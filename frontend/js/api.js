@@ -3,7 +3,7 @@
  * Tất cả các gọi API đều qua đây
  */
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
 
 // Lấy token từ localStorage
 function getToken() {
