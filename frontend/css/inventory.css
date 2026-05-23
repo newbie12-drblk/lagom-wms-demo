@@ -1,0 +1,479 @@
+/* ==================== INVENTORY PAGE STYLES ==================== */
+
+/* ==================== 1. INVENTORY STATS MINI ==================== */
+.inventory-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-mini {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-mini-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stat-mini-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue-light);
+  font-family: var(--font-mono);
+}
+
+.stat-mini-value.warning {
+  color: var(--yellow);
+}
+
+.stat-mini-value.danger {
+  color: var(--red);
+}
+
+/* ==================== 2. FILTER BAR ==================== */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.search-box {
+  position: relative;
+  flex: 2;
+  min-width: 250px;
+}
+
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 13px;
+  z-index: 1;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.search-box input::placeholder {
+  color: var(--text-dim);
+}
+
+.cat-select {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 180px;
+  transition: all 0.2s;
+}
+
+.cat-select:hover {
+  border-color: var(--blue);
+}
+
+.cat-select:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.filter-bar .btn-outline {
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-bar .btn-outline:hover {
+  background: var(--surface3);
+  color: #ffffff;
+  border-color: var(--blue);
+}
+
+/* ==================== 3. DATA TABLE ==================== */
+.table-wrap {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: auto;
+  max-height: 55vh;
+  scrollbar-width: thin;
+}
+
+.table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-wrap::-webkit-scrollbar-track {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 4px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 2200px;
+  background: #111827;
+}
+
+.inv-table th,
+.inv-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #1e2d45;
+  vertical-align: top;
+}
+
+/* Header */
+.inv-table th {
+  background: #0f172a;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #3b82f6;
+  white-space: nowrap;
+}
+
+/* Tất cả các ô dữ liệu - chữ TRẮNG TINH */
+.inv-table td {
+  background-color: #111827;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* ===== STICKY COLUMNS - CỐ ĐỊNH 2 CỘT ĐẦU ===== */
+.inv-table th.sticky-col,
+.inv-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 100;
+  background-color: #0f172a;
+  min-width: 50px;
+  width: 50px;
+}
+
+.inv-table th.sticky-col-2,
+.inv-table td.sticky-col-2 {
+  position: sticky;
+  left: 50px;
+  z-index: 100;
+  background-color: #0f172a;
+  min-width: 220px;
+  width: 220px;
+}
+
+/* Hover cho sticky columns */
+.inv-table tr:hover td.sticky-col,
+.inv-table tr:hover td.sticky-col-2 {
+  background-color: #1e293b !important;
+}
+
+/* Bóng đổ phân cách */
+.inv-table td.sticky-col::after,
+.inv-table td.sticky-col-2::after,
+.inv-table th.sticky-col::after,
+.inv-table th.sticky-col-2::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  z-index: 101;
+}
+
+/* ===== MÀU CHỮ ĐẶC BIỆT ===== */
+
+/* Tên sản phẩm - màu xanh sáng */
+.inv-table td.sticky-col-2 strong {
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Giá nhập, Giá xuất - màu xanh dương */
+.inv-table td:nth-child(8),
+.inv-table td:nth-child(15) {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+/* SL nhập, SL xuất - màu xanh lá */
+.inv-table td:nth-child(9),
+.inv-table td:nth-child(14) {
+  color: #86efac;
+  font-weight: 600;
+}
+
+/* Tồn cuối - đậm, nổi bật */
+.inv-table td:nth-child(20) {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.inv-table td:nth-child(20).text-success {
+  color: #4ade80;
+}
+
+.inv-table td:nth-child(20).text-danger {
+  color: #f87171;
+}
+
+/* Hover row */
+.inv-table tr:hover td {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Hàng hết hàng */
+.inv-table tr.out-of-stock td {
+  opacity: 0.85;
+}
+
+/* ==================== 4. PAGINATION ==================== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 10px;
+}
+
+.page-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--surface2);
+  border-color: var(--blue);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* ==================== 5. TEXT ALIGNMENT ==================== */
+.text-right {
+  text-align: right;
+}
+
+/* ==================== 6. DEBT BADGE ==================== */
+.debt-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.debt-badge.safe {
+  background: rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+}
+
+.debt-badge.normal {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.debt-badge.warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.debt-badge.critical {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  animation: pulseWarning 1s infinite;
+}
+
+.debt-badge.expired {
+  background: rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+  font-weight: 700;
+  animation: pulseExpired 0.8s infinite;
+}
+
+.debt-badge.no-debt {
+  background: rgba(107, 114, 128, 0.2);
+  color: #94a3b8;
+}
+
+@keyframes pulseWarning {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulseExpired {
+  0%,
+  100% {
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.35);
+  }
+  50% {
+    opacity: 0.8;
+    background: rgba(239, 68, 68, 0.5);
+  }
+}
+
+/* ==================== 7. EXPIRY BADGE ==================== */
+.expiry-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.expiry-badge.valid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #4ade80;
+}
+
+.expiry-badge.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.expiry-badge.expired {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ==================== 8. DEBT TABLE ==================== */
+.debt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.debt-table th {
+  background: #0f172a;
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 12px;
+  border-bottom: 2px solid #3b82f6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.debt-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: #ffffff;
+  background-color: #111827;
+}
+
+.debt-table tr:hover td {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.debt-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.debt-status-badge.expired {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.debt-status-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.debt-status-badge.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.debt-status-badge.normal {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.debt-status-badge.safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: #4ade80;
+}

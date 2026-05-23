@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản trị hệ thống - LAGOM</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="admin-container">
+      <div class="admin-header">
+        <a href="index.html" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+        <h1><i class="fas fa-shield-alt"></i> Quản trị hệ thống</h1>
+        <div class="special-buttons">
+          <button id="btnOpenIndex" class="btn-special-dashboard">
+            <i class="fas fa-chart-line"></i> Mở Dashboard
+          </button>
+          <button id="btnOpenRolePanel" class="btn-special-rolepanel">
+            <i class="fas fa-users-gear"></i> Vào Role-Panel
+          </button>
+          <div class="admin-user" id="adminUserInfo"></div>
+          <button id="logoutBtn" class="btn btn-danger">
+            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-stats">
+        <div class="stat-mini">
+          <span class="stat-mini-label">Tổng người dùng:</span>
+          <span class="stat-mini-value" id="totalUsers">0</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-mini-label">Đang hoạt động:</span>
+          <span class="stat-mini-value" id="activeUsers">0</span>
+        </div>
+        <div class="stat-mini">
+          <span class="stat-mini-label">Đã khóa:</span>
+          <span class="stat-mini-value" id="lockedUsers">0</span>
+        </div>
+      </div>
+
+      <!-- TAB BUTTONS -->
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="users">
+          Quản lý người dùng
+        </button>
+        <button class="tab-btn" data-tab="approvals">Yêu cầu duyệt</button>
+        <button class="tab-btn" data-tab="history">Lịch sử chỉnh sửa</button>
+      </div>
+
+      <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
+      <div class="tab-content active" id="tab-users">
+        <div class="admin-toolbar">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              id="searchUser"
+              placeholder="Tìm theo tên, username, email..."
+            />
+          </div>
+          <select id="roleFilter" class="cat-select">
+            <option value="">Tất cả role</option>
+          </select>
+          <button class="btn btn-primary" id="btnAddUser">
+            <i class="fas fa-plus"></i> Thêm người dùng
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th style="width: 50px">STT</th>
+                <th>Username</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Trạng thái</th>
+                <th style="width: 180px">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button class="page-btn" id="prevPage" disabled>
+            <i class="fas fa-chevron-left"></i> Trước
+          </button>
+          <span class="page-info" id="pageInfo">Trang 1 / 1</span>
+          <button class="page-btn" id="nextPage">
+            Sau <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB: YÊU CẦU DUYỆT -->
+      <div class="tab-content" id="tab-approvals">
+        <div id="approvalRequestsList" class="approval-list"></div>
+      </div>
+
+      <!-- TAB: LỊCH SỬ CHỈNH SỬA -->
+      <div class="tab-content" id="tab-history">
+        <div id="editHistoryList" class="history-list"></div>
+      </div>
+    </div>
+
+    <!-- MODAL THÊM/SỬA USER -->
+    <div id="userModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Thêm người dùng</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <input type="hidden" id="userId" />
+            <div class="form-group">
+              <label>Tên đăng nhập *</label>
+              <input type="text" id="username" required />
+            </div>
+            <div class="form-group" id="passwordGroup">
+              <label>Mật khẩu *</label>
+              <input type="password" id="password" />
+              <small>Để trống nếu không đổi mật khẩu (khi sửa)</small>
+            </div>
+            <div class="form-group">
+              <label>Họ và tên *</label>
+              <input type="text" id="fullName" required />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="email" />
+            </div>
+            <div class="form-group">
+              <label>Role *</label>
+              <select id="roleId" required>
+                <option value="admin">Quản trị</option>
+                <option value="ke_toan">Kế toán</option>
+                <option value="quan_ly_kho">Quản lý kho</option>
+                <option value="quan_ly">Quản lý</option>
+                <option value="nhan_vien">Nhân viên</option>
+                <option value="nhap_lieu">Nhập liệu</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Trạng thái</label>
+              <select id="isActive">
+                <option value="true">Hoạt động</option>
+                <option value="false">Đã khóa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="useCustomPermissions" />
+                Sử dụng quyền tùy chỉnh (ghi đè role mặc định)
+              </label>
+            </div>
+            <div id="customPermissionsPanel" style="display: none">
+              <div class="permissions-group">
+                <label>Quyền chỉnh sửa field:</label>
+                <div class="permissions-grid">
+                  <label
+                    ><input type="checkbox" value="tenThuongMai" /> Tên thương
+                    mại</label
+                  >
+                  <label
+                    ><input type="checkbox" value="maHang" /> Mã hàng</label
+                  >
+                  <label
+                    ><input type="checkbox" value="giaNhap" /> Giá nhập</label
+                  >
+                  <label
+                    ><input type="checkbox" value="giaXuat" /> Giá xuất</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soLuongNhap" /> Số lượng
+                    nhập</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soLuongXuat" /> Số lượng
+                    xuất</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soHopDongNhap" /> Số hợp đồng
+                    nhập</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soHopDongXuat" /> Số hợp đồng
+                    xuất</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soHoaDonNhap" /> Số hóa đơn
+                    nhập</label
+                  >
+                  <label
+                    ><input type="checkbox" value="soHoaDonXuat" /> Số hóa đơn
+                    xuất</label
+                  >
+                  <label
+                    ><input type="checkbox" value="ngayNhapHD" /> Ngày nhập
+                    HĐ</label
+                  >
+                  <label
+                    ><input type="checkbox" value="ngayXuatHD" /> Ngày xuất
+                    HĐ</label
+                  >
+                  <label><input type="checkbox" value="soLot" /> Số lot</label>
+                  <label
+                    ><input type="checkbox" value="ngayHetHan" /> Ngày hết
+                    hạn</label
+                  >
+                  <label
+                    ><input type="checkbox" value="ghiChu" /> Ghi chú</label
+                  >
+                </div>
+              </div>
+              <div class="permissions-group">
+                <label>Quyền thao tác:</label>
+                <div class="permissions-grid">
+                  <label
+                    ><input type="checkbox" id="permAddRow" /> Thêm dòng</label
+                  >
+                  <label
+                    ><input type="checkbox" id="permDeleteRow" /> Xóa
+                    dòng</label
+                  >
+                  <label
+                    ><input type="checkbox" id="permSave" /> Lưu phiếu</label
+                  >
+                  <label
+                    ><input type="checkbox" id="permExport" /> Xuất Excel</label
+                  >
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCancelModal">Hủy</button>
+          <button class="btn btn-primary" id="btnSaveUser">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ĐỔI MẬT KHẨU -->
+    <div id="passwordModal" class="modal">
+      <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header">
+          <h3>Đổi mật khẩu</h3>
+          <span class="close-pw">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>Đang đổi mật khẩu cho: <strong id="pwUsername"></strong></p>
+          <div class="form-group">
+            <label>Mật khẩu mới</label>
+            <input type="password" id="newPassword" />
+          </div>
+          <div class="form-group">
+            <label>Xác nhận mật khẩu</label>
+            <input type="password" id="confirmPassword" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCancelPw">Hủy</button>
+          <button class="btn btn-primary" id="btnSavePassword">
+            Đổi mật khẩu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>

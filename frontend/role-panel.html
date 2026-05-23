@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAGOM – Bảng điều khiển</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/inventory.css" />
+    <link rel="stylesheet" href="css/role-panel.css" />
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="app-shell">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">
+            <div class="logo-icon">🧪</div>
+            <div class="logo-text-main">LAGOM</div>
+          </div>
+          <div class="logo-text-sub">Pharma &amp; Medical Supply</div>
+        </div>
+
+        <div class="nav-label">Điều khiển</div>
+        <a href="#" class="nav-item active" data-view="inventory">
+          <div class="nav-icon">📦</div>
+          Quản lý tồn kho
+        </a>
+        <a href="#" class="nav-item" data-view="statistics">
+          <div class="nav-icon">📊</div>
+          Thống kê
+        </a>
+        <a href="#" class="nav-item" data-view="supplier-debt">
+          <div class="nav-icon">🏢</div>
+          Công nợ NCC
+        </a>
+        <a href="#" class="nav-item" data-view="customer-debt">
+          <div class="nav-icon">👥</div>
+          Công nợ KH
+        </a>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-ver">v2.0.0 · LAGOM WMS</div>
+        </div>
+      </aside>
+
+      <!-- CONTENT -->
+      <div class="content-area">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="breadcrumb">
+              LAGOM <span>/</span>
+              <strong id="breadcrumb-title">Quản lý tồn kho</strong>
+            </div>
+          </div>
+          <div class="topbar-right" id="topbarRight">
+            <button id="btnOpenIndex" class="btn-open-dashboard">
+              <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <div class="top-pulse">
+              <div class="pulse-dot"></div>
+              Hệ thống hoạt động
+            </div>
+            <div class="top-date" id="currentDate"></div>
+          </div>
+        </div>
+
+        <div class="view-container">
+          <!-- VIEW: INVENTORY -->
+          <div class="view active" id="view-inventory">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">WORKSPACE</div>
+                  <div class="page-title" id="pageTitle">Quản lý tồn kho</div>
+                  <div class="page-sub" id="pageSub">
+                    Chỉnh sửa các trường được phép theo chức vụ
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button
+                    class="btn btn-primary"
+                    id="btnCreateRequest"
+                    style="display: none"
+                  >
+                    <i class="fas fa-plus"></i> Tạo yêu cầu
+                  </button>
+                  <button class="btn btn-outline" id="btnRefresh">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                  </button>
+                  <button class="btn btn-primary" id="btnSaveAll">
+                    <i class="fas fa-save"></i> Lưu tất cả
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="inv-search"
+                    placeholder="Tìm theo tên, mã hàng, hoặc số lot..."
+                  />
+                </div>
+                <select class="cat-select" id="inv-cat-filter">
+                  <option value="">Tất cả phân loại</option>
+                </select>
+                <select class="cat-select" id="inv-status-filter">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="con-hang">Còn hàng (Tồn > 0)</option>
+                  <option value="het-hang">Hết hàng (Tồn = 0)</option>
+                  <option value="sap-het-han">Sắp đến hạn (≤30 ngày)</option>
+                  <option value="het-han">Quá hạn</option>
+                </select>
+                <button class="btn btn-outline" id="btnResetFilter">
+                  <i class="fas fa-undo-alt"></i> Đặt lại
+                </button>
+              </div>
+
+              <div class="inventory-stats">
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng mặt hàng:</span>
+                  <span class="stat-mini-value" id="statTotalItems">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng tồn kho:</span>
+                  <span class="stat-mini-value" id="statTotalStock">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng giá trị tồn:</span>
+                  <span class="stat-mini-value" id="statTotalValue">0 ₫</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Sắp hết hạn:</span>
+                  <span class="stat-mini-value warning" id="statExpiringSoon"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Quá hạn:</span>
+                  <span class="stat-mini-value danger" id="statExpired">0</span>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="inv-table">
+                  <thead>
+                    <tr>
+                      <th class="sticky-col">STT</th>
+                      <th class="sticky-col-2">Tên thương mại</th>
+                      <th>Mã hàng</th>
+                      <th>Quy cách</th>
+                      <th>Hãng SX</th>
+                      <th>ĐVT</th>
+                      <th>Phân loại</th>
+                      <th class="text-right">Giá nhập</th>
+                      <th class="text-right">SL nhập</th>
+                      <th>Số HĐ</th>
+                      <th>Số HĐơn nhập</th>
+                      <th>Ngày nhập HĐ</th>
+                      <th>Số lot</th>
+                      <th>Ngày hết hạn</th>
+                      <th class="text-right">SL xuất</th>
+                      <th class="text-right">Giá xuất</th>
+                      <th>Số HĐ xuất</th>
+                      <th>Số HĐơn xuất</th>
+                      <th>Ngày xuất</th>
+                      <th class="text-right">Tồn cuối</th>
+                      <th>Công nợ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inv-tbody"></tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" id="prevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="pageInfo">Trang 1 / 1</span>
+                <button class="page-btn" id="nextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: STATISTICS -->
+          <div class="view" id="view-statistics">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">REPORT</div>
+                  <div class="page-title">Thống kê</div>
+                  <div class="page-sub">Đang phát triển...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: SUPPLIER DEBT (CÔNG NỢ NHÀ CUNG CẤP) -->
+          <div class="view" id="view-supplier-debt">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">SUPPLIER DEBT</div>
+                  <div class="page-title">Công nợ phải trả - Nhà cung cấp</div>
+                  <div class="page-sub">
+                    Danh sách công nợ từ phiếu nhập hàng (dựa trên ngày nhập hóa
+                    đơn)
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnExportSupplierDebt">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar" style="margin-bottom: 24px">
+                <div class="search-box" style="flex: 1">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="supplierDebtSearch"
+                    placeholder="Tìm theo tên nhà cung cấp, số phiếu..."
+                  />
+                </div>
+                <select class="cat-select" id="supplierDebtStatusFilter">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="expired">Quá hạn</option>
+                  <option value="critical">Khẩn cấp (≤7 ngày)</option>
+                  <option value="warning">Sắp đến hạn (8-30 ngày)</option>
+                  <option value="normal">Bình thường (31-90 ngày)</option>
+                  <option value="safe">An toàn (>90 ngày)</option>
+                </select>
+              </div>
+
+              <div
+                class="debt-stats"
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-bottom: 24px;
+                  flex-wrap: wrap;
+                "
+              >
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng công nợ NCC:</span>
+                  <span class="stat-mini-value" id="supplierDebtTotalCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Quá hạn:</span>
+                  <span
+                    class="stat-mini-value danger"
+                    id="supplierDebtExpiredCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Khẩn cấp (≤7 ngày):</span>
+                  <span
+                    class="stat-mini-value warning"
+                    id="supplierDebtCriticalCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Sắp đến hạn (8-30 ngày):</span>
+                  <span class="stat-mini-value" id="supplierDebtWarningCount"
+                    >0</span
+                  >
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table
+                  class="debt-table"
+                  style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 13px;
+                    min-width: 800px;
+                  "
+                >
+                  <thead>
+                    <tr style="background: var(--surface2)">
+                      <th style="padding: 12px; text-align: left; width: 50px">
+                        STT
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Nhà cung cấp / Số phiếu
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Ngày nhập HĐ
+                      </th>
+                      <th style="padding: 12px; text-align: center">
+                        Số ngày còn lại
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Trạng thái
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Số hợp đồng
+                      </th>
+                      <th style="padding: 12px; text-align: right">Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody id="supplierDebtTableBody"></tbody>
+                </table>
+              </div>
+
+              <div class="pagination" style="margin-top: 20px">
+                <button class="page-btn" id="supplierDebtPrevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="supplierDebtPageInfo"
+                  >Trang 1 / 1</span
+                >
+                <button class="page-btn" id="supplierDebtNextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: CUSTOMER DEBT (CÔNG NỢ KHÁCH HÀNG) -->
+          <div class="view" id="view-customer-debt">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">CUSTOMER DEBT</div>
+                  <div class="page-title">Công nợ phải thu - Khách hàng</div>
+                  <div class="page-sub">
+                    Danh sách công nợ từ phiếu xuất kho (dựa trên ngày xuất hóa
+                    đơn)
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnExportCustomerDebt">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar" style="margin-bottom: 24px">
+                <div class="search-box" style="flex: 1">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="customerDebtSearch"
+                    placeholder="Tìm theo tên khách hàng, số phiếu..."
+                  />
+                </div>
+                <select class="cat-select" id="customerDebtStatusFilter">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="expired">Quá hạn</option>
+                  <option value="critical">Khẩn cấp (≤7 ngày)</option>
+                  <option value="warning">Sắp đến hạn (8-30 ngày)</option>
+                  <option value="normal">Bình thường (31-90 ngày)</option>
+                  <option value="safe">An toàn (>90 ngày)</option>
+                </select>
+              </div>
+
+              <div
+                class="debt-stats"
+                style="
+                  display: flex;
+                  gap: 16px;
+                  margin-bottom: 24px;
+                  flex-wrap: wrap;
+                "
+              >
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng công nợ KH:</span>
+                  <span class="stat-mini-value" id="customerDebtTotalCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Quá hạn:</span>
+                  <span
+                    class="stat-mini-value danger"
+                    id="customerDebtExpiredCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Khẩn cấp (≤7 ngày):</span>
+                  <span
+                    class="stat-mini-value warning"
+                    id="customerDebtCriticalCount"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Sắp đến hạn (8-30 ngày):</span>
+                  <span class="stat-mini-value" id="customerDebtWarningCount"
+                    >0</span
+                  >
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table
+                  class="debt-table"
+                  style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 13px;
+                    min-width: 800px;
+                  "
+                >
+                  <thead>
+                    <tr style="background: var(--surface2)">
+                      <th style="padding: 12px; text-align: left; width: 50px">
+                        STT
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Khách hàng / Số phiếu
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Ngày xuất HĐ
+                      </th>
+                      <th style="padding: 12px; text-align: center">
+                        Số ngày còn lại
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Trạng thái
+                      </th>
+                      <th style="padding: 12px; text-align: left">
+                        Số hợp đồng
+                      </th>
+                      <th style="padding: 12px; text-align: right">Giá trị</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customerDebtTableBody"></tbody>
+                </table>
+              </div>
+
+              <div class="pagination" style="margin-top: 20px">
+                <button class="page-btn" id="customerDebtPrevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="customerDebtPageInfo"
+                  >Trang 1 / 1</span
+                >
+                <button class="page-btn" id="customerDebtNextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL TẠO YÊU CẦU NHIỀU SẢN PHẨM (dành cho nhập liệu) -->
+    <div id="createRequestModal" class="modal">
+      <div class="modal-content" style="max-width: 1100px">
+        <div class="modal-header">
+          <h3>Yêu cầu nhập nhiều sản phẩm</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="requestProductsContainer"></div>
+          <div style="margin-top: 10px">
+            <button type="button" class="btn btn-outline" id="btnAddProductRow">
+              <i class="fas fa-plus"></i> Thêm sản phẩm
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCancelRequest">Hủy</button>
+          <button class="btn btn-primary" id="btnSubmitRequest">
+            Gửi yêu cầu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/role-panel.js"></script>
+  </body>
+</html>

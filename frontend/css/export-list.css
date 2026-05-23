@@ -1,0 +1,132 @@
+/* ==================== EXPORT LIST STYLES ==================== */
+
+.exports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 24px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.export-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--blue);
+  background: var(--surface2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.export-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.export-card-id {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-card-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.export-card-info {
+  flex: 1;
+  min-width: 140px;
+}
+
+.export-card-info .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.export-card-info .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.export-card-total {
+  text-align: right;
+  min-width: 160px;
+}
+
+.export-card-total .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.export-card-total .value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: var(--font-mono);
+}
+
+.export-card-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.empty-exports {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.detail-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.detail-items-table th,
+.detail-items-table td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+}
+
+.detail-items-table th {
+  background: var(--surface2);
+  font-weight: 600;
+}

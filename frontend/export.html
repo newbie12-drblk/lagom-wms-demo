@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAGOM – Phiếu xuất kho / Biên bản bàn giao</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/export.css" />
+  </head>
+  <body>
+    <div class="export-container">
+      <div class="export-paper" id="exportPaper">
+        <!-- Header -->
+        <div class="company-header">
+          <div class="company-name">
+            CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM
+          </div>
+          <div class="company-address">
+            Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất,
+            Thành phố Hồ Chí Minh, Việt Nam
+          </div>
+          <div class="company-tax">MST: 0316156162</div>
+        </div>
+
+        <!-- Title -->
+        <div class="export-title">
+          <h2>PHIẾU XUẤT KHO</h2>
+          <p style="font-size: 12px; margin-top: 4px">
+            (Biên bản bàn giao hàng hóa)
+          </p>
+        </div>
+
+        <!-- Date -->
+        <div class="date-row">
+          Ngày <span id="day">...</span> tháng <span id="month">...</span> năm
+          <span id="year">...</span>
+        </div>
+
+        <!-- Thông tin khách hàng -->
+        <div class="info-box">
+          <strong>📋 Thông tin khách hàng</strong>
+          <div class="info-line">
+            Đơn vị khách hàng: Trung Tâm y tế Tân Cảng
+          </div>
+          <div class="info-line">
+            Địa chỉ: 1259B Nguyễn Thị Định, phường Cát Lái, TP. Hồ Chí Minh
+          </div>
+          <div class="info-line">
+            <label>MST:</label>
+            <input type="text" id="customerTax" placeholder="Mã số thuế" />
+          </div>
+          <div class="info-line">Số HĐ: Tạm ứng hàng hóa</div>
+        </div>
+
+        <!-- Thông tin đơn hàng -->
+        <div class="info-box">
+          <strong>🚚 Thông tin xuất kho</strong>
+          <div class="info-line">
+            <label>Số phiếu xuất:</label>
+            <input
+              type="text"
+              id="exportNo"
+              placeholder="PX-2026-001"
+              value="PX-2026-001"
+            />
+          </div>
+          <div class="info-line">
+            <label>Người nhận:</label>
+            <input
+              type="text"
+              id="receiverName"
+              placeholder="Họ tên người nhận"
+            />
+          </div>
+          <div class="info-line">
+            <label>Lý do xuất:</label>
+            <select id="exportReason">
+              <option value="Sử dụng nội bộ">Sử dụng nội bộ</option>
+              <option value="Chuyển khoa/phòng">Chuyển khoa/phòng</option>
+              <option value="Trả hàng">Trả hàng</option>
+              <option value="Hủy">Hủy</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bảng sản phẩm -->
+        <div class="items-table-wrapper">
+          <table class="items-table" id="itemsTable">
+            <thead>
+              <tr>
+                <th style="width: 40px">TT</th>
+                <th style="width: 180px">Tên thương mại</th>
+                <th style="width: 100px">Mã hàng</th>
+                <th style="width: 120px">Quy cách</th>
+                <th style="width: 160px">Hãng SX</th>
+                <th style="width: 60px">ĐVT</th>
+                <th style="width: 180px">Phân loại</th>
+                <th style="width: 100px">Đơn giá</th>
+                <th style="width: 70px">Số lượng</th>
+                <th style="width: 120px">Thành tiền</th>
+                <th style="width: 100px">Số lot</th>
+                <th style="width: 100px">HSD</th>
+                <th style="width: 80px">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="8" class="text-right">
+                  <strong>TỔNG CỘNG:</strong>
+                </td>
+                <td class="text-right"><strong id="totalAmount">0</strong></td>
+                <td colspan="4"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="toolbar no-print">
+          <button class="btn btn-add" id="btnAddRow">
+            <i class="fas fa-plus"></i> Thêm sản phẩm
+          </button>
+        </div>
+
+        <!-- Chữ ký 2 bên -->
+        <div class="signature">
+          <div class="sign-item">
+            <div class="sign-line">
+              ĐẠI DIỆN BÊN GIAO<br /><span style="font-size: 10px"
+                >(Ký, họ tên, đóng dấu)</span
+              >
+            </div>
+          </div>
+          <div class="sign-item">
+            <div class="sign-line">
+              ĐẠI DIỆN BÊN NHẬN<br /><span style="font-size: 10px"
+                >(Ký, họ tên)</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons no-print">
+          <button class="btn btn-outline" id="btnBack">
+            <i class="fas fa-arrow-left"></i> Quay lại
+          </button>
+          <button class="btn btn-success" id="btnSave">
+            <i class="fas fa-save"></i> Lưu phiếu
+          </button>
+          <button class="btn btn-primary" id="btnExportExcel">
+            <i class="fas fa-file-excel"></i> Xuất Excel
+          </button>
+          <button class="btn btn-danger" id="btnClear">
+            <i class="fas fa-trash"></i> Làm mới
+          </button>
+          <button class="btn btn-primary" id="btnPrint">
+            <i class="fas fa-print"></i> In phiếu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/export.js"></script>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+/* ======================================================
+   FILE: index.css
+   TÁC GIẢ: LAGOM
+   MÔ TẢ: Styles riêng cho trang index (chế độ xem + danh sách phiếu)
+   NGÀY: 2026
+====================================================== */
+
+/* ==================== READONLY MODE ==================== */
+.readonly-field {
+  display: inline-block;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Ẩn tất cả input trong bảng (chế độ chỉ xem) */
+.inv-table input {
+  display: none;
+}
+
+/* Ẩn các nút thao tác không cần thiết */
+.btn-add,
+.btn-remove,
+.toolbar .btn,
+.action-buttons .btn-success,
+.action-buttons .btn-danger,
+.header-actions .btn-primary {
+  display: none !important;
+}
+
+/* Class để khóa tính năng khi không có quyền */
+.locked-feature {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ==================== ANIMATION CHUYỂN TRANG ==================== */
+.page-transition {
+  animation: fadeInUp 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== NÚT TẠO PHIẾU MỚI ==================== */
+.btn-new-slip {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-new-slip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-new-slip i {
+  font-size: 14px;
+}
+
+/* ==================== DANH SÁCH PHIẾU ==================== */
+.receipts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.receipt-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 24px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.receipt-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--blue);
+  background: var(--surface2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.receipt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.receipt-card-id {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipt-card-id i {
+  font-size: 18px;
+}
+
+.receipt-card-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receipt-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.receipt-card-info {
+  flex: 1;
+  min-width: 140px;
+}
+
+.receipt-card-info .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.receipt-card-info .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.receipt-card-total {
+  text-align: right;
+  min-width: 160px;
+}
+
+.receipt-card-total .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.receipt-card-total .value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: var(--font-mono);
+}
+
+.receipt-card-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.receipt-card-footer i {
+  margin-right: 6px;
+}
+
+/* Empty state */
+.empty-receipts {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.empty-receipts i {
+  font-size: 48px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.empty-receipts p {
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.empty-receipts small {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+/* ==================== FILTER BAR TRONG INDEX ==================== */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  z-index: 1;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.cat-select {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.cat-select:hover {
+  border-color: var(--blue);
+}

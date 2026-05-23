@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAGOM – Phiếu đề nghị nhập hàng</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/receipt.css" />
+  </head>
+  <body>
+    <div class="receipt-container">
+      <div class="receipt-paper" id="receiptPaper">
+        <!-- Header công ty -->
+        <div class="company-header">
+          <div class="company-name">
+            CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM
+          </div>
+          <div class="company-address">
+            Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất,
+            Thành phố Hồ Chí Minh, Việt Nam
+          </div>
+          <div class="company-tax">MST: 0316156162</div>
+        </div>
+
+        <!-- Title -->
+        <div class="receipt-title">
+          <h2>PHIẾU ĐỀ NGHỊ NHẬP HÀNG HÓA</h2>
+        </div>
+
+        <!-- Date -->
+        <div class="date-row">
+          Ngày <span id="day">...</span> tháng <span id="month">...</span> năm
+          <span id="year">...</span>
+        </div>
+
+        <!-- Thông tin -->
+        <div class="info-grid">
+          <div class="info-box">
+            <strong>📦 Thông tin nhà cung cấp</strong>
+            <div class="info-line">
+              <label>Công ty:</label>
+              <input
+                type="text"
+                id="supplierName"
+                placeholder="Tên nhà cung cấp"
+              />
+            </div>
+            <div class="info-line">
+              <label>Địa chỉ:</label>
+              <input type="text" id="supplierAddress" placeholder="Địa chỉ" />
+            </div>
+            <div class="info-line">
+              <label>MST:</label>
+              <input type="text" id="supplierTax" placeholder="Mã số thuế" />
+            </div>
+          </div>
+          <div class="info-box">
+            <strong>🏥 Đơn vị khách hàng</strong>
+            <div class="info-line">Trung Tâm y tế Tân Cảng</div>
+            <div class="info-line">
+              Địa chỉ: 1259B Nguyễn Thị Định, phường Cát Lái, TP. Hồ Chí Minh
+            </div>
+            <div class="info-line">
+              <label>MST:</label>
+              <input type="text" id="customerTax" placeholder="Mã số thuế" />
+            </div>
+            <div class="info-line">Số HĐ: Tạm ứng hàng hóa</div>
+          </div>
+        </div>
+
+        <!-- Bảng sản phẩm -->
+        <div class="items-table-wrapper">
+          <table class="items-table" id="itemsTable">
+            <thead>
+              <tr>
+                <th style="width: 40px">TT</th>
+                <th style="width: 200px">Tên thương mại</th>
+                <th style="width: 100px">Mã hàng</th>
+                <th style="width: 120px">Quy cách đóng gói</th>
+                <th style="width: 180px">Hãng/ Nước sản xuất</th>
+                <th style="width: 60px">ĐVT</th>
+                <th style="width: 200px">Phân loại</th>
+                <th style="width: 100px">Đơn giá</th>
+                <th style="width: 80px">Số lượng</th>
+                <th style="width: 120px">Thành tiền</th>
+                <th style="width: 80px">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="8" class="text-right">
+                  <strong>TỔNG CỘNG:</strong>
+                </td>
+                <td class="text-right"><strong id="totalAmount">0</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="toolbar no-print">
+          <button class="btn btn-add" id="btnAddRow">
+            <i class="fas fa-plus"></i> Thêm dòng
+          </button>
+        </div>
+
+        <!-- Chữ ký -->
+        <div class="signature">
+          <div class="sign-item">
+            <div class="sign-line">Bộ phận đặt hàng</div>
+          </div>
+          <div class="sign-item">
+            <div class="sign-line">Người lập phiếu</div>
+          </div>
+          <div class="sign-item">
+            <div class="sign-line">Giám đốc</div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons no-print">
+          <button class="btn btn-outline" id="btnBack">
+            <i class="fas fa-arrow-left"></i> Quay lại
+          </button>
+          <button class="btn btn-success" id="btnSave">
+            <i class="fas fa-save"></i> Lưu phiếu
+          </button>
+          <button class="btn btn-primary" id="btnExportExcel">
+            <i class="fas fa-file-excel"></i> Xuất Excel
+          </button>
+          <button class="btn btn-danger" id="btnClear">
+            <i class="fas fa-trash"></i> Làm mới
+          </button>
+          <button class="btn btn-primary" id="btnPrint">
+            <i class="fas fa-print"></i> In phiếu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/receipt.js"></script>
+  </body>
+</html>

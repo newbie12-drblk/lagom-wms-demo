@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAGOM – Quản Lý Tồn Kho</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/inventory.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/receipt-list.css" />
+    <link rel="stylesheet" href="css/export-list.css" />
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="app-shell">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">
+            <div class="logo-icon">🧪</div>
+            <div class="logo-text-main">LAGOM</div>
+          </div>
+          <div class="logo-text-sub">Pharma &amp; Medical Supply</div>
+        </div>
+
+        <div class="nav-label">Tổng quan</div>
+        <a href="#" class="nav-item active" data-view="home">
+          <div class="nav-icon">🏠</div>
+          Trang chủ
+        </a>
+
+        <div class="nav-label">Quản lý kho</div>
+        <a href="#" class="nav-item" data-view="inventory">
+          <div class="nav-icon">📦</div>
+          Tồn kho
+        </a>
+        <a href="#" class="nav-item" id="receiptNav" data-view="receipts">
+          <div class="nav-icon">📥</div>
+          Phiếu nhập hàng
+        </a>
+        <a href="#" class="nav-item" id="exportNav" data-view="exports">
+          <div class="nav-icon">📤</div>
+          Phiếu xuất kho
+        </a>
+
+        <div class="nav-label">Báo cáo</div>
+        <a href="#" class="nav-item" data-view="statistics">
+          <div class="nav-icon">📊</div>
+          Thống kê
+        </a>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-ver">v2.0.0 · LAGOM WMS</div>
+        </div>
+      </aside>
+
+      <!-- CONTENT AREA -->
+      <div class="content-area">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="breadcrumb">
+              LAGOM <span>/</span>
+              <strong id="breadcrumb-title">Trang chủ</strong>
+            </div>
+          </div>
+          <div class="topbar-right" id="topbarRight">
+            <div class="top-pulse">
+              <div class="pulse-dot"></div>
+              Hệ thống hoạt động
+            </div>
+            <div class="top-date" id="currentDate"></div>
+          </div>
+        </div>
+
+        <div class="view-container">
+          <!-- VIEW: HOME -->
+          <div class="view active" id="view-home">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">Dashboard</div>
+                  <div class="page-title">Tổng quan tồn kho</div>
+                  <div class="page-sub">Chế độ XEM - Chỉ hiển thị dữ liệu</div>
+                </div>
+              </div>
+
+              <div class="stats-row">
+                <div class="stat-card s-blue">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">📦</div>
+                    <div class="stat-trend trend-up">SKU</div>
+                  </div>
+                  <div class="stat-value" id="homeTotalItems">0</div>
+                  <div class="stat-label">Tổng mặt hàng</div>
+                </div>
+                <div class="stat-card s-green">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">✅</div>
+                    <div class="stat-trend trend-up">+</div>
+                  </div>
+                  <div class="stat-value" id="homeTotalStock">0</div>
+                  <div class="stat-label">Tổng đã nhập</div>
+                </div>
+                <div class="stat-card s-yellow">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">⚠️</div>
+                    <div class="stat-trend trend-warn">Khẩn cấp</div>
+                  </div>
+                  <div class="stat-value" id="homeExpiringSoon">0</div>
+                  <div class="stat-label">Khẩn cấp (≤7 ngày)</div>
+                </div>
+                <div class="stat-card s-red">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">🚨</div>
+                    <div class="stat-trend trend-danger">Quá hạn</div>
+                  </div>
+                  <div class="stat-value" id="homeExpired">0</div>
+                  <div class="stat-label">Quá hạn</div>
+                </div>
+              </div>
+
+              <div class="content-grid">
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">⚡</span> Truy cập nhanh
+                    </div>
+                    <span class="pill pill-blue">4 chức năng</span>
+                  </div>
+                  <div class="quick-grid">
+                    <a href="#" class="quick-tile t-blue" data-nav="inventory">
+                      <span class="quick-tile-arrow">↗</span>
+                      <div class="quick-tile-icon">📋</div>
+                      <div class="quick-tile-name">Quản lý tồn kho</div>
+                      <div class="quick-tile-desc">
+                        Xem danh sách, số lượng tồn & lô hàng
+                      </div>
+                    </a>
+                    <a href="#" class="quick-tile t-green" id="receiptTile">
+                      <span class="quick-tile-arrow">↗</span>
+                      <div class="quick-tile-icon">📥</div>
+                      <div class="quick-tile-name">Phiếu nhập hàng</div>
+                      <div class="quick-tile-desc">
+                        Xem lịch sử và tạo phiếu nhập mới
+                      </div>
+                    </a>
+                    <a href="#" class="quick-tile t-purple" id="exportTile">
+                      <span class="quick-tile-arrow">↗</span>
+                      <div class="quick-tile-icon">📤</div>
+                      <div class="quick-tile-name">Phiếu xuất kho</div>
+                      <div class="quick-tile-desc">
+                        Xem lịch sử và tạo phiếu xuất mới
+                      </div>
+                    </a>
+                    <a href="#" class="quick-tile t-cyan" data-nav="statistics">
+                      <span class="quick-tile-arrow">↗</span>
+                      <div class="quick-tile-icon">📊</div>
+                      <div class="quick-tile-name">Báo cáo thống kê</div>
+                      <div class="quick-tile-desc">
+                        Tổng hợp nhập xuất theo kỳ
+                      </div>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- PANEL CẢNH BÁO CÔNG NỢ NHÀ CUNG CẤP -->
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">🏢</span> Công nợ phải trả - Nhà
+                      cung cấp
+                    </div>
+                    <span class="pill pill-red" id="supplierAlertCount">0</span>
+                  </div>
+                  <div class="alert-scroll" id="supplierAlertList"></div>
+                </div>
+
+                <!-- PANEL CẢNH BÁO CÔNG NỢ KHÁCH HÀNG -->
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">👥</span> Công nợ phải thu - Khách
+                      hàng
+                    </div>
+                    <span class="pill pill-yellow" id="customerAlertCount"
+                      >0</span
+                    >
+                  </div>
+                  <div class="alert-scroll" id="customerAlertList"></div>
+                </div>
+
+                <div class="panel" style="grid-column: 1 / -1">
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">📊</span> Phân bổ theo nhóm hàng
+                    </div>
+                    <span class="pill pill-muted" id="categoryCount"></span>
+                  </div>
+                  <div class="cat-body" id="categoryList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: INVENTORY (CHỈ XEM) -->
+          <div class="view" id="view-inventory">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">WAREHOUSE</div>
+                  <div class="page-title">Quản lý tồn kho chi tiết</div>
+                  <div class="page-sub">Chế độ XEM - Chỉ hiển thị dữ liệu</div>
+                </div>
+              </div>
+              <div class="filter-bar">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="inv-search"
+                    placeholder="Tìm theo tên, mã hàng, hoặc số lot..."
+                  />
+                </div>
+                <select class="cat-select" id="inv-cat-filter">
+                  <option value="">Tất cả phân loại</option>
+                </select>
+                <select class="cat-select" id="inv-status-filter">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="con-hang">Còn hàng (Tồn > 0)</option>
+                  <option value="het-hang">Hết hàng (Tồn = 0)</option>
+                  <option value="sap-het-han">Sắp đến hạn (≤30 ngày)</option>
+                  <option value="het-han">Quá hạn</option>
+                </select>
+                <button class="btn btn-outline" id="btnResetFilter">
+                  <i class="fas fa-undo-alt"></i> Đặt lại
+                </button>
+                <button class="btn btn-primary" id="btnExport">
+                  <i class="fas fa-file-excel"></i> Xuất Excel
+                </button>
+                <button class="btn btn-success" id="btnRefreshInventory">
+                  <i class="fas fa-sync-alt"></i> Làm mới dữ liệu
+                </button>
+              </div>
+              <div class="inventory-stats">
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng mặt hàng:</span>
+                  <span class="stat-mini-value" id="statTotalItems">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng tồn kho:</span>
+                  <span class="stat-mini-value" id="statTotalStock">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng giá trị tồn:</span>
+                  <span class="stat-mini-value" id="statTotalValue">0 ₫</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Khẩn cấp:</span>
+                  <span class="stat-mini-value warning" id="statExpiringSoon"
+                    >0</span
+                  >
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Quá hạn:</span>
+                  <span class="stat-mini-value danger" id="statExpired">0</span>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="inv-table">
+                  <thead>
+                    <tr>
+                      <th class="sticky-col">STT</th>
+                      <th class="sticky-col-2">Tên thương mại</th>
+                      <th>Mã hàng</th>
+                      <th>Quy cách</th>
+                      <th>Hãng SX</th>
+                      <th>ĐVT</th>
+                      <th>Phân loại</th>
+                      <th class="text-right">Giá nhập</th>
+                      <th class="text-right">SL nhập</th>
+                      <th>Số HĐ</th>
+                      <th>Số HĐơn nhập</th>
+                      <th>Ngày nhập HĐ</th>
+                      <th>Số lot</th>
+                      <th>Ngày hết hạn</th>
+                      <th class="text-right">SL xuất</th>
+                      <th class="text-right">Giá xuất</th>
+                      <th>Số HĐ xuất</th>
+                      <th>Số HĐơn xuất</th>
+                      <th>Ngày xuất</th>
+                      <th class="text-right">Tồn cuối</th>
+                      <th>Công nợ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inv-tbody"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <button class="page-btn" id="prevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="pageInfo">Trang 1 / 1</span>
+                <button class="page-btn" id="nextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: RECEIPTS (LỊCH SỬ PHIẾU NHẬP) -->
+          <div class="view" id="view-receipts">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">IMPORT HISTORY</div>
+                  <div class="page-title">Lịch sử phiếu nhập hàng</div>
+                  <div class="page-sub">Danh sách các phiếu nhập đã tạo</div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnCreateNewReceipt">
+                    <i class="fas fa-plus"></i> Tạo phiếu nhập mới
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="searchReceipt"
+                    placeholder="Tìm theo số phiếu, nhà cung cấp..."
+                  />
+                </div>
+                <select class="cat-select" id="receiptFilterDate">
+                  <option value="all">Tất cả thời gian</option>
+                  <option value="7">7 ngày qua</option>
+                  <option value="30">30 ngày qua</option>
+                  <option value="90">90 ngày qua</option>
+                </select>
+                <button class="btn btn-outline" id="btnRefreshReceipts">
+                  <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+              </div>
+
+              <div class="inventory-stats" style="margin-bottom: 20px">
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng số phiếu:</span>
+                  <span class="stat-mini-value" id="receiptTotalCount">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng giá trị nhập:</span>
+                  <span class="stat-mini-value" id="receiptTotalValue"
+                    >0 ₫</span
+                  >
+                </div>
+              </div>
+
+              <div id="receiptsList" class="receipts-list"></div>
+
+              <div class="pagination">
+                <button class="page-btn" id="receiptPrevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="receiptPageInfo">Trang 1 / 1</span>
+                <button class="page-btn" id="receiptNextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: EXPORTS (LỊCH SỬ PHIẾU XUẤT) -->
+          <div class="view" id="view-exports">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">EXPORT HISTORY</div>
+                  <div class="page-title">Lịch sử phiếu xuất kho</div>
+                  <div class="page-sub">Danh sách các phiếu xuất đã tạo</div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnCreateNewExport">
+                    <i class="fas fa-plus"></i> Tạo phiếu xuất mới
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="searchExport"
+                    placeholder="Tìm theo số phiếu, người nhận..."
+                  />
+                </div>
+                <select class="cat-select" id="exportFilterDate">
+                  <option value="all">Tất cả thời gian</option>
+                  <option value="7">7 ngày qua</option>
+                  <option value="30">30 ngày qua</option>
+                  <option value="90">90 ngày qua</option>
+                </select>
+                <button class="btn btn-outline" id="btnRefreshExports">
+                  <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+              </div>
+
+              <div class="inventory-stats" style="margin-bottom: 20px">
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng số phiếu:</span>
+                  <span class="stat-mini-value" id="exportTotalCount">0</span>
+                </div>
+                <div class="stat-mini">
+                  <span class="stat-mini-label">Tổng giá trị xuất:</span>
+                  <span class="stat-mini-value" id="exportTotalValue">0 ₫</span>
+                </div>
+              </div>
+
+              <div id="exportsList" class="exports-list"></div>
+
+              <div class="pagination">
+                <button class="page-btn" id="exportPrevPage" disabled>
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="page-info" id="exportPageInfo">Trang 1 / 1</span>
+                <button class="page-btn" id="exportNextPage">
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: STATISTICS -->
+          <div class="view" id="view-statistics">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">REPORT</div>
+                  <div class="page-title">Thống kê</div>
+                  <div class="page-sub">Đang phát triển...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT PHIẾU -->
+    <div id="receiptDetailModal" class="modal">
+      <div class="modal-content" style="max-width: 800px">
+        <div class="modal-header">
+          <h3>Chi tiết phiếu nhập</h3>
+          <span class="close-receipt-modal">&times;</span>
+        </div>
+        <div class="modal-body" id="receiptDetailBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCloseReceiptModal">
+            Đóng
+          </button>
+          <button class="btn btn-primary" id="btnPrintReceiptDetail">
+            <i class="fas fa-print"></i> In phiếu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="exportDetailModal" class="modal">
+      <div class="modal-content" style="max-width: 800px">
+        <div class="modal-header">
+          <h3>Chi tiết phiếu xuất</h3>
+          <span class="close-export-modal">&times;</span>
+        </div>
+        <div class="modal-body" id="exportDetailBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCloseExportModal">Đóng</button>
+          <button class="btn btn-primary" id="btnPrintExportDetail">
+            <i class="fas fa-print"></i> In phiếu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/receipt-list.js"></script>
+    <script src="js/export-list.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
