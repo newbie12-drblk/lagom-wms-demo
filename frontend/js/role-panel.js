@@ -78,8 +78,8 @@
 
   function canEditField(fieldName) {
     if (isAdmin) return true;
-    if (isNhapLieu) return true; // Nhập liệu được full quyền (phải qua admin duyệt)
-    if (isNhanVien) return false; // Nhân viên không được sửa gì
+    if (isNhapLieu) return true;
+    if (isNhanVien) return false;
     if (isKeToan && keToanFields.includes(fieldName)) return true;
     if (isQuanLyKho && quanLyKhoFields.includes(fieldName)) return true;
     if (isQuanLy && quanLyFields.includes(fieldName)) return true;
@@ -179,12 +179,10 @@
       }
     }
 
-    // Ẩn nút Lưu tất cả nếu là nhân viên
     if (isNhanVien && saveAllBtn) {
       saveAllBtn.style.display = "none";
     }
 
-    // Xử lý nút Tạo yêu cầu (chỉ nhập liệu)
     if (btnCreateRequest) {
       if (isNhapLieu) {
         console.log("✅ HIỂN THỊ nút Tạo yêu cầu cho role:", roleId);
@@ -369,7 +367,7 @@
       Utils.showToast("Lỗi khi tải dữ liệu tồn kho", "error");
       inventoryData = [];
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;padding:60px;color:red;">Lỗi tải dữ liệu: ${error.message}<\/td><\/tr>`;
+        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:60px;color:red;">Lỗi tải dữ liệu: ${error.message}<\/td><\/tr>`;
       }
     } finally {
       Utils.showLoading(false);
@@ -434,7 +432,6 @@
 
   // ========== RENDER FIELD (CÓ PHÂN QUYỀN) ==========
   function renderEditableField(value, fieldName, isNumber = false) {
-    // Nhân viên: chỉ xem
     if (isNhanVien) {
       if (isNumber) {
         return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
@@ -449,7 +446,6 @@
       return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
     }
 
-    // Kiểm tra quyền chỉnh sửa
     const canEdit = canEditField(fieldName);
 
     if (canEdit) {
@@ -468,7 +464,6 @@
       return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}" style="color:#ffffff;">`;
     }
 
-    // Không có quyền: readonly
     if (isNumber) {
       return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
     }
@@ -486,14 +481,14 @@
   function renderTable() {
     if (!tbody) return;
     if (!filteredData || filteredData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<td><td colspan="23" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
       updatePaginationControls();
       return;
     }
     const start = (currentPage - 1) * itemsPerPage;
     const pageData = filteredData.slice(start, start + itemsPerPage);
     if (pageData.length === 0) {
-      tbody.innerHTML = `<td><td colspan="21" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
       updatePaginationControls();
       return;
     }
@@ -525,6 +520,19 @@
           <td>${renderEditableField(item.ngayXuatHD, "ngayXuatHD")}<\/td>
           <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, "tonKho", true)}<\/strong><\/td>
           <td>${getDebtBadge(remainingDays)}<\/td>
+          ${
+            isNhapLieu
+              ? `
+          <td class="text-center">
+            <button class="btn btn-sm btn-danger" 
+                    onclick="requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')"
+                    style="padding: 4px 8px; font-size: 11px;">
+              <i class="fas fa-trash"></i> Xóa
+            </button>
+          <\/td>
+          `
+              : ""
+          }
         <\/tr>
       `;
       })
@@ -694,6 +702,30 @@
     loadInventoryData();
   }
 
+  // ========== YÊU CẦU XÓA SẢN PHẨM ==========
+  async function requestDeleteProduct(productId, productName) {
+    if (
+      !confirm(
+        `Bạn có chắc muốn yêu cầu xóa sản phẩm "${productName}"?\n\nYêu cầu sẽ được gửi đến Admin để duyệt.`,
+      )
+    ) {
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu xóa...");
+    try {
+      await window.API.deletion.createRequest(productId);
+      Utils.showToast(
+        `Đã gửi yêu cầu xóa sản phẩm "${productName}"`,
+        "success",
+      );
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
   // ========== EVENTS ==========
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((link) => {
@@ -754,6 +786,9 @@
     const dateEl = document.getElementById("currentDate");
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString("vi-VN");
   }
+
+  // Global functions
+  window.requestDeleteProduct = requestDeleteProduct;
 
   init();
 })();
