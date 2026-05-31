@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026
+   NGÀY: 2026 - FIXED MOBILE RESPONSIVE
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -60,14 +60,16 @@
 html,
 body {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ==================== 2. HIỆU ỨNG NỀN (GRID + ORBS) ==================== */
@@ -131,8 +133,8 @@ body::before {
   position: relative;
   z-index: 1;
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  width: 100%;
 }
 
 /* ==================== 4. SIDEBAR ==================== */
@@ -143,8 +145,12 @@ body::before {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
+  height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 /* Hiệu ứng gradient top */
@@ -305,7 +311,8 @@ body::before {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-w));
 }
 
 /* Topbar */
@@ -319,6 +326,9 @@ body::before {
   background: rgba(8, 12, 18, 0.8);
   backdrop-filter: blur(12px);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .topbar-left {
@@ -395,6 +405,7 @@ body::before {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 28px 32px 40px;
+  height: calc(100vh - var(--header-h));
 }
 
 .scroll-area::-webkit-scrollbar {
@@ -414,19 +425,19 @@ body::before {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  height: calc(100vh - var(--header-h));
 }
 
 .view {
   position: relative;
   display: none;
-  overflow-y: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
 }
 
 .view.active {
   display: block;
-  opacity: 1;
-  visibility: visible;
 }
 
 /* ==================== 7. PAGE HEADER ==================== */
@@ -532,6 +543,7 @@ body::before {
     transform: translateY(0);
   }
 }
+
 /* ==================== USER INFO & LOGOUT ==================== */
 .user-info {
   display: flex;
@@ -618,7 +630,6 @@ body::before {
 }
 
 /* ==================== BUTTON STYLES ==================== */
-/* Đảm bảo nút tạo phiếu hiển thị */
 .header-actions .btn-primary,
 #btnCreateNewReceipt,
 #btnCreateNewExport {
@@ -641,13 +652,6 @@ body::before {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
-
-.header-actions .btn-primary:active,
-#btnCreateNewReceipt:active,
-#btnCreateNewExport:active {
-  transform: translateY(0);
-}
-/* Thêm vào cuối file style.css */
 
 /* Toast animations */
 @keyframes slideIn {
@@ -701,11 +705,10 @@ body::before {
   background: var(--blue);
 }
 
-/* ==================== RESPONSIVE FIX FOR MOBILE ==================== */
+/* ==================== RESPONSIVE FOR MOBILE ==================== */
 
-/* Tablet & Mobile (dưới 992px) */
+/* Tablet (768px - 992px) */
 @media (max-width: 992px) {
-  /* Thu nhỏ sidebar */
   .sidebar {
     width: 70px;
     min-width: 70px;
@@ -737,30 +740,23 @@ body::before {
     margin: 0 auto;
   }
 
-  /* Điều chỉnh content area */
+  .content-area {
+    width: calc(100% - 70px);
+  }
+
   .scroll-area {
-    padding: 16px;
+    padding: 20px;
   }
 
   .page-title {
     font-size: 22px;
   }
 
-  /* Stats cards - 2 cột */
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  .stat-card {
-    padding: 12px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  /* Filter bar dọc */
   .filter-bar {
     flex-direction: column;
     gap: 10px;
@@ -772,56 +768,39 @@ body::before {
     width: 100%;
   }
 
-  /* Inventory stats - 2 cột */
   .inventory-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 
-  .stat-mini {
-    justify-content: space-between;
-  }
-
-  /* Bảng có thể cuộn ngang */
   .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Header actions */
   .header-actions {
     flex-wrap: wrap;
     gap: 8px;
   }
-
-  .header-actions .btn {
-    padding: 8px 14px;
-    font-size: 12px;
-  }
 }
 
-/* Mobile nhỏ (dưới 576px) */
-@media (max-width: 576px) {
-  /* Ẩn hoàn toàn sidebar, thay bằng nút menu */
+/* Mobile nhỏ (dưới 768px) */
+@media (max-width: 768px) {
   .sidebar {
     display: none;
-  }
-
-  .app-shell {
-    flex-direction: column;
   }
 
   .content-area {
     width: 100%;
   }
 
-  /* Topbar */
   .topbar {
     flex-direction: column;
     height: auto;
     padding: 10px 16px;
     gap: 8px;
+    position: relative;
   }
 
   .topbar-left,
@@ -839,16 +818,26 @@ body::before {
     padding: 4px 10px;
   }
 
-  /* Stats - 1 cột */
+  .scroll-area {
+    padding: 16px;
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+
+  .view-container {
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+
   .stats-row {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .inventory-stats {
     grid-template-columns: 1fr;
   }
 
-  /* Page header */
   .page-header {
     flex-direction: column;
     align-items: flex-start;
@@ -863,7 +852,7 @@ body::before {
     font-size: 11px;
   }
 
-  /* Buttons to hơn cho dễ chạm */
+  /* Tăng kích thước nút bấm cho dễ chạm */
   .btn,
   button,
   .action-btn,
@@ -878,7 +867,6 @@ body::before {
     font-size: 14px;
   }
 
-  /* Tabs */
   .tab-buttons {
     flex-wrap: wrap;
   }
@@ -890,7 +878,6 @@ body::before {
     padding: 10px 8px;
   }
 
-  /* Modal */
   .modal-content {
     width: 95%;
     margin: 20px auto;
@@ -900,7 +887,6 @@ body::before {
     font-size: 16px;
   }
 
-  /* Pagination */
   .pagination {
     flex-wrap: wrap;
     justify-content: center;
@@ -921,7 +907,6 @@ body::before {
     justify-content: center;
   }
 
-  /* Bảng trong approval card - cuộn ngang */
   .approval-body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -961,7 +946,6 @@ body::before {
     min-width: 500px;
   }
 
-  /* History table */
   .history-table {
     min-width: 500px;
   }
@@ -989,27 +973,54 @@ body::before {
   }
 }
 
-/* Đảm bảo cuộn được trên mobile */
-@media (max-width: 768px) {
+/* Mobile siêu nhỏ (dưới 480px) */
+@media (max-width: 480px) {
   .scroll-area {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    height: calc(100vh - 60px);
+    padding: 12px;
   }
 
-  .view-container {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    height: 100%;
+  .stat-mini {
+    justify-content: space-between;
   }
 
-  .view {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+  .stat-mini-value {
+    font-size: 14px;
+  }
+
+  .stat-mini-label {
+    font-size: 10px;
+  }
+
+  .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .page-info {
+    font-size: 11px;
+  }
+
+  .page-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .user-info {
+    padding: 4px 8px;
   }
 }
 
-/* Touch-friendly - tăng kích thước chạm */
+/* Touch-friendly - tăng kích thước chạm trên mobile */
 @media (hover: none) and (pointer: coarse) {
   button,
   .btn,
@@ -1032,5 +1043,27 @@ body::before {
   .editable-field {
     min-height: 36px;
     padding: 8px;
+  }
+}
+
+/* Đảm bảo cuộn được trên tất cả các view */
+@media (max-width: 768px) {
+  .scroll-area,
+  .view-container,
+  .view,
+  .admin-container,
+  .receipt-container,
+  .export-container {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body {
+    overflow-y: auto !important;
+  }
+
+  .app-shell {
+    min-height: 100vh;
+    height: auto;
   }
 }
