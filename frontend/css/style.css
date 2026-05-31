@@ -701,10 +701,11 @@ body::before {
   background: var(--blue);
 }
 
-/* ==================== RESPONSIVE FOR MOBILE ==================== */
+/* ==================== RESPONSIVE FIX FOR MOBILE ==================== */
 
-/* Tablet (768px trở xuống) */
-@media (max-width: 768px) {
+/* Tablet & Mobile (dưới 992px) */
+@media (max-width: 992px) {
+  /* Thu nhỏ sidebar */
   .sidebar {
     width: 70px;
     min-width: 70px;
@@ -719,51 +720,59 @@ body::before {
 
   .sidebar .nav-icon {
     margin: 0 auto;
+    font-size: 20px;
   }
 
   .sidebar .nav-item {
     justify-content: center;
-    padding: 12px 0;
+    padding: 14px 0;
   }
 
-  .topbar {
-    padding: 0 16px;
+  .sidebar-logo {
+    padding: 16px 0;
+    text-align: center;
   }
 
-  .top-date {
-    display: none;
+  .logo-icon {
+    margin: 0 auto;
   }
 
+  /* Điều chỉnh content area */
   .scroll-area {
     padding: 16px;
   }
 
   .page-title {
-    font-size: 20px;
+    font-size: 22px;
   }
 
+  /* Stats cards - 2 cột */
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  /* Filter bar dọc */
+  .filter-bar {
+    flex-direction: column;
     gap: 10px;
   }
 
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-box {
+  .filter-bar .search-box,
+  .filter-bar .cat-select,
+  .filter-bar .btn {
     width: 100%;
   }
 
-  .cat-select {
-    width: 100%;
-  }
-
+  /* Inventory stats - 2 cột */
   .inventory-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -774,32 +783,27 @@ body::before {
     justify-content: space-between;
   }
 
+  /* Bảng có thể cuộn ngang */
   .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .inv-table {
-    min-width: 800px;
-  }
-
+  /* Header actions */
   .header-actions {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .header-actions .btn {
-    padding: 6px 12px;
-    font-size: 11px;
-  }
-
-  .modal-content {
-    width: 95%;
-    margin: 20px auto;
+    padding: 8px 14px;
+    font-size: 12px;
   }
 }
 
-/* Mobile (480px trở xuống) */
-@media (max-width: 480px) {
+/* Mobile nhỏ (dưới 576px) */
+@media (max-width: 576px) {
+  /* Ẩn hoàn toàn sidebar, thay bằng nút menu */
   .sidebar {
     display: none;
   }
@@ -809,13 +813,14 @@ body::before {
   }
 
   .content-area {
-    margin-left: 0;
+    width: 100%;
   }
 
+  /* Topbar */
   .topbar {
     flex-direction: column;
     height: auto;
-    padding: 10px;
+    padding: 10px 16px;
     gap: 8px;
   }
 
@@ -825,6 +830,16 @@ body::before {
     justify-content: space-between;
   }
 
+  .top-pulse {
+    font-size: 10px;
+  }
+
+  .top-date {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+
+  /* Stats - 1 cột */
   .stats-row {
     grid-template-columns: 1fr;
   }
@@ -833,8 +848,11 @@ body::before {
     grid-template-columns: 1fr;
   }
 
-  .stat-mini {
-    width: 100%;
+  /* Page header */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
   .page-title {
@@ -845,11 +863,22 @@ body::before {
     font-size: 11px;
   }
 
-  .btn {
-    padding: 6px 12px;
-    font-size: 11px;
+  /* Buttons to hơn cho dễ chạm */
+  .btn,
+  button,
+  .action-btn,
+  .page-btn,
+  .tab-btn {
+    min-height: 40px;
+    padding: 8px 14px;
   }
 
+  .btn i,
+  button i {
+    font-size: 14px;
+  }
+
+  /* Tabs */
   .tab-buttons {
     flex-wrap: wrap;
   }
@@ -857,28 +886,34 @@ body::before {
   .tab-btn {
     flex: 1;
     text-align: center;
-    padding: 8px 10px;
     font-size: 12px;
+    padding: 10px 8px;
   }
 
-  .pagination {
-    flex-wrap: wrap;
-  }
-
-  .page-btn {
-    padding: 6px 12px;
+  /* Modal */
+  .modal-content {
+    width: 95%;
+    margin: 20px auto;
   }
 
   .modal-header h3 {
     font-size: 16px;
   }
 
+  /* Pagination */
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Approval cards */
   .approval-card {
     padding: 12px;
   }
 
   .approval-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
   .approval-actions .btn {
@@ -886,6 +921,52 @@ body::before {
     justify-content: center;
   }
 
+  /* Bảng trong approval card - cuộn ngang */
+  .approval-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .approval-body table {
+    min-width: 500px;
+  }
+
+  /* Admin trang */
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .special-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .special-buttons button {
+    flex: 1;
+  }
+
+  .admin-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+  }
+
+  .user-table {
+    min-width: 500px;
+  }
+
+  /* History table */
+  .history-table {
+    min-width: 500px;
+  }
+
+  /* Signature (phiếu nhập/xuất) */
   .signature {
     flex-direction: column;
     gap: 20px;
@@ -894,10 +975,12 @@ body::before {
 
   .sign-item {
     width: 100%;
+    text-align: center;
   }
 
   .action-buttons {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .action-buttons .btn {
@@ -906,7 +989,27 @@ body::before {
   }
 }
 
-/* Touch-friendly - tăng kích thước nút bấm trên mobile */
+/* Đảm bảo cuộn được trên mobile */
+@media (max-width: 768px) {
+  .scroll-area {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: calc(100vh - 60px);
+  }
+
+  .view-container {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100%;
+  }
+
+  .view {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Touch-friendly - tăng kích thước chạm */
 @media (hover: none) and (pointer: coarse) {
   button,
   .btn,
@@ -914,8 +1017,10 @@ body::before {
   .action-btn,
   .page-btn,
   .tab-btn,
-  .quick-tile {
-    min-height: 44px;
+  .quick-tile,
+  .approval-card,
+  .receipt-card {
+    cursor: pointer;
   }
 
   input,
@@ -926,5 +1031,6 @@ body::before {
 
   .editable-field {
     min-height: 36px;
+    padding: 8px;
   }
 }

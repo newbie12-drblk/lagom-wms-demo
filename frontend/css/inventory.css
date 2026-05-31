@@ -535,3 +535,21 @@
     font-size: 11px;
   }
 }
+/* Fix scroll cho bảng inventory */
+@media (max-width: 768px) {
+  .table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: 60vh;
+  }
+
+  .inv-table {
+    min-width: 800px;
+  }
+
+  .inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
