@@ -248,7 +248,9 @@
 /* Scroll area trong debt view */
 .scroll-area {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch !important;
   padding: 28px 32px 40px;
 }
 

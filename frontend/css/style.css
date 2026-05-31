@@ -60,6 +60,7 @@
 html,
 body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -391,6 +392,8 @@ body::before {
 .scroll-area {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 28px 32px 40px;
 }
 
@@ -408,21 +411,20 @@ body::before {
 .view-container {
   flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .view {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
+  position: relative;
+  display: none;
+  overflow-y: visible;
+  height: 100%;
 }
 
 .view.active {
+  display: block;
   opacity: 1;
   visibility: visible;
 }

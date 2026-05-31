@@ -139,6 +139,7 @@
   overflow: auto;
   max-height: 55vh;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table-wrap::-webkit-scrollbar {
