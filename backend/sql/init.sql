@@ -1,9 +1,7 @@
--- Tạo database
-CREATE DATABASE IF NOT EXISTS lagom_wms;
-USE lagom_wms;
+USE defaultdb;
 
 -- 1. Bảng users
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -19,7 +17,7 @@ CREATE TABLE users (
 );
 
 -- 2. Bảng inventory
-CREATE TABLE inventory (
+CREATE TABLE IF NOT EXISTS inventory (
     id INT PRIMARY KEY AUTO_INCREMENT,
     stt INT,
     tenThuongMai VARCHAR(200) NOT NULL,
@@ -52,7 +50,7 @@ CREATE TABLE inventory (
 );
 
 -- 3. Bảng receipts
-CREATE TABLE receipts (
+CREATE TABLE IF NOT EXISTS receipts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     receiptNo VARCHAR(50) UNIQUE NOT NULL,
     receiptDate DATE,
@@ -75,7 +73,7 @@ CREATE TABLE receipts (
 );
 
 -- 4. Bảng receipt_items
-CREATE TABLE receipt_items (
+CREATE TABLE IF NOT EXISTS receipt_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     receiptId INT NOT NULL,
     tenThuongMai VARCHAR(200),
@@ -92,7 +90,7 @@ CREATE TABLE receipt_items (
 );
 
 -- 5. Bảng exports
-CREATE TABLE exports (
+CREATE TABLE IF NOT EXISTS exports (
     id INT PRIMARY KEY AUTO_INCREMENT,
     exportNo VARCHAR(50) UNIQUE NOT NULL,
     exportDate DATE,
@@ -113,7 +111,7 @@ CREATE TABLE exports (
 );
 
 -- 6. Bảng export_items
-CREATE TABLE export_items (
+CREATE TABLE IF NOT EXISTS export_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     exportId INT NOT NULL,
     tenThuongMai VARCHAR(200),
@@ -133,7 +131,7 @@ CREATE TABLE export_items (
 );
 
 -- 7. Bảng files (lưu scan)
-CREATE TABLE files (
+CREATE TABLE IF NOT EXISTS files (
     id INT PRIMARY KEY AUTO_INCREMENT,
     relatedType ENUM('receipt', 'export', 'contract', 'request') NOT NULL,
     relatedId INT NOT NULL,
@@ -148,7 +146,7 @@ CREATE TABLE files (
 );
 
 -- 8. Bảng approval_requests (yêu cầu thêm sản phẩm từ Nhập liệu)
-CREATE TABLE approval_requests (
+CREATE TABLE IF NOT EXISTS approval_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
     productData JSON NOT NULL,
@@ -163,12 +161,13 @@ CREATE TABLE approval_requests (
 );
 
 -- 9. Bảng edit_history (lịch sử chỉnh sửa)
-CREATE TABLE edit_history (
+CREATE TABLE IF NOT EXISTS edit_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId INT NOT NULL,
     tableName VARCHAR(50) NOT NULL,
     recordId INT NOT NULL,
-    fieldName VARCHAR(100) NOT NULL,
+    action VARCHAR(50) NOT NULL DEFAULT 'UPDATE',
+    fieldName VARCHAR(100),
     oldValue TEXT,
     newValue TEXT,
     editedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -179,7 +178,7 @@ CREATE TABLE edit_history (
 );
 
 -- 10. Bảng notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId INT NOT NULL,
     title VARCHAR(200) NOT NULL,
@@ -193,8 +192,26 @@ CREATE TABLE notifications (
     INDEX idx_createdAt (createdAt)
 );
 
--- Chèn dữ liệu mẫu (users)
-INSERT INTO users (username, password, fullName, email, roleId, isActive) VALUES
+-- 11. Bảng deletion_requests (yêu cầu xóa sản phẩm từ Nhập liệu)
+CREATE TABLE IF NOT EXISTS deletion_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    requesterId INT NOT NULL,
+    productId INT NOT NULL,
+    productData JSON NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    approvedBy INT,
+    approvedAt DATETIME,
+    rejectedReason TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (requesterId) REFERENCES users(id),
+    FOREIGN KEY (approvedBy) REFERENCES users(id),
+    FOREIGN KEY (productId) REFERENCES inventory(id),
+    INDEX idx_status (status),
+    INDEX idx_productId (productId)
+);
+
+-- Chèn dữ liệu mẫu (users) - chỉ chèn nếu chưa có
+INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
 ('admin', 'admin123_hash', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
 ('ketoan', 'ketoan123_hash', 'Nguyễn Thị Kế Toán', 'ketoan@lagom.com', 'ke_toan', TRUE),
 ('quanlykho', 'kho123_hash', 'Trần Văn Quản Lý Kho', 'quanlykho@lagom.com', 'quan_ly_kho', TRUE),
@@ -202,5 +219,6 @@ INSERT INTO users (username, password, fullName, email, roleId, isActive) VALUES
 ('nhanvien', 'nv123_hash', 'Phạm Văn Nhân Viên', 'nhanvien@lagom.com', 'nhan_vien', TRUE),
 ('nhaplieu', 'nl123_hash', 'Nguyễn Văn Nhập Liệu', 'nhaplieu@lagom.com', 'nhap_lieu', TRUE);
 
--- Chèn 15 sản phẩm mẫu vào inventory (từ DEFAULT_INVENTORY_DATA cũ)
--- (Sẽ viết script riêng để chuyển dữ liệu)
+-- Chèn 1 sản phẩm mẫu vào inventory
+INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai, giaNhap, giaXuat, tonKho, soLuongNhap, soLuongXuat, soLot, ngayHetHan) VALUES
+(1, 'Atelica IM TSH3-Ultra II (TSH3ULII)', '11208706', '130 Tests', 'Siemens Healthcare Diagnostics Inc. - Tarrytown USA/Hoa Kỳ', 'Hộp/Test', 'Máy sinh hóa miễn dịch Atellica- hãng Siemens', 2915000, 0, 0, 0, 0, 'LOT001', '2026-12-31');

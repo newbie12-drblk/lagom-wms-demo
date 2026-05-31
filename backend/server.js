@@ -29,6 +29,7 @@ const fileRoutes = require("./routes/fileRoutes");
 const approvalRoutes = require("./routes/approvalRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const deletionRoutes = require("./routes/deletionRoutes"); // THÊM DÒNG NÀY
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -39,6 +40,7 @@ app.use("/api/files", fileRoutes);
 app.use("/api/approvals", approvalRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/deletions", deletionRoutes); // THÊM DÒNG NÀY
 
 // Health check
 app.get("/api/health", (req, res) => {
