@@ -217,6 +217,72 @@
   opacity: 0.7;
 }
 
+/* Sticky columns */
+.inv-table th.sticky-col,
+.inv-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 100;
+  background-color: #0f172a;
+  min-width: 50px;
+  width: 50px;
+}
+
+.inv-table th.sticky-col-2,
+.inv-table td.sticky-col-2 {
+  position: sticky;
+  left: 50px;
+  z-index: 100;
+  background-color: #0f172a;
+  min-width: 220px;
+  width: 220px;
+}
+
+.inv-table td.sticky-col-2 strong {
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Hover cho sticky columns */
+.inv-table tr:hover td.sticky-col,
+.inv-table tr:hover td.sticky-col-2 {
+  background-color: #1e293b !important;
+}
+
+/* Bóng đổ phân cách */
+.inv-table td.sticky-col::after,
+.inv-table td.sticky-col-2::after,
+.inv-table th.sticky-col::after,
+.inv-table th.sticky-col-2::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  z-index: 101;
+}
+
+/* Nút xóa */
+.btn-delete-product {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-product:hover {
+  background: #b91c1c;
+  transform: scale(1.02);
+}
+
 /* Debt tables */
 .debt-table {
   width: 100%;
@@ -266,6 +332,8 @@
   background: var(--border2);
   border-radius: 3px;
 }
+
+/* Modal tạo yêu cầu */
 #createRequestModal.modal {
   display: none;
   position: fixed;
@@ -292,7 +360,7 @@
   overflow-y: auto;
 }
 
-/* -------------------------Mobile responsive -------------------------------------- */
+/* Mobile responsive */
 @media (max-width: 768px) {
   .user-info {
     padding: 4px 10px;
@@ -332,6 +400,15 @@
 
   .debt-stats .stat-mini {
     width: 100%;
+  }
+
+  .inv-table {
+    min-width: 800px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

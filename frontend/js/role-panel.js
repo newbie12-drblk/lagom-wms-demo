@@ -24,7 +24,6 @@
 
   // ========== QUYỀN CHỈNH SỬA THEO ROLE ==========
 
-  // Kế toán: chỉ được sửa số hóa đơn và ngày hóa đơn
   const keToanFields = [
     "soHoaDonNhap",
     "soHoaDonXuat",
@@ -32,7 +31,6 @@
     "ngayXuatHD",
   ];
 
-  // Quản lý kho: chỉ được sửa số lượng, hợp đồng, hóa đơn, lot, HSD
   const quanLyKhoFields = [
     "soLuongNhap",
     "soHopDongNhap",
@@ -44,7 +42,6 @@
     "soHoaDonXuat",
   ];
 
-  // Tất cả các field có trong bảng inventory
   const allFields = [
     "tenThuongMai",
     "maHang",
@@ -68,10 +65,7 @@
     "ghiChu",
   ];
 
-  // Field mà Quản lý KHÔNG được sửa (thuộc về Kế toán và Quản lý kho)
   const quanLyForbiddenFields = [...keToanFields, ...quanLyKhoFields];
-
-  // Quản lý được sửa những field không nằm trong danh sách cấm
   const quanLyFields = allFields.filter(
     (field) => !quanLyForbiddenFields.includes(field),
   );
@@ -88,10 +82,6 @@
 
   console.log("=== ROLE PANEL DEBUG ===");
   console.log("roleId:", roleId);
-  console.log("=== QUYỀN CHI TIẾT ===");
-  console.log("Kế toán được sửa:", keToanFields);
-  console.log("Quản lý kho được sửa:", quanLyKhoFields);
-  console.log("Quản lý được sửa:", quanLyFields);
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -108,7 +98,6 @@
   const pageSub = document.getElementById("pageSub");
   const btnCreateRequest = document.getElementById("btnCreateRequest");
 
-  // Views
   const views = {
     inventory: document.getElementById("view-inventory"),
     statistics: document.getElementById("view-statistics"),
@@ -170,7 +159,7 @@
           "📦 QUẢN LÝ KHO - Bạn được sửa: Số lượng nhập, Số HĐ, Số lot, Ngày đến hạn, Số lượng xuất";
       } else if (isQuanLy) {
         pageSub.textContent =
-          "📋 QUẢN LÝ - Bạn được sửa: Tất cả các trường còn lại (tên sp, mã hàng, giá, tồn kho, ghi chú...)";
+          "📋 QUẢN LÝ - Bạn được sửa: Tất cả các trường còn lại";
       } else if (isNhapLieu) {
         pageSub.textContent =
           "✏️ NHẬP LIỆU - Bạn có quyền chỉnh sửa full, nhưng phải được Admin duyệt";
@@ -185,22 +174,15 @@
 
     if (btnCreateRequest) {
       if (isNhapLieu) {
-        console.log("✅ HIỂN THỊ nút Tạo yêu cầu cho role:", roleId);
         btnCreateRequest.style.display = "inline-flex";
-        btnCreateRequest.onclick = function (e) {
-          e.preventDefault();
-          console.log("🖱️ Nút Tạo yêu cầu được click!");
-          openCreateRequestModal();
-        };
+        btnCreateRequest.onclick = () => openCreateRequestModal();
       } else {
-        console.log("❌ ẨN nút Tạo yêu cầu cho role:", roleId);
         btnCreateRequest.style.display = "none";
         btnCreateRequest.onclick = null;
       }
     }
   }
 
-  // ========== VIEW ==========
   function switchView(viewName) {
     Object.values(views).forEach((view) => {
       if (view) view.classList.remove("active");
@@ -235,14 +217,11 @@
   let productRowCounter = 1;
 
   function openCreateRequestModal() {
-    console.log("📂 openCreateRequestModal - ĐANG MỞ MODAL");
     const modal = document.getElementById("createRequestModal");
     if (!modal) {
-      console.error("❌ Không tìm thấy modal #createRequestModal!");
       Utils.showToast("Lỗi: Không tìm thấy modal", "error");
       return;
     }
-    console.log("✅ Tìm thấy modal, đang mở...");
     const productsContainer = document.getElementById(
       "requestProductsContainer",
     );
@@ -266,18 +245,18 @@
       "margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;";
     row.innerHTML = `
       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-        <input type="text" placeholder="Tên thương mại *" class="product-name" style="flex:2; min-width: 150px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Mã hàng *" class="product-code" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Quy cách" class="product-quyCach" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Hãng SX" class="product-hangSX" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="ĐVT" class="product-dvt" style="flex:0.5; min-width: 60px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Phân loại" class="product-phanLoai" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Giá nhập" class="product-giaNhap" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Giá xuất" class="product-giaXuat" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Tồn đầu" class="product-tonKho" style="flex:0.5; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="text" placeholder="Số lot" class="product-soLot" style="flex:1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <input type="date" placeholder="HSD" class="product-ngayHetHan" style="flex:1; min-width: 120px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
-        <button type="button" class="btn-remove-row" data-id="${productRowCounter}" style="background: #dc2626; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-trash"></i> Xóa</button>
+        <input type="text" placeholder="Tên thương mại *" class="product-name">
+        <input type="text" placeholder="Mã hàng *" class="product-code">
+        <input type="text" placeholder="Quy cách" class="product-quyCach">
+        <input type="text" placeholder="Hãng SX" class="product-hangSX">
+        <input type="text" placeholder="ĐVT" class="product-dvt">
+        <input type="text" placeholder="Phân loại" class="product-phanLoai">
+        <input type="text" placeholder="Giá nhập" class="product-giaNhap">
+        <input type="text" placeholder="Giá xuất" class="product-giaXuat">
+        <input type="text" placeholder="Tồn đầu" class="product-tonKho">
+        <input type="text" placeholder="Số lot" class="product-soLot">
+        <input type="date" placeholder="HSD" class="product-ngayHetHan">
+        <button type="button" class="btn-remove-row" data-id="${productRowCounter}"><i class="fas fa-trash"></i> Xóa</button>
       </div>
     `;
     if (data) {
@@ -347,7 +326,6 @@
       const modal = document.getElementById("createRequestModal");
       if (modal) modal.style.display = "none";
     } catch (error) {
-      console.error("Submit request error:", error);
       Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
     } finally {
       Utils.showLoading(false);
@@ -359,15 +337,13 @@
     Utils.showLoading(true, "Đang tải dữ liệu...");
     try {
       inventoryData = await window.API.inventory.getAll();
-      console.log("Inventory loaded:", inventoryData.length);
       await loadCategories();
       applyFilters();
     } catch (error) {
-      console.error("Load inventory error:", error);
       Utils.showToast("Lỗi khi tải dữ liệu tồn kho", "error");
       inventoryData = [];
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:60px;color:red;">Lỗi tải dữ liệu: ${error.message}<\/td><\/tr>`;
+        tbody.innerHTML = `<tr><td colspan="23" class="text-center">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
       }
     } finally {
       Utils.showLoading(false);
@@ -392,7 +368,6 @@
     }
   }
 
-  // ========== HELPER ==========
   function getRemainingDays(item) {
     if (item.ngayXuatHD && item.ngayXuatHD !== "") {
       const dueDate = new Date(item.ngayXuatHD);
@@ -430,19 +405,12 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
-  // ========== RENDER FIELD (CÓ PHÂN QUYỀN) ==========
   function renderEditableField(value, fieldName, isNumber = false) {
     if (isNhanVien) {
-      if (isNumber) {
+      if (isNumber)
         return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
-      }
-      if (
-        fieldName === "ngayHetHan" ||
-        fieldName === "ngayNhapHD" ||
-        fieldName === "ngayXuatHD"
-      ) {
+      if (fieldName.includes("ngay"))
         return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
-      }
       return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
     }
 
@@ -450,45 +418,34 @@
 
     if (canEdit) {
       if (isNumber) {
-        return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.formatNumber(value)}" style="color:#ffffff;">`;
+        return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.formatNumber(value)}">`;
       }
-      if (
-        fieldName === "ngayHetHan" ||
-        fieldName === "ngayNhapHD" ||
-        fieldName === "ngayXuatHD"
-      ) {
+      if (fieldName.includes("ngay")) {
         const dateValue =
           value && value !== "—" ? Utils.formatDate(value, "YYYY-MM-DD") : "";
-        return `<input type="date" class="editable-field" data-field="${fieldName}" value="${dateValue}" style="color:#ffffff;">`;
+        return `<input type="date" class="editable-field" data-field="${fieldName}" value="${dateValue}">`;
       }
-      return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}" style="color:#ffffff;">`;
+      return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}">`;
     }
 
-    if (isNumber) {
+    if (isNumber)
       return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
-    }
-    if (
-      fieldName === "ngayHetHan" ||
-      fieldName === "ngayNhapHD" ||
-      fieldName === "ngayXuatHD"
-    ) {
+    if (fieldName.includes("ngay"))
       return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
-    }
     return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
   }
 
-  // ========== RENDER TABLE ==========
   function renderTable() {
     if (!tbody) return;
     if (!filteredData || filteredData.length === 0) {
-      tbody.innerHTML = `<td><td colspan="23" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<tr><td colspan="23" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
       updatePaginationControls();
       return;
     }
     const start = (currentPage - 1) * itemsPerPage;
     const pageData = filteredData.slice(start, start + itemsPerPage);
     if (pageData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<tr><td colspan="23" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
       updatePaginationControls();
       return;
     }
@@ -499,41 +456,39 @@
         const isOutOfStock = (item.tonKho || 0) === 0;
         return `
         <tr class="${isOutOfStock ? "out-of-stock" : ""}">
-          <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a;">${globalIdx}<\/td>
-          <td class="sticky-col-2" style="position: sticky; left: 50px; z-index: 100; background: #0f172a;"><strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai, "tenThuongMai")}<\/strong><\/td>
-          <td>${renderEditableField(item.maHang, "maHang")}<\/td>
-          <td>${renderEditableField(item.quyCach, "quyCach")}<\/td>
-          <td>${renderEditableField(item.hangSX, "hangSX")}<\/td>
-          <td>${renderEditableField(item.dvt, "dvt")}<\/td>
-          <td>${renderEditableField(item.phanLoai, "phanLoai")}<\/td>
-          <td class="text-right">${renderEditableField(item.giaNhap, "giaNhap", true)}<\/td>
-          <td class="text-right">${renderEditableField(item.soLuongNhap, "soLuongNhap", true)}<\/td>
-          <td>${renderEditableField(item.soHopDongNhap, "soHopDongNhap")}<\/td>
-          <td>${renderEditableField(item.soHoaDonNhap, "soHoaDonNhap")}<\/td>
-          <td>${renderEditableField(item.ngayNhapHD, "ngayNhapHD")}<\/td>
-          <td>${renderEditableField(item.soLot, "soLot")}<\/td>
-          <td>${renderEditableField(item.ngayHetHan, "ngayHetHan")}<\/td>
-          <td class="text-right">${renderEditableField(item.soLuongXuat, "soLuongXuat", true)}<\/td>
-          <td class="text-right">${renderEditableField(item.giaXuat, "giaXuat", true)}<\/td>
-          <td>${renderEditableField(item.soHopDongXuat, "soHopDongXuat")}<\/td>
-          <td>${renderEditableField(item.soHoaDonXuat, "soHoaDonXuat")}<\/td>
-          <td>${renderEditableField(item.ngayXuatHD, "ngayXuatHD")}<\/td>
-          <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, "tonKho", true)}<\/strong><\/td>
-          <td>${getDebtBadge(remainingDays)}<\/td>
+          <td class="sticky-col">${globalIdx}</td>
+          <td class="sticky-col-2"><strong>${renderEditableField(item.tenThuongMai, "tenThuongMai")}</strong></td>
+          <td>${renderEditableField(item.maHang, "maHang")}</td>
+          <td>${renderEditableField(item.quyCach, "quyCach")}</td>
+          <td>${renderEditableField(item.hangSX, "hangSX")}</td>
+          <td>${renderEditableField(item.dvt, "dvt")}</td>
+          <td>${renderEditableField(item.phanLoai, "phanLoai")}</td>
+          <td class="text-right">${renderEditableField(item.giaNhap, "giaNhap", true)}</td>
+          <td class="text-right">${renderEditableField(item.soLuongNhap, "soLuongNhap", true)}</td>
+          <td>${renderEditableField(item.soHopDongNhap, "soHopDongNhap")}</td>
+          <td>${renderEditableField(item.soHoaDonNhap, "soHoaDonNhap")}</td>
+          <td>${renderEditableField(item.ngayNhapHD, "ngayNhapHD")}</td>
+          <td>${renderEditableField(item.soLot, "soLot")}</td>
+          <td>${renderEditableField(item.ngayHetHan, "ngayHetHan")}</td>
+          <td class="text-right">${renderEditableField(item.soLuongXuat, "soLuongXuat", true)}</td>
+          <td class="text-right">${renderEditableField(item.giaXuat, "giaXuat", true)}</td>
+          <td>${renderEditableField(item.soHopDongXuat, "soHopDongXuat")}</td>
+          <td>${renderEditableField(item.soHoaDonXuat, "soHoaDonXuat")}</td>
+          <td>${renderEditableField(item.ngayXuatHD, "ngayXuatHD")}</td>
+          <td class="text-right"><strong>${renderEditableField(item.tonKho, "tonKho", true)}</strong></td>
+          <td>${getDebtBadge(remainingDays)}</td>
           ${
             isNhapLieu
               ? `
           <td class="text-center">
-            <button class="btn btn-sm btn-danger" 
-                    onclick="requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')"
-                    style="padding: 4px 8px; font-size: 11px;">
+            <button class="btn-delete-product" onclick="requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')">
               <i class="fas fa-trash"></i> Xóa
             </button>
-          <\/td>
+          </td>
           `
               : ""
           }
-        <\/tr>
+        </tr>
       `;
       })
       .join("");
@@ -653,7 +608,6 @@
     if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
   }
 
-  // ========== FILTER ==========
   function applyFilters() {
     const searchTerm = searchInput?.value.toLowerCase() || "";
     const category = catFilter?.value || "";
@@ -662,10 +616,9 @@
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
-          (item.tenThuongMai &&
-            item.tenThuongMai.toLowerCase().includes(searchTerm)) ||
-          (item.maHang && item.maHang.toLowerCase().includes(searchTerm)) ||
-          (item.soLot && item.soLot.toLowerCase().includes(searchTerm)),
+          item.tenThuongMai?.toLowerCase().includes(searchTerm) ||
+          item.maHang?.toLowerCase().includes(searchTerm) ||
+          item.soLot?.toLowerCase().includes(searchTerm),
       );
     }
     if (category) {
@@ -702,7 +655,7 @@
     loadInventoryData();
   }
 
-  // ========== YÊU CẦU XÓA SẢN PHẨM ==========
+  // ========== YÊU CẦU XÓA SẢN PHẨM (DÙNG FETCH TRỰC TIẾP) ==========
   async function requestDeleteProduct(productId, productName) {
     if (
       !confirm(
@@ -714,12 +667,29 @@
 
     Utils.showLoading(true, "Đang gửi yêu cầu xóa...");
     try {
-      await window.API.deletion.createRequest(productId);
-      Utils.showToast(
-        `Đã gửi yêu cầu xóa sản phẩm "${productName}"`,
-        "success",
+      const token = localStorage.getItem("lagom_token");
+      const response = await fetch(
+        "https://lagom-wms-demo.onrender.com/api/deletions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId: productId }),
+        },
       );
+      const data = await response.json();
+      if (data.success) {
+        Utils.showToast(
+          `Đã gửi yêu cầu xóa sản phẩm "${productName}"`,
+          "success",
+        );
+      } else {
+        throw new Error(data.message || "Lỗi không xác định");
+      }
     } catch (error) {
+      console.error("Delete request error:", error);
       Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
     } finally {
       Utils.showLoading(false);
@@ -776,9 +746,7 @@
     });
   }
 
-  // ========== INIT ==========
   async function init() {
-    console.log("=== ROLE PANEL INIT ===");
     updateUserUI();
     await loadInventoryData();
     bindEvents();
@@ -787,8 +755,6 @@
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString("vi-VN");
   }
 
-  // Global functions
   window.requestDeleteProduct = requestDeleteProduct;
-
   init();
 })();
