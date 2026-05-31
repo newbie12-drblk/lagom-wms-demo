@@ -289,3 +289,62 @@
   max-height: 80vh;
   overflow-y: auto;
 }
+
+/* -------------------------Mobile responsive -------------------------------------- */
+@media (max-width: 768px) {
+  .user-info {
+    padding: 4px 10px;
+  }
+
+  .user-name {
+    font-size: 11px;
+  }
+
+  .btn-open-dashboard {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .scroll-area {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  .debt-stats {
+    flex-direction: column;
+  }
+
+  .debt-stats .stat-mini {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-details {
+    display: none;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+}

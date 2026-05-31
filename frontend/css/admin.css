@@ -708,3 +708,78 @@
     flex-wrap: wrap;
   }
 }
+
+/* -------------------------Mobile responsive -------------------------------------- */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .special-buttons {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .special-buttons button {
+    flex: 1;
+  }
+
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+  }
+
+  .admin-toolbar .search-box,
+  .admin-toolbar .cat-select,
+  .admin-toolbar .btn {
+    width: 100%;
+  }
+
+  .user-table {
+    min-width: 600px;
+  }
+
+  .tab-buttons {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header h1 {
+    font-size: 18px;
+  }
+
+  .stat-mini {
+    justify-content: space-between;
+  }
+
+  .approval-card .approval-body table {
+    min-width: 500px;
+  }
+
+  .approval-actions {
+    flex-direction: column;
+  }
+
+  .approval-actions .btn {
+    width: 100%;
+  }
+
+  .history-table {
+    min-width: 600px;
+  }
+}

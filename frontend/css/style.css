@@ -698,3 +698,231 @@ body::before {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--blue);
 }
+
+/* ==================== RESPONSIVE FOR MOBILE ==================== */
+
+/* Tablet (768px trở xuống) */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+    min-width: 70px;
+  }
+
+  .sidebar .logo-text-main,
+  .sidebar .logo-text-sub,
+  .sidebar .nav-label,
+  .sidebar .nav-item span:not(.nav-icon) {
+    display: none;
+  }
+
+  .sidebar .nav-icon {
+    margin: 0 auto;
+  }
+
+  .sidebar .nav-item {
+    justify-content: center;
+    padding: 12px 0;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .top-date {
+    display: none;
+  }
+
+  .scroll-area {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .cat-select {
+    width: 100%;
+  }
+
+  .inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-mini {
+    justify-content: space-between;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .inv-table {
+    min-width: 800px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+  }
+
+  .header-actions .btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px auto;
+  }
+}
+
+/* Mobile (480px trở xuống) */
+@media (max-width: 480px) {
+  .sidebar {
+    display: none;
+  }
+
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .content-area {
+    margin-left: 0;
+  }
+
+  .topbar {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-mini {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .page-sub {
+    font-size: 11px;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .tab-buttons {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    padding: 6px 12px;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+  }
+
+  .approval-card {
+    padding: 12px;
+  }
+
+  .approval-actions {
+    flex-direction: column;
+  }
+
+  .approval-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .signature {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .sign-item {
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+
+  .action-buttons .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Touch-friendly - tăng kích thước nút bấm trên mobile */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .btn,
+  .nav-item,
+  .action-btn,
+  .page-btn,
+  .tab-btn,
+  .quick-tile {
+    min-height: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .editable-field {
+    min-height: 36px;
+  }
+}
