@@ -106,7 +106,7 @@
     if (!userTableBody) return;
 
     if (pageData.length === 0) {
-      userTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;">Không có dữ liệu người dùng</td></tr>`;
+      userTableBody.innerHTML = `<td><td colspan="7" style="text-align:center;padding:40px;">Không có dữ liệu người dùng<\/td><\/tr>`;
       return;
     }
 
@@ -118,19 +118,19 @@
           currentUser && currentUser.username === user.username;
         return `
           <tr>
-            <td>${startIndex + idx + 1}</td>
-            <td><strong>${Utils.escapeHtml(user.username)}</strong></td>
-            <td>${Utils.escapeHtml(user.fullName)}</td>
-            <td>${Utils.escapeHtml(user.email || "—")}</td>
-            <td><span class="status-badge">${user.roleId}</span></td>
-            <td><span class="status-badge ${user.isActive ? "status-approved" : "status-rejected"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}</span></td>
+            <td>${startIndex + idx + 1}<\/td>
+            <td><strong>${Utils.escapeHtml(user.username)}<\/strong><\/td>
+            <td>${Utils.escapeHtml(user.fullName)}<\/td>
+            <td>${Utils.escapeHtml(user.email || "—")}<\/td>
+            <td><span class="status-badge">${user.roleId}<\/span><\/td>
+            <td><span class="status-badge ${user.isActive ? "status-approved" : "status-rejected"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}<\/span><\/td>
             <td class="action-buttons">
-              <button class="action-btn edit" onclick="adminEditUser(${user.id})"><i class="fas fa-edit"></i></button>
-              <button class="action-btn password" onclick="adminChangePassword(${user.id}, '${Utils.escapeHtml(user.username)}')"><i class="fas fa-key"></i></button>
-              <button class="action-btn lock" onclick="adminToggleLock(${user.id}, ${!user.isActive})"><i class="fas fa-${user.isActive ? "lock" : "lock-open"}"></i></button>
-              ${!isCurrentUser ? `<button class="action-btn delete" onclick="adminDeleteUser(${user.id})"><i class="fas fa-trash"></i></button>` : ""}
-            </td>
-          </tr>
+              <button class="action-btn edit" onclick="adminEditUser(${user.id})"><i class="fas fa-edit"></i><\/button>
+              <button class="action-btn password" onclick="adminChangePassword(${user.id}, '${Utils.escapeHtml(user.username)}')"><i class="fas fa-key"></i><\/button>
+              <button class="action-btn lock" onclick="adminToggleLock(${user.id}, ${!user.isActive})"><i class="fas fa-${user.isActive ? "lock" : "lock-open"}"></i><\/button>
+              ${!isCurrentUser ? `<button class="action-btn delete" onclick="adminDeleteUser(${user.id})"><i class="fas fa-trash"></i><\/button>` : ""}
+            <\/td>
+          <\/tr>
         `;
       })
       .join("");
@@ -325,10 +325,11 @@
     document.getElementById(`tab-${tabId}`)?.classList.add("active");
 
     if (tabId === "approvals") loadApprovalRequests();
+    if (tabId === "deletions") loadDeletionRequests();
     if (tabId === "history") loadEditHistory();
   }
 
-  // Load approval requests
+  // Load approval requests (thêm sản phẩm)
   async function loadApprovalRequests() {
     const container = document.getElementById("approvalRequestsList");
     if (!container) return;
@@ -371,13 +372,13 @@
                     .map(
                       (p) => `
                     <tr>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.tenThuongMai)}</td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.maHang)}</td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaNhap)}</td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaXuat)}</td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${p.tonKho}</td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${p.ngayHetHan || "—"}</td>
-                    </tr>
+                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.tenThuongMai)}<\/td>
+                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.maHang)}<\/td>
+                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaNhap)}<\/td>
+                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaXuat)}<\/td>
+                      <td style="border:1px solid var(--border); padding: 6px;">${p.tonKho}<\/td>
+                      <td style="border:1px solid var(--border); padding: 6px;">${p.ngayHetHan || "—"}<\/td>
+                    <\/tr>
                   `,
                     )
                     .join("")}
@@ -404,7 +405,7 @@
     }
   }
 
-  // Approve request
+  // Approve request (thêm)
   window.approveRequest = async (id) => {
     Utils.showLoading(true, "Đang duyệt...");
     try {
@@ -418,7 +419,7 @@
     }
   };
 
-  // Reject request
+  // Reject request (thêm)
   window.rejectRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
@@ -428,6 +429,103 @@
       await window.API.approval.reject(id, reason);
       Utils.showToast("Đã từ chối yêu cầu");
       loadApprovalRequests();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi từ chối", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // Load deletion requests (xóa)
+  async function loadDeletionRequests() {
+    const container = document.getElementById("deletionRequestsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải yêu cầu xóa...");
+    try {
+      const requests = await window.API.deletion.getAllRequests("pending");
+
+      if (requests.length === 0) {
+        container.innerHTML =
+          '<div class="empty-state">Không có yêu cầu xóa nào đang chờ duyệt</div>';
+        Utils.showLoading(false);
+        return;
+      }
+
+      container.innerHTML = requests
+        .map((req) => {
+          const product = req.productData;
+          return `
+          <div class="approval-card">
+            <div class="approval-header">
+              <strong>Yêu cầu xóa #${req.id}</strong> - 
+              Người gửi: ${Utils.escapeHtml(req.requesterName)} - 
+              Ngày: ${Utils.formatDate(req.createdAt)}
+            </div>
+            <div class="approval-body">
+              <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr>
+                    <th style="border:1px solid var(--border); padding: 6px;">Tên sản phẩm</th>
+                    <th style="border:1px solid var(--border); padding: 6px;">Mã hàng</th>
+                    <th style="border:1px solid var(--border); padding: 6px;">Số lot</th>
+                    <th style="border:1px solid var(--border); padding: 6px;">HSD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.tenThuongMai)}<\/td>
+                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.maHang)}<\/td>
+                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.soLot || "—")}<\/td>
+                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatDate(product.ngayHetHan) || "—"}<\/td>
+                  <\/tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="approval-actions" style="margin-top: 15px;">
+              <button class="btn btn-success btn-sm" onclick="approveDeletionRequest(${req.id})" style="margin-right: 10px;">
+                <i class="fas fa-check"></i> Duyệt xóa
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="rejectDeletionRequest(${req.id})">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+    } catch (error) {
+      console.error("Load deletion requests error:", error);
+      Utils.showToast("Lỗi khi tải yêu cầu xóa", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // Approve deletion request (xóa)
+  window.approveDeletionRequest = async (id) => {
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await window.API.deletion.approve(id);
+      Utils.showToast("Đã duyệt và xóa sản phẩm khỏi kho", "success");
+      loadDeletionRequests();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi duyệt", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // Reject deletion request (xóa)
+  window.rejectDeletionRequest = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await window.API.deletion.reject(id, reason);
+      Utils.showToast("Đã từ chối yêu cầu xóa", "success");
+      loadDeletionRequests();
     } catch (error) {
       Utils.showToast(error.message || "Lỗi khi từ chối", "error");
     } finally {
@@ -461,13 +559,13 @@
               .map(
                 (h) => `
               <tr>
-                <td>${Utils.formatDate(h.editedAt, "DD/MM/YYYY HH:mm")}</td>
-                <td>${Utils.escapeHtml(h.userName)}</td>
-                <td>${h.tableName}</td>
-                <td>${h.recordId}</td>
-                <td>${h.fieldName || "CREATE/DELETE"}</td>
-                <td><small>${Utils.escapeHtml(h.oldValue?.substring(0, 50) || "—")}</small></td>
-                <td><small>${Utils.escapeHtml(h.newValue?.substring(0, 50) || "—")}</small></td>
+                <td>${Utils.formatDate(h.editedAt, "DD/MM/YYYY HH:mm")}<\/td>
+                <td>${Utils.escapeHtml(h.userName)}<\/td>
+                <td>${h.tableName}<\/td>
+                <td>${h.recordId}<\/td>
+                <td>${h.fieldName || "CREATE/DELETE"}<\/td>
+                <td><small>${Utils.escapeHtml(h.oldValue?.substring(0, 50) || "—")}</small><\/td>
+                <td><small>${Utils.escapeHtml(h.newValue?.substring(0, 50) || "—")}</small><\/td>
               </tr>
             `,
               )
