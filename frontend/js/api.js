@@ -1,6 +1,7 @@
 /**
  * ==================== API WRAPPER ====================
  * Tất cả các gọi API đều qua đây
+ * // FORCE UPDATE - 2026-06-01 - FIX DELETION API
  */
 
 const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
@@ -235,7 +236,7 @@ const exportAPI = {
   },
 };
 
-// ========== APPROVAL API (cho role Nhập liệu) ==========
+// ========== APPROVAL API (cho role Nhập liệu - thêm sản phẩm) ==========
 const approvalAPI = {
   createRequest: async (productData) => {
     return await apiCall("/approvals", {
@@ -271,6 +272,45 @@ const approvalAPI = {
   delete: async (id) => {
     return await apiCall(`/approvals/${id}`, {
       method: "DELETE",
+    });
+  },
+};
+
+// ========== DELETION API (yêu cầu xóa sản phẩm) ==========
+const deletionAPI = {
+  // Tạo yêu cầu xóa
+  createRequest: async (productId) => {
+    return await apiCall("/deletions", {
+      method: "POST",
+      body: JSON.stringify({ productId }),
+    });
+  },
+
+  // Lấy tất cả yêu cầu (admin)
+  getAllRequests: async (status = null) => {
+    const url = status ? `/deletions?status=${status}` : "/deletions";
+    const data = await apiCall(url);
+    return data.data || [];
+  },
+
+  // Lấy yêu cầu của tôi (nhập liệu)
+  getMyRequests: async () => {
+    const data = await apiCall("/deletions/my");
+    return data.data || [];
+  },
+
+  // Duyệt yêu cầu xóa (admin)
+  approve: async (id) => {
+    return await apiCall(`/deletions/${id}/approve`, {
+      method: "PUT",
+    });
+  },
+
+  // Từ chối yêu cầu xóa (admin)
+  reject: async (id, reason) => {
+    return await apiCall(`/deletions/${id}/reject`, {
+      method: "PUT",
+      body: JSON.stringify({ reason }),
     });
   },
 };
@@ -365,6 +405,7 @@ window.API = {
   receipt: receiptAPI,
   export: exportAPI,
   approval: approvalAPI,
+  deletion: deletionAPI,
   history: historyAPI,
   notification: notificationAPI,
   file: fileAPI,
