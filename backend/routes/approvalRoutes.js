@@ -26,8 +26,10 @@ router.get("/my", verifyToken, getMyRequests);
 // Lấy tất cả yêu cầu - chỉ admin
 router.get("/", verifyToken, checkRole("admin"), getAllRequests);
 
-// Duyệt/từ chối yêu cầu - chỉ admin
+// Duyệt yêu cầu - chỉ admin
 router.put("/:id/approve", verifyToken, checkRole("admin"), approveRequest);
+
+// Từ chối yêu cầu - chỉ admin
 router.put("/:id/reject", verifyToken, checkRole("admin"), rejectRequest);
 
 // Xóa yêu cầu - chỉ admin
