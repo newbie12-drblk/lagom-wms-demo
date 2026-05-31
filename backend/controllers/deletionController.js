@@ -77,7 +77,7 @@ const getMyDeletionRequests = async (req, res) => {
   }
 };
 
-// Duyệt yêu cầu xóa (admin)
+// Duyệt yêu cầu xóa (admin) - ĐÃ SỬA THỨ TỰ
 const approveDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -91,7 +91,10 @@ const approveDeletionRequest = async (req, res) => {
       });
     }
 
-    // Xóa sản phẩm khỏi inventory
+    // QUAN TRỌNG: Xóa yêu cầu TRƯỚC để phá foreign key constraint
+    await DeletionRequest.delete(id);
+
+    // Sau đó xóa sản phẩm khỏi inventory
     await Inventory.delete(request.productId);
 
     // Ghi lịch sử
@@ -104,9 +107,6 @@ const approveDeletionRequest = async (req, res) => {
       null,
       JSON.stringify(request.productData),
     );
-
-    // Cập nhật trạng thái yêu cầu
-    await DeletionRequest.approve(id, approvedBy);
 
     // Gửi thông báo cho người yêu cầu
     await Notification.create(
@@ -123,7 +123,9 @@ const approveDeletionRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve deletion request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
