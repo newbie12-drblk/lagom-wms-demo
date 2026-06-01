@@ -767,7 +767,7 @@
         product.ngayXuatHD || "";
       document.getElementById("edit_ghiChu").value = product.ghiChu || "";
 
-      editModal.style.display = "block";
+      editModal.style.display = "flex";
     } catch (error) {
       Utils.showToast("Lỗi khi tải thông tin sản phẩm", "error");
     }
