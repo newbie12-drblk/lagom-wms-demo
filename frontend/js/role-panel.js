@@ -406,32 +406,42 @@
   }
 
   function renderEditableField(value, fieldName, isNumber = false) {
+    // Nhân viên: chỉ xem
     if (isNhanVien) {
-      if (isNumber)
+      if (isNumber) {
         return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
-      if (fieldName.includes("ngay"))
+      }
+      if (fieldName.includes("ngay")) {
         return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
+      }
       return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
     }
 
+    // Kiểm tra quyền chỉnh sửa
     const canEdit = canEditField(fieldName);
 
     if (canEdit) {
       if (isNumber) {
         return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.formatNumber(value)}">`;
       }
+      // Xử lý field ngày tháng - cho phép xóa (để trống)
       if (fieldName.includes("ngay")) {
         const dateValue =
-          value && value !== "—" ? Utils.formatDate(value, "YYYY-MM-DD") : "";
-        return `<input type="date" class="editable-field" data-field="${fieldName}" value="${dateValue}">`;
+          value && value !== "—" && value !== null
+            ? Utils.formatDate(value, "YYYY-MM-DD")
+            : "";
+        return `<input type="date" class="editable-field" data-field="${fieldName}" value="${dateValue}" placeholder="DD/MM/YYYY">`;
       }
       return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}">`;
     }
 
-    if (isNumber)
+    // Không có quyền: readonly
+    if (isNumber) {
       return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
-    if (fieldName.includes("ngay"))
+    }
+    if (fieldName.includes("ngay")) {
       return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
+    }
     return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
   }
 
@@ -526,9 +536,15 @@
           "soLuongXuat",
           "tonKho",
         ];
+
         if (numberFields.includes(fieldName)) {
           parsedValue = Utils.parseNumber(newValue);
         }
+        // Xử lý field ngày tháng: cho phép lưu null khi xóa
+        if (fieldName.includes("ngay")) {
+          parsedValue = newValue === "" ? null : newValue;
+        }
+
         const oldValue = item[fieldName];
         if (oldValue == parsedValue) return;
         item[fieldName] = parsedValue;
@@ -541,12 +557,19 @@
           if (numberFields.includes(fieldName)) {
             input.value = Utils.formatNumber(parsedValue);
           }
+          if (fieldName.includes("ngay") && !parsedValue) {
+            input.value = "";
+          }
           updateStats();
         } catch (error) {
           Utils.showToast(error.message || "Lỗi khi lưu", "error");
           item[fieldName] = oldValue;
           if (numberFields.includes(fieldName)) {
             input.value = Utils.formatNumber(oldValue);
+          } else if (fieldName.includes("ngay")) {
+            input.value = oldValue
+              ? Utils.formatDate(oldValue, "YYYY-MM-DD")
+              : "";
           } else {
             input.value = oldValue;
           }
