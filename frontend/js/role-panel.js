@@ -65,7 +65,12 @@
     "ghiChu",
   ];
 
-  const quanLyForbiddenFields = [...keToanFields, ...quanLyKhoFields];
+  const quanLyForbiddenFields = [
+    ...keToanFields,
+    ...quanLyKhoFields,
+    "giaNhap",
+    "giaXuat",
+  ];
   const quanLyFields = allFields.filter(
     (field) => !quanLyForbiddenFields.includes(field),
   );
