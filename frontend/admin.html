@@ -1,9 +1,11 @@
 <!doctype html>
 <html lang="vi">
   <head>
-    <!-- FIX: Force redeploy for deletion requests - 2026-06-01 -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
     <title>Quản trị hệ thống - LAGOM</title>
     <link
       rel="stylesheet"
@@ -59,6 +61,7 @@
         </button>
         <button class="tab-btn" data-tab="approvals">Yêu cầu duyệt</button>
         <button class="tab-btn" data-tab="deletions">Yêu cầu xóa</button>
+        <button class="tab-btn" data-tab="edits">Yêu cầu chỉnh sửa</button>
         <button class="tab-btn" data-tab="history">Lịch sử chỉnh sửa</button>
       </div>
 
@@ -117,6 +120,11 @@
       <!-- TAB: YÊU CẦU XÓA (xóa sản phẩm) -->
       <div class="tab-content" id="tab-deletions">
         <div id="deletionRequestsList" class="approval-list"></div>
+      </div>
+
+      <!-- TAB: YÊU CẦU CHỈNH SỬA (sửa sản phẩm) -->
+      <div class="tab-content" id="tab-edits">
+        <div id="editRequestsList" class="approval-list"></div>
       </div>
 
       <!-- TAB: LỊCH SỬ CHỈNH SỬA -->

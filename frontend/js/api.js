@@ -1,7 +1,6 @@
 /**
  * ==================== API WRAPPER ====================
  * Tất cả các gọi API đều qua đây
- * // FORCE UPDATE - 2026-06-01 - FIX DELETION API
  */
 
 const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
@@ -59,7 +58,6 @@ async function apiCall(endpoint, options = {}) {
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Token hết hạn hoặc không hợp lệ
       removeToken();
       if (window.location.pathname !== "/login.html") {
         window.location.href = "login.html";
@@ -236,7 +234,7 @@ const exportAPI = {
   },
 };
 
-// ========== APPROVAL API (cho role Nhập liệu - thêm sản phẩm) ==========
+// ========== APPROVAL API (yêu cầu thêm sản phẩm) ==========
 const approvalAPI = {
   createRequest: async (productData) => {
     return await apiCall("/approvals", {
@@ -278,7 +276,6 @@ const approvalAPI = {
 
 // ========== DELETION API (yêu cầu xóa sản phẩm) ==========
 const deletionAPI = {
-  // Tạo yêu cầu xóa
   createRequest: async (productId) => {
     return await apiCall("/deletions", {
       method: "POST",
@@ -286,29 +283,59 @@ const deletionAPI = {
     });
   },
 
-  // Lấy tất cả yêu cầu (admin)
   getAllRequests: async (status = null) => {
     const url = status ? `/deletions?status=${status}` : "/deletions";
     const data = await apiCall(url);
     return data.data || [];
   },
 
-  // Lấy yêu cầu của tôi (nhập liệu)
   getMyRequests: async () => {
     const data = await apiCall("/deletions/my");
     return data.data || [];
   },
 
-  // Duyệt yêu cầu xóa (admin)
   approve: async (id) => {
     return await apiCall(`/deletions/${id}/approve`, {
       method: "PUT",
     });
   },
 
-  // Từ chối yêu cầu xóa (admin)
   reject: async (id, reason) => {
     return await apiCall(`/deletions/${id}/reject`, {
+      method: "PUT",
+      body: JSON.stringify({ reason }),
+    });
+  },
+};
+
+// ========== EDIT API (yêu cầu chỉnh sửa sản phẩm) ==========
+const editAPI = {
+  createRequest: async (productId, updatedData) => {
+    return await apiCall("/edits", {
+      method: "POST",
+      body: JSON.stringify({ productId, updatedData }),
+    });
+  },
+
+  getAllRequests: async (status = null) => {
+    const url = status ? `/edits?status=${status}` : "/edits";
+    const data = await apiCall(url);
+    return data.data || [];
+  },
+
+  getMyRequests: async () => {
+    const data = await apiCall("/edits/my");
+    return data.data || [];
+  },
+
+  approve: async (id) => {
+    return await apiCall(`/edits/${id}/approve`, {
+      method: "PUT",
+    });
+  },
+
+  reject: async (id, reason) => {
+    return await apiCall(`/edits/${id}/reject`, {
       method: "PUT",
       body: JSON.stringify({ reason }),
     });
@@ -406,6 +433,7 @@ window.API = {
   export: exportAPI,
   approval: approvalAPI,
   deletion: deletionAPI,
+  edit: editAPI,
   history: historyAPI,
   notification: notificationAPI,
   file: fileAPI,

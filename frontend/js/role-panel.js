@@ -218,7 +218,7 @@
     }
   }
 
-  // ========== MODAL TẠO YÊU CẦU ==========
+  // ========== MODAL TẠO YÊU CẦU THÊM SẢN PHẨM ==========
   let productRowCounter = 1;
 
   function openCreateRequestModal() {
@@ -348,7 +348,7 @@
       Utils.showToast("Lỗi khi tải dữ liệu tồn kho", "error");
       inventoryData = [];
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="23" class="text-center">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="24" class="text-center">Lỗi tải dữ liệu: ${error.message}<\/td><\/tr>`;
       }
     } finally {
       Utils.showLoading(false);
@@ -411,7 +411,6 @@
   }
 
   function renderEditableField(value, fieldName, isNumber = false) {
-    // Nhân viên: chỉ xem
     if (isNhanVien) {
       if (isNumber) {
         return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
@@ -422,14 +421,12 @@
       return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
     }
 
-    // Kiểm tra quyền chỉnh sửa
     const canEdit = canEditField(fieldName);
 
     if (canEdit) {
       if (isNumber) {
         return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.formatNumber(value)}">`;
       }
-      // Xử lý field ngày tháng - cho phép xóa (để trống)
       if (fieldName.includes("ngay")) {
         const dateValue =
           value && value !== "—" && value !== null
@@ -440,7 +437,6 @@
       return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}">`;
     }
 
-    // Không có quyền: readonly
     if (isNumber) {
       return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
     }
@@ -453,14 +449,14 @@
   function renderTable() {
     if (!tbody) return;
     if (!filteredData || filteredData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="23" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho<\/td><\/tr>`;
       updatePaginationControls();
       return;
     }
     const start = (currentPage - 1) * itemsPerPage;
     const pageData = filteredData.slice(start, start + itemsPerPage);
     if (pageData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="23" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho<\/td><\/tr>`;
       updatePaginationControls();
       return;
     }
@@ -496,10 +492,13 @@
             isNhapLieu
               ? `
           <td class="text-center">
+            <button class="btn-edit-product" onclick="openEditRequestModal(${item.id})" style="margin-right: 4px;">
+              <i class="fas fa-edit"></i> Sửa
+            </button>
             <button class="btn-delete-product" onclick="requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')">
               <i class="fas fa-trash"></i> Xóa
             </button>
-          </td>
+          <\/td>
           `
               : ""
           }
@@ -545,7 +544,6 @@
         if (numberFields.includes(fieldName)) {
           parsedValue = Utils.parseNumber(newValue);
         }
-        // Xử lý field ngày tháng: cho phép lưu null khi xóa
         if (fieldName.includes("ngay")) {
           parsedValue = newValue === "" ? null : newValue;
         }
@@ -683,7 +681,7 @@
     loadInventoryData();
   }
 
-  // ========== YÊU CẦU XÓA SẢN PHẨM (DÙNG FETCH TRỰC TIẾP) ==========
+  // ========== YÊU CẦU XÓA SẢN PHẨM ==========
   async function requestDeleteProduct(productId, productName) {
     if (
       !confirm(
@@ -724,6 +722,120 @@
     }
   }
 
+  // ========== YÊU CẦU CHỈNH SỬA SẢN PHẨM ==========
+  const editModal = document.getElementById("editProductModal");
+  let currentEditProduct = null;
+
+  async function openEditRequestModal(productId) {
+    try {
+      const product = inventoryData.find((p) => p.id == productId);
+      if (!product) {
+        Utils.showToast("Không tìm thấy sản phẩm", "error");
+        return;
+      }
+      currentEditProduct = product;
+
+      document.getElementById("edit_productId").value = product.id;
+      document.getElementById("edit_tenThuongMai").value =
+        product.tenThuongMai || "";
+      document.getElementById("edit_maHang").value = product.maHang || "";
+      document.getElementById("edit_quyCach").value = product.quyCach || "";
+      document.getElementById("edit_hangSX").value = product.hangSX || "";
+      document.getElementById("edit_dvt").value = product.dvt || "";
+      document.getElementById("edit_phanLoai").value = product.phanLoai || "";
+      document.getElementById("edit_giaNhap").value =
+        Utils.formatNumber(product.giaNhap) || "0";
+      document.getElementById("edit_giaXuat").value =
+        Utils.formatNumber(product.giaXuat) || "0";
+      document.getElementById("edit_soLuongNhap").value =
+        product.soLuongNhap || "0";
+      document.getElementById("edit_soLuongXuat").value =
+        product.soLuongXuat || "0";
+      document.getElementById("edit_soLot").value = product.soLot || "";
+      document.getElementById("edit_ngayHetHan").value =
+        product.ngayHetHan || "";
+      document.getElementById("edit_soHopDongNhap").value =
+        product.soHopDongNhap || "";
+      document.getElementById("edit_soHoaDonNhap").value =
+        product.soHoaDonNhap || "";
+      document.getElementById("edit_soHopDongXuat").value =
+        product.soHopDongXuat || "";
+      document.getElementById("edit_soHoaDonXuat").value =
+        product.soHoaDonXuat || "";
+      document.getElementById("edit_ngayNhapHD").value =
+        product.ngayNhapHD || "";
+      document.getElementById("edit_ngayXuatHD").value =
+        product.ngayXuatHD || "";
+      document.getElementById("edit_ghiChu").value = product.ghiChu || "";
+
+      editModal.style.display = "block";
+    } catch (error) {
+      Utils.showToast("Lỗi khi tải thông tin sản phẩm", "error");
+    }
+  }
+
+  async function submitEditRequest() {
+    const productId = document.getElementById("edit_productId").value;
+
+    const updatedData = {
+      tenThuongMai: document.getElementById("edit_tenThuongMai").value.trim(),
+      maHang: document.getElementById("edit_maHang").value.trim(),
+      quyCach: document.getElementById("edit_quyCach").value,
+      hangSX: document.getElementById("edit_hangSX").value,
+      dvt: document.getElementById("edit_dvt").value,
+      phanLoai: document.getElementById("edit_phanLoai").value,
+      giaNhap: Utils.parseNumber(document.getElementById("edit_giaNhap").value),
+      giaXuat: Utils.parseNumber(document.getElementById("edit_giaXuat").value),
+      soLuongNhap: Utils.parseNumber(
+        document.getElementById("edit_soLuongNhap").value,
+      ),
+      soLuongXuat: Utils.parseNumber(
+        document.getElementById("edit_soLuongXuat").value,
+      ),
+      soLot: document.getElementById("edit_soLot").value,
+      ngayHetHan: document.getElementById("edit_ngayHetHan").value || null,
+      soHopDongNhap: document.getElementById("edit_soHopDongNhap").value,
+      soHoaDonNhap: document.getElementById("edit_soHoaDonNhap").value,
+      soHopDongXuat: document.getElementById("edit_soHopDongXuat").value,
+      soHoaDonXuat: document.getElementById("edit_soHoaDonXuat").value,
+      ngayNhapHD: document.getElementById("edit_ngayNhapHD").value || null,
+      ngayXuatHD: document.getElementById("edit_ngayXuatHD").value || null,
+      ghiChu: document.getElementById("edit_ghiChu").value,
+    };
+
+    let hasChanges = false;
+    for (const key in updatedData) {
+      if (updatedData[key] != currentEditProduct[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+
+    if (!hasChanges) {
+      Utils.showToast("Không có thay đổi nào được thực hiện", "warning");
+      return;
+    }
+
+    if (!updatedData.tenThuongMai || !updatedData.maHang) {
+      Utils.showToast("Tên thương mại và mã hàng không được để trống", "error");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu chỉnh sửa...");
+    try {
+      await window.API.edit.createRequest(productId, updatedData);
+      Utils.showToast(
+        `Đã gửi yêu cầu chỉnh sửa sản phẩm "${updatedData.tenThuongMai}"`,
+        "success",
+      );
+      editModal.style.display = "none";
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
   // ========== EVENTS ==========
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((link) => {
@@ -757,6 +869,7 @@
         }
       });
 
+    // Modal tạo yêu cầu
     const modal = document.getElementById("createRequestModal");
     const closeBtn = modal?.querySelector(".close");
     const cancelBtn = document.getElementById("btnCancelRequest");
@@ -769,8 +882,27 @@
     if (submitBtn) submitBtn.addEventListener("click", submitCreateRequest);
     if (addProductBtn)
       addProductBtn.addEventListener("click", () => addProductRow());
+
+    // Modal chỉnh sửa
+    const closeEditBtn = document.querySelector(".close-edit-modal");
+    const cancelEditBtn = document.getElementById("btnCancelEdit");
+    const submitEditBtn = document.getElementById("btnSubmitEdit");
+    if (closeEditBtn)
+      closeEditBtn.addEventListener(
+        "click",
+        () => (editModal.style.display = "none"),
+      );
+    if (cancelEditBtn)
+      cancelEditBtn.addEventListener(
+        "click",
+        () => (editModal.style.display = "none"),
+      );
+    if (submitEditBtn)
+      submitEditBtn.addEventListener("click", submitEditRequest);
+
     window.addEventListener("click", (e) => {
       if (e.target === modal) modal.style.display = "none";
+      if (e.target === editModal) editModal.style.display = "none";
     });
   }
 
@@ -783,6 +915,9 @@
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString("vi-VN");
   }
 
+  // Global functions
   window.requestDeleteProduct = requestDeleteProduct;
+  window.openEditRequestModal = openEditRequestModal;
+
   init();
 })();

@@ -106,7 +106,7 @@
     if (!userTableBody) return;
 
     if (pageData.length === 0) {
-      userTableBody.innerHTML = `<td><td colspan="7" style="text-align:center;padding:40px;">Không có dữ liệu người dùng<\/td><\/tr>`;
+      userTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;">Không có dữ liệu người dùng<\/td><\/tr>`;
       return;
     }
 
@@ -326,10 +326,11 @@
 
     if (tabId === "approvals") loadApprovalRequests();
     if (tabId === "deletions") loadDeletionRequests();
+    if (tabId === "edits") loadEditRequests();
     if (tabId === "history") loadEditHistory();
   }
 
-  // Load approval requests (thêm sản phẩm)
+  // ========== YÊU CẦU DUYỆT (thêm sản phẩm) ==========
   async function loadApprovalRequests() {
     const container = document.getElementById("approvalRequestsList");
     if (!container) return;
@@ -405,7 +406,6 @@
     }
   }
 
-  // Approve request (thêm)
   window.approveRequest = async (id) => {
     Utils.showLoading(true, "Đang duyệt...");
     try {
@@ -419,7 +419,6 @@
     }
   };
 
-  // Reject request (thêm)
   window.rejectRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
@@ -436,7 +435,7 @@
     }
   };
 
-  // Load deletion requests (xóa)
+  // ========== YÊU CẦU XÓA ==========
   async function loadDeletionRequests() {
     const container = document.getElementById("deletionRequestsList");
     if (!container) return;
@@ -502,13 +501,13 @@
     }
   }
 
-  // Approve deletion request (xóa)
   window.approveDeletionRequest = async (id) => {
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.deletion.approve(id);
       Utils.showToast("Đã duyệt và xóa sản phẩm khỏi kho", "success");
       loadDeletionRequests();
+      if (typeof loadInventoryData === "function") loadInventoryData();
     } catch (error) {
       Utils.showToast(error.message || "Lỗi khi duyệt", "error");
     } finally {
@@ -516,7 +515,6 @@
     }
   };
 
-  // Reject deletion request (xóa)
   window.rejectDeletionRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
@@ -533,7 +531,101 @@
     }
   };
 
-  // Load edit history
+  // ========== YÊU CẦU CHỈNH SỬA ==========
+  async function loadEditRequests() {
+    const container = document.getElementById("editRequestsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải yêu cầu chỉnh sửa...");
+    try {
+      const requests = await window.API.edit.getAllRequests("pending");
+
+      if (requests.length === 0) {
+        container.innerHTML =
+          '<div class="empty-state">Không có yêu cầu chỉnh sửa nào đang chờ duyệt</div>';
+        Utils.showLoading(false);
+        return;
+      }
+
+      container.innerHTML = requests
+        .map((req) => {
+          const oldData = req.oldData;
+          const newData = req.newData;
+          const changes = [];
+          for (const key in newData) {
+            if (JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])) {
+              changes.push(
+                `<strong>${key}:</strong> ${oldData[key] || "—"} → ${newData[key] || "—"}`,
+              );
+            }
+          }
+          return `
+          <div class="approval-card">
+            <div class="approval-header">
+              <strong>Yêu cầu chỉnh sửa #${req.id}</strong> - 
+              Người gửi: ${Utils.escapeHtml(req.requesterName)} - 
+              Ngày: ${Utils.formatDate(req.createdAt)}<br>
+              <strong>Sản phẩm:</strong> ${Utils.escapeHtml(req.productName)} (${req.productCode})
+            </div>
+            <div class="approval-body">
+              <div style="margin-bottom: 10px; font-size: 12px;">
+                <strong>Thay đổi đề xuất:</strong>
+                <ul style="margin: 5px 0 0 20px;">
+                  ${changes.map((change) => `<li>${change}</li>`).join("")}
+                </ul>
+              </div>
+            </div>
+            <div class="approval-actions" style="margin-top: 15px;">
+              <button class="btn btn-success btn-sm" onclick="approveEditRequest(${req.id})" style="margin-right: 10px;">
+                <i class="fas fa-check"></i> Duyệt
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="rejectEditRequest(${req.id})">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+    } catch (error) {
+      console.error("Load edit requests error:", error);
+      Utils.showToast("Lỗi khi tải yêu cầu chỉnh sửa", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  window.approveEditRequest = async (id) => {
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await window.API.edit.approve(id);
+      Utils.showToast("Đã duyệt và cập nhật sản phẩm", "success");
+      loadEditRequests();
+      if (typeof loadInventoryData === "function") loadInventoryData();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi duyệt", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  window.rejectEditRequest = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await window.API.edit.reject(id, reason);
+      Utils.showToast("Đã từ chối yêu cầu chỉnh sửa", "success");
+      loadEditRequests();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi từ chối", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ========== LỊCH SỬ CHỈNH SỬA ==========
   async function loadEditHistory() {
     const container = document.getElementById("editHistoryList");
     if (!container) return;
@@ -580,7 +672,7 @@
     }
   }
 
-  // Event binding
+  // ========== EVENT BINDING ==========
   function bindEvents() {
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
       Auth.logout();
@@ -642,7 +734,7 @@
     });
   }
 
-  // Init
+  // ========== INIT ==========
   async function init() {
     await loadAdminInfo();
     await loadRoleFilter();

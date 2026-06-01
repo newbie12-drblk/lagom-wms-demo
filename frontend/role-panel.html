@@ -2,7 +2,10 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
     <title>LAGOM – Bảng điều khiển</title>
     <link
       rel="stylesheet"
@@ -79,7 +82,7 @@
               <div class="page-header">
                 <div>
                   <div class="page-title-tag">WORKSPACE</div>
-                  <div class="page-title" id="pageTitle">Quản lý tồn kho</div>
+                  <div class="page-title" id="pageTitle">Bảng điều khiển</div>
                   <div class="page-sub" id="pageSub">
                     Chỉnh sửa các trường được phép theo chức vụ
                   </div>
@@ -175,6 +178,7 @@
                       <th>Ngày xuất</th>
                       <th class="text-right">Tồn cuối</th>
                       <th>Công nợ</th>
+                      <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody id="inv-tbody"></tbody>
@@ -206,7 +210,7 @@
             </div>
           </div>
 
-          <!-- VIEW: SUPPLIER DEBT (CÔNG NỢ NHÀ CUNG CẤP) -->
+          <!-- VIEW: SUPPLIER DEBT -->
           <div class="view" id="view-supplier-debt">
             <div class="scroll-area">
               <div class="page-header">
@@ -214,127 +218,17 @@
                   <div class="page-title-tag">SUPPLIER DEBT</div>
                   <div class="page-title">Công nợ phải trả - Nhà cung cấp</div>
                   <div class="page-sub">
-                    Danh sách công nợ từ phiếu nhập hàng (dựa trên ngày nhập hóa
-                    đơn)
+                    Danh sách công nợ từ phiếu nhập hàng
                   </div>
                 </div>
-                <div class="header-actions">
-                  <button class="btn btn-primary" id="btnExportSupplierDebt">
-                    <i class="fas fa-file-excel"></i> Xuất Excel
-                  </button>
-                </div>
               </div>
-
-              <div class="filter-bar" style="margin-bottom: 24px">
-                <div class="search-box" style="flex: 1">
-                  <i class="fas fa-search"></i>
-                  <input
-                    type="text"
-                    id="supplierDebtSearch"
-                    placeholder="Tìm theo tên nhà cung cấp, số phiếu..."
-                  />
-                </div>
-                <select class="cat-select" id="supplierDebtStatusFilter">
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="expired">Quá hạn</option>
-                  <option value="critical">Khẩn cấp (≤7 ngày)</option>
-                  <option value="warning">Sắp đến hạn (8-30 ngày)</option>
-                  <option value="normal">Bình thường (31-90 ngày)</option>
-                  <option value="safe">An toàn (>90 ngày)</option>
-                </select>
-              </div>
-
-              <div
-                class="debt-stats"
-                style="
-                  display: flex;
-                  gap: 16px;
-                  margin-bottom: 24px;
-                  flex-wrap: wrap;
-                "
-              >
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Tổng công nợ NCC:</span>
-                  <span class="stat-mini-value" id="supplierDebtTotalCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Quá hạn:</span>
-                  <span
-                    class="stat-mini-value danger"
-                    id="supplierDebtExpiredCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Khẩn cấp (≤7 ngày):</span>
-                  <span
-                    class="stat-mini-value warning"
-                    id="supplierDebtCriticalCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Sắp đến hạn (8-30 ngày):</span>
-                  <span class="stat-mini-value" id="supplierDebtWarningCount"
-                    >0</span
-                  >
-                </div>
-              </div>
-
-              <div class="table-wrap">
-                <table
-                  class="debt-table"
-                  style="
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 13px;
-                    min-width: 800px;
-                  "
-                >
-                  <thead>
-                    <tr style="background: var(--surface2)">
-                      <th style="padding: 12px; text-align: left; width: 50px">
-                        STT
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Nhà cung cấp / Số phiếu
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Ngày nhập HĐ
-                      </th>
-                      <th style="padding: 12px; text-align: center">
-                        Số ngày còn lại
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Trạng thái
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Số hợp đồng
-                      </th>
-                      <th style="padding: 12px; text-align: right">Giá trị</th>
-                    </tr>
-                  </thead>
-                  <tbody id="supplierDebtTableBody"></tbody>
-                </table>
-              </div>
-
-              <div class="pagination" style="margin-top: 20px">
-                <button class="page-btn" id="supplierDebtPrevPage" disabled>
-                  <i class="fas fa-chevron-left"></i> Trước
-                </button>
-                <span class="page-info" id="supplierDebtPageInfo"
-                  >Trang 1 / 1</span
-                >
-                <button class="page-btn" id="supplierDebtNextPage">
-                  Sau <i class="fas fa-chevron-right"></i>
-                </button>
+              <div id="supplierDebtContent" class="debt-content">
+                <div class="empty-state">Đang tải dữ liệu...</div>
               </div>
             </div>
           </div>
 
-          <!-- VIEW: CUSTOMER DEBT (CÔNG NỢ KHÁCH HÀNG) -->
+          <!-- VIEW: CUSTOMER DEBT -->
           <div class="view" id="view-customer-debt">
             <div class="scroll-area">
               <div class="page-header">
@@ -342,122 +236,12 @@
                   <div class="page-title-tag">CUSTOMER DEBT</div>
                   <div class="page-title">Công nợ phải thu - Khách hàng</div>
                   <div class="page-sub">
-                    Danh sách công nợ từ phiếu xuất kho (dựa trên ngày xuất hóa
-                    đơn)
+                    Danh sách công nợ từ phiếu xuất kho
                   </div>
                 </div>
-                <div class="header-actions">
-                  <button class="btn btn-primary" id="btnExportCustomerDebt">
-                    <i class="fas fa-file-excel"></i> Xuất Excel
-                  </button>
-                </div>
               </div>
-
-              <div class="filter-bar" style="margin-bottom: 24px">
-                <div class="search-box" style="flex: 1">
-                  <i class="fas fa-search"></i>
-                  <input
-                    type="text"
-                    id="customerDebtSearch"
-                    placeholder="Tìm theo tên khách hàng, số phiếu..."
-                  />
-                </div>
-                <select class="cat-select" id="customerDebtStatusFilter">
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="expired">Quá hạn</option>
-                  <option value="critical">Khẩn cấp (≤7 ngày)</option>
-                  <option value="warning">Sắp đến hạn (8-30 ngày)</option>
-                  <option value="normal">Bình thường (31-90 ngày)</option>
-                  <option value="safe">An toàn (>90 ngày)</option>
-                </select>
-              </div>
-
-              <div
-                class="debt-stats"
-                style="
-                  display: flex;
-                  gap: 16px;
-                  margin-bottom: 24px;
-                  flex-wrap: wrap;
-                "
-              >
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Tổng công nợ KH:</span>
-                  <span class="stat-mini-value" id="customerDebtTotalCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Quá hạn:</span>
-                  <span
-                    class="stat-mini-value danger"
-                    id="customerDebtExpiredCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Khẩn cấp (≤7 ngày):</span>
-                  <span
-                    class="stat-mini-value warning"
-                    id="customerDebtCriticalCount"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Sắp đến hạn (8-30 ngày):</span>
-                  <span class="stat-mini-value" id="customerDebtWarningCount"
-                    >0</span
-                  >
-                </div>
-              </div>
-
-              <div class="table-wrap">
-                <table
-                  class="debt-table"
-                  style="
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 13px;
-                    min-width: 800px;
-                  "
-                >
-                  <thead>
-                    <tr style="background: var(--surface2)">
-                      <th style="padding: 12px; text-align: left; width: 50px">
-                        STT
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Khách hàng / Số phiếu
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Ngày xuất HĐ
-                      </th>
-                      <th style="padding: 12px; text-align: center">
-                        Số ngày còn lại
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Trạng thái
-                      </th>
-                      <th style="padding: 12px; text-align: left">
-                        Số hợp đồng
-                      </th>
-                      <th style="padding: 12px; text-align: right">Giá trị</th>
-                    </tr>
-                  </thead>
-                  <tbody id="customerDebtTableBody"></tbody>
-                </table>
-              </div>
-
-              <div class="pagination" style="margin-top: 20px">
-                <button class="page-btn" id="customerDebtPrevPage" disabled>
-                  <i class="fas fa-chevron-left"></i> Trước
-                </button>
-                <span class="page-info" id="customerDebtPageInfo"
-                  >Trang 1 / 1</span
-                >
-                <button class="page-btn" id="customerDebtNextPage">
-                  Sau <i class="fas fa-chevron-right"></i>
-                </button>
+              <div id="customerDebtContent" class="debt-content">
+                <div class="empty-state">Đang tải dữ liệu...</div>
               </div>
             </div>
           </div>
@@ -465,7 +249,7 @@
       </div>
     </div>
 
-    <!-- MODAL TẠO YÊU CẦU NHIỀU SẢN PHẨM (dành cho nhập liệu) -->
+    <!-- MODAL TẠO YÊU CẦU THÊM SẢN PHẨM -->
     <div id="createRequestModal" class="modal">
       <div class="modal-content" style="max-width: 1100px">
         <div class="modal-header">
@@ -484,6 +268,121 @@
           <button class="btn btn-outline" id="btnCancelRequest">Hủy</button>
           <button class="btn btn-primary" id="btnSubmitRequest">
             Gửi yêu cầu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA SẢN PHẨM (dành cho Nhập liệu) -->
+    <div id="editProductModal" class="modal edit-product-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Yêu cầu chỉnh sửa sản phẩm</h3>
+          <span class="close-edit-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="editProductForm" class="edit-product-form">
+            <input type="hidden" id="edit_productId" />
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tên thương mại *</label>
+                <input type="text" id="edit_tenThuongMai" required />
+              </div>
+              <div class="form-group">
+                <label>Mã hàng *</label>
+                <input type="text" id="edit_maHang" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Quy cách</label>
+                <input type="text" id="edit_quyCach" />
+              </div>
+              <div class="form-group">
+                <label>Hãng SX</label>
+                <input type="text" id="edit_hangSX" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>ĐVT</label>
+                <input type="text" id="edit_dvt" />
+              </div>
+              <div class="form-group">
+                <label>Phân loại</label>
+                <input type="text" id="edit_phanLoai" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Giá nhập</label>
+                <input type="text" id="edit_giaNhap" />
+              </div>
+              <div class="form-group">
+                <label>Giá xuất</label>
+                <input type="text" id="edit_giaXuat" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số lượng nhập</label>
+                <input type="text" id="edit_soLuongNhap" />
+              </div>
+              <div class="form-group">
+                <label>Số lượng xuất</label>
+                <input type="text" id="edit_soLuongXuat" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số lot</label>
+                <input type="text" id="edit_soLot" />
+              </div>
+              <div class="form-group">
+                <label>Ngày hết hạn</label>
+                <input type="date" id="edit_ngayHetHan" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số hợp đồng nhập</label>
+                <input type="text" id="edit_soHopDongNhap" />
+              </div>
+              <div class="form-group">
+                <label>Số hóa đơn nhập</label>
+                <input type="text" id="edit_soHoaDonNhap" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số hợp đồng xuất</label>
+                <input type="text" id="edit_soHopDongXuat" />
+              </div>
+              <div class="form-group">
+                <label>Số hóa đơn xuất</label>
+                <input type="text" id="edit_soHoaDonXuat" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ngày nhập HĐ</label>
+                <input type="date" id="edit_ngayNhapHD" />
+              </div>
+              <div class="form-group">
+                <label>Ngày xuất HĐ</label>
+                <input type="date" id="edit_ngayXuatHD" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ghi chú</label>
+              <textarea id="edit_ghiChu" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btnCancelEdit">Hủy</button>
+          <button class="btn btn-primary" id="btnSubmitEdit">
+            Gửi yêu cầu chỉnh sửa
           </button>
         </div>
       </div>

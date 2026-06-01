@@ -184,22 +184,6 @@
   color: #94a3b8;
 }
 
-/* Màu số ngày còn lại */
-.expired-number {
-  color: #ef4444 !important;
-  font-weight: 700;
-}
-
-.critical-number {
-  color: #f97316 !important;
-  font-weight: 600;
-}
-
-.warning-number {
-  color: #fbbf24 !important;
-  font-weight: 500;
-}
-
 /* Table styles */
 .inv-table .text-right {
   text-align: right;
@@ -244,13 +228,11 @@
   font-weight: 700;
 }
 
-/* Hover cho sticky columns */
 .inv-table tr:hover td.sticky-col,
 .inv-table tr:hover td.sticky-col-2 {
   background-color: #1e293b !important;
 }
 
-/* Bóng đổ phân cách */
 .inv-table td.sticky-col::after,
 .inv-table td.sticky-col-2::after,
 .inv-table th.sticky-col::after,
@@ -283,6 +265,68 @@
   transform: scale(1.02);
 }
 
+/* Nút sửa */
+.btn-edit-product {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 4px;
+}
+
+.btn-edit-product:hover {
+  background: #d97706;
+  transform: scale(1.02);
+}
+
+/* Modal chỉnh sửa sản phẩm */
+.edit-product-modal .modal-content {
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.edit-product-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.edit-product-form .form-group {
+  margin-bottom: 0;
+}
+
+.edit-product-form label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.edit-product-form input,
+.edit-product-form select,
+.edit-product-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.edit-product-form input:focus,
+.edit-product-form select:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
 /* Debt tables */
 .debt-table {
   width: 100%;
@@ -311,7 +355,7 @@
   background: var(--surface2);
 }
 
-/* Scroll area trong debt view */
+/* Scroll area */
 .scroll-area {
   flex: 1;
   overflow-y: auto !important;
@@ -409,6 +453,10 @@
   .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .edit-product-form .form-row {
+    grid-template-columns: 1fr;
   }
 }
 
