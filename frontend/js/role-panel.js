@@ -77,7 +77,6 @@
 
   function canEditField(fieldName) {
     if (isAdmin) return true;
-    if (isNhapLieu) return true;
     if (isNhanVien) return false;
     if (isKeToan && keToanFields.includes(fieldName)) return true;
     if (isQuanLyKho && quanLyKhoFields.includes(fieldName)) return true;
