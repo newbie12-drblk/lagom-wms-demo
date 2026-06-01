@@ -248,21 +248,13 @@
   z-index: 101;
 }
 
-/* Nút xóa */
-.btn-delete-product {
-  background: #dc2626;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-delete-product:hover {
-  background: #b91c1c;
-  transform: scale(1.02);
+/* ========== NÚT HÀNH ĐỘNG ========== */
+.action-buttons-cell {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
 }
 
 /* Nút sửa */
@@ -270,17 +262,51 @@
   background: #f59e0b;
   color: white;
   border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  margin-right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-edit-product:hover {
   background: #d97706;
-  transform: scale(1.02);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-edit-product i {
+  font-size: 12px;
+}
+
+/* Nút xóa */
+.btn-delete-product {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete-product:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-delete-product i {
+  font-size: 12px;
 }
 
 /* Modal chỉnh sửa sản phẩm */
@@ -457,6 +483,13 @@
 
   .edit-product-form .form-row {
     grid-template-columns: 1fr;
+  }
+
+  /* Nút hành động trên mobile */
+  .btn-edit-product,
+  .btn-delete-product {
+    padding: 4px 8px;
+    font-size: 10px;
   }
 }
 
