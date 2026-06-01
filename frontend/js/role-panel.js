@@ -680,7 +680,7 @@
     loadInventoryData();
   }
 
-  // ========== YÊU CẦU XÓA SẢN PHẨM ==========
+  // ========== YÊU CẦU XÓA SẢN PHẨM (DÙNG FETCH TRỰC TIẾP) ==========
   async function requestDeleteProduct(productId, productName) {
     if (
       !confirm(
