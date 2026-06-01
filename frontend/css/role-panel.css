@@ -248,16 +248,7 @@
   z-index: 101;
 }
 
-/* ========== NÚT HÀNH ĐỘNG ========== */
-.action-buttons-cell {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-  white-space: nowrap;
-}
-
-/* Nút sửa */
+/* Nút hành động */
 .btn-edit-product {
   background: #f59e0b;
   color: white;
@@ -279,11 +270,6 @@
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
-.btn-edit-product i {
-  font-size: 12px;
-}
-
-/* Nút xóa */
 .btn-delete-product {
   background: #dc2626;
   color: white;
@@ -303,54 +289,6 @@
   background: #b91c1c;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-}
-
-.btn-delete-product i {
-  font-size: 12px;
-}
-
-/* Modal chỉnh sửa sản phẩm */
-.edit-product-modal .modal-content {
-  max-width: 800px;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-.edit-product-form .form-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.edit-product-form .form-group {
-  margin-bottom: 0;
-}
-
-.edit-product-form label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.edit-product-form input,
-.edit-product-form select,
-.edit-product-form textarea {
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 13px;
-}
-
-.edit-product-form input:focus,
-.edit-product-form select:focus {
-  outline: none;
-  border-color: var(--blue);
 }
 
 /* Debt tables */
@@ -430,6 +368,157 @@
   overflow-y: auto;
 }
 
+/* ==================== MODAL CHỈNH SỬA SẢN PHẨM ==================== */
+.edit-product-modal .modal-content {
+  max-width: 850px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.edit-product-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid #1e2d45;
+  background: #0f172a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.edit-product-modal .modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #60a5fa;
+  margin: 0;
+}
+
+.edit-product-modal .close-edit-modal {
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b82a0;
+  transition: all 0.2s;
+}
+
+.edit-product-modal .close-edit-modal:hover {
+  color: #f87171;
+}
+
+.edit-product-modal .modal-body {
+  padding: 24px;
+}
+
+.edit-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-product-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.edit-product-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-product-form .form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8ba0bc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-product-form .form-group label .required {
+  color: #ef4444;
+}
+
+.edit-product-form .form-group input,
+.edit-product-form .form-group select,
+.edit-product-form .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #1a2235;
+  border: 1px solid #1e2d45;
+  border-radius: 8px;
+  color: #e2eaf5;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.edit-product-form .form-group input:focus,
+.edit-product-form .form-group select:focus,
+.edit-product-form .form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.edit-product-form .form-group input::placeholder,
+.edit-product-form .form-group select::placeholder,
+.edit-product-form .form-group textarea::placeholder {
+  color: #4a5a7a;
+}
+
+.edit-product-form .form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.edit-product-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #1e2d45;
+  background: #0f172a;
+  position: sticky;
+  bottom: 0;
+}
+
+.edit-product-modal .modal-footer .btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-product-modal .modal-footer .btn-outline {
+  background: transparent;
+  border: 1px solid #1e2d45;
+  color: #6b82a0;
+}
+
+.edit-product-modal .modal-footer .btn-outline:hover {
+  border-color: #3b82f6;
+  color: #e2eaf5;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.edit-product-modal .modal-footer .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  color: white;
+  border: none;
+}
+
+.edit-product-modal .modal-footer .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .user-info {
@@ -481,15 +570,49 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .edit-product-form .form-row {
-    grid-template-columns: 1fr;
-  }
-
   /* Nút hành động trên mobile */
   .btn-edit-product,
   .btn-delete-product {
     padding: 4px 8px;
     font-size: 10px;
+  }
+
+  /* Modal chỉnh sửa trên mobile */
+  .edit-product-modal .modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .edit-product-form .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .edit-product-modal .modal-header {
+    padding: 14px 16px;
+  }
+
+  .edit-product-modal .modal-header h3 {
+    font-size: 16px;
+  }
+
+  .edit-product-modal .modal-body {
+    padding: 16px;
+  }
+
+  .edit-product-modal .modal-footer {
+    padding: 12px 16px;
+  }
+
+  .edit-product-form .form-group input,
+  .edit-product-form .form-group select,
+  .edit-product-form .form-group textarea {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .edit-product-form .form-group label {
+    font-size: 11px;
   }
 }
 
@@ -506,5 +629,14 @@
 
   .page-title {
     font-size: 18px;
+  }
+
+  .edit-product-modal .modal-header h3 {
+    font-size: 14px;
+  }
+
+  .edit-product-modal .modal-footer .btn {
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }
