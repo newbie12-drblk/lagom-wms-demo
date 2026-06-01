@@ -210,6 +210,25 @@ CREATE TABLE IF NOT EXISTS deletion_requests (
     INDEX idx_productId (productId)
 );
 
+-- 12. Bảng edit_requests (yêu cầu chỉnh sửa sản phẩm từ Nhập liệu)
+CREATE TABLE IF NOT EXISTS edit_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    requesterId INT NOT NULL,
+    productId INT NOT NULL,
+    oldData JSON NOT NULL,
+    newData JSON NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    approvedBy INT,
+    approvedAt DATETIME,
+    rejectedReason TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (requesterId) REFERENCES users(id),
+    FOREIGN KEY (approvedBy) REFERENCES users(id),
+    FOREIGN KEY (productId) REFERENCES inventory(id),
+    INDEX idx_status (status),
+    INDEX idx_productId (productId)
+);
+
 -- Chèn dữ liệu mẫu (users) - chỉ chèn nếu chưa có
 INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
 ('admin', 'admin123_hash', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
