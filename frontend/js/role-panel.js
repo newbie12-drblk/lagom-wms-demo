@@ -234,7 +234,14 @@
     }
     productRowCounter = 1;
     addProductRow();
-    modal.style.display = "block";
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeCreateRequestModal() {
+    const modal = document.getElementById("createRequestModal");
+    if (modal) modal.style.display = "none";
+    document.body.style.overflow = "";
   }
 
   function addProductRow(data = null) {
@@ -327,8 +334,7 @@
     try {
       await window.API.approval.createRequest({ products: products });
       Utils.showToast("Yêu cầu đã được gửi đến Admin");
-      const modal = document.getElementById("createRequestModal");
-      if (modal) modal.style.display = "none";
+      closeCreateRequestModal();
     } catch (error) {
       Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
     } finally {
@@ -725,6 +731,13 @@
   const editModal = document.getElementById("editProductModal");
   let currentEditProduct = null;
 
+  function closeEditModal() {
+    if (editModal) {
+      editModal.style.display = "none";
+    }
+    document.body.style.overflow = "";
+  }
+
   async function openEditRequestModal(productId) {
     try {
       const product = inventoryData.find((p) => p.id == productId);
@@ -767,8 +780,13 @@
         product.ngayXuatHD || "";
       document.getElementById("edit_ghiChu").value = product.ghiChu || "";
 
-      editModal.style.display = "flex";
+      // HIỂN THỊ MODAL
+      if (editModal) {
+        editModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
     } catch (error) {
+      console.error("Open edit modal error:", error);
       Utils.showToast("Lỗi khi tải thông tin sản phẩm", "error");
     }
   }
@@ -827,7 +845,7 @@
         `Đã gửi yêu cầu chỉnh sửa sản phẩm "${updatedData.tenThuongMai}"`,
         "success",
       );
-      editModal.style.display = "none";
+      closeEditModal();
     } catch (error) {
       Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
     } finally {
@@ -874,10 +892,8 @@
     const cancelBtn = document.getElementById("btnCancelRequest");
     const submitBtn = document.getElementById("btnSubmitRequest");
     const addProductBtn = document.getElementById("btnAddProductRow");
-    if (closeBtn)
-      closeBtn.addEventListener("click", () => (modal.style.display = "none"));
-    if (cancelBtn)
-      cancelBtn.addEventListener("click", () => (modal.style.display = "none"));
+    if (closeBtn) closeBtn.addEventListener("click", closeCreateRequestModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeCreateRequestModal);
     if (submitBtn) submitBtn.addEventListener("click", submitCreateRequest);
     if (addProductBtn)
       addProductBtn.addEventListener("click", () => addProductRow());
@@ -886,22 +902,14 @@
     const closeEditBtn = document.querySelector(".close-edit-modal");
     const cancelEditBtn = document.getElementById("btnCancelEdit");
     const submitEditBtn = document.getElementById("btnSubmitEdit");
-    if (closeEditBtn)
-      closeEditBtn.addEventListener(
-        "click",
-        () => (editModal.style.display = "none"),
-      );
-    if (cancelEditBtn)
-      cancelEditBtn.addEventListener(
-        "click",
-        () => (editModal.style.display = "none"),
-      );
+    if (closeEditBtn) closeEditBtn.addEventListener("click", closeEditModal);
+    if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeEditModal);
     if (submitEditBtn)
       submitEditBtn.addEventListener("click", submitEditRequest);
 
     window.addEventListener("click", (e) => {
-      if (e.target === modal) modal.style.display = "none";
-      if (e.target === editModal) editModal.style.display = "none";
+      if (e.target === modal) closeCreateRequestModal();
+      if (e.target === editModal) closeEditModal();
     });
   }
 
