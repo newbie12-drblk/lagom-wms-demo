@@ -176,10 +176,13 @@ const receiptAPI = {
   },
 
   create: async (receiptData) => {
-    // Đảm bảo dữ liệu gửi lên đúng format
+    // LOG DỮ LIỆU ĐỂ DEBUG
+    console.log("📤 Receipt data nhận được:", receiptData);
+
+    // ĐẢM BẢO TẤT CẢ FIELD ĐỀU CÓ GIÁ TRỊ
     const payload = {
       receiptDate:
-        receiptData.receiptDate || new Date().toLocaleDateString("vi-VN"),
+        receiptData.receiptDate || new Date().toISOString().split("T")[0],
       supplierName: receiptData.supplierName || "",
       supplierAddress: receiptData.supplierAddress || "",
       supplierTax: receiptData.supplierTax || "",
@@ -188,9 +191,12 @@ const receiptAPI = {
       customerTax: receiptData.customerTax || "",
       customerContract: receiptData.customerContract || "",
       items: receiptData.items || [],
-      total: receiptData.total || 0,
+      total: Number(receiptData.total) || 0,
       notes: receiptData.notes || "",
     };
+
+    console.log("📤 Payload gửi lên server:", JSON.stringify(payload, null, 2));
+
     return await apiCall("/receipts", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -229,16 +235,25 @@ const exportAPI = {
   },
 
   create: async (exportData) => {
+    // LOG DỮ LIỆU ĐỂ DEBUG
+    console.log("📤 Export data nhận được:", exportData);
+
     const payload = {
       exportDate:
-        exportData.exportDate || new Date().toLocaleDateString("vi-VN"),
+        exportData.exportDate || new Date().toISOString().split("T")[0],
       exportNo: exportData.exportNo || `PX-${Date.now()}`,
       receiverName: exportData.receiverName || "",
-      exportReason: exportData.exportReason || "Sử dụng nội bộ",
+      customerName: exportData.customerName || "",
+      customerAddress: exportData.customerAddress || "",
       customerTax: exportData.customerTax || "",
+      customerContract: exportData.customerContract || "",
+      exportReason: exportData.exportReason || "Sử dụng nội bộ",
       items: exportData.items || [],
-      total: exportData.total || 0,
+      total: Number(exportData.total) || 0,
     };
+
+    console.log("📤 Payload gửi lên server:", JSON.stringify(payload, null, 2));
+
     return await apiCall("/exports", {
       method: "POST",
       body: JSON.stringify(payload),
