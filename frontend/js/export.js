@@ -272,8 +272,15 @@
     const receiverNameEl = document.getElementById("receiverName");
     const exportReasonEl = document.getElementById("exportReason");
 
+    // Lấy ngày hiện tại định dạng YYYY-MM-DD
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const exportDate = `${year}-${month}-${day}`;
+
     const data = {
-      exportDate: `${DOM.day?.textContent || ""}/${DOM.month?.textContent || ""}/${DOM.year?.textContent || ""}`,
+      exportDate: exportDate, // ĐỊNH DẠNG YYYY-MM-DD
       exportNo: exportNoEl?.value || "",
       customerName: customerNameEl?.value || "",
       customerAddress: customerAddressEl?.value || "",

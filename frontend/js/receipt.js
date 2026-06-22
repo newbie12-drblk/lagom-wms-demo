@@ -257,8 +257,15 @@
     const customerTaxEl = document.getElementById("customerTax");
     const customerContractEl = document.getElementById("customerContract");
 
+    // Lấy ngày hiện tại định dạng YYYY-MM-DD
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const receiptDate = `${year}-${month}-${day}`;
+
     const data = {
-      receiptDate: `${DOM.day?.textContent || ""}/${DOM.month?.textContent || ""}/${DOM.year?.textContent || ""}`,
+      receiptDate: receiptDate, // ĐỊNH DẠNG YYYY-MM-DD
       supplierName: supplierNameEl?.value || "",
       supplierAddress: supplierAddressEl?.value || "",
       supplierTax: supplierTaxEl?.value || "",
