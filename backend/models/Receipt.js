@@ -5,9 +5,9 @@ const Receipt = {
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
-             FROM receipts r 
-             LEFT JOIN users u ON r.createdBy = u.id 
-             ORDER BY r.createdAt DESC`,
+       FROM receipts r 
+       LEFT JOIN users u ON r.createdBy = u.id 
+       ORDER BY r.createdAt DESC`,
     );
     return rows;
   },
@@ -16,10 +16,10 @@ const Receipt = {
   findById: async (id) => {
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
-             FROM receipts r 
-             LEFT JOIN users u ON r.createdBy = u.id 
-             LEFT JOIN users a ON r.approvedBy = a.id 
-             WHERE r.id = ?`,
+       FROM receipts r 
+       LEFT JOIN users u ON r.createdBy = u.id 
+       LEFT JOIN users a ON r.approvedBy = a.id 
+       WHERE r.id = ?`,
       [id],
     );
 
@@ -49,16 +49,20 @@ const Receipt = {
 
     const [result] = await db.execute(
       `INSERT INTO receipts 
-            (receiptNo, receiptDate, supplierName, supplierAddress, supplierTax, 
-             customerTax, total, notes, status, createdBy) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (receiptNo, receiptDate, supplierName, supplierAddress, supplierTax, 
+         customerName, customerAddress, customerTax, customerContract,
+         total, notes, status, createdBy) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         receiptNo,
-        data.receiptDate,
-        data.supplierName,
-        data.supplierAddress,
-        data.supplierTax,
-        data.customerTax,
+        data.receiptDate || new Date().toISOString().split("T")[0],
+        data.supplierName || "",
+        data.supplierAddress || "",
+        data.supplierTax || "",
+        data.customerName || "",
+        data.customerAddress || "",
+        data.customerTax || "",
+        data.customerContract || "",
         data.total || 0,
         data.notes || "",
         "pending",
@@ -72,20 +76,20 @@ const Receipt = {
       for (const item of data.items) {
         await db.execute(
           `INSERT INTO receipt_items 
-                    (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
-                     phanLoai, giaNhap, soLuongNhap, thanhTien) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
+             phanLoai, giaNhap, soLuongNhap, thanhTien) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             receiptId,
-            item.tenThuongMai,
-            item.maHang,
-            item.quyCach,
-            item.hangSX,
-            item.dvt,
-            item.phanLoai,
-            item.giaNhap,
-            item.soLuongNhap,
-            item.thanhTien,
+            item.tenThuongMai || "",
+            item.maHang || "",
+            item.quyCach || "",
+            item.hangSX || "",
+            item.dvt || "",
+            item.phanLoai || "",
+            item.giaNhap || 0,
+            item.soLuongNhap || 0,
+            item.thanhTien || 0,
           ],
         );
       }
@@ -98,8 +102,8 @@ const Receipt = {
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE receipts 
-             SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
-             WHERE id = ?`,
+       SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
+       WHERE id = ?`,
       [status, approvedBy, rejectedReason, id],
     );
     return true;
@@ -109,10 +113,10 @@ const Receipt = {
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
-             FROM receipts r 
-             LEFT JOIN users u ON r.createdBy = u.id 
-             WHERE r.status = 'pending'
-             ORDER BY r.createdAt ASC`,
+       FROM receipts r 
+       LEFT JOIN users u ON r.createdBy = u.id 
+       WHERE r.status = 'pending'
+       ORDER BY r.createdAt ASC`,
     );
     return rows;
   },

@@ -5,9 +5,9 @@ const Export = {
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
-             FROM exports e 
-             LEFT JOIN users u ON e.createdBy = u.id 
-             ORDER BY e.createdAt DESC`,
+       FROM exports e 
+       LEFT JOIN users u ON e.createdBy = u.id 
+       ORDER BY e.createdAt DESC`,
     );
     return rows;
   },
@@ -16,10 +16,10 @@ const Export = {
   findById: async (id) => {
     const [exports] = await db.execute(
       `SELECT e.*, u.fullName as creatorName, a.fullName as approverName
-             FROM exports e 
-             LEFT JOIN users u ON e.createdBy = u.id 
-             LEFT JOIN users a ON e.approvedBy = a.id 
-             WHERE e.id = ?`,
+       FROM exports e 
+       LEFT JOIN users u ON e.createdBy = u.id 
+       LEFT JOIN users a ON e.approvedBy = a.id 
+       WHERE e.id = ?`,
       [id],
     );
 
@@ -49,15 +49,18 @@ const Export = {
 
     const [result] = await db.execute(
       `INSERT INTO exports 
-            (exportNo, exportDate, receiverName, customerTax, exportReason, 
-             total, status, createdBy) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (exportNo, exportDate, receiverName, customerName, customerAddress, 
+         customerTax, customerContract, exportReason, total, status, createdBy) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         exportNo,
-        data.exportDate,
-        data.receiverName,
-        data.customerTax,
-        data.exportReason,
+        data.exportDate || new Date().toISOString().split("T")[0],
+        data.receiverName || "",
+        data.customerName || "",
+        data.customerAddress || "",
+        data.customerTax || "",
+        data.customerContract || "",
+        data.exportReason || "Sử dụng nội bộ",
         data.total || 0,
         "pending",
         createdBy,
@@ -70,23 +73,23 @@ const Export = {
       for (const item of data.items) {
         await db.execute(
           `INSERT INTO export_items 
-                    (exportId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
-                     phanLoai, donGia, soLuong, thanhTien, soLot, ngayHetHan, ghiChu) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (exportId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
+             phanLoai, donGia, soLuong, thanhTien, soLot, ngayHetHan, ghiChu) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             exportId,
-            item.tenThuongMai,
-            item.maHang,
-            item.quyCach,
-            item.hangSX,
-            item.dvt,
-            item.phanLoai,
-            item.donGia,
-            item.soLuong,
-            item.thanhTien,
-            item.soLot,
-            item.ngayHetHan,
-            item.ghiChu,
+            item.tenThuongMai || "",
+            item.maHang || "",
+            item.quyCach || "",
+            item.hangSX || "",
+            item.dvt || "",
+            item.phanLoai || "",
+            item.donGia || 0,
+            item.soLuong || 0,
+            item.thanhTien || 0,
+            item.soLot || "",
+            item.ngayHetHan || null,
+            item.ghiChu || "",
           ],
         );
       }
@@ -99,8 +102,8 @@ const Export = {
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE exports 
-             SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
-             WHERE id = ?`,
+       SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
+       WHERE id = ?`,
       [status, approvedBy, rejectedReason, id],
     );
     return true;
@@ -110,10 +113,10 @@ const Export = {
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
-             FROM exports e 
-             LEFT JOIN users u ON e.createdBy = u.id 
-             WHERE e.status = 'pending'
-             ORDER BY e.createdAt ASC`,
+       FROM exports e 
+       LEFT JOIN users u ON e.createdBy = u.id 
+       WHERE e.status = 'pending'
+       ORDER BY e.createdAt ASC`,
     );
     return rows;
   },
