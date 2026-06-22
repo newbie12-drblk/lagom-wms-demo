@@ -1,6 +1,6 @@
 /**
  * ==================== EXPORT MODULE ====================
- * SỬA: Gọi API thay vì localStorage + tự động điền theo mã hàng
+ * Quản lý phiếu xuất kho
  */
 
 (function () {
@@ -26,7 +26,10 @@
     day: document.getElementById("day"),
     month: document.getElementById("month"),
     year: document.getElementById("year"),
+    customerName: document.getElementById("customerName"),
+    customerAddress: document.getElementById("customerAddress"),
     customerTax: document.getElementById("customerTax"),
+    customerContract: document.getElementById("customerContract"),
     exportNo: document.getElementById("exportNo"),
     receiverName: document.getElementById("receiverName"),
     exportReason: document.getElementById("exportReason"),
@@ -54,9 +57,10 @@
   }
 
   function formatNumberInput(input) {
-    const num = parseNumber(input.value);
-    input.value = num ? formatCurrency(num) : "";
-    return num;
+    const rawValue = input.value;
+    const number = parseNumber(rawValue);
+    input.value = number ? formatCurrency(number) : "";
+    return number;
   }
 
   function calculateTotal() {
@@ -229,7 +233,10 @@
     return {
       exportDate: `${DOM.day?.textContent}/${DOM.month?.textContent}/${DOM.year?.textContent}`,
       exportNo: DOM.exportNo?.value || "",
+      customerName: DOM.customerName?.value || "",
+      customerAddress: DOM.customerAddress?.value || "",
       customerTax: DOM.customerTax?.value || "",
+      customerContract: DOM.customerContract?.value || "",
       receiverName: DOM.receiverName?.value || "",
       exportReason: DOM.exportReason?.value || "",
       items: items,
@@ -246,24 +253,33 @@
       return;
     }
 
+    Utils.showLoading(true, "Đang lưu phiếu...");
     try {
       const result = await window.API.export.create(data);
       if (result.success) {
-        alert("✅ Đã lưu phiếu xuất kho thành công!");
+        Utils.showToast("✅ Đã lưu phiếu xuất kho thành công!");
         clearForm();
       } else {
-        alert("❌ Lỗi: " + (result.message || "Không thể lưu phiếu"));
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể lưu phiếu"),
+          "error",
+        );
       }
     } catch (error) {
       console.error("Save export error:", error);
-      alert("❌ Có lỗi xảy ra khi lưu phiếu!");
+      Utils.showToast("❌ Có lỗi xảy ra khi lưu phiếu!", "error");
+    } finally {
+      Utils.showLoading(false);
     }
   }
 
   // ========== Làm mới form ==========
   function clearForm() {
     if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu xuất?")) {
+      DOM.customerName.value = "";
+      DOM.customerAddress.value = "";
       DOM.customerTax.value = "";
+      DOM.customerContract.value = "";
       DOM.exportNo.value = "PX-" + new Date().getFullYear() + "-001";
       DOM.receiverName.value = "";
       DOM.exportReason.value = "Sử dụng nội bộ";
@@ -297,57 +313,106 @@
       return;
     }
 
-    const exportData = data.items.map((item, idx) => ({
-      STT: idx + 1,
-      "Tên thương mại": item.tenThuongMai,
-      "Mã hàng": item.maHang,
-      "Quy cách": item.quyCach,
-      "Hãng SX": item.hangSX,
-      ĐVT: item.dvt,
-      "Phân loại": item.phanLoai,
-      "Đơn giá": item.donGia,
-      "Số lượng": item.soLuong,
-      "Thành tiền": item.thanhTien,
-      "Số lot": item.soLot,
-      HSD: item.ngayHetHan,
-      "Ghi chú": item.ghiChu,
-    }));
+    let itemsHTML = data.items
+      .map(
+        (item, idx) => `
+      <tr>
+        <td class="text-center">${idx + 1}</td>
+        <td>${escapeHtml(item.tenThuongMai)}</td>
+        <td>${escapeHtml(item.maHang)}</td>
+        <td>${escapeHtml(item.quyCach)}</td>
+        <td>${escapeHtml(item.hangSX)}</td>
+        <td>${escapeHtml(item.dvt)}</td>
+        <td>${escapeHtml(item.phanLoai)}</td>
+        <td class="text-right">${formatCurrency(item.donGia)}</td>
+        <td class="text-right">${item.soLuong}</td>
+        <td class="text-right">${formatCurrency(item.thanhTien)}</td>
+        <td>${escapeHtml(item.soLot)}</td>
+        <td>${escapeHtml(item.ngayHetHan)}</td>
+        <td>${escapeHtml(item.ghiChu)}</td>
+      </tr>
+    `,
+      )
+      .join("");
 
-    const headers = Object.keys(exportData[0]);
-    const csvRows = [headers.join(",")];
+    const totalHTML = `
+      <tr class="total-row">
+        <td colspan="8" class="text-right"><strong>TỔNG CỘNG:</strong></td>
+        <td class="text-right"><strong>${formatCurrency(data.total)}</strong></td>
+        <td colspan="4"></td>
+      </tr>
+    `;
 
-    for (const row of exportData) {
-      const values = headers.map((header) => {
-        const val = row[header];
-        if (typeof val === "string") return `"${val.replace(/"/g, '""')}"`;
-        return val;
-      });
-      csvRows.push(values.join(","));
-    }
+    const htmlContent = `
+      <div class="company-header">
+        <div class="company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
+        <div class="company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
+        <div class="company-tax">MST: 0316156162</div>
+      </div>
+      
+      <h2>PHIẾU XUẤT KHO</h2>
+      <p style="text-align: center; font-size: 12px;">(Biên bản bàn giao hàng hóa)</p>
+      
+      <div class="date-row">
+        Ngày ${DOM.day?.textContent || ""} tháng ${DOM.month?.textContent || ""} năm ${DOM.year?.textContent || ""}
+      </div>
+      
+      <div class="info-box">
+        <strong>📋 Thông tin khách hàng</strong>
+        <div class="info-line"><label>Đơn vị:</label> ${escapeHtml(data.customerName)}</div>
+        <div class="info-line"><label>Địa chỉ:</label> ${escapeHtml(data.customerAddress)}</div>
+        <div class="info-line"><label>MST:</label> ${escapeHtml(data.customerTax)}</div>
+        <div class="info-line"><label>Số HĐ:</label> ${escapeHtml(data.customerContract)}</div>
+      </div>
+      
+      <div class="info-box">
+        <strong>🚚 Thông tin xuất kho</strong>
+        <div class="info-line"><label>Số phiếu xuất:</label> ${escapeHtml(data.exportNo)}</div>
+        <div class="info-line"><label>Người nhận:</label> ${escapeHtml(data.receiverName)}</div>
+        <div class="info-line"><label>Lý do xuất:</label> ${escapeHtml(data.exportReason)}</div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>TT</th>
+            <th>Tên thương mại</th>
+            <th>Mã hàng</th>
+            <th>Quy cách</th>
+            <th>Hãng SX</th>
+            <th>ĐVT</th>
+            <th>Phân loại</th>
+            <th>Đơn giá</th>
+            <th>Số lượng</th>
+            <th>Thành tiền</th>
+            <th>Số lot</th>
+            <th>HSD</th>
+            <th>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHTML}
+          ${totalHTML}
+        </tbody>
+      </table>
+      
+      <div class="signature">
+        <div class="sign-item"><div class="sign-line">ĐẠI DIỆN BÊN GIAO<br><span style="font-size:10px;">(Ký, họ tên, đóng dấu)</span></div></div>
+        <div class="sign-item"><div class="sign-line">ĐẠI DIỆN BÊN NHẬN<br><span style="font-size:10px;">(Ký, họ tên)</span></div></div>
+      </div>
+    `;
 
-    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `phieu_xuat_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    alert("Đã xuất file CSV thành công!");
+    Utils.exportToExcel(htmlContent, "phieu_xuat_kho");
   }
 
+  // ========== INIT ==========
   function init() {
     if (!checkAuthAndRedirect()) return;
     setCurrentDate();
     addNewRow();
   }
 
+  // ========== BIND EVENTS ==========
   function bindEvents() {
     if (DOM.btnAddRow)
       DOM.btnAddRow.addEventListener("click", () => addNewRow());

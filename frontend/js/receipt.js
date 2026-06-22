@@ -1,6 +1,6 @@
 /**
  * ==================== RECEIPT MODULE ====================
- * SỬA: Gọi API thay vì localStorage + tự động điền theo mã hàng
+ * Quản lý phiếu nhập hàng
  */
 
 (function () {
@@ -29,7 +29,10 @@
     supplierName: document.getElementById("supplierName"),
     supplierAddress: document.getElementById("supplierAddress"),
     supplierTax: document.getElementById("supplierTax"),
+    customerName: document.getElementById("customerName"),
+    customerAddress: document.getElementById("customerAddress"),
     customerTax: document.getElementById("customerTax"),
+    customerContract: document.getElementById("customerContract"),
     itemsBody: document.getElementById("itemsBody"),
     totalAmount: document.getElementById("totalAmount"),
     btnAddRow: document.getElementById("btnAddRow"),
@@ -100,7 +103,6 @@
     try {
       const product = await window.API.inventory.getByMaHang(maHang);
       if (product) {
-        // Điền tự động các trường
         const nameInput = row.querySelector(".product-name");
         const packingInput = row.querySelector(".packing");
         const manufacturerInput = row.querySelector(".manufacturer");
@@ -223,7 +225,10 @@
       supplierName: DOM.supplierName?.value || "",
       supplierAddress: DOM.supplierAddress?.value || "",
       supplierTax: DOM.supplierTax?.value || "",
+      customerName: DOM.customerName?.value || "",
+      customerAddress: DOM.customerAddress?.value || "",
       customerTax: DOM.customerTax?.value || "",
+      customerContract: DOM.customerContract?.value || "",
       items: items,
       total: parseNumber(DOM.totalAmount?.textContent),
       notes: "",
@@ -239,17 +244,23 @@
       return;
     }
 
+    Utils.showLoading(true, "Đang lưu phiếu...");
     try {
       const result = await window.API.receipt.create(data);
       if (result.success) {
-        alert("✅ Đã lưu phiếu nhập hàng thành công!");
+        Utils.showToast("✅ Đã lưu phiếu nhập hàng thành công!");
         clearForm();
       } else {
-        alert("❌ Lỗi: " + (result.message || "Không thể lưu phiếu"));
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể lưu phiếu"),
+          "error",
+        );
       }
     } catch (error) {
       console.error("Save receipt error:", error);
-      alert("❌ Có lỗi xảy ra khi lưu phiếu!");
+      Utils.showToast("❌ Có lỗi xảy ra khi lưu phiếu!", "error");
+    } finally {
+      Utils.showLoading(false);
     }
   }
 
@@ -259,7 +270,10 @@
       DOM.supplierName.value = "";
       DOM.supplierAddress.value = "";
       DOM.supplierTax.value = "";
+      DOM.customerName.value = "";
+      DOM.customerAddress.value = "";
       DOM.customerTax.value = "";
+      DOM.customerContract.value = "";
       DOM.itemsBody.innerHTML = "";
       rowCounter = 1;
       addNewRow();
@@ -290,54 +304,103 @@
       return;
     }
 
-    const exportData = data.items.map((item, idx) => ({
-      STT: idx + 1,
-      "Tên thương mại": item.tenThuongMai,
-      "Mã hàng": item.maHang,
-      "Quy cách": item.quyCach,
-      "Hãng SX": item.hangSX,
-      ĐVT: item.dvt,
-      "Phân loại": item.phanLoai,
-      "Đơn giá": item.giaNhap,
-      "Số lượng": item.soLuongNhap,
-      "Thành tiền": item.thanhTien,
-    }));
+    // Tạo HTML cho Excel
+    let itemsHTML = data.items
+      .map(
+        (item, idx) => `
+      <tr>
+        <td class="text-center">${idx + 1}</td>
+        <td>${escapeHtml(item.tenThuongMai)}</td>
+        <td>${escapeHtml(item.maHang)}</td>
+        <td>${escapeHtml(item.quyCach)}</td>
+        <td>${escapeHtml(item.hangSX)}</td>
+        <td>${escapeHtml(item.dvt)}</td>
+        <td>${escapeHtml(item.phanLoai)}</td>
+        <td class="text-right">${formatCurrency(item.giaNhap)}</td>
+        <td class="text-right">${item.soLuongNhap}</td>
+        <td class="text-right">${formatCurrency(item.thanhTien)}</td>
+        <td></td>
+      </tr>
+    `,
+      )
+      .join("");
 
-    const headers = Object.keys(exportData[0]);
-    const csvRows = [headers.join(",")];
+    const totalHTML = `
+      <tr class="total-row">
+        <td colspan="8" class="text-right"><strong>TỔNG CỘNG:</strong></td>
+        <td class="text-right"><strong>${formatCurrency(data.total)}</strong></td>
+        <td colspan="2"></td>
+      </tr>
+    `;
 
-    for (const row of exportData) {
-      const values = headers.map((header) => {
-        const val = row[header];
-        if (typeof val === "string") return `"${val.replace(/"/g, '""')}"`;
-        return val;
-      });
-      csvRows.push(values.join(","));
-    }
+    const htmlContent = `
+      <div class="company-header">
+        <div class="company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
+        <div class="company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
+        <div class="company-tax">MST: 0316156162</div>
+      </div>
+      
+      <h2>PHIẾU ĐỀ NGHỊ NHẬP HÀNG HÓA</h2>
+      
+      <div class="date-row">
+        Ngày ${DOM.day?.textContent || ""} tháng ${DOM.month?.textContent || ""} năm ${DOM.year?.textContent || ""}
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-box">
+          <strong>📦 Thông tin nhà cung cấp</strong>
+          <div class="info-line"><label>Công ty:</label> ${escapeHtml(data.supplierName)}</div>
+          <div class="info-line"><label>Địa chỉ:</label> ${escapeHtml(data.supplierAddress)}</div>
+          <div class="info-line"><label>MST:</label> ${escapeHtml(data.supplierTax)}</div>
+        </div>
+        <div class="info-box">
+          <strong>🏥 Thông tin khách hàng</strong>
+          <div class="info-line"><label>Tên đơn vị:</label> ${escapeHtml(data.customerName)}</div>
+          <div class="info-line"><label>Địa chỉ:</label> ${escapeHtml(data.customerAddress)}</div>
+          <div class="info-line"><label>MST:</label> ${escapeHtml(data.customerTax)}</div>
+          <div class="info-line"><label>Số HĐ:</label> ${escapeHtml(data.customerContract)}</div>
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>TT</th>
+            <th>Tên thương mại</th>
+            <th>Mã hàng</th>
+            <th>Quy cách</th>
+            <th>Hãng SX</th>
+            <th>ĐVT</th>
+            <th>Phân loại</th>
+            <th>Đơn giá</th>
+            <th>Số lượng</th>
+            <th>Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHTML}
+          ${totalHTML}
+        </tbody>
+      </table>
+      
+      <div class="signature">
+        <div class="sign-item"><div class="sign-line">Bộ phận đặt hàng</div></div>
+        <div class="sign-item"><div class="sign-line">Người lập phiếu</div></div>
+        <div class="sign-item"><div class="sign-line">Giám đốc</div></div>
+      </div>
+    `;
 
-    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `phieu_nhap_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    alert("Đã xuất file CSV thành công!");
+    Utils.exportToExcel(htmlContent, "phieu_nhap_hang");
   }
 
+  // ========== INIT ==========
   function init() {
     if (!checkAuthAndRedirect()) return;
     setCurrentDate();
     addNewRow();
   }
 
+  // ========== BIND EVENTS ==========
   function bindEvents() {
     if (DOM.btnAddRow)
       DOM.btnAddRow.addEventListener("click", () => addNewRow());

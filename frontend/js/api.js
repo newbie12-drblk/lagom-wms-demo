@@ -176,9 +176,24 @@ const receiptAPI = {
   },
 
   create: async (receiptData) => {
+    // Đảm bảo dữ liệu gửi lên đúng format
+    const payload = {
+      receiptDate:
+        receiptData.receiptDate || new Date().toLocaleDateString("vi-VN"),
+      supplierName: receiptData.supplierName || "",
+      supplierAddress: receiptData.supplierAddress || "",
+      supplierTax: receiptData.supplierTax || "",
+      customerName: receiptData.customerName || "",
+      customerAddress: receiptData.customerAddress || "",
+      customerTax: receiptData.customerTax || "",
+      customerContract: receiptData.customerContract || "",
+      items: receiptData.items || [],
+      total: receiptData.total || 0,
+      notes: receiptData.notes || "",
+    };
     return await apiCall("/receipts", {
       method: "POST",
-      body: JSON.stringify(receiptData),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -214,9 +229,19 @@ const exportAPI = {
   },
 
   create: async (exportData) => {
+    const payload = {
+      exportDate:
+        exportData.exportDate || new Date().toLocaleDateString("vi-VN"),
+      exportNo: exportData.exportNo || `PX-${Date.now()}`,
+      receiverName: exportData.receiverName || "",
+      exportReason: exportData.exportReason || "Sử dụng nội bộ",
+      customerTax: exportData.customerTax || "",
+      items: exportData.items || [],
+      total: exportData.total || 0,
+    };
     return await apiCall("/exports", {
       method: "POST",
-      body: JSON.stringify(exportData),
+      body: JSON.stringify(payload),
     });
   },
 
