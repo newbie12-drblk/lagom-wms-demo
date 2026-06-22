@@ -47,6 +47,7 @@ const Export = {
     }
     const exportNo = `PX-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
+    // Thêm customerName, customerAddress, customerContract
     const [result] = await db.execute(
       `INSERT INTO exports 
         (exportNo, exportDate, receiverName, customerName, customerAddress, 

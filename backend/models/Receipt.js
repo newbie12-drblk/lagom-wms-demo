@@ -47,6 +47,7 @@ const Receipt = {
     }
     const receiptNo = `PN-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
+    // Thêm customerName, customerAddress, customerContract
     const [result] = await db.execute(
       `INSERT INTO receipts 
         (receiptNo, receiptDate, supplierName, supplierAddress, supplierTax, 
