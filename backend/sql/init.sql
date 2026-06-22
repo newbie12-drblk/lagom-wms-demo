@@ -57,7 +57,10 @@ CREATE TABLE IF NOT EXISTS receipts (
     supplierName VARCHAR(200),
     supplierAddress VARCHAR(300),
     supplierTax VARCHAR(50),
+    customerName VARCHAR(200),
+    customerAddress VARCHAR(300),
     customerTax VARCHAR(50),
+    customerContract VARCHAR(100),
     total DECIMAL(15,0) DEFAULT 0,
     notes TEXT,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
@@ -95,7 +98,10 @@ CREATE TABLE IF NOT EXISTS exports (
     exportNo VARCHAR(50) UNIQUE NOT NULL,
     exportDate DATE,
     receiverName VARCHAR(200),
+    customerName VARCHAR(200),
+    customerAddress VARCHAR(300),
     customerTax VARCHAR(50),
+    customerContract VARCHAR(100),
     exportReason VARCHAR(100),
     total DECIMAL(15,0) DEFAULT 0,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
@@ -130,7 +136,7 @@ CREATE TABLE IF NOT EXISTS export_items (
     INDEX idx_exportId (exportId)
 );
 
--- 7. Bảng files (lưu scan)
+-- 7. Bảng files
 CREATE TABLE IF NOT EXISTS files (
     id INT PRIMARY KEY AUTO_INCREMENT,
     relatedType ENUM('receipt', 'export', 'contract', 'request') NOT NULL,
@@ -145,7 +151,7 @@ CREATE TABLE IF NOT EXISTS files (
     INDEX idx_related (relatedType, relatedId)
 );
 
--- 8. Bảng approval_requests (yêu cầu thêm sản phẩm từ Nhập liệu)
+-- 8. Bảng approval_requests
 CREATE TABLE IF NOT EXISTS approval_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
@@ -160,7 +166,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     INDEX idx_status (status)
 );
 
--- 9. Bảng edit_history (lịch sử chỉnh sửa)
+-- 9. Bảng edit_history
 CREATE TABLE IF NOT EXISTS edit_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId INT NOT NULL,
@@ -192,7 +198,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     INDEX idx_createdAt (createdAt)
 );
 
--- 11. Bảng deletion_requests (yêu cầu xóa sản phẩm từ Nhập liệu)
+-- 11. Bảng deletion_requests
 CREATE TABLE IF NOT EXISTS deletion_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
@@ -210,7 +216,7 @@ CREATE TABLE IF NOT EXISTS deletion_requests (
     INDEX idx_productId (productId)
 );
 
--- 12. Bảng edit_requests (yêu cầu chỉnh sửa sản phẩm từ Nhập liệu)
+-- 12. Bảng edit_requests
 CREATE TABLE IF NOT EXISTS edit_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
@@ -229,14 +235,14 @@ CREATE TABLE IF NOT EXISTS edit_requests (
     INDEX idx_productId (productId)
 );
 
--- Chèn dữ liệu mẫu (users) - chỉ chèn nếu chưa có
+-- Chèn dữ liệu mẫu (users)
 INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
-('admin', 'admin123_hash', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
-('ketoan', 'ketoan123_hash', 'Nguyễn Thị Kế Toán', 'ketoan@lagom.com', 'ke_toan', TRUE),
-('quanlykho', 'kho123_hash', 'Trần Văn Quản Lý Kho', 'quanlykho@lagom.com', 'quan_ly_kho', TRUE),
-('quanly', 'quanly123_hash', 'Lê Thị Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE),
-('nhanvien', 'nv123_hash', 'Phạm Văn Nhân Viên', 'nhanvien@lagom.com', 'nhan_vien', TRUE),
-('nhaplieu', 'nl123_hash', 'Nguyễn Văn Nhập Liệu', 'nhaplieu@lagom.com', 'nhap_lieu', TRUE);
+('admin', 'admin123', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
+('ketoan', 'ketoan123', 'Nguyễn Thị Kế Toán', 'ketoan@lagom.com', 'ke_toan', TRUE),
+('quanlykho', 'kho123', 'Trần Văn Quản Lý Kho', 'quanlykho@lagom.com', 'quan_ly_kho', TRUE),
+('quanly', 'quanly123', 'Lê Thị Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE),
+('nhanvien', 'nv123', 'Phạm Văn Nhân Viên', 'nhanvien@lagom.com', 'nhan_vien', TRUE),
+('nhaplieu', 'nl123', 'Nguyễn Văn Nhập Liệu', 'nhaplieu@lagom.com', 'nhap_lieu', TRUE);
 
 -- Chèn 1 sản phẩm mẫu vào inventory
 INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai, giaNhap, giaXuat, tonKho, soLuongNhap, soLuongXuat, soLot, ngayHetHan) VALUES
