@@ -154,96 +154,9 @@ function downloadFile(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// Export to Excel with formatting
+// ==================== EXPORT TO EXCEL ====================
+// CHỈ GỌI CSS TỪ window.EXCEL_CSS, KHÔNG CÓ CSS TRONG NÀY
 function exportToExcel(htmlContent, filename) {
-  const styles = `
-    <style>
-      * { font-family: 'Times New Roman', Arial, sans-serif; }
-      h2 { text-align: center; color: #1e3a5f; margin-bottom: 20px; }
-      table { width: 100%; border-collapse: collapse; font-size: 12px; }
-      th { 
-        background: #1e3a5f; 
-        color: white; 
-        font-weight: bold; 
-        padding: 8px; 
-        border: 1px solid #2d4a6e;
-        text-align: center;
-      }
-      td { 
-        padding: 6px 8px; 
-        border: 1px solid #cbd5e0; 
-        text-align: left;
-      }
-      .text-right { text-align: right; }
-      .text-center { text-align: center; }
-      .total-row { background: #f1f5f9; font-weight: bold; }
-      .stt-cell { text-align: center; background: #f8fafc; }
-      .company-header { 
-        text-align: center; 
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #1e3a5f;
-      }
-      .company-name { 
-        font-size: 18px; 
-        font-weight: 700; 
-        color: #1e3a5f; 
-        text-transform: uppercase;
-      }
-      .company-address, .company-tax {
-        font-size: 12px;
-        color: #4a5568;
-      }
-      .info-box {
-        border: 1px solid #cbd5e0;
-        padding: 12px 16px;
-        background: #f8fafc;
-        border-radius: 4px;
-        margin: 10px 0;
-      }
-      .info-box strong {
-        display: block;
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e3a5f;
-        margin-bottom: 8px;
-      }
-      .info-line {
-        margin: 4px 0;
-        font-size: 13px;
-      }
-      .info-line label {
-        font-weight: 600;
-        color: #4a5568;
-        margin-right: 8px;
-      }
-      .signature {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 40px;
-        padding-top: 20px;
-      }
-      .sign-item {
-        text-align: center;
-        width: 200px;
-      }
-      .sign-line {
-        margin-top: 30px;
-        padding-top: 8px;
-        border-top: 1px solid #1a202c;
-        font-size: 12px;
-        color: #4a5568;
-      }
-      .date-row {
-        text-align: right;
-        font-size: 14px;
-        margin-bottom: 20px;
-        color: #2d3748;
-        font-style: italic;
-      }
-    </style>
-  `;
-
   const html = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" 
           xmlns:x="urn:schemas-microsoft-com:office:excel" 
@@ -251,7 +164,10 @@ function exportToExcel(htmlContent, filename) {
       <head>
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        ${styles}
+        <style>
+          * { font-family: 'Times New Roman', Arial, sans-serif; }
+          ${window.EXCEL_CSS || ""}
+        </style>
         <!--[if gte mso 9]>
         <xml>
           <x:ExcelWorkbook>
