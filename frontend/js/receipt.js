@@ -457,27 +457,29 @@
     <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ - 3 BÊN ĐỀU NHAU -->
-    <div class="excel-signature-wrapper" style="display: flex; justify-content: space-between;">
-      <div class="excel-sign-item" style="text-align: center; width: 30%;">
-        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
-          Bộ phận đặt hàng
-          <span class="excel-sign-sub">(Ký, họ tên)</span>
-        </div>
-      </div>
-      <div class="excel-sign-item" style="text-align: center; width: 30%;">
-        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
-          Người lập phiếu
-          <span class="excel-sign-sub">(Ký, họ tên)</span>
-        </div>
-      </div>
-      <div class="excel-sign-item" style="text-align: center; width: 30%;">
-        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
-          Giám đốc
-          <span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span>
-        </div>
-      </div>
-    </div>
+    <!-- CHỮ KÝ - 3 BÊN ĐỀU NHAU BẰNG TABLE -->
+    <table style="width: 100%; border: none; margin-top: 20px;">
+      <tr>
+        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
+          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
+            <strong>Bộ phận đặt hàng</strong><br>
+            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
+          </div>
+        </td>
+        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
+          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
+            <strong>Người lập phiếu</strong><br>
+            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
+          </div>
+        </td>
+        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
+          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
+            <strong>Giám đốc</strong><br>
+            <span style="font-size: 11px; color: #718096;">(Ký, họ tên, đóng dấu)</span>
+          </div>
+        </td>
+      </tr>
+    </table>
   `;
 
     Utils.exportToExcel(htmlContent, "phieu_nhap_hang");

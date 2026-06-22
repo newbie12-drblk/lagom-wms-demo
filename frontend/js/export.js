@@ -474,21 +474,23 @@
     <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI -->
-    <div class="excel-signature-wrapper">
-      <div class="excel-sign-item" style="text-align: left; padding-left: 20px;">
-        <div class="excel-sign-line" style="width: 250px; margin-left: 0; margin-right: auto;">
-          ĐẠI DIỆN BÊN GIAO
-          <span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span>
-        </div>
-      </div>
-      <div class="excel-sign-item" style="text-align: right; padding-right: 20px;">
-        <div class="excel-sign-line" style="width: 250px; margin-right: 0; margin-left: auto;">
-          ĐẠI DIỆN BÊN NHẬN
-          <span class="excel-sign-sub">(Ký, họ tên)</span>
-        </div>
-      </div>
-    </div>
+    <!-- CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI BẰNG TABLE -->
+    <table style="width: 100%; border: none; margin-top: 20px;">
+      <tr>
+        <td style="width: 50%; text-align: left; border: none; padding: 0 20px 0 0;">
+          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 80%;">
+            <strong>ĐẠI DIỆN BÊN GIAO</strong><br>
+            <span style="font-size: 11px; color: #718096;">(Ký, họ tên, đóng dấu)</span>
+          </div>
+        </td>
+        <td style="width: 50%; text-align: right; border: none; padding: 0 0 0 20px;">
+          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 80%; margin-left: auto;">
+            <strong>ĐẠI DIỆN BÊN NHẬN</strong><br>
+            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
+          </div>
+        </td>
+      </tr>
+    </table>
   `;
 
     Utils.exportToExcel(htmlContent, "phieu_xuat_kho");

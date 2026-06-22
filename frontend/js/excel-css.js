@@ -173,38 +173,5 @@ window.EXCEL_CSS = `
     color: #2d3748;
   }
   
-  /* CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI, MỖI BÊN CÓ KHOẢNG TRỐNG ĐỂ KÝ */
-  .excel-signature-wrapper {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 50px;
-    padding-top: 10px;
-    width: 100%;
-  }
-  .excel-sign-item {
-    text-align: center;
-    width: 45%;
-    max-width: 350px;
-  }
-  .excel-sign-line {
-    margin-top: 50px;
-    padding-top: 8px;
-    border-top: 1px solid #1a202c;
-    font-size: 13px;
-    color: #4a5568;
-    font-family: 'Arial', sans-serif;
-    min-width: 200px;
-  }
-  .excel-sign-sub {
-    font-size: 11px;
-    color: #718096;
-    display: block;
-    margin-top: 4px;
-    font-family: 'Arial', sans-serif;
-  }
-  
-  /* KHOẢNG CÁCH SAU BẢNG */
-  .excel-spacer {
-    height: 40px;
-  }
+  /* CHỮ KÝ - KHÔNG CẦN CSS VÌ ĐÃ DÙNG TABLE TRONG HTML */
 `;
