@@ -451,18 +451,18 @@
       <thead>
         <tr>
           <th style="width:30px;">TT</th>
-          <th style="width:140px;">Tên thương mại</th>
-          <th style="width:80px;">Mã hàng</th>
-          <th style="width:100px;">Quy cách</th>
-          <th style="width:120px;">Hãng SX</th>
-          <th style="width:40px;">ĐVT</th>
-          <th style="width:120px;">Phân loại</th>
+          <th style="width:130px;">Tên thương mại</th>
+          <th style="width:75px;">Mã hàng</th>
+          <th style="width:95px;">Quy cách</th>
+          <th style="width:110px;">Hãng SX</th>
+          <th style="width:35px;">ĐVT</th>
+          <th style="width:110px;">Phân loại</th>
           <th style="width:100px;">Đơn giá</th>
-          <th style="width:60px;">Số lượng</th>
+          <th style="width:55px;">Số lượng</th>
           <th style="width:120px;">Thành tiền</th>
-          <th style="width:80px;">Số lot</th>
-          <th style="width:90px;">HSD</th>
-          <th style="width:100px;">Ghi chú</th>
+          <th style="width:75px;">Số lot</th>
+          <th style="width:85px;">HSD</th>
+          <th style="width:95px;">Ghi chú</th>
         </tr>
       </thead>
       <tbody>
@@ -471,6 +471,10 @@
       </tbody>
     </table>
     
+    <!-- CÁCH BẢNG 3 DÒNG -->
+    <div style="height: 45px;"></div>
+    
+    <!-- CHỮ KÝ 2 BÊN TRÁI PHẢI -->
     <div class="excel-signature">
       <div class="excel-sign-item">
         <div class="excel-sign-line">ĐẠI DIỆN BÊN GIAO<br><span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span></div>

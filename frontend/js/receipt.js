@@ -368,7 +368,6 @@
       return;
     }
 
-    // TẠO BẢNG VỚI CĂN CHỈNH ĐÚNG
     let itemsHTML = data.items
       .map(
         (item, idx) => `
@@ -437,16 +436,16 @@
       <thead>
         <tr>
           <th style="width:35px;">TT</th>
-          <th style="width:180px;">Tên thương mại</th>
-          <th style="width:100px;">Mã hàng</th>
-          <th style="width:120px;">Quy cách</th>
-          <th style="width:160px;">Hãng SX</th>
-          <th style="width:45px;">ĐVT</th>
-          <th style="width:140px;">Phân loại</th>
-          <th style="width:120px;">Đơn giá</th>
-          <th style="width:70px;">Số lượng</th>
-          <th style="width:140px;">Thành tiền</th>
-          <th style="width:100px;">Ghi chú</th>
+          <th style="width:170px;">Tên thương mại</th>
+          <th style="width:95px;">Mã hàng</th>
+          <th style="width:110px;">Quy cách</th>
+          <th style="width:150px;">Hãng SX</th>
+          <th style="width:40px;">ĐVT</th>
+          <th style="width:130px;">Phân loại</th>
+          <th style="width:110px;">Đơn giá</th>
+          <th style="width:65px;">Số lượng</th>
+          <th style="width:130px;">Thành tiền</th>
+          <th style="width:90px;">Ghi chú</th>
         </tr>
       </thead>
       <tbody>
@@ -455,6 +454,10 @@
       </tbody>
     </table>
     
+    <!-- CÁCH BẢNG 3 DÒNG -->
+    <div style="height: 45px;"></div>
+    
+    <!-- CHỮ KÝ 3 BÊN -->
     <div class="excel-signature">
       <div class="excel-sign-item">
         <div class="excel-sign-line">Bộ phận đặt hàng<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>

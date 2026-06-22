@@ -5,7 +5,7 @@
 window.EXCEL_CSS = `
   /* RESET */
   * { 
-    font-family: 'Times New Roman', Arial, sans-serif; 
+    font-family: 'Arial', 'Times New Roman', sans-serif; 
     box-sizing: border-box;
   }
   
@@ -17,26 +17,29 @@ window.EXCEL_CSS = `
     border-bottom: 3px double #1a365d;
   }
   .excel-company-name {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #1a365d;
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 4px;
+    font-family: 'Arial', sans-serif;
   }
   .excel-company-address {
     font-size: 12px;
     color: #4a5568;
+    font-family: 'Arial', sans-serif;
   }
   .excel-company-tax {
     font-size: 12px;
     color: #4a5568;
+    font-family: 'Arial', sans-serif;
   }
   
   /* TIÊU ĐỀ */
   .excel-title {
     text-align: center;
-    margin: 20px 0 10px;
+    margin: 20px 0 5px;
   }
   .excel-title h2 {
     text-align: center;
@@ -45,6 +48,7 @@ window.EXCEL_CSS = `
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
+    font-family: 'Arial', sans-serif;
   }
   .excel-sub-title {
     text-align: center;
@@ -52,19 +56,21 @@ window.EXCEL_CSS = `
     color: #4a5568;
     font-style: italic;
     margin-top: 2px;
+    font-family: 'Arial', sans-serif;
   }
   
   /* NGÀY THÁNG */
   .excel-date-row {
     text-align: right;
-    font-size: 14px;
-    margin-bottom: 20px;
+    font-size: 13px;
+    margin: 10px 0 20px;
     color: #2d3748;
     font-style: italic;
     padding-right: 10px;
+    font-family: 'Arial', sans-serif;
   }
   
-  /* INFO BOX - CĂN CHỈNH ĐẸP */
+  /* INFO BOX */
   .excel-info-box {
     border: 1px solid #dce0e5;
     padding: 12px 16px;
@@ -79,6 +85,7 @@ window.EXCEL_CSS = `
     margin-bottom: 8px;
     border-bottom: 1px solid #dce0e5;
     padding-bottom: 6px;
+    font-family: 'Arial', sans-serif;
   }
   .excel-info-line {
     margin: 5px 0;
@@ -86,11 +93,12 @@ window.EXCEL_CSS = `
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    font-family: 'Arial', sans-serif;
   }
   .excel-info-line label {
     font-weight: 600;
     color: #4a5568;
-    width: 80px;
+    width: 100px;
     flex-shrink: 0;
   }
   .excel-info-line .excel-value {
@@ -107,28 +115,31 @@ window.EXCEL_CSS = `
   .excel-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11px;
     margin: 15px 0;
     border: 1px solid #dce0e5;
+    font-family: 'Arial', sans-serif;
   }
   .excel-table th {
     background: #1a365d;
     color: #ffffff;
     font-weight: 700;
-    padding: 8px 10px;
+    padding: 8px 8px;
     border: 1px solid #2a4a6e;
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     white-space: nowrap;
+    font-family: 'Arial', sans-serif;
   }
   .excel-table td {
-    padding: 6px 10px;
+    padding: 6px 8px;
     border: 1px solid #dce0e5;
-    font-size: 12px;
+    font-size: 11px;
     color: #1a202c;
     vertical-align: middle;
+    font-family: 'Arial', sans-serif;
   }
   
   /* CĂN LỀ */
@@ -136,19 +147,20 @@ window.EXCEL_CSS = `
   .excel-text-center { text-align: center !important; }
   .excel-text-right { text-align: right !important; }
   
-  /* TỔNG CỘNG */
+  /* TỔNG CỘNG - CÁCH BẢNG 2 DÒNG */
   .excel-total-row {
     background: #edf2f7;
     font-weight: 700;
     border-top: 2px solid #1a365d;
   }
   .excel-total-row td {
-    font-size: 14px;
-    padding: 10px 10px;
+    font-size: 13px;
+    padding: 10px 8px;
     color: #1a365d;
+    font-family: 'Arial', sans-serif;
   }
   .excel-total-amount {
-    font-size: 16px;
+    font-size: 15px;
     color: #1a365d;
     font-weight: 700;
   }
@@ -161,28 +173,35 @@ window.EXCEL_CSS = `
     color: #2d3748;
   }
   
-  /* CHỮ KÝ */
+  /* CHỮ KÝ - 2 BÊN TRÁI PHẢI, CÁCH BẢNG 3 DÒNG */
   .excel-signature {
     display: flex;
     justify-content: space-between;
-    margin-top: 40px;
-    padding-top: 20px;
+    margin-top: 50px;
+    padding-top: 10px;
   }
   .excel-sign-item {
     text-align: center;
-    width: 200px;
+    width: 250px;
   }
   .excel-sign-line {
-    margin-top: 35px;
+    margin-top: 40px;
     padding-top: 8px;
     border-top: 1px solid #1a202c;
     font-size: 12px;
     color: #4a5568;
+    font-family: 'Arial', sans-serif;
   }
   .excel-sign-sub {
     font-size: 10px;
     color: #718096;
     display: block;
     margin-top: 3px;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  /* TẠO KHOẢNG CÁCH SAU BẢNG BẰNG CÁCH THÊM DÒNG TRỐNG */
+  .excel-spacer {
+    height: 30px;
   }
 `;
