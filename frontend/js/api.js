@@ -1,6 +1,5 @@
 /**
  * ==================== API WRAPPER ====================
- * Tất cả các gọi API đều qua đây
  */
 
 const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
@@ -176,10 +175,8 @@ const receiptAPI = {
   },
 
   create: async (receiptData) => {
-    // LOG DỮ LIỆU ĐỂ DEBUG
     console.log("📤 Receipt data nhận được:", receiptData);
 
-    // ĐẢM BẢO TẤT CẢ FIELD ĐỀU CÓ GIÁ TRỊ
     const payload = {
       receiptDate:
         receiptData.receiptDate || new Date().toISOString().split("T")[0],
@@ -235,7 +232,6 @@ const exportAPI = {
   },
 
   create: async (exportData) => {
-    // LOG DỮ LIỆU ĐỂ DEBUG
     console.log("📤 Export data nhận được:", exportData);
 
     const payload = {
@@ -274,7 +270,7 @@ const exportAPI = {
   },
 };
 
-// ========== APPROVAL API (yêu cầu thêm sản phẩm) ==========
+// ========== APPROVAL API ==========
 const approvalAPI = {
   createRequest: async (productData) => {
     return await apiCall("/approvals", {
@@ -314,7 +310,7 @@ const approvalAPI = {
   },
 };
 
-// ========== DELETION API (yêu cầu xóa sản phẩm) ==========
+// ========== DELETION API ==========
 const deletionAPI = {
   createRequest: async (productId) => {
     return await apiCall("/deletions", {
@@ -348,7 +344,7 @@ const deletionAPI = {
   },
 };
 
-// ========== EDIT API (yêu cầu chỉnh sửa sản phẩm) ==========
+// ========== EDIT API ==========
 const editAPI = {
   createRequest: async (productId, updatedData) => {
     return await apiCall("/edits", {
