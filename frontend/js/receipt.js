@@ -368,90 +368,105 @@
       return;
     }
 
+    // TẠO BẢNG VỚI CĂN CHỈNH ĐÚNG
     let itemsHTML = data.items
       .map(
         (item, idx) => `
       <tr>
-        <td class="text-center">${idx + 1}</td>
-        <td>${escapeHtml(item.tenThuongMai)}</td>
-        <td>${escapeHtml(item.maHang)}</td>
-        <td>${escapeHtml(item.quyCach)}</td>
-        <td>${escapeHtml(item.hangSX)}</td>
-        <td>${escapeHtml(item.dvt)}</td>
-        <td>${escapeHtml(item.phanLoai)}</td>
-        <td class="text-right">${formatCurrency(item.giaNhap)}</td>
-        <td class="text-right">${item.soLuongNhap}</td>
-        <td class="text-right">${formatCurrency(item.thanhTien)}</td>
-        <td></td>
+        <td class="excel-text-center">${idx + 1}</td>
+        <td class="excel-text-left">${escapeHtml(item.tenThuongMai)}</td>
+        <td class="excel-text-left">${escapeHtml(item.maHang)}</td>
+        <td class="excel-text-left">${escapeHtml(item.quyCach)}</td>
+        <td class="excel-text-left">${escapeHtml(item.hangSX)}</td>
+        <td class="excel-text-center">${escapeHtml(item.dvt)}</td>
+        <td class="excel-text-left">${escapeHtml(item.phanLoai)}</td>
+        <td class="excel-text-right">${formatCurrency(item.giaNhap)}</td>
+        <td class="excel-text-right">${item.soLuongNhap}</td>
+        <td class="excel-text-right">${formatCurrency(item.thanhTien)}</td>
+        <td class="excel-text-left">${escapeHtml(item.ghiChu || "")}</td>
       </tr>
     `,
       )
       .join("");
 
     const totalHTML = `
-      <tr class="total-row">
-        <td colspan="8" class="text-right"><strong>TỔNG CỘNG:</strong></td>
-        <td class="text-right"><strong>${formatCurrency(data.total)}</strong></td>
-        <td colspan="2"></td>
-      </tr>
-    `;
+    <tr class="excel-total-row">
+      <td colspan="9" class="excel-text-right"><strong>TỔNG CỘNG:</strong></td>
+      <td class="excel-text-right excel-total-amount"><strong>${formatCurrency(data.total)}</strong></td>
+      <td></td>
+    </tr>
+  `;
+
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
 
     const htmlContent = `
-      <div class="company-header">
-        <div class="company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
-        <div class="company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
-        <div class="company-tax">MST: 0316156162</div>
-      </div>
-      
+    <div class="excel-company-header">
+      <div class="excel-company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
+      <div class="excel-company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
+      <div class="excel-company-tax">MST: 0316156162</div>
+    </div>
+    
+    <div class="excel-title">
       <h2>PHIẾU ĐỀ NGHỊ NHẬP HÀNG HÓA</h2>
-      
-      <div class="date-row">
-        Ngày ${DOM.day?.textContent || ""} tháng ${DOM.month?.textContent || ""} năm ${DOM.year?.textContent || ""}
+    </div>
+    
+    <div class="excel-date-row">
+      Ngày ${day} tháng ${month} năm ${year}
+    </div>
+    
+    <div class="excel-info-grid">
+      <div class="excel-info-box">
+        <strong>📦 Thông tin nhà cung cấp</strong>
+        <div class="excel-info-line"><label>Công ty:</label> <span class="excel-value">${escapeHtml(data.supplierName)}</span></div>
+        <div class="excel-info-line"><label>Địa chỉ:</label> <span class="excel-value">${escapeHtml(data.supplierAddress)}</span></div>
+        <div class="excel-info-line"><label>MST:</label> <span class="excel-value">${escapeHtml(data.supplierTax)}</span></div>
       </div>
-      
-      <div class="info-grid">
-        <div class="info-box">
-          <strong>📦 Thông tin nhà cung cấp</strong>
-          <div class="info-line"><label>Công ty:</label> ${escapeHtml(data.supplierName)}</div>
-          <div class="info-line"><label>Địa chỉ:</label> ${escapeHtml(data.supplierAddress)}</div>
-          <div class="info-line"><label>MST:</label> ${escapeHtml(data.supplierTax)}</div>
-        </div>
-        <div class="info-box">
-          <strong>🏥 Thông tin khách hàng</strong>
-          <div class="info-line"><label>Tên đơn vị:</label> ${escapeHtml(data.customerName)}</div>
-          <div class="info-line"><label>Địa chỉ:</label> ${escapeHtml(data.customerAddress)}</div>
-          <div class="info-line"><label>MST:</label> ${escapeHtml(data.customerTax)}</div>
-          <div class="info-line"><label>Số HĐ:</label> ${escapeHtml(data.customerContract)}</div>
-        </div>
+      <div class="excel-info-box">
+        <strong>🏥 Thông tin khách hàng</strong>
+        <div class="excel-info-line"><label>Tên đơn vị:</label> <span class="excel-value">${escapeHtml(data.customerName)}</span></div>
+        <div class="excel-info-line"><label>Địa chỉ:</label> <span class="excel-value">${escapeHtml(data.customerAddress)}</span></div>
+        <div class="excel-info-line"><label>MST:</label> <span class="excel-value">${escapeHtml(data.customerTax)}</span></div>
+        <div class="excel-info-line"><label>Số HĐ:</label> <span class="excel-value">${escapeHtml(data.customerContract)}</span></div>
       </div>
-      
-      <table>
-        <thead>
-          <tr>
-            <th>TT</th>
-            <th>Tên thương mại</th>
-            <th>Mã hàng</th>
-            <th>Quy cách</th>
-            <th>Hãng SX</th>
-            <th>ĐVT</th>
-            <th>Phân loại</th>
-            <th>Đơn giá</th>
-            <th>Số lượng</th>
-            <th>Thành tiền</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itemsHTML}
-          ${totalHTML}
-        </tbody>
-      </table>
-      
-      <div class="signature">
-        <div class="sign-item"><div class="sign-line">Bộ phận đặt hàng</div></div>
-        <div class="sign-item"><div class="sign-line">Người lập phiếu</div></div>
-        <div class="sign-item"><div class="sign-line">Giám đốc</div></div>
+    </div>
+    
+    <table class="excel-table">
+      <thead>
+        <tr>
+          <th style="width:35px;">TT</th>
+          <th style="width:180px;">Tên thương mại</th>
+          <th style="width:100px;">Mã hàng</th>
+          <th style="width:120px;">Quy cách</th>
+          <th style="width:160px;">Hãng SX</th>
+          <th style="width:45px;">ĐVT</th>
+          <th style="width:140px;">Phân loại</th>
+          <th style="width:120px;">Đơn giá</th>
+          <th style="width:70px;">Số lượng</th>
+          <th style="width:140px;">Thành tiền</th>
+          <th style="width:100px;">Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHTML}
+        ${totalHTML}
+      </tbody>
+    </table>
+    
+    <div class="excel-signature">
+      <div class="excel-sign-item">
+        <div class="excel-sign-line">Bộ phận đặt hàng<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>
       </div>
-    `;
+      <div class="excel-sign-item">
+        <div class="excel-sign-line">Người lập phiếu<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>
+      </div>
+      <div class="excel-sign-item">
+        <div class="excel-sign-line">Giám đốc<br><span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span></div>
+      </div>
+    </div>
+  `;
 
     Utils.exportToExcel(htmlContent, "phieu_nhap_hang");
   }
