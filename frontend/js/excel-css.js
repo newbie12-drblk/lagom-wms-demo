@@ -147,7 +147,7 @@ window.EXCEL_CSS = `
   .excel-text-center { text-align: center !important; }
   .excel-text-right { text-align: right !important; }
   
-  /* TỔNG CỘNG - CÁCH BẢNG 2 DÒNG */
+  /* TỔNG CỘNG */
   .excel-total-row {
     background: #edf2f7;
     font-weight: 700;
@@ -173,35 +173,38 @@ window.EXCEL_CSS = `
     color: #2d3748;
   }
   
-  /* CHỮ KÝ - 2 BÊN TRÁI PHẢI, CÁCH BẢNG 3 DÒNG */
-  .excel-signature {
+  /* CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI, MỖI BÊN CÓ KHOẢNG TRỐNG ĐỂ KÝ */
+  .excel-signature-wrapper {
     display: flex;
     justify-content: space-between;
     margin-top: 50px;
     padding-top: 10px;
+    width: 100%;
   }
   .excel-sign-item {
     text-align: center;
-    width: 250px;
+    width: 45%;
+    max-width: 350px;
   }
   .excel-sign-line {
-    margin-top: 40px;
+    margin-top: 50px;
     padding-top: 8px;
     border-top: 1px solid #1a202c;
-    font-size: 12px;
+    font-size: 13px;
     color: #4a5568;
     font-family: 'Arial', sans-serif;
+    min-width: 200px;
   }
   .excel-sign-sub {
-    font-size: 10px;
+    font-size: 11px;
     color: #718096;
     display: block;
-    margin-top: 3px;
+    margin-top: 4px;
     font-family: 'Arial', sans-serif;
   }
   
-  /* TẠO KHOẢNG CÁCH SAU BẢNG BẰNG CÁCH THÊM DÒNG TRỐNG */
+  /* KHOẢNG CÁCH SAU BẢNG */
   .excel-spacer {
-    height: 30px;
+    height: 40px;
   }
 `;

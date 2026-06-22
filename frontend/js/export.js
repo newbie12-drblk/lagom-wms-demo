@@ -474,13 +474,19 @@
     <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ 2 BÊN TRÁI PHẢI -->
-    <div class="excel-signature">
-      <div class="excel-sign-item">
-        <div class="excel-sign-line">ĐẠI DIỆN BÊN GIAO<br><span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span></div>
+    <!-- CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI -->
+    <div class="excel-signature-wrapper">
+      <div class="excel-sign-item" style="text-align: left; padding-left: 20px;">
+        <div class="excel-sign-line" style="width: 250px; margin-left: 0; margin-right: auto;">
+          ĐẠI DIỆN BÊN GIAO
+          <span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span>
+        </div>
       </div>
-      <div class="excel-sign-item">
-        <div class="excel-sign-line">ĐẠI DIỆN BÊN NHẬN<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>
+      <div class="excel-sign-item" style="text-align: right; padding-right: 20px;">
+        <div class="excel-sign-line" style="width: 250px; margin-right: 0; margin-left: auto;">
+          ĐẠI DIỆN BÊN NHẬN
+          <span class="excel-sign-sub">(Ký, họ tên)</span>
+        </div>
       </div>
     </div>
   `;

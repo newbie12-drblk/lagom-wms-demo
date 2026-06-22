@@ -457,16 +457,25 @@
     <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ 3 BÊN -->
-    <div class="excel-signature">
-      <div class="excel-sign-item">
-        <div class="excel-sign-line">Bộ phận đặt hàng<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>
+    <!-- CHỮ KÝ - 3 BÊN ĐỀU NHAU -->
+    <div class="excel-signature-wrapper" style="display: flex; justify-content: space-between;">
+      <div class="excel-sign-item" style="text-align: center; width: 30%;">
+        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
+          Bộ phận đặt hàng
+          <span class="excel-sign-sub">(Ký, họ tên)</span>
+        </div>
       </div>
-      <div class="excel-sign-item">
-        <div class="excel-sign-line">Người lập phiếu<br><span class="excel-sign-sub">(Ký, họ tên)</span></div>
+      <div class="excel-sign-item" style="text-align: center; width: 30%;">
+        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
+          Người lập phiếu
+          <span class="excel-sign-sub">(Ký, họ tên)</span>
+        </div>
       </div>
-      <div class="excel-sign-item">
-        <div class="excel-sign-line">Giám đốc<br><span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span></div>
+      <div class="excel-sign-item" style="text-align: center; width: 30%;">
+        <div class="excel-sign-line" style="width: 180px; margin: 0 auto;">
+          Giám đốc
+          <span class="excel-sign-sub">(Ký, họ tên, đóng dấu)</span>
+        </div>
       </div>
     </div>
   `;
