@@ -68,13 +68,8 @@
 
     let totalValue = 0;
     for (const r of filtered) {
-      let val = 0;
-      if (typeof r.total === "string") {
-        val = parseFloat(r.total.replace(/,/g, "")) || 0;
-      } else {
-        val = parseFloat(r.total) || 0;
-      }
-      totalValue += val;
+      const cleanTotal = String(r.total || "0").replace(/[.,]/g, "");
+      totalValue += parseFloat(cleanTotal) || 0;
     }
 
     if (totalCountSpan) totalCountSpan.textContent = total;
@@ -118,7 +113,7 @@
         const status = statusMap[exportItem.status] || statusMap["pending"];
 
         return `
-          <div class="receipt-card" data-id="${exportItem.id}" onclick="Components.viewExportDetail(${exportItem.id})">
+          <div class="receipt-card" data-id="${exportItem.id}" onclick="if(window.Components) Components.viewExportDetail(${exportItem.id})">
             <div class="receipt-card-header">
               <div class="receipt-card-id">
                 <i class="fas fa-file-export"></i> ${Utils.escapeHtml(exportItem.exportNo || "PX-" + exportItem.id)}
@@ -149,6 +144,26 @@
         `;
       })
       .join("");
+
+    // Bind click event an toàn
+    container.querySelectorAll(".receipt-card").forEach((card) => {
+      card.addEventListener("click", function (e) {
+        if (e.target.closest("button")) return;
+        const id = this.dataset.id;
+        if (
+          window.Components &&
+          typeof Components.viewExportDetail === "function"
+        ) {
+          Components.viewExportDetail(id);
+        } else {
+          console.error("❌ Components.viewExportDetail not found!");
+          Utils.showToast(
+            "Lỗi: Không tìm thấy chức năng xem chi tiết",
+            "error",
+          );
+        }
+      });
+    });
   }
 
   function changePage(delta) {
@@ -192,6 +207,8 @@
     loadExports();
     bindEvents();
   }
+
+  window.loadExports = loadExports;
 
   init();
 })();

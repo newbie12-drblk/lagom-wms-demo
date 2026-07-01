@@ -2,15 +2,98 @@
  * ==================== COMPONENTS ====================
  * Tạo các component UI động bằng JavaScript
  */
+console.log("🔧 COMPONENTS.JS LOADED SUCCESSFULLY");
 
 const Components = {
-  // ... existing methods ...
+  // ========== TẠO CARD PHIẾU NHẬP ==========
+  createReceiptCard: (receipt) => {
+    const statusMap = {
+      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      approved: { class: "status-approved", text: "✅ Đã xác nhận" },
+      rejected: { class: "status-rejected", text: "❌ Từ chối" },
+    };
+    const status = statusMap[receipt.status] || statusMap["pending"];
 
-  // Xem chi tiết phiếu nhập - THÊM NÚT DUYỆT
+    return `
+      <div class="receipt-card" data-id="${receipt.id}" onclick="if(window.Components) Components.viewReceiptDetail(${receipt.id})">
+        <div class="receipt-card-header">
+          <div class="receipt-card-id">
+            <i class="fas fa-file-invoice"></i> ${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}
+          </div>
+          <div class="receipt-card-date">
+            <i class="far fa-calendar-alt"></i> ${Utils.formatDate(receipt.receiptDate || receipt.createdAt)}
+          </div>
+          <span class="status-badge ${status.class}">${status.text}</span>
+        </div>
+        <div class="receipt-card-body">
+          <div class="receipt-card-info">
+            <div class="label">Nhà cung cấp</div>
+            <div class="value">${Utils.escapeHtml(receipt.supplierName || "Chưa có")}</div>
+          </div>
+          <div class="receipt-card-info">
+            <div class="label">Số sản phẩm</div>
+            <div class="value">${receipt.items?.length || 0}</div>
+          </div>
+          <div class="receipt-card-total">
+            <div class="label">Tổng tiền</div>
+            <div class="value">${Utils.formatCurrency(receipt.total || 0)}</div>
+          </div>
+        </div>
+        <div class="receipt-card-footer">
+          <i class="fas fa-eye"></i> Xem chi tiết
+        </div>
+      </div>
+    `;
+  },
+
+  // ========== TẠO CARD PHIẾU XUẤT ==========
+  createExportCard: (exportItem) => {
+    const statusMap = {
+      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      approved: { class: "status-approved", text: "✅ Đã xác nhận" },
+      rejected: { class: "status-rejected", text: "❌ Từ chối" },
+    };
+    const status = statusMap[exportItem.status] || statusMap["pending"];
+
+    return `
+      <div class="receipt-card" data-id="${exportItem.id}" onclick="if(window.Components) Components.viewExportDetail(${exportItem.id})">
+        <div class="receipt-card-header">
+          <div class="receipt-card-id">
+            <i class="fas fa-file-export"></i> ${Utils.escapeHtml(exportItem.exportNo || "PX-" + exportItem.id)}
+          </div>
+          <div class="receipt-card-date">
+            <i class="far fa-calendar-alt"></i> ${Utils.formatDate(exportItem.exportDate || exportItem.createdAt)}
+          </div>
+          <span class="status-badge ${status.class}">${status.text}</span>
+        </div>
+        <div class="receipt-card-body">
+          <div class="receipt-card-info">
+            <div class="label">Người nhận</div>
+            <div class="value">${Utils.escapeHtml(exportItem.receiverName || "Chưa có")}</div>
+          </div>
+          <div class="receipt-card-info">
+            <div class="label">Số sản phẩm</div>
+            <div class="value">${exportItem.items?.length || 0}</div>
+          </div>
+          <div class="receipt-card-total">
+            <div class="label">Tổng tiền</div>
+            <div class="value">${Utils.formatCurrency(exportItem.total || 0)}</div>
+          </div>
+        </div>
+        <div class="receipt-card-footer">
+          <i class="fas fa-eye"></i> Xem chi tiết
+        </div>
+      </div>
+    `;
+  },
+
+  // ========== XEM CHI TIẾT PHIẾU NHẬP ==========
   viewReceiptDetail: async (id) => {
+    console.log("📋 viewReceiptDetail called with id:", id);
     Utils.showLoading(true, "Đang tải chi tiết...");
     try {
       const receipt = await window.API.receipt.getById(id);
+      console.log("📦 Receipt data received:", receipt);
       const modal = document.getElementById("receiptDetailModal");
       const body = document.getElementById("receiptDetailBody");
       const footer = document.querySelector(
@@ -100,17 +183,20 @@ const Components = {
 
       if (modal) modal.style.display = "block";
     } catch (error) {
+      console.error("❌ Error loading receipt:", error);
       Utils.showToast("Lỗi khi tải chi tiết phiếu", "error");
     } finally {
       Utils.showLoading(false);
     }
   },
 
-  // Xem chi tiết phiếu xuất - THÊM NÚT DUYỆT
+  // ========== XEM CHI TIẾT PHIẾU XUẤT ==========
   viewExportDetail: async (id) => {
+    console.log("📋 viewExportDetail called with id:", id);
     Utils.showLoading(true, "Đang tải chi tiết...");
     try {
       const exportItem = await window.API.export.getById(id);
+      console.log("📦 Export data received:", exportItem);
       const modal = document.getElementById("exportDetailModal");
       const body = document.getElementById("exportDetailBody");
       const footer = document.querySelector("#exportDetailModal .modal-footer");
@@ -195,6 +281,7 @@ const Components = {
 
       if (modal) modal.style.display = "block";
     } catch (error) {
+      console.error("❌ Error loading export detail:", error);
       Utils.showToast("Lỗi khi tải chi tiết phiếu", "error");
     } finally {
       Utils.showLoading(false);
@@ -211,10 +298,8 @@ async function approveReceipt(id) {
     const result = await window.API.receipt.updateStatus(id, "approved");
     if (result.success) {
       Utils.showToast("✅ Đã duyệt phiếu nhập thành công!");
-      // Cập nhật tồn kho
       await updateInventoryFromReceipt(id);
       closeModal("receiptDetailModal");
-      // Refresh danh sách
       if (typeof loadReceipts === "function") loadReceipts();
     } else {
       Utils.showToast(
@@ -312,15 +397,12 @@ async function updateInventoryFromReceipt(receiptId) {
     if (!receipt || !receipt.items) return;
 
     for (const item of receipt.items) {
-      // Kiểm tra sản phẩm đã tồn tại trong kho chưa
       const existing = await window.API.inventory.getByMaHang(item.maHang);
       if (existing) {
-        // Cập nhật số lượng tồn
         await window.API.inventory.update(existing.id, {
           tonKho: (existing.tonKho || 0) + (item.soLuongNhap || 0),
         });
       } else {
-        // Tạo mới sản phẩm trong kho
         await window.API.inventory.create({
           tenThuongMai: item.tenThuongMai,
           maHang: item.maHang,
@@ -349,5 +431,10 @@ function closeModal(modalId) {
   if (modal) modal.style.display = "none";
 }
 
-// Export
+// ========== EXPORT ==========
 window.Components = Components;
+window.closeModal = closeModal;
+window.approveReceipt = approveReceipt;
+window.rejectReceipt = rejectReceipt;
+window.approveExport = approveExport;
+window.rejectExport = rejectExport;

@@ -30,13 +30,13 @@
     }
 
     userBar.innerHTML = `
-            <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
-            <div class="user-details">
-                <span class="user-name">${Utils.escapeHtml(user.fullName)}</span>
-                <span class="user-role role-${user.roleId}">${user.roleName}</span>
-            </div>
-            <button class="logout-btn" id="topbarLogoutBtn" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
-        `;
+      <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+      <div class="user-details">
+        <span class="user-name">${Utils.escapeHtml(user.fullName)}</span>
+        <span class="user-role role-${user.roleId}">${user.roleName}</span>
+      </div>
+      <button class="logout-btn" id="topbarLogoutBtn" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
+    `;
 
     document
       .getElementById("topbarLogoutBtn")
