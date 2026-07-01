@@ -65,12 +65,13 @@
 
   function updateStats(filtered) {
     const total = filtered.length;
-    // SỬA: Chuyển total về Number trước khi tính
-    const totalValue = filtered.reduce((sum, r) => {
-      const val =
-        typeof r.total === "string" ? parseFloat(r.total) : r.total || 0;
-      return sum + val;
-    }, 0);
+
+    // ĐƠN GIẢN: Cộng tất cả total của các phiếu
+    let totalValue = 0;
+    for (const r of filtered) {
+      const val = parseFloat(r.total) || 0;
+      totalValue += val;
+    }
 
     if (totalCountSpan) totalCountSpan.textContent = total;
     if (totalValueSpan) {
