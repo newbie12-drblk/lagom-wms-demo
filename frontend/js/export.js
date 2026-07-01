@@ -1,6 +1,6 @@
 /**
  * ==================== EXPORT MODULE ====================
- * Quản lý phiếu xuất kho - FIXED VERSION
+ * Quản lý phiếu xuất kho - TỰ ĐỘNG DUYỆT
  */
 
 (function () {
@@ -263,7 +263,6 @@
       });
     });
 
-    // Lấy giá trị từ DOM
     const customerNameEl = document.getElementById("customerName");
     const customerAddressEl = document.getElementById("customerAddress");
     const customerTaxEl = document.getElementById("customerTax");
@@ -272,7 +271,6 @@
     const receiverNameEl = document.getElementById("receiverName");
     const exportReasonEl = document.getElementById("exportReason");
 
-    // Lấy ngày hiện tại định dạng YYYY-MM-DD
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -280,7 +278,7 @@
     const exportDate = `${year}-${month}-${day}`;
 
     const data = {
-      exportDate: exportDate, // ĐỊNH DẠNG YYYY-MM-DD
+      exportDate: exportDate,
       exportNo: exportNoEl?.value || "",
       customerName: customerNameEl?.value || "",
       customerAddress: customerAddressEl?.value || "",
@@ -294,6 +292,29 @@
 
     console.log("📤 Dữ liệu thu thập được:", JSON.stringify(data, null, 2));
     return data;
+  }
+
+  // ========== Reset form (không confirm - dùng sau khi lưu) ==========
+  function resetFormData() {
+    if (DOM.customerName) DOM.customerName.value = "";
+    if (DOM.customerAddress) DOM.customerAddress.value = "";
+    if (DOM.customerTax) DOM.customerTax.value = "";
+    if (DOM.customerContract) DOM.customerContract.value = "";
+    if (DOM.exportNo)
+      DOM.exportNo.value = "PX-" + new Date().getFullYear() + "-001";
+    if (DOM.receiverName) DOM.receiverName.value = "";
+    if (DOM.exportReason) DOM.exportReason.value = "Sử dụng nội bộ";
+    if (DOM.itemsBody) DOM.itemsBody.innerHTML = "";
+    rowCounter = 1;
+    addNewRow();
+    calculateTotal();
+  }
+
+  // ========== Làm mới form (có confirm - dùng cho nút Làm mới) ==========
+  function clearForm() {
+    if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu xuất?")) {
+      resetFormData();
+    }
   }
 
   // ========== LƯU PHIẾU XUẤT ==========
@@ -321,8 +342,20 @@
       console.log("📥 Kết quả từ server:", result);
 
       if (result.success) {
-        Utils.showToast("✅ Đã lưu phiếu xuất kho thành công!");
-        clearForm();
+        if (result.data && result.data.status === "approved") {
+          Utils.showToast("✅ " + result.message);
+        } else if (result.details && result.details.length > 0) {
+          let errorMsg = "⚠️ " + result.message + "\n\n";
+          errorMsg += result.details.join("\n");
+          alert(errorMsg);
+          Utils.showToast("⚠️ Phiếu đã lưu nhưng cần kiểm tra lại", "warning");
+        } else if (result.data && result.data.status === "pending") {
+          Utils.showToast("⚠️ " + result.message, "warning");
+        } else {
+          Utils.showToast("✅ " + result.message);
+        }
+        // 👇 GỌI resetFormData() KHÔNG CONFIRM
+        resetFormData();
       } else {
         Utils.showToast(
           "❌ Lỗi: " + (result.message || "Không thể lưu phiếu"),
@@ -337,23 +370,6 @@
       );
     } finally {
       Utils.showLoading(false);
-    }
-  }
-
-  // ========== Làm mới form ==========
-  function clearForm() {
-    if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu xuất?")) {
-      if (DOM.customerName) DOM.customerName.value = "";
-      if (DOM.customerAddress) DOM.customerAddress.value = "";
-      if (DOM.customerTax) DOM.customerTax.value = "";
-      if (DOM.customerContract) DOM.customerContract.value = "";
-      if (DOM.exportNo)
-        DOM.exportNo.value = "PX-" + new Date().getFullYear() + "-001";
-      if (DOM.receiverName) DOM.receiverName.value = "";
-      if (DOM.exportReason) DOM.exportReason.value = "Sử dụng nội bộ";
-      if (DOM.itemsBody) DOM.itemsBody.innerHTML = "";
-      rowCounter = 1;
-      addNewRow();
     }
   }
 
@@ -471,10 +487,8 @@
       </tbody>
     </table>
     
-    <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ - TÁCH 2 BÊN TRÁI PHẢI BẰNG TABLE -->
     <table style="width: 100%; border: none; margin-top: 20px;">
       <tr>
         <td style="width: 50%; text-align: left; border: none; padding: 0 20px 0 0;">

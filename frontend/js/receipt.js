@@ -280,6 +280,28 @@
     return data;
   }
 
+  // ========== Reset form (không confirm - dùng sau khi lưu) ==========
+  function resetFormData() {
+    if (DOM.supplierName) DOM.supplierName.value = "";
+    if (DOM.supplierAddress) DOM.supplierAddress.value = "";
+    if (DOM.supplierTax) DOM.supplierTax.value = "";
+    if (DOM.customerName) DOM.customerName.value = "";
+    if (DOM.customerAddress) DOM.customerAddress.value = "";
+    if (DOM.customerTax) DOM.customerTax.value = "";
+    if (DOM.customerContract) DOM.customerContract.value = "";
+    if (DOM.itemsBody) DOM.itemsBody.innerHTML = "";
+    rowCounter = 1;
+    addNewRow();
+    calculateTotal();
+  }
+
+  // ========== Làm mới form (có confirm - dùng cho nút Làm mới) ==========
+  function clearForm() {
+    if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu?")) {
+      resetFormData();
+    }
+  }
+
   // ========== LƯU PHIẾU NHẬP ==========
   async function saveReceipt() {
     const data = getReceiptData();
@@ -305,11 +327,9 @@
       console.log("📥 Kết quả từ server:", result);
 
       if (result.success) {
-        // Kiểm tra xem phiếu có được tự động duyệt không
         if (result.data && result.data.status === "approved") {
           Utils.showToast("✅ " + result.message);
         } else if (result.details && result.details.length > 0) {
-          // Có lỗi không khớp
           let errorMsg = "⚠️ " + result.message + "\n\n";
           errorMsg += result.details.join("\n");
           alert(errorMsg);
@@ -319,7 +339,8 @@
         } else {
           Utils.showToast("✅ " + result.message);
         }
-        clearForm();
+        // 👇 GỌI resetFormData() KHÔNG CONFIRM
+        resetFormData();
       } else {
         Utils.showToast(
           "❌ Lỗi: " + (result.message || "Không thể lưu phiếu"),
@@ -334,22 +355,6 @@
       );
     } finally {
       Utils.showLoading(false);
-    }
-  }
-
-  // ========== Làm mới form ==========
-  function clearForm() {
-    if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu?")) {
-      if (DOM.supplierName) DOM.supplierName.value = "";
-      if (DOM.supplierAddress) DOM.supplierAddress.value = "";
-      if (DOM.supplierTax) DOM.supplierTax.value = "";
-      if (DOM.customerName) DOM.customerName.value = "";
-      if (DOM.customerAddress) DOM.customerAddress.value = "";
-      if (DOM.customerTax) DOM.customerTax.value = "";
-      if (DOM.customerContract) DOM.customerContract.value = "";
-      if (DOM.itemsBody) DOM.itemsBody.innerHTML = "";
-      rowCounter = 1;
-      addNewRow();
     }
   }
 
