@@ -826,3 +826,116 @@ body {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
 }
+
+/* ==================== MODAL CHI TIẾT PHIẾU ==================== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 99999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.show,
+.modal[style*="display: flex"] {
+  display: flex !important;
+}
+
+.modal-content {
+  background: #111827;
+  border: 1px solid #1e2d45;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #1e2d45;
+  background: #0f172a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #60a5fa;
+  margin: 0;
+}
+
+.modal-header .close-receipt-modal,
+.modal-header .close-export-modal {
+  font-size: 28px;
+  cursor: pointer;
+  color: #6b82a0;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.modal-header .close-receipt-modal:hover,
+.modal-header .close-export-modal:hover {
+  color: #f87171;
+}
+
+.modal-body {
+  padding: 24px;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #1e2d45;
+  border-radius: 3px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #1e2d45;
+  background: #0f172a;
+  position: sticky;
+  bottom: 0;
+  border-radius: 0 0 16px 16px;
+}
+
+.modal-footer .btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}

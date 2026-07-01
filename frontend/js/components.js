@@ -126,7 +126,7 @@ const Components = {
       let itemsTableHtml = "";
       if (receipt.items && receipt.items.length > 0) {
         itemsTableHtml = `
-          <div class="detail-section" style="margin-top: 20px;">
+          <div style="margin-top: 20px;">
             <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📦 Danh sách sản phẩm</h4>
             <div style="overflow-x: auto;">
               <table style="width:100%; border-collapse: collapse; font-size: 13px;">
@@ -176,7 +176,7 @@ const Components = {
         `;
       } else {
         itemsTableHtml = `
-          <div class="detail-section" style="margin-top: 20px;">
+          <div style="margin-top: 20px;">
             <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📦 Danh sách sản phẩm</h4>
             <div style="padding: 20px; text-align: center; color: #6b82a0;">Không có sản phẩm trong phiếu này</div>
           </div>
@@ -184,7 +184,7 @@ const Components = {
       }
 
       body.innerHTML = `
-        <div class="detail-section">
+        <div>
           <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📋 Thông tin phiếu nhập</h4>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
             <div><strong style="color: #6b82a0;">Số phiếu:</strong> <span style="color: #60a5fa;">${Utils.escapeHtml(receipt.receiptNo)}</span></div>
@@ -204,9 +204,23 @@ const Components = {
         ${itemsTableHtml}
       `;
 
-      modal.style.display = "flex";
-      modal.style.alignItems = "center";
-      modal.style.justifyContent = "center";
+      // HIỂN THỊ MODAL - CÁCH CHẮC CHẮN
+      modal.style.cssText = `
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        z-index: 99999 !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.8) !important;
+        backdrop-filter: blur(4px) !important;
+      `;
+
+      // Đảm bảo body không bị scroll
+      document.body.style.overflow = "hidden";
 
       console.log("✅ Modal displayed successfully");
     } catch (error) {
@@ -256,7 +270,7 @@ const Components = {
       let itemsTableHtml = "";
       if (exportItem.items && exportItem.items.length > 0) {
         itemsTableHtml = `
-          <div class="detail-section" style="margin-top: 20px;">
+          <div style="margin-top: 20px;">
             <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📦 Danh sách sản phẩm xuất</h4>
             <div style="overflow-x: auto;">
               <table style="width:100%; border-collapse: collapse; font-size: 13px;">
@@ -313,7 +327,7 @@ const Components = {
         `;
       } else {
         itemsTableHtml = `
-          <div class="detail-section" style="margin-top: 20px;">
+          <div style="margin-top: 20px;">
             <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📦 Danh sách sản phẩm xuất</h4>
             <div style="padding: 20px; text-align: center; color: #6b82a0;">Không có sản phẩm trong phiếu này</div>
           </div>
@@ -321,7 +335,7 @@ const Components = {
       }
 
       body.innerHTML = `
-        <div class="detail-section">
+        <div>
           <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📋 Thông tin phiếu xuất</h4>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
             <div><strong style="color: #6b82a0;">Số phiếu:</strong> <span style="color: #60a5fa;">${Utils.escapeHtml(exportItem.exportNo)}</span></div>
@@ -340,9 +354,22 @@ const Components = {
         ${itemsTableHtml}
       `;
 
-      modal.style.display = "flex";
-      modal.style.alignItems = "center";
-      modal.style.justifyContent = "center";
+      // HIỂN THỊ MODAL - CÁCH CHẮC CHẮN
+      modal.style.cssText = `
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        z-index: 99999 !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.8) !important;
+        backdrop-filter: blur(4px) !important;
+      `;
+
+      document.body.style.overflow = "hidden";
 
       console.log("✅ Export Modal displayed successfully");
     } catch (error) {
@@ -457,7 +484,11 @@ async function rejectExport(id) {
 // ========== ĐÓNG MODAL ==========
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) modal.style.display = "none";
+  if (modal) {
+    modal.style.display = "none";
+    // Reset overflow
+    document.body.style.overflow = "";
+  }
 }
 
 // ========== EXPORT ==========
