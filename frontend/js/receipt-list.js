@@ -1,6 +1,6 @@
 /**
  * ==================== RECEIPT LIST MODULE ====================
- * Hiển thị danh sách phiếu nhập
+ * Hiển thị danh sách phiếu nhập - FIXED
  */
 
 (function () {
@@ -27,6 +27,7 @@
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
       allReceipts = await window.API.receipt.getAll();
+      console.log("📥 Danh sách phiếu nhập:", allReceipts);
       filterAndRender();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -64,11 +65,17 @@
 
   function updateStats(filtered) {
     const total = filtered.length;
-    const totalValue = filtered.reduce((sum, r) => sum + (r.total || 0), 0);
+    // SỬA: Chuyển total về Number trước khi tính
+    const totalValue = filtered.reduce((sum, r) => {
+      const val =
+        typeof r.total === "string" ? parseFloat(r.total) : r.total || 0;
+      return sum + val;
+    }, 0);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
-    if (totalValueSpan)
+    if (totalValueSpan) {
       totalValueSpan.textContent = Utils.formatCurrency(totalValue);
+    }
   }
 
   function renderReceipts(filtered) {
@@ -87,17 +94,56 @@
 
     if (pageData.length === 0) {
       container.innerHTML = `
-                <div class="empty-receipts">
-                    <i class="fas fa-inbox"></i>
-                    <p>Chưa có phiếu nhập nào</p>
-                    <small>Nhấn "Tạo phiếu nhập mới" để thêm phiếu</small>
-                </div>
-            `;
+        <div class="empty-receipts">
+          <i class="fas fa-inbox"></i>
+          <p>Chưa có phiếu nhập nào</p>
+          <small>Nhấn "Tạo phiếu nhập mới" để thêm phiếu</small>
+        </div>
+      `;
       return;
     }
 
     container.innerHTML = pageData
-      .map((receipt) => Components.createReceiptCard(receipt))
+      .map((receipt) => {
+        // Xác định trạng thái
+        const statusMap = {
+          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+          approved: { class: "status-approved", text: "✅ Đã xác nhận" },
+          rejected: { class: "status-rejected", text: "❌ Từ chối" },
+        };
+        const status = statusMap[receipt.status] || statusMap["pending"];
+
+        return `
+          <div class="receipt-card" data-id="${receipt.id}" onclick="Components.viewReceiptDetail(${receipt.id})">
+            <div class="receipt-card-header">
+              <div class="receipt-card-id">
+                <i class="fas fa-file-invoice"></i> ${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}
+              </div>
+              <div class="receipt-card-date">
+                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(receipt.receiptDate || receipt.createdAt)}
+              </div>
+              <span class="status-badge ${status.class}">${status.text}</span>
+            </div>
+            <div class="receipt-card-body">
+              <div class="receipt-card-info">
+                <div class="label">Nhà cung cấp</div>
+                <div class="value">${Utils.escapeHtml(receipt.supplierName || "Chưa có")}</div>
+              </div>
+              <div class="receipt-card-info">
+                <div class="label">Số sản phẩm</div>
+                <div class="value">${receipt.items?.length || 0}</div>
+              </div>
+              <div class="receipt-card-total">
+                <div class="label">Tổng tiền</div>
+                <div class="value">${Utils.formatCurrency(receipt.total || 0)}</div>
+              </div>
+            </div>
+            <div class="receipt-card-footer">
+              <i class="fas fa-eye"></i> Xem chi tiết
+            </div>
+          </div>
+        `;
+      })
       .join("");
   }
 

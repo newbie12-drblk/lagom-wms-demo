@@ -1,6 +1,6 @@
 /**
  * ==================== EXPORT LIST MODULE ====================
- * Hiển thị danh sách phiếu xuất
+ * Hiển thị danh sách phiếu xuất - FIXED
  */
 
 (function () {
@@ -27,6 +27,7 @@
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
       allExports = await window.API.export.getAll();
+      console.log("📥 Danh sách phiếu xuất:", allExports);
       filterAndRender();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -64,11 +65,17 @@
 
   function updateStats(filtered) {
     const total = filtered.length;
-    const totalValue = filtered.reduce((sum, r) => sum + (r.total || 0), 0);
+    // SỬA: Chuyển total về Number trước khi tính
+    const totalValue = filtered.reduce((sum, r) => {
+      const val =
+        typeof r.total === "string" ? parseFloat(r.total) : r.total || 0;
+      return sum + val;
+    }, 0);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
-    if (totalValueSpan)
+    if (totalValueSpan) {
       totalValueSpan.textContent = Utils.formatCurrency(totalValue);
+    }
   }
 
   function renderExports(filtered) {
@@ -87,17 +94,55 @@
 
     if (pageData.length === 0) {
       container.innerHTML = `
-                <div class="empty-receipts">
-                    <i class="fas fa-inbox"></i>
-                    <p>Chưa có phiếu xuất nào</p>
-                    <small>Nhấn "Tạo phiếu xuất mới" để thêm phiếu</small>
-                </div>
-            `;
+        <div class="empty-receipts">
+          <i class="fas fa-inbox"></i>
+          <p>Chưa có phiếu xuất nào</p>
+          <small>Nhấn "Tạo phiếu xuất mới" để thêm phiếu</small>
+        </div>
+      `;
       return;
     }
 
     container.innerHTML = pageData
-      .map((exportItem) => Components.createExportCard(exportItem))
+      .map((exportItem) => {
+        const statusMap = {
+          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+          approved: { class: "status-approved", text: "✅ Đã xác nhận" },
+          rejected: { class: "status-rejected", text: "❌ Từ chối" },
+        };
+        const status = statusMap[exportItem.status] || statusMap["pending"];
+
+        return `
+          <div class="receipt-card" data-id="${exportItem.id}" onclick="Components.viewExportDetail(${exportItem.id})">
+            <div class="receipt-card-header">
+              <div class="receipt-card-id">
+                <i class="fas fa-file-export"></i> ${Utils.escapeHtml(exportItem.exportNo || "PX-" + exportItem.id)}
+              </div>
+              <div class="receipt-card-date">
+                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(exportItem.exportDate || exportItem.createdAt)}
+              </div>
+              <span class="status-badge ${status.class}">${status.text}</span>
+            </div>
+            <div class="receipt-card-body">
+              <div class="receipt-card-info">
+                <div class="label">Người nhận</div>
+                <div class="value">${Utils.escapeHtml(exportItem.receiverName || "Chưa có")}</div>
+              </div>
+              <div class="receipt-card-info">
+                <div class="label">Số sản phẩm</div>
+                <div class="value">${exportItem.items?.length || 0}</div>
+              </div>
+              <div class="receipt-card-total">
+                <div class="label">Tổng tiền</div>
+                <div class="value">${Utils.formatCurrency(exportItem.total || 0)}</div>
+              </div>
+            </div>
+            <div class="receipt-card-footer">
+              <i class="fas fa-eye"></i> Xem chi tiết
+            </div>
+          </div>
+        `;
+      })
       .join("");
   }
 
