@@ -478,3 +478,5 @@ window.API = {
   removeToken,
   getCurrentUserFromToken,
 };
+
+console.log("✅ API loaded successfully!");
