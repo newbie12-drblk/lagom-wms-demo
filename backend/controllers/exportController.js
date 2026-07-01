@@ -30,7 +30,7 @@ const getExportById = async (req, res) => {
   }
 };
 
-// Tạo phiếu xuất mới
+// Tạo phiếu xuất mới - TỰ ĐỘNG KIỂM TRA
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
@@ -55,21 +55,99 @@ const createExport = async (req, res) => {
 
     const exportId = await Export.create(exportData, createdBy);
 
-    await EditHistory.log(
-      createdBy,
-      "exports",
-      exportId,
-      "CREATE",
-      null,
-      null,
-      JSON.stringify(exportData),
-    );
+    // Lấy phiếu vừa tạo
+    const exportItem = await Export.findById(exportId);
 
-    res.json({
-      success: true,
-      data: { id: exportId },
-      message: "Tạo phiếu xuất thành công",
-    });
+    // TỰ ĐỘNG KIỂM TRA VÀ DUYỆT
+    let allMatched = true;
+    let mismatchDetails = [];
+
+    for (const item of exportItem.items || []) {
+      const product = await Inventory.findByMaHang(item.maHang);
+
+      if (!product) {
+        allMatched = false;
+        mismatchDetails.push(
+          `❌ Sản phẩm "${item.tenThuongMai}" (${item.maHang}) chưa có trong kho`,
+        );
+        continue;
+      }
+
+      // So sánh các trường
+      if (product.tenThuongMai !== item.tenThuongMai) {
+        allMatched = false;
+        mismatchDetails.push(
+          `❌ Tên sản phẩm "${item.maHang}" không khớp (kho: ${product.tenThuongMai}, phiếu: ${item.tenThuongMai})`,
+        );
+      }
+      if (product.quyCach !== item.quyCach) {
+        allMatched = false;
+        mismatchDetails.push(
+          `❌ Quy cách của "${item.maHang}" không khớp (kho: ${product.quyCach}, phiếu: ${item.quyCach})`,
+        );
+      }
+    }
+
+    if (allMatched) {
+      // TỰ ĐỘNG DUYỆT
+      await Export.updateStatus(exportId, "approved", createdBy, null);
+
+      // Cập nhật tồn kho
+      for (const item of exportItem.items || []) {
+        await Inventory.updateStock(item.maHang, item.soLuong, "export");
+      }
+
+      await EditHistory.log(
+        createdBy,
+        "exports",
+        exportId,
+        "AUTO_APPROVED",
+        null,
+        null,
+        JSON.stringify(exportData),
+      );
+
+      await Notification.create(
+        createdBy,
+        `✅ Phiếu xuất ${exportItem.exportNo} đã được tự động xác nhận`,
+        "Tất cả sản phẩm trong phiếu đều khớp với kho, hệ thống tự động duyệt thành công.",
+        "success",
+        exportId,
+      );
+
+      res.json({
+        success: true,
+        data: { id: exportId, status: "approved" },
+        message:
+          "✅ Tạo phiếu xuất thành công! Phiếu đã được tự động xác nhận.",
+      });
+    } else {
+      await EditHistory.log(
+        createdBy,
+        "exports",
+        exportId,
+        "CREATE",
+        null,
+        null,
+        JSON.stringify(exportData),
+      );
+
+      await Notification.create(
+        createdBy,
+        `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xử lý`,
+        `Có ${mismatchDetails.length} sản phẩm không khớp với kho.\n\nChi tiết:\n${mismatchDetails.join("\n")}`,
+        "warning",
+        exportId,
+      );
+
+      res.json({
+        success: true,
+        data: { id: exportId, status: "pending" },
+        message:
+          "⚠️ Tạo phiếu xuất thành công! Nhưng có sản phẩm không khớp với kho, vui lòng kiểm tra lại.",
+        details: mismatchDetails,
+      });
+    }
   } catch (error) {
     console.error("Create export error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
@@ -98,13 +176,6 @@ const updateExportStatus = async (req, res) => {
         status === "approved" ? "success" : "warning",
         id,
       );
-
-      // Nếu được duyệt, cập nhật tồn kho
-      if (status === "approved" && exportItem.items) {
-        for (const item of exportItem.items) {
-          await Inventory.updateStock(item.maHang, item.soLuong, "export");
-        }
-      }
     }
 
     await EditHistory.log(

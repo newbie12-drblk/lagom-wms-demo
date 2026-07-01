@@ -64,7 +64,7 @@ const Export = {
         data.customerTax || "",
         data.customerContract || "",
         data.exportReason || "Sử dụng nội bộ",
-        total, // ← ĐÃ ÉP KIỂU NUMBER
+        total,
         "pending",
         createdBy,
       ],

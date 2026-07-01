@@ -66,7 +66,7 @@ const Receipt = {
         data.customerAddress || "",
         data.customerTax || "",
         data.customerContract || "",
-        total, // ← ĐÃ ÉP KIỂU NUMBER
+        total,
         data.notes || "",
         "pending",
         createdBy,

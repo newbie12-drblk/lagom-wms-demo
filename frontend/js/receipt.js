@@ -1,6 +1,6 @@
 /**
  * ==================== RECEIPT MODULE ====================
- * Quản lý phiếu nhập hàng - FIXED VERSION
+ * Quản lý phiếu nhập hàng - TỰ ĐỘNG DUYỆT
  */
 
 (function () {
@@ -248,7 +248,6 @@
       });
     });
 
-    // Lấy giá trị từ DOM
     const supplierNameEl = document.getElementById("supplierName");
     const supplierAddressEl = document.getElementById("supplierAddress");
     const supplierTaxEl = document.getElementById("supplierTax");
@@ -257,7 +256,6 @@
     const customerTaxEl = document.getElementById("customerTax");
     const customerContractEl = document.getElementById("customerContract");
 
-    // Lấy ngày hiện tại định dạng YYYY-MM-DD
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -265,7 +263,7 @@
     const receiptDate = `${year}-${month}-${day}`;
 
     const data = {
-      receiptDate: receiptDate, // ĐỊNH DẠNG YYYY-MM-DD
+      receiptDate: receiptDate,
       supplierName: supplierNameEl?.value || "",
       supplierAddress: supplierAddressEl?.value || "",
       supplierTax: supplierTaxEl?.value || "",
@@ -286,13 +284,11 @@
   async function saveReceipt() {
     const data = getReceiptData();
 
-    // Kiểm tra dữ liệu
     if (data.items.length === 0) {
       alert("⚠️ Chưa có sản phẩm nào để nhập!");
       return;
     }
 
-    // Kiểm tra sản phẩm hợp lệ
     const invalidItems = data.items.filter(
       (item) => !item.tenThuongMai || !item.maHang,
     );
@@ -309,7 +305,20 @@
       console.log("📥 Kết quả từ server:", result);
 
       if (result.success) {
-        Utils.showToast("✅ Đã lưu phiếu nhập hàng thành công!");
+        // Kiểm tra xem phiếu có được tự động duyệt không
+        if (result.data && result.data.status === "approved") {
+          Utils.showToast("✅ " + result.message);
+        } else if (result.details && result.details.length > 0) {
+          // Có lỗi không khớp
+          let errorMsg = "⚠️ " + result.message + "\n\n";
+          errorMsg += result.details.join("\n");
+          alert(errorMsg);
+          Utils.showToast("⚠️ Phiếu đã lưu nhưng cần kiểm tra lại", "warning");
+        } else if (result.data && result.data.status === "pending") {
+          Utils.showToast("⚠️ " + result.message, "warning");
+        } else {
+          Utils.showToast("✅ " + result.message);
+        }
         clearForm();
       } else {
         Utils.showToast(
@@ -454,10 +463,8 @@
       </tbody>
     </table>
     
-    <!-- CÁCH BẢNG 3 DÒNG -->
     <div style="height: 45px;"></div>
     
-    <!-- CHỮ KÝ - 3 BÊN ĐỀU NHAU BẰNG TABLE -->
     <table style="width: 100%; border: none; margin-top: 20px;">
       <tr>
         <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">

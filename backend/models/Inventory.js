@@ -34,7 +34,6 @@ const Inventory = {
 
   // Tạo sản phẩm mới
   create: async (data, createdBy) => {
-    // Lấy STT lớn nhất + 1
     const [maxStt] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
     );
@@ -121,7 +120,7 @@ const Inventory = {
     return true;
   },
 
-  // Cập nhật số lượng tồn kho
+  // Cập nhật số lượng tồn kho - THÊM MỚI
   updateStock: async (maHang, quantityChange, type = "import") => {
     const product = await Inventory.findByMaHang(maHang);
     if (!product) return false;

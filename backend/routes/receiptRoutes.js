@@ -23,7 +23,7 @@ router.get("/:id", verifyToken, getReceiptById);
 router.post(
   "/",
   verifyToken,
-  checkRole("admin", "quan_ly_kho", "quan_ly"),
+  checkRole("admin", "quan_ly_kho", "quan_ly", "nhap_lieu"),
   createReceipt,
 );
 router.put(
