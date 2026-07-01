@@ -66,10 +66,14 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
-    // ĐƠN GIẢN: Cộng tất cả total của các phiếu
     let totalValue = 0;
     for (const r of filtered) {
-      const val = parseFloat(r.total) || 0;
+      let val = 0;
+      if (typeof r.total === "string") {
+        val = parseFloat(r.total.replace(/,/g, "")) || 0;
+      } else {
+        val = parseFloat(r.total) || 0;
+      }
       totalValue += val;
     }
 
