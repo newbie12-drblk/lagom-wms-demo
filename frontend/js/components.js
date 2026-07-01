@@ -102,7 +102,6 @@ const Components = {
       const currentUser = Auth.getCurrentUser();
 
       if (body) {
-        // Xác định trạng thái
         const statusMap = {
           pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
           approved: { class: "status-approved", text: "✅ Đã xác nhận" },
@@ -110,61 +109,96 @@ const Components = {
         };
         const status = statusMap[receipt.status] || statusMap["pending"];
 
+        // Tạo bảng sản phẩm
+        let itemsTableHtml = "";
+        if (receipt.items && receipt.items.length > 0) {
+          itemsTableHtml = `
+            <div class="detail-section">
+              <h4>📦 Danh sách sản phẩm</h4>
+              <div style="overflow-x: auto;">
+                <table class="detail-table" style="width:100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #1a2235;">
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Tên thương mại</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Mã hàng</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Quy cách</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Hãng SX</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Phân loại</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Đơn giá</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Số lượng</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Thành tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${receipt.items
+                      .map(
+                        (item, idx) => `
+                      <tr style="border-bottom: 1px solid #1e2d45;">
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;"><strong>${Utils.escapeHtml(item.tenThuongMai)}</strong></td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac;">${item.soLuongNhap || 0}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien)}</td>
+                      </tr>
+                    `,
+                      )
+                      .join("")}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                      <td colspan="9" style="padding: 12px 8px; text-align: right; font-size: 15px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                      <td style="padding: 12px 8px; text-align: right; font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(receipt.total)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          `;
+        } else {
+          itemsTableHtml = `
+            <div class="detail-section">
+              <h4>📦 Danh sách sản phẩm</h4>
+              <div style="padding: 20px; text-align: center; color: #6b82a0;">Không có sản phẩm trong phiếu này</div>
+            </div>
+          `;
+        }
+
         body.innerHTML = `
           <div class="detail-section">
-            <h4>Thông tin phiếu</h4>
-            <div class="detail-grid">
-              <div><strong>Số phiếu:</strong> ${Utils.escapeHtml(receipt.receiptNo)}</div>
-              <div><strong>Ngày tạo:</strong> ${Utils.formatDate(receipt.createdAt)}</div>
-              <div><strong>Ngày nhập:</strong> ${Utils.formatDate(receipt.receiptDate)}</div>
-              <div><strong>Trạng thái:</strong> <span class="status-badge ${status.class}">${status.text}</span></div>
-              <div><strong>Nhà cung cấp:</strong> ${Utils.escapeHtml(receipt.supplierName || "—")}</div>
-              <div><strong>Địa chỉ:</strong> ${Utils.escapeHtml(receipt.supplierAddress || "—")}</div>
-              <div><strong>MST NCC:</strong> ${Utils.escapeHtml(receipt.supplierTax || "—")}</div>
-              <div><strong>Người tạo:</strong> ${Utils.escapeHtml(receipt.creatorName || "—")}</div>
-              <div><strong>Khách hàng:</strong> ${Utils.escapeHtml(receipt.customerName || "—")}</div>
-              <div><strong>Địa chỉ KH:</strong> ${Utils.escapeHtml(receipt.customerAddress || "—")}</div>
-              <div><strong>Số HĐ KH:</strong> ${Utils.escapeHtml(receipt.customerContract || "—")}</div>
+            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📋 Thông tin phiếu nhập</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
+              <div><strong style="color: #6b82a0;">Số phiếu:</strong> <span style="color: #60a5fa;">${Utils.escapeHtml(receipt.receiptNo)}</span></div>
+              <div><strong style="color: #6b82a0;">Trạng thái:</strong> <span class="status-badge ${status.class}">${status.text}</span></div>
+              <div><strong style="color: #6b82a0;">Ngày tạo:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.createdAt)}</span></div>
+              <div><strong style="color: #6b82a0;">Ngày nhập:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.receiptDate)}</span></div>
+              <div><strong style="color: #6b82a0;">Người tạo:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.creatorName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Nhà cung cấp:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Địa chỉ NCC:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierAddress || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">MST NCC:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierTax || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Khách hàng:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Địa chỉ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerAddress || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">MST KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerTax || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Số HĐ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerContract || "—")}</span></div>
             </div>
           </div>
-          <div class="detail-section">
-            <h4>Danh sách sản phẩm</h4>
-            <table class="detail-table">
-              <thead>
-                <tr><th>STT</th><th>Tên sản phẩm</th><th>Mã hàng</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr>
-              </thead>
-              <tbody>
-                ${(receipt.items || [])
-                  .map(
-                    (item, idx) => `
-                    <tr>
-                      <td>${idx + 1}</td>
-                      <td>${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td>${Utils.escapeHtml(item.maHang)}</td>
-                      <td>${item.soLuongNhap || 0}</td>
-                      <td class="text-right">${Utils.formatCurrency(item.giaNhap)}</td>
-                      <td class="text-right">${Utils.formatCurrency(item.thanhTien)}</td>
-                    </tr>
-                  `,
-                  )
-                  .join("")}
-              </tbody>
-              <tfoot>
-                <tr><td colspan="5" class="text-right"><strong>Tổng cộng:</strong></td><td class="text-right"><strong>${Utils.formatCurrency(receipt.total)}</strong></td></tr>
-              </tfoot>
-            </table>
-          </div>
+          ${itemsTableHtml}
         `;
       }
 
-      // THÊM NÚT DUYỆT CHO ADMIN
+      // THÊM NÚT DUYỆT CHO ADMIN (nếu cần vẫn giữ)
       if (footer && currentUser && currentUser.roleId === "admin") {
         const existingBtns = footer.querySelectorAll(
           ".btn-approve, .btn-reject",
         );
         existingBtns.forEach((btn) => btn.remove());
 
-        // Chỉ hiển thị nút nếu phiếu đang ở trạng thái chờ duyệt
         if (receipt.status === "pending") {
           const approveBtn = document.createElement("button");
           approveBtn.className = "btn btn-success btn-approve";
@@ -210,53 +244,94 @@ const Components = {
         };
         const status = statusMap[exportItem.status] || statusMap["pending"];
 
+        let itemsTableHtml = "";
+        if (exportItem.items && exportItem.items.length > 0) {
+          itemsTableHtml = `
+            <div class="detail-section">
+              <h4>📦 Danh sách sản phẩm xuất</h4>
+              <div style="overflow-x: auto;">
+                <table class="detail-table" style="width:100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr style="background: #1a2235;">
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Tên thương mại</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Mã hàng</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Quy cách</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Hãng SX</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Phân loại</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Đơn giá</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Số lượng</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">Thành tiền</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">Số lot</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">HSD</th>
+                      <th style="padding: 10px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">Ghi chú</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${exportItem.items
+                      .map(
+                        (item, idx) => `
+                      <tr style="border-bottom: 1px solid #1e2d45;">
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;"><strong>${Utils.escapeHtml(item.tenThuongMai)}</strong></td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac;">${item.soLuong || 0}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayHetHan)}</td>
+                        <td style="padding: 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                      </tr>
+                    `,
+                      )
+                      .join("")}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                      <td colspan="9" style="padding: 12px 8px; text-align: right; font-size: 15px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                      <td style="padding: 12px 8px; text-align: right; font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(exportItem.total)}</td>
+                      <td colspan="3"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          `;
+        } else {
+          itemsTableHtml = `
+            <div class="detail-section">
+              <h4>📦 Danh sách sản phẩm xuất</h4>
+              <div style="padding: 20px; text-align: center; color: #6b82a0;">Không có sản phẩm trong phiếu này</div>
+            </div>
+          `;
+        }
+
         body.innerHTML = `
           <div class="detail-section">
-            <h4>Thông tin phiếu</h4>
-            <div class="detail-grid">
-              <div><strong>Số phiếu:</strong> ${Utils.escapeHtml(exportItem.exportNo)}</div>
-              <div><strong>Ngày tạo:</strong> ${Utils.formatDate(exportItem.createdAt)}</div>
-              <div><strong>Ngày xuất:</strong> ${Utils.formatDate(exportItem.exportDate)}</div>
-              <div><strong>Trạng thái:</strong> <span class="status-badge ${status.class}">${status.text}</span></div>
-              <div><strong>Người nhận:</strong> ${Utils.escapeHtml(exportItem.receiverName || "—")}</div>
-              <div><strong>Lý do xuất:</strong> ${Utils.escapeHtml(exportItem.exportReason || "—")}</div>
-              <div><strong>Người tạo:</strong> ${Utils.escapeHtml(exportItem.creatorName || "—")}</div>
-              <div><strong>Khách hàng:</strong> ${Utils.escapeHtml(exportItem.customerName || "—")}</div>
-              <div><strong>Địa chỉ KH:</strong> ${Utils.escapeHtml(exportItem.customerAddress || "—")}</div>
-              <div><strong>Số HĐ KH:</strong> ${Utils.escapeHtml(exportItem.customerContract || "—")}</div>
+            <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 15px;">📋 Thông tin phiếu xuất</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
+              <div><strong style="color: #6b82a0;">Số phiếu:</strong> <span style="color: #60a5fa;">${Utils.escapeHtml(exportItem.exportNo)}</span></div>
+              <div><strong style="color: #6b82a0;">Trạng thái:</strong> <span class="status-badge ${status.class}">${status.text}</span></div>
+              <div><strong style="color: #6b82a0;">Ngày tạo:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.createdAt)}</span></div>
+              <div><strong style="color: #6b82a0;">Ngày xuất:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.exportDate)}</span></div>
+              <div><strong style="color: #6b82a0;">Người tạo:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.creatorName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Người nhận:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.receiverName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Lý do xuất:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.exportReason || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Khách hàng:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerName || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Địa chỉ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerAddress || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">MST KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerTax || "—")}</span></div>
+              <div><strong style="color: #6b82a0;">Số HĐ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerContract || "—")}</span></div>
             </div>
           </div>
-          <div class="detail-section">
-            <h4>Danh sách sản phẩm</h4>
-            <table class="detail-table">
-              <thead>
-                <tr><th>STT</th><th>Tên sản phẩm</th><th>Mã hàng</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr>
-              </thead>
-              <tbody>
-                ${(exportItem.items || [])
-                  .map(
-                    (item, idx) => `
-                    <tr>
-                      <td>${idx + 1}</td>
-                      <td>${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td>${Utils.escapeHtml(item.maHang)}</td>
-                      <td>${item.soLuong || 0}</td>
-                      <td class="text-right">${Utils.formatCurrency(item.donGia)}</td>
-                      <td class="text-right">${Utils.formatCurrency(item.thanhTien)}</td>
-                    </tr>
-                  `,
-                  )
-                  .join("")}
-              </tbody>
-              <tfoot>
-                <tr><td colspan="5" class="text-right"><strong>Tổng cộng:</strong></td><td class="text-right"><strong>${Utils.formatCurrency(exportItem.total)}</strong></td></tr>
-              </tfoot>
-            </table>
-          </div>
+          ${itemsTableHtml}
         `;
       }
 
-      // THÊM NÚT DUYỆT CHO ADMIN
       if (footer && currentUser && currentUser.roleId === "admin") {
         const existingBtns = footer.querySelectorAll(
           ".btn-approve, .btn-reject",
@@ -298,7 +373,6 @@ async function approveReceipt(id) {
     const result = await window.API.receipt.updateStatus(id, "approved");
     if (result.success) {
       Utils.showToast("✅ Đã duyệt phiếu nhập thành công!");
-      await updateInventoryFromReceipt(id);
       closeModal("receiptDetailModal");
       if (typeof loadReceipts === "function") loadReceipts();
     } else {
@@ -387,41 +461,6 @@ async function rejectExport(id) {
     Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
   } finally {
     Utils.showLoading(false);
-  }
-}
-
-// ========== CẬP NHẬT TỒN KHO TỪ PHIẾU NHẬP ==========
-async function updateInventoryFromReceipt(receiptId) {
-  try {
-    const receipt = await window.API.receipt.getById(receiptId);
-    if (!receipt || !receipt.items) return;
-
-    for (const item of receipt.items) {
-      const existing = await window.API.inventory.getByMaHang(item.maHang);
-      if (existing) {
-        await window.API.inventory.update(existing.id, {
-          tonKho: (existing.tonKho || 0) + (item.soLuongNhap || 0),
-        });
-      } else {
-        await window.API.inventory.create({
-          tenThuongMai: item.tenThuongMai,
-          maHang: item.maHang,
-          quyCach: item.quyCach || "",
-          hangSX: item.hangSX || "",
-          dvt: item.dvt || "",
-          phanLoai: item.phanLoai || "",
-          giaNhap: item.giaNhap || 0,
-          giaXuat: 0,
-          tonKho: item.soLuongNhap || 0,
-          soLuongNhap: item.soLuongNhap || 0,
-          soLuongXuat: 0,
-          ngayHetHan: null,
-        });
-      }
-    }
-    Utils.showToast("✅ Đã cập nhật tồn kho!", "success");
-  } catch (error) {
-    console.error("Update inventory error:", error);
   }
 }
 
