@@ -47,7 +47,9 @@ const Receipt = {
     }
     const receiptNo = `PN-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
-    // Thêm customerName, customerAddress, customerContract
+    // ÉP KIỂU total THÀNH NUMBER
+    const total = parseFloat(data.total) || 0;
+
     const [result] = await db.execute(
       `INSERT INTO receipts 
         (receiptNo, receiptDate, supplierName, supplierAddress, supplierTax, 
@@ -64,7 +66,7 @@ const Receipt = {
         data.customerAddress || "",
         data.customerTax || "",
         data.customerContract || "",
-        data.total || 0,
+        total, // ← ĐÃ ÉP KIỂU NUMBER
         data.notes || "",
         "pending",
         createdBy,

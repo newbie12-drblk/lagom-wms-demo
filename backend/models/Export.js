@@ -47,7 +47,9 @@ const Export = {
     }
     const exportNo = `PX-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
-    // Thêm customerName, customerAddress, customerContract
+    // ÉP KIỂU total THÀNH NUMBER
+    const total = parseFloat(data.total) || 0;
+
     const [result] = await db.execute(
       `INSERT INTO exports 
         (exportNo, exportDate, receiverName, customerName, customerAddress, 
@@ -62,7 +64,7 @@ const Export = {
         data.customerTax || "",
         data.customerContract || "",
         data.exportReason || "Sử dụng nội bộ",
-        data.total || 0,
+        total, // ← ĐÃ ÉP KIỂU NUMBER
         "pending",
         createdBy,
       ],
