@@ -331,8 +331,22 @@
                 </div>
               </div>
 
-              <div class="filter-bar">
-                <div class="search-box">
+              <!-- FILTER BAR MỚI -->
+              <div
+                class="filter-bar"
+                style="
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 10px;
+                  align-items: center;
+                  background: var(--surface);
+                  padding: 12px 16px;
+                  border-radius: 12px;
+                  border: 1px solid var(--border);
+                  margin-bottom: 16px;
+                "
+              >
+                <div class="search-box" style="flex: 1; min-width: 180px">
                   <i class="fas fa-search"></i>
                   <input
                     type="text"
@@ -340,14 +354,66 @@
                     placeholder="Tìm theo số phiếu, nhà cung cấp..."
                   />
                 </div>
-                <select class="cat-select" id="receiptFilterDate">
+
+                <select
+                  class="cat-select"
+                  id="receiptFilterDate"
+                  style="min-width: 130px"
+                >
                   <option value="all">Tất cả thời gian</option>
                   <option value="7">7 ngày qua</option>
                   <option value="30">30 ngày qua</option>
+                  <option value="60">60 ngày qua</option>
                   <option value="90">90 ngày qua</option>
                 </select>
-                <button class="btn btn-outline" id="btnRefreshReceipts">
+
+                <div style="display: flex; align-items: center; gap: 4px">
+                  <span style="color: #6b82a0; font-size: 12px">Từ</span>
+                  <input
+                    type="date"
+                    id="receiptFromDate"
+                    style="
+                      padding: 8px 10px;
+                      background: #1a2235;
+                      border: 1px solid #1e2d45;
+                      border-radius: 8px;
+                      color: #e2eaf5;
+                      font-size: 13px;
+                      max-width: 150px;
+                    "
+                  />
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 4px">
+                  <span style="color: #6b82a0; font-size: 12px">Đến</span>
+                  <input
+                    type="date"
+                    id="receiptToDate"
+                    style="
+                      padding: 8px 10px;
+                      background: #1a2235;
+                      border: 1px solid #1e2d45;
+                      border-radius: 8px;
+                      color: #e2eaf5;
+                      font-size: 13px;
+                      max-width: 150px;
+                    "
+                  />
+                </div>
+
+                <button
+                  class="btn btn-outline"
+                  id="btnRefreshReceipts"
+                  style="padding: 8px 16px"
+                >
                   <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+                <button
+                  class="btn btn-outline"
+                  id="btnClearReceiptFilters"
+                  style="padding: 8px 16px"
+                >
+                  <i class="fas fa-undo-alt"></i> Xóa lọc
                 </button>
               </div>
 
@@ -394,8 +460,22 @@
                 </div>
               </div>
 
-              <div class="filter-bar">
-                <div class="search-box">
+              <!-- FILTER BAR MỚI -->
+              <div
+                class="filter-bar"
+                style="
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 10px;
+                  align-items: center;
+                  background: var(--surface);
+                  padding: 12px 16px;
+                  border-radius: 12px;
+                  border: 1px solid var(--border);
+                  margin-bottom: 16px;
+                "
+              >
+                <div class="search-box" style="flex: 1; min-width: 180px">
                   <i class="fas fa-search"></i>
                   <input
                     type="text"
@@ -403,14 +483,66 @@
                     placeholder="Tìm theo số phiếu, người nhận..."
                   />
                 </div>
-                <select class="cat-select" id="exportFilterDate">
+
+                <select
+                  class="cat-select"
+                  id="exportFilterDate"
+                  style="min-width: 130px"
+                >
                   <option value="all">Tất cả thời gian</option>
                   <option value="7">7 ngày qua</option>
                   <option value="30">30 ngày qua</option>
+                  <option value="60">60 ngày qua</option>
                   <option value="90">90 ngày qua</option>
                 </select>
-                <button class="btn btn-outline" id="btnRefreshExports">
+
+                <div style="display: flex; align-items: center; gap: 4px">
+                  <span style="color: #6b82a0; font-size: 12px">Từ</span>
+                  <input
+                    type="date"
+                    id="exportFromDate"
+                    style="
+                      padding: 8px 10px;
+                      background: #1a2235;
+                      border: 1px solid #1e2d45;
+                      border-radius: 8px;
+                      color: #e2eaf5;
+                      font-size: 13px;
+                      max-width: 150px;
+                    "
+                  />
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 4px">
+                  <span style="color: #6b82a0; font-size: 12px">Đến</span>
+                  <input
+                    type="date"
+                    id="exportToDate"
+                    style="
+                      padding: 8px 10px;
+                      background: #1a2235;
+                      border: 1px solid #1e2d45;
+                      border-radius: 8px;
+                      color: #e2eaf5;
+                      font-size: 13px;
+                      max-width: 150px;
+                    "
+                  />
+                </div>
+
+                <button
+                  class="btn btn-outline"
+                  id="btnRefreshExports"
+                  style="padding: 8px 16px"
+                >
                   <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+                <button
+                  class="btn btn-outline"
+                  id="btnClearExportFilters"
+                  style="padding: 8px 16px"
+                >
+                  <i class="fas fa-undo-alt"></i> Xóa lọc
                 </button>
               </div>
 
@@ -456,7 +588,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - ĐÃ SỬA LỚN HƠN, DỄ ĐÓNG      -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - LỚN HƠN, DỄ ĐÓNG             -->
     <!-- ============================================================ -->
     <div id="receiptDetailModal" class="modal" style="display: none">
       <div
@@ -506,7 +638,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - ĐÃ SỬA LỚN HƠN, DỄ ĐÓNG      -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - LỚN HƠN, DỄ ĐÓNG             -->
     <!-- ============================================================ -->
     <div id="exportDetailModal" class="modal" style="display: none">
       <div

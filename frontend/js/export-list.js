@@ -1,6 +1,6 @@
 /**
  * ==================== EXPORT LIST MODULE ====================
- * Hiển thị danh sách phiếu xuất - FIXED
+ * Hiển thị danh sách phiếu xuất - CÓ TÌM KIẾM THEO NGÀY VÀ MÃ PHIẾU
  */
 
 (function () {
@@ -14,7 +14,10 @@
   const container = document.getElementById("exportsList");
   const searchInput = document.getElementById("searchExport");
   const filterDate = document.getElementById("exportFilterDate");
+  const fromDate = document.getElementById("exportFromDate");
+  const toDate = document.getElementById("exportToDate");
   const refreshBtn = document.getElementById("btnRefreshExports");
+  const clearBtn = document.getElementById("btnClearExportFilters");
   const createBtn = document.getElementById("btnCreateNewExport");
   const prevPageBtn = document.getElementById("exportPrevPage");
   const nextPageBtn = document.getElementById("exportNextPage");
@@ -43,10 +46,25 @@
       filterDate?.value === "all" ? 0 : parseInt(filterDate?.value || "0");
     const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
 
+    const fromDateVal = fromDate?.value || "";
+    const toDateVal = toDate?.value || "";
+
     let filtered = [...allExports];
 
     if (cutoff) {
       filtered = filtered.filter((item) => new Date(item.createdAt) >= cutoff);
+    }
+
+    if (fromDateVal) {
+      const from = new Date(fromDateVal);
+      from.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((item) => new Date(item.createdAt) >= from);
+    }
+
+    if (toDateVal) {
+      const to = new Date(toDateVal);
+      to.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((item) => new Date(item.createdAt) <= to);
     }
 
     if (searchTerm) {
@@ -96,8 +114,8 @@
       container.innerHTML = `
         <div class="empty-receipts">
           <i class="fas fa-inbox"></i>
-          <p>Chưa có phiếu xuất nào</p>
-          <small>Nhấn "Tạo phiếu xuất mới" để thêm phiếu</small>
+          <p>Không tìm thấy phiếu nào</p>
+          <small>Thử thay đổi bộ lọc tìm kiếm</small>
         </div>
       `;
       return;
@@ -129,8 +147,12 @@
                 <div class="value">${Utils.escapeHtml(exportItem.receiverName || "Chưa có")}</div>
               </div>
               <div class="receipt-card-info">
-                <div class="label">Số sản phẩm</div>
-                <div class="value">${exportItem.items?.length || 0}</div>
+                <div class="label">Ngày tạo</div>
+                <div class="value">${Utils.formatDate(exportItem.createdAt)}</div>
+              </div>
+              <div class="receipt-card-info">
+                <div class="label">Mã phiếu</div>
+                <div class="value">${Utils.escapeHtml(exportItem.exportNo || "—")}</div>
               </div>
               <div class="receipt-card-total">
                 <div class="label">Tổng tiền</div>
@@ -144,26 +166,6 @@
         `;
       })
       .join("");
-
-    // Bind click event an toàn
-    container.querySelectorAll(".receipt-card").forEach((card) => {
-      card.addEventListener("click", function (e) {
-        if (e.target.closest("button")) return;
-        const id = this.dataset.id;
-        if (
-          window.Components &&
-          typeof Components.viewExportDetail === "function"
-        ) {
-          Components.viewExportDetail(id);
-        } else {
-          console.error("❌ Components.viewExportDetail not found!");
-          Utils.showToast(
-            "Lỗi: Không tìm thấy chức năng xem chi tiết",
-            "error",
-          );
-        }
-      });
-    });
   }
 
   function changePage(delta) {
@@ -179,6 +181,15 @@
     window.open("export.html", "_blank");
   }
 
+  function clearFilters() {
+    if (searchInput) searchInput.value = "";
+    if (filterDate) filterDate.value = "all";
+    if (fromDate) fromDate.value = "";
+    if (toDate) toDate.value = "";
+    currentPage = 1;
+    filterAndRender();
+  }
+
   function bindEvents() {
     if (searchInput)
       searchInput.addEventListener("input", () => {
@@ -190,13 +201,26 @@
         currentPage = 1;
         filterAndRender();
       });
+    if (fromDate)
+      fromDate.addEventListener("change", () => {
+        currentPage = 1;
+        filterAndRender();
+      });
+    if (toDate)
+      toDate.addEventListener("change", () => {
+        currentPage = 1;
+        filterAndRender();
+      });
     if (refreshBtn)
       refreshBtn.addEventListener("click", () => {
         currentPage = 1;
         if (searchInput) searchInput.value = "";
         if (filterDate) filterDate.value = "all";
+        if (fromDate) fromDate.value = "";
+        if (toDate) toDate.value = "";
         loadExports();
       });
+    if (clearBtn) clearBtn.addEventListener("click", clearFilters);
     if (createBtn) createBtn.addEventListener("click", goToCreatePage);
     if (prevPageBtn)
       prevPageBtn.addEventListener("click", () => changePage(-1));

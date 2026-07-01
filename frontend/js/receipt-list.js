@@ -1,6 +1,6 @@
 /**
  * ==================== RECEIPT LIST MODULE ====================
- * Hiển thị danh sách phiếu nhập - FIXED
+ * Hiển thị danh sách phiếu nhập - CÓ TÌM KIẾM THEO NGÀY VÀ MÃ PHIẾU
  */
 
 (function () {
@@ -14,7 +14,10 @@
   const container = document.getElementById("receiptsList");
   const searchInput = document.getElementById("searchReceipt");
   const filterDate = document.getElementById("receiptFilterDate");
+  const fromDate = document.getElementById("receiptFromDate");
+  const toDate = document.getElementById("receiptToDate");
   const refreshBtn = document.getElementById("btnRefreshReceipts");
+  const clearBtn = document.getElementById("btnClearReceiptFilters");
   const createBtn = document.getElementById("btnCreateNewReceipt");
   const prevPageBtn = document.getElementById("receiptPrevPage");
   const nextPageBtn = document.getElementById("receiptNextPage");
@@ -43,12 +46,31 @@
       filterDate?.value === "all" ? 0 : parseInt(filterDate?.value || "0");
     const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
 
+    const fromDateVal = fromDate?.value || "";
+    const toDateVal = toDate?.value || "";
+
     let filtered = [...allReceipts];
 
+    // Lọc theo số ngày (preset)
     if (cutoff) {
       filtered = filtered.filter((item) => new Date(item.createdAt) >= cutoff);
     }
 
+    // Lọc theo từ ngày
+    if (fromDateVal) {
+      const from = new Date(fromDateVal);
+      from.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((item) => new Date(item.createdAt) >= from);
+    }
+
+    // Lọc theo đến ngày
+    if (toDateVal) {
+      const to = new Date(toDateVal);
+      to.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((item) => new Date(item.createdAt) <= to);
+    }
+
+    // Lọc theo từ khóa (mã phiếu, nhà cung cấp)
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
@@ -96,8 +118,8 @@
       container.innerHTML = `
         <div class="empty-receipts">
           <i class="fas fa-inbox"></i>
-          <p>Chưa có phiếu nhập nào</p>
-          <small>Nhấn "Tạo phiếu nhập mới" để thêm phiếu</small>
+          <p>Không tìm thấy phiếu nào</p>
+          <small>Thử thay đổi bộ lọc tìm kiếm</small>
         </div>
       `;
       return;
@@ -129,8 +151,12 @@
                 <div class="value">${Utils.escapeHtml(receipt.supplierName || "Chưa có")}</div>
               </div>
               <div class="receipt-card-info">
-                <div class="label">Số sản phẩm</div>
-                <div class="value">${receipt.items?.length || 0}</div>
+                <div class="label">Ngày tạo</div>
+                <div class="value">${Utils.formatDate(receipt.createdAt)}</div>
+              </div>
+              <div class="receipt-card-info">
+                <div class="label">Mã phiếu</div>
+                <div class="value">${Utils.escapeHtml(receipt.receiptNo || "—")}</div>
               </div>
               <div class="receipt-card-total">
                 <div class="label">Tổng tiền</div>
@@ -144,26 +170,6 @@
         `;
       })
       .join("");
-
-    // Bind click event an toàn
-    container.querySelectorAll(".receipt-card").forEach((card) => {
-      card.addEventListener("click", function (e) {
-        if (e.target.closest("button")) return;
-        const id = this.dataset.id;
-        if (
-          window.Components &&
-          typeof Components.viewReceiptDetail === "function"
-        ) {
-          Components.viewReceiptDetail(id);
-        } else {
-          console.error("❌ Components.viewReceiptDetail not found!");
-          Utils.showToast(
-            "Lỗi: Không tìm thấy chức năng xem chi tiết",
-            "error",
-          );
-        }
-      });
-    });
   }
 
   function changePage(delta) {
@@ -179,6 +185,15 @@
     window.open("receipt.html", "_blank");
   }
 
+  function clearFilters() {
+    if (searchInput) searchInput.value = "";
+    if (filterDate) filterDate.value = "all";
+    if (fromDate) fromDate.value = "";
+    if (toDate) toDate.value = "";
+    currentPage = 1;
+    filterAndRender();
+  }
+
   function bindEvents() {
     if (searchInput)
       searchInput.addEventListener("input", () => {
@@ -190,13 +205,26 @@
         currentPage = 1;
         filterAndRender();
       });
+    if (fromDate)
+      fromDate.addEventListener("change", () => {
+        currentPage = 1;
+        filterAndRender();
+      });
+    if (toDate)
+      toDate.addEventListener("change", () => {
+        currentPage = 1;
+        filterAndRender();
+      });
     if (refreshBtn)
       refreshBtn.addEventListener("click", () => {
         currentPage = 1;
         if (searchInput) searchInput.value = "";
         if (filterDate) filterDate.value = "all";
+        if (fromDate) fromDate.value = "";
+        if (toDate) toDate.value = "";
         loadReceipts();
       });
+    if (clearBtn) clearBtn.addEventListener("click", clearFilters);
     if (createBtn) createBtn.addEventListener("click", goToCreatePage);
     if (prevPageBtn)
       prevPageBtn.addEventListener("click", () => changePage(-1));
