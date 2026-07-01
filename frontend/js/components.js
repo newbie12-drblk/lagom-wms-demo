@@ -204,23 +204,8 @@ const Components = {
         ${itemsTableHtml}
       `;
 
-      // HIỂN THỊ MODAL - CÁCH CHẮC CHẮN
-      modal.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        position: fixed !important;
-        z-index: 99999 !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: rgba(0, 0, 0, 0.8) !important;
-        backdrop-filter: blur(4px) !important;
-      `;
-
-      // Đảm bảo body không bị scroll
-      document.body.style.overflow = "hidden";
+      // HIỂN THỊ MODAL
+      showModal(modal);
 
       console.log("✅ Modal displayed successfully");
     } catch (error) {
@@ -354,22 +339,7 @@ const Components = {
         ${itemsTableHtml}
       `;
 
-      // HIỂN THỊ MODAL - CÁCH CHẮC CHẮN
-      modal.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        position: fixed !important;
-        z-index: 99999 !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: rgba(0, 0, 0, 0.8) !important;
-        backdrop-filter: blur(4px) !important;
-      `;
-
-      document.body.style.overflow = "hidden";
+      showModal(modal);
 
       console.log("✅ Export Modal displayed successfully");
     } catch (error) {
@@ -380,6 +350,55 @@ const Components = {
     }
   },
 };
+
+// ========== HIỂN THỊ MODAL ==========
+function showModal(modal) {
+  if (!modal) return;
+
+  // Reset style
+  modal.style.cssText = `
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    z-index: 99999 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(4px) !important;
+  `;
+
+  // Chặn scroll body
+  document.body.style.overflow = "hidden";
+
+  // Gắn sự kiện click ra ngoài để đóng
+  modal.onclick = function (e) {
+    if (e.target === modal) {
+      closeModal(modal.id);
+    }
+  };
+
+  // Gắn sự kiện ESC để đóng
+  document.onkeydown = function (e) {
+    if (e.key === "Escape") {
+      closeModal(modal.id);
+    }
+  };
+}
+
+// ========== ĐÓNG MODAL ==========
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+    // Reset overflow
+    document.body.style.overflow = "";
+    // Xóa sự kiện ESC
+    document.onkeydown = null;
+  }
+}
 
 // ========== HÀM DUYỆT PHIẾU NHẬP ==========
 async function approveReceipt(id) {
@@ -478,16 +497,6 @@ async function rejectExport(id) {
     Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
   } finally {
     Utils.showLoading(false);
-  }
-}
-
-// ========== ĐÓNG MODAL ==========
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "none";
-    // Reset overflow
-    document.body.style.overflow = "";
   }
 }
 

@@ -455,35 +455,100 @@
       </div>
     </div>
 
-    <!-- MODAL XEM CHI TIẾT PHIẾU -->
-    <div id="receiptDetailModal" class="modal">
-      <div class="modal-content" style="max-width: 800px">
+    <!-- ============================================================ -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - ĐÃ SỬA LỚN HƠN, DỄ ĐÓNG      -->
+    <!-- ============================================================ -->
+    <div id="receiptDetailModal" class="modal" style="display: none">
+      <div
+        class="modal-content"
+        style="
+          max-width: 1100px;
+          max-height: 90vh;
+          overflow-y: auto;
+          width: 95%;
+        "
+      >
         <div class="modal-header">
-          <h3>Chi tiết phiếu nhập</h3>
-          <span class="close-receipt-modal">&times;</span>
+          <h3 style="font-size: 20px">📋 Chi tiết phiếu nhập</h3>
+          <span
+            class="close-receipt-modal"
+            onclick="closeModal('receiptDetailModal')"
+            style="
+              font-size: 40px;
+              cursor: pointer;
+              color: #6b82a0;
+              transition: all 0.2s;
+              line-height: 1;
+              padding: 0 8px;
+            "
+            >&times;</span
+          >
         </div>
         <div class="modal-body" id="receiptDetailBody"></div>
         <div class="modal-footer">
-          <button class="btn btn-outline" id="btnCloseReceiptModal">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('receiptDetailModal')"
+            style="padding: 10px 24px; font-size: 14px"
+          >
             Đóng
           </button>
-          <button class="btn btn-primary" id="btnPrintReceiptDetail">
+          <button
+            class="btn btn-primary"
+            id="btnPrintReceiptDetail"
+            onclick="window.print()"
+            style="padding: 10px 24px; font-size: 14px"
+          >
             <i class="fas fa-print"></i> In phiếu
           </button>
         </div>
       </div>
     </div>
 
-    <div id="exportDetailModal" class="modal">
-      <div class="modal-content" style="max-width: 800px">
+    <!-- ============================================================ -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - ĐÃ SỬA LỚN HƠN, DỄ ĐÓNG      -->
+    <!-- ============================================================ -->
+    <div id="exportDetailModal" class="modal" style="display: none">
+      <div
+        class="modal-content"
+        style="
+          max-width: 1100px;
+          max-height: 90vh;
+          overflow-y: auto;
+          width: 95%;
+        "
+      >
         <div class="modal-header">
-          <h3>Chi tiết phiếu xuất</h3>
-          <span class="close-export-modal">&times;</span>
+          <h3 style="font-size: 20px">📋 Chi tiết phiếu xuất</h3>
+          <span
+            class="close-export-modal"
+            onclick="closeModal('exportDetailModal')"
+            style="
+              font-size: 40px;
+              cursor: pointer;
+              color: #6b82a0;
+              transition: all 0.2s;
+              line-height: 1;
+              padding: 0 8px;
+            "
+            >&times;</span
+          >
         </div>
         <div class="modal-body" id="exportDetailBody"></div>
         <div class="modal-footer">
-          <button class="btn btn-outline" id="btnCloseExportModal">Đóng</button>
-          <button class="btn btn-primary" id="btnPrintExportDetail">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('exportDetailModal')"
+            style="padding: 10px 24px; font-size: 14px"
+          >
+            Đóng
+          </button>
+          <button
+            class="btn btn-primary"
+            id="btnPrintExportDetail"
+            onclick="window.print()"
+            style="padding: 10px 24px; font-size: 14px"
+          >
             <i class="fas fa-print"></i> In phiếu
           </button>
         </div>
