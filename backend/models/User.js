@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const bcrypt = require("bcryptjs");
 
 const User = {
   findByUsername: async (username) => {
@@ -28,19 +29,21 @@ const User = {
   },
 
   create: async (userData) => {
-    // Lưu password trực tiếp (KHÔNG HASH)
-    const plainPassword = userData.password;
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(userData.password, salt);
+
     const [result] = await db.execute(
       `INSERT INTO users (username, password, fullName, email, roleId, isActive, customPermissions) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userData.username,
-        plainPassword,
+        hashedPassword,
         userData.fullName,
         userData.email,
         userData.roleId,
-        userData.isActive,
-        userData.customPermissions,
+        userData.isActive !== undefined ? userData.isActive : true,
+        userData.customPermissions || null,
       ],
     );
     return result.insertId;
@@ -50,7 +53,7 @@ const User = {
     const updates = [];
     const values = [];
 
-    if (userData.fullName) {
+    if (userData.fullName !== undefined) {
       updates.push("fullName = ?");
       values.push(userData.fullName);
     }
@@ -58,7 +61,7 @@ const User = {
       updates.push("email = ?");
       values.push(userData.email);
     }
-    if (userData.roleId) {
+    if (userData.roleId !== undefined) {
       updates.push("roleId = ?");
       values.push(userData.roleId);
     }
@@ -71,9 +74,10 @@ const User = {
       values.push(JSON.stringify(userData.customPermissions));
     }
     if (userData.password) {
-      // Lưu password trực tiếp (KHÔNG HASH)
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(userData.password, salt);
       updates.push("password = ?");
-      values.push(userData.password);
+      values.push(hashedPassword);
     }
 
     if (updates.length === 0) return false;
@@ -89,6 +93,11 @@ const User = {
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM users WHERE id = ?", [id]);
     return result.affectedRows > 0;
+  },
+
+  // Kiểm tra mật khẩu
+  verifyPassword: async (plainPassword, hashedPassword) => {
+    return await bcrypt.compare(plainPassword, hashedPassword);
   },
 };
 

@@ -2,7 +2,7 @@ const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const path = require("path");
 
-// ⭐ QUAN TRỌNG: Load .env từ thư mục gốc backend
+// Load .env từ thư mục gốc backend
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 console.log("🔍 DATABASE CONFIG:");
@@ -11,7 +11,11 @@ console.log("  User:", process.env.DB_USER);
 console.log("  Database:", process.env.DB_NAME);
 console.log("  Port:", process.env.DB_PORT);
 
-const pool = mysql.createPool({
+// Kiểm tra xem có đang chạy trên môi trường production (Render) không
+const isProduction =
+  process.env.NODE_ENV === "production" || process.env.RENDER;
+
+let poolConfig = {
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
@@ -21,13 +25,22 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 10000,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+};
 
+// Chỉ thêm SSL nếu đang chạy trên production (Render, Aiven, v.v.)
+if (isProduction) {
+  poolConfig.ssl = {
+    rejectUnauthorized: false,
+  };
+  console.log("🔒 SSL enabled (production mode)");
+} else {
+  console.log("🔓 SSL disabled (local development)");
+}
+
+const pool = mysql.createPool(poolConfig);
 const promisePool = pool.promise();
 
+// Kiểm tra kết nối
 (async () => {
   try {
     const connection = await promisePool.getConnection();
@@ -37,6 +50,7 @@ const promisePool = pool.promise();
     console.error("❌ Database connection failed!");
     console.error("  Code:", error.code);
     console.error("  Message:", error.message);
+    console.error("  Please check your .env file and database configuration.");
   }
 })();
 

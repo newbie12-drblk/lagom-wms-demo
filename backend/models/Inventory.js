@@ -48,26 +48,33 @@ const Inventory = {
     const [result] = await db.execute(
       `INSERT INTO inventory 
         (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-         giaNhap, soLuongNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-         ngayNhapHD, ngayXuatHD, ghiChu, tonKho, status, createdBy) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+         giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+         soLot, ngayHetHan,
+         soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+         ngayNhapHD, ngayXuatHD, ghiChu, 
+         status, createdBy) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         newStt,
-        data.tenThuongMai,
-        data.maHang,
+        data.tenThuongMai || "",
+        data.maHang || "",
         data.quyCach || "",
         data.hangSX || "",
         data.dvt || "",
         data.phanLoai || "",
         data.giaNhap || 0,
+        data.giaXuat || 0,
         data.soLuongNhap || 0,
+        data.soLuongXuat || 0,
+        data.tonKho || 0,
+        data.soLot || "",
+        data.ngayHetHan || null,
         data.soHopDongNhap || "",
         data.soHoaDonNhap || "",
         data.soHoaDonXuat || "",
         data.ngayNhapHD || null,
         data.ngayXuatHD || null,
         data.ghiChu || "",
-        0,
         createdBy,
       ],
     );
@@ -106,7 +113,7 @@ const Inventory = {
     return true;
   },
 
-  // Cập nhật sản phẩm (dùng khi duyệt chỉnh sửa)
+  // Cập nhật sản phẩm
   update: async (id, data) => {
     const fields = [];
     const values = [];
@@ -119,6 +126,7 @@ const Inventory = {
       "dvt",
       "phanLoai",
       "giaNhap",
+      "giaXuat",
       "soLuongNhap",
       "soLuongXuat",
       "tonKho",
@@ -126,7 +134,6 @@ const Inventory = {
       "ngayHetHan",
       "soHopDongNhap",
       "soHoaDonNhap",
-      "soHopDongXuat",
       "soHoaDonXuat",
       "ngayNhapHD",
       "ngayXuatHD",

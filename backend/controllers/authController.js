@@ -42,8 +42,8 @@ const login = async (req, res) => {
         .json({ success: false, message: "Tài khoản đã bị khóa" });
     }
 
-    // So sánh mật khẩu (dạng text, không hash)
-    const isValidPassword = password === user.password;
+    // So sánh mật khẩu (dùng bcrypt)
+    const isValidPassword = await User.verifyPassword(password, user.password);
 
     if (!isValidPassword) {
       return res
@@ -63,14 +63,13 @@ const login = async (req, res) => {
         fullName: user.fullName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN },
+      { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
-    // QUAN TRỌNG: Admin vẫn có thể vào role-panel
-    // Chỉ định trang mặc định khi đăng nhập lần đầu
+    // Quan trọng: Admin vẫn có thể vào role-panel
     let defaultRedirectUrl = "role-panel.html";
     if (user.roleId === "admin") {
-      defaultRedirectUrl = "admin.html"; // Admin vào admin.html mặc định
+      defaultRedirectUrl = "admin.html";
     }
 
     res.json({
@@ -154,11 +153,9 @@ const createUser = async (req, res) => {
       password,
       fullName,
       email,
-      roleId,
-      isActive,
-      customPermissions: customPermissions
-        ? JSON.stringify(customPermissions)
-        : null,
+      roleId: roleId || "quan_ly",
+      isActive: isActive !== undefined ? isActive : true,
+      customPermissions: customPermissions || null,
     });
 
     res.json({ success: true, userId, message: "Tạo người dùng thành công" });
