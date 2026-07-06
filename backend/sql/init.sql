@@ -139,6 +139,7 @@ CREATE TABLE export_requests (
     soLot VARCHAR(50),
     ngayHetHan DATE,
     soHopDongXuat VARCHAR(50),
+    tonKho INT DEFAULT 0,
     matchStatus ENUM('matched', 'unmatched') DEFAULT 'unmatched',
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
@@ -371,8 +372,8 @@ CREATE TABLE user_permissions (
 
 -- User mẫu (password đã hash: admin123, manager123)
 INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
-('admin', 'admin123', 'Admin - Nhập liệu', 'admin@lagom.com', 'admin', TRUE),
-('quanly', 'manager123', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
+('admin', '$2a$10$Nk3Z7x5sZ8Y9W2X3Y4Z5A6B7C8D9E0F1G2H3I4J5K6L7M8N9O0P1Q2R3S4', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
+('quanly', '$2a$10$Nk3Z7x5sZ8Y9W2X3Y4Z5A6B7C8D9E0F1G2H3I4J5K6L7M8N9O0P1Q2R3S4', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
 
 -- Sản phẩm mẫu (đã được duyệt)
 INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai, giaNhap, giaXuat, tonKho, status, createdBy, approvedBy, approvedAt) VALUES

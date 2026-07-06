@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chọn vai trò - LAGOM</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .role-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .role-panel h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #60a5fa, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .role-panel .sub {
+        color: #6b82a0;
+        margin-bottom: 32px;
+        font-size: 14px;
+      }
+      .role-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        max-width: 700px;
+        width: 100%;
+      }
+      .role-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--text);
+      }
+      .role-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--blue);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+      }
+      .role-card .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        display: block;
+      }
+      .role-card .name {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .role-card .desc {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+      .role-card .badge {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .badge-admin {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+      }
+      .badge-manager {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+      }
+      .logout-link {
+        margin-top: 32px;
+        color: var(--text-muted);
+        font-size: 13px;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .logout-link:hover {
+        color: var(--red);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="app-shell">
+      <div class="role-panel">
+        <h1>🧪 LAGOM Pharma</h1>
+        <p class="sub">Chọn vai trò để tiếp tục</p>
+
+        <div class="role-grid">
+          <a href="admin.html" class="role-card">
+            <span class="icon">👑</span>
+            <div class="name">Admin</div>
+            <div class="desc">Quản lý người dùng, duyệt yêu cầu</div>
+            <span class="badge badge-admin">Quản trị</span>
+          </a>
+
+          <a href="manager.html" class="role-card">
+            <span class="icon">📋</span>
+            <div class="name">Quản lý</div>
+            <div class="desc">Duyệt yêu cầu từ Admin</div>
+            <span class="badge badge-manager">Quản lý</span>
+          </a>
+
+          <a href="index.html" class="role-card">
+            <span class="icon">📊</span>
+            <div class="name">Xem kho</div>
+            <div class="desc">Xem tồn kho, phiếu nhập/xuất</div>
+            <span class="badge badge-manager">Xem</span>
+          </a>
+        </div>
+
+        <div class="logout-link" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function handleLogout() {
+        if (confirm("Bạn có chắc muốn đăng xuất?")) {
+          Auth.logout();
+          window.location.href = "login.html";
+        }
+      }
+
+      // Kiểm tra nếu chưa đăng nhập thì redirect về login
+      if (!Auth.isLoggedIn()) {
+        window.location.href = "login.html";
+      }
+
+      // Cập nhật tên user
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.querySelector(".sub").textContent =
+          `Xin chào ${user.fullName || user.username}! Chọn vai trò để tiếp tục.`;
+      }
+    </script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

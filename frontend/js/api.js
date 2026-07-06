@@ -2,7 +2,9 @@
  * ==================== API WRAPPER ====================
  */
 
-const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
+// SỬA: Dùng biến môi trường hoặc local
+const API_BASE_URL = "http://localhost:3000/api";
+// Nếu dùng production: "https://lagom-wms-demo.onrender.com/api"
 
 // Lấy token từ localStorage
 function getToken() {

@@ -1,6 +1,5 @@
 /**
  * ==================== LOGIN MODULE ====================
- * SỬA: Gọi API login
  */
 
 (function () {
@@ -49,8 +48,15 @@
   function checkExistingSession() {
     if (Auth.isLoggedIn()) {
       const session = Auth.getCurrentSession();
-      const redirectUrl =
-        session.roleId === "admin" ? "admin.html" : "role-panel.html";
+      let redirectUrl = "role-panel.html";
+
+      // Redirect dựa trên role
+      if (session.roleId === "admin") {
+        redirectUrl = "admin.html";
+      } else if (session.roleId === "quan_ly") {
+        redirectUrl = "manager.html";
+      }
+
       window.location.href = redirectUrl;
     }
   }

@@ -54,12 +54,12 @@ const ExportRequest = {
          giaNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
          ngayNhapHD, ngayXuatHD, ghiChu,
          donGiaXuat, soLuong, soLot, ngayHetHan, soHopDongXuat,
-         matchStatus, status, createdBy)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+         tonKho, matchStatus, status, createdBy)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         requestNo,
-        data.tenThuongMai,
-        data.maHang,
+        data.tenThuongMai || "",
+        data.maHang || "",
         data.dvt || "",
         data.hangSX || "",
         data.phanLoai || "",
@@ -75,6 +75,7 @@ const ExportRequest = {
         data.soLot || "",
         data.ngayHetHan || null,
         data.soHopDongXuat || "",
+        currentStock,
         matchStatus,
         createdBy,
       ],
@@ -99,7 +100,7 @@ const ExportRequest = {
        WHERE r.id = ?`,
       [id],
     );
-    return rows[0];
+    return rows[0] || null;
   },
 
   getAll: async (status = null) => {
