@@ -35,9 +35,13 @@
           <div class="nav-icon">📊</div>
           Tổng quan
         </a>
+        <a href="#" class="nav-item" data-view="users">
+          <div class="nav-icon">👥</div>
+          Quản lý người dùng
+        </a>
         <a href="#" class="nav-item" data-view="requests">
           <div class="nav-icon">📋</div>
-          Yêu cầu của tôi
+          Yêu cầu duyệt
         </a>
         <a href="#" class="nav-item" data-view="history">
           <div class="nav-icon">📜</div>
@@ -74,20 +78,14 @@
               <div class="page-header">
                 <div>
                   <div class="page-title-tag">ADMIN</div>
-                  <div class="page-title">Nhập liệu</div>
+                  <div class="page-title">Tổng quan</div>
                   <div class="page-sub">
-                    Tạo yêu cầu nhập liệu và đề nghị nhập/xuất hàng
+                    Quản lý người dùng và duyệt yêu cầu
                   </div>
                 </div>
                 <div class="header-actions">
-                  <button class="btn btn-primary" id="btnCreateProduct">
-                    <i class="fas fa-plus"></i> Tạo yêu cầu nhập liệu
-                  </button>
-                  <button class="btn btn-primary" id="btnCreateReceipt">
-                    <i class="fas fa-plus"></i> Đề nghị nhập hàng
-                  </button>
-                  <button class="btn btn-primary" id="btnCreateExport">
-                    <i class="fas fa-plus"></i> Đề nghị xuất kho
+                  <button class="btn btn-primary" id="btnAddUser">
+                    <i class="fas fa-plus"></i> Thêm người dùng
                   </button>
                   <button class="btn btn-outline" id="btnRefresh">
                     <i class="fas fa-sync-alt"></i>
@@ -98,13 +96,28 @@
                 </div>
               </div>
 
+              <!-- Stats -->
               <div class="stats-row">
                 <div class="stat-card s-blue">
                   <div class="stat-top">
-                    <div class="stat-icon-wrap">📦</div>
+                    <div class="stat-icon-wrap">👥</div>
                   </div>
-                  <div class="stat-value" id="statTotalItems">0</div>
-                  <div class="stat-label">Tổng sản phẩm</div>
+                  <div class="stat-value" id="statTotalUsers">0</div>
+                  <div class="stat-label">Tổng người dùng</div>
+                </div>
+                <div class="stat-card s-green">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">✅</div>
+                  </div>
+                  <div class="stat-value" id="statActiveUsers">0</div>
+                  <div class="stat-label">Đang hoạt động</div>
+                </div>
+                <div class="stat-card s-yellow">
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">⏳</div>
+                  </div>
+                  <div class="stat-value" id="statPendingRequests">0</div>
+                  <div class="stat-label">Yêu cầu chờ duyệt</div>
                 </div>
               </div>
 
@@ -124,17 +137,79 @@
             </div>
           </div>
 
-          <!-- VIEW: YÊU CẦU CỦA TÔI -->
+          <!-- VIEW: QUẢN LÝ NGƯỜI DÙNG -->
+          <div class="view" id="view-users">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">USER MANAGEMENT</div>
+                  <div class="page-title">Quản lý người dùng</div>
+                  <div class="page-sub">
+                    Thêm, sửa, xóa và phân quyền người dùng
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnAddUser2">
+                    <i class="fas fa-plus"></i> Thêm người dùng
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar" style="margin-bottom: 16px">
+                <div class="search-box" style="flex: 1">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    id="searchUser"
+                    placeholder="Tìm theo tên, username..."
+                  />
+                </div>
+                <select class="cat-select" id="filterUserRole">
+                  <option value="">Tất cả vai trò</option>
+                  <option value="admin">Admin</option>
+                  <option value="quan_ly">Quản lý</option>
+                </select>
+                <select class="cat-select" id="filterUserStatus">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Đã khóa</option>
+                </select>
+                <button class="btn btn-outline" id="btnResetUserFilter">
+                  <i class="fas fa-undo-alt"></i> Đặt lại
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table class="user-table">
+                  <thead>
+                    <tr>
+                      <th>STT</th>
+                      <th>Username</th>
+                      <th>Họ tên</th>
+                      <th>Email</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      <th>Ngày tạo</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: YÊU CẦU DUYỆT -->
           <div class="view" id="view-requests">
             <div class="scroll-area">
               <div class="page-header">
                 <div>
-                  <div class="page-title-tag">REQUESTS</div>
-                  <div class="page-title">Yêu cầu của tôi</div>
-                  <div class="page-sub">Danh sách các yêu cầu đã gửi</div>
+                  <div class="page-title-tag">APPROVALS</div>
+                  <div class="page-title">Yêu cầu chờ duyệt</div>
+                  <div class="page-sub">Danh sách các yêu cầu từ nhập liệu</div>
                 </div>
               </div>
-              <div id="requestsList" class="request-list"></div>
+              <div id="approvalList" class="approval-list"></div>
             </div>
           </div>
 
@@ -155,116 +230,56 @@
       </div>
     </div>
 
-    <!-- MODAL TẠO YÊU CẦU NHẬP LIỆU -->
-    <div id="productModal" class="modal" style="display: none">
-      <div class="modal-content" style="max-width: 800px">
+    <!-- MODAL THÊM/SỬA USER -->
+    <div id="userModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 700px">
         <div class="modal-header">
-          <h3>Tạo yêu cầu nhập sản phẩm mới</h3>
-          <span class="close-modal" onclick="closeModal('productModal')"
+          <h3 id="modalTitle">Thêm người dùng</h3>
+          <span class="close-modal" onclick="closeModal('userModal')"
             >&times;</span
           >
         </div>
         <div class="modal-body">
-          <form id="productForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Tên thương mại *</label>
-                <input
-                  type="text"
-                  id="p_tenThuongMai"
-                  required
-                  placeholder="Nhập tên sản phẩm"
-                />
-              </div>
-              <div class="form-group">
-                <label>Mã hàng *</label>
-                <input
-                  type="text"
-                  id="p_maHang"
-                  required
-                  placeholder="Nhập mã hàng"
-                />
-              </div>
+          <form id="userForm">
+            <input type="hidden" id="editUserId" />
+            <div class="form-group">
+              <label>Tên đăng nhập *</label>
+              <input type="text" id="editUsername" required />
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Đơn vị tính</label>
-                <input type="text" id="p_dvt" placeholder="Hộp, Chai, Ống..." />
-              </div>
-              <div class="form-group">
-                <label>Hãng sản xuất</label>
-                <input
-                  type="text"
-                  id="p_hangSX"
-                  placeholder="Tên hãng sản xuất"
-                />
-              </div>
+            <div class="form-group" id="passwordGroup">
+              <label>Mật khẩu</label>
+              <input type="password" id="editPassword" />
+              <small>Để trống nếu không đổi mật khẩu (khi sửa)</small>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Phân loại</label>
-                <input
-                  type="text"
-                  id="p_phanLoai"
-                  placeholder="Phân loại sản phẩm"
-                />
-              </div>
-              <div class="form-group">
-                <label>Giá nhập</label>
-                <input type="text" id="p_giaNhap" placeholder="0" />
-              </div>
+            <div class="form-group">
+              <label>Họ và tên *</label>
+              <input type="text" id="editFullName" required />
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Số hợp đồng nhập</label>
-                <input
-                  type="text"
-                  id="p_soHopDongNhap"
-                  placeholder="Số hợp đồng nhập"
-                />
-              </div>
-              <div class="form-group">
-                <label>Số hóa đơn nhập</label>
-                <input
-                  type="text"
-                  id="p_soHoaDonNhap"
-                  placeholder="Số hóa đơn nhập"
-                />
-              </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="editEmail" />
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Số hóa đơn xuất</label>
-                <input
-                  type="text"
-                  id="p_soHoaDonXuat"
-                  placeholder="Số hóa đơn xuất"
-                />
-              </div>
-              <div class="form-group">
-                <label>Ngày nhập hóa đơn</label>
-                <input type="date" id="p_ngayNhapHD" />
-              </div>
+            <div class="form-group">
+              <label>Vai trò</label>
+              <select id="editRole">
+                <option value="admin">Admin</option>
+                <option value="quan_ly">Quản lý</option>
+              </select>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Ngày xuất hóa đơn</label>
-                <input type="date" id="p_ngayXuatHD" />
-              </div>
-              <div class="form-group">
-                <label>Ghi chú</label>
-                <input type="text" id="p_ghiChu" placeholder="Ghi chú thêm" />
-              </div>
+            <div class="form-group">
+              <label>Trạng thái</label>
+              <select id="editIsActive">
+                <option value="true">Hoạt động</option>
+                <option value="false">Đã khóa</option>
+              </select>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-outline" onclick="closeModal('productModal')">
+          <button class="btn btn-outline" onclick="closeModal('userModal')">
             Hủy
           </button>
-          <button class="btn btn-primary" id="btnSaveProduct">
-            Gửi yêu cầu
-          </button>
+          <button class="btn btn-primary" id="btnSaveUser">Lưu</button>
         </div>
       </div>
     </div>

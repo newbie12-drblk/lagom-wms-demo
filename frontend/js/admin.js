@@ -1,7 +1,6 @@
 /**
  * ==================== ADMIN MODULE ====================
- * Admin - Nhập liệu (KHÔNG được sửa trực tiếp trên bảng)
- * Chỉ tạo yêu cầu nhập liệu, đề nghị nhập/xuất hàng
+ * Admin - Quản lý người dùng, duyệt yêu cầu
  */
 
 (function () {
@@ -19,14 +18,11 @@
     return;
   }
 
-  // ========== DOM REFS ==========
   const $ = (id) => document.getElementById(id);
-  const viewNames = ["dashboard", "requests", "history"];
-
+  const viewNames = ["dashboard", "users", "requests", "history"];
   let currentView = "dashboard";
-  let inventoryData = [];
-  let receiptRequests = [];
-  let exportRequests = [];
+  let users = [];
+  let pendingRequests = [];
 
   // ========== UPDATE TOPBAR ==========
   function updateTopbar() {
@@ -44,7 +40,7 @@
       <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
       <div class="user-details">
         <span class="user-name">${Utils.escapeHtml(currentUser.fullName)}</span>
-        <span class="user-role role-admin">Admin (Nhập liệu)</span>
+        <span class="user-role role-admin">Admin</span>
       </div>
       <button class="logout-btn" id="logoutBtn" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
     `;
@@ -74,12 +70,14 @@
 
     const titles = {
       dashboard: "Tổng quan",
-      requests: "Yêu cầu của tôi",
+      users: "Quản lý người dùng",
+      requests: "Yêu cầu duyệt",
       history: "Lịch sử",
     };
     $("breadcrumb-title").textContent = titles[viewName] || viewName;
 
     if (viewName === "dashboard") loadDashboard();
+    else if (viewName === "users") loadUsers();
     else if (viewName === "requests") loadRequests();
     else if (viewName === "history") loadHistory();
   }
@@ -87,13 +85,24 @@
   // ========== LOAD DASHBOARD ==========
   async function loadDashboard() {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory`, {
+      const usersRes = await fetch(`${API_BASE_URL}/auth/users`, {
         headers: { Authorization: `Bearer ${API.getToken()}` },
       });
-      const result = await response.json();
-      if (result.success) {
-        const data = result.data || [];
-        $("statTotalItems").textContent = data.length;
+      const usersData = await usersRes.json();
+      if (usersData.success) {
+        const allUsers = usersData.users || [];
+        $("statTotalUsers").textContent = allUsers.length;
+        $("statActiveUsers").textContent = allUsers.filter(
+          (u) => u.isActive,
+        ).length;
+      }
+
+      const reqRes = await fetch(`${API_BASE_URL}/approvals?status=pending`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const reqData = await reqRes.json();
+      if (reqData.success) {
+        $("statPendingRequests").textContent = (reqData.data || []).length;
       }
     } catch (error) {
       console.error("Load dashboard error:", error);
@@ -151,26 +160,238 @@
     }
   };
 
-  // ========== LOAD REQUESTS (Yêu cầu của Admin) ==========
+  // ========== LOAD USERS ==========
+  async function loadUsers() {
+    Utils.showLoading(true, "Đang tải...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/users`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        users = result.users || [];
+        renderUsers();
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi tải dữ liệu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  function renderUsers() {
+    const container = $("userTableBody");
+    const searchTerm = $("searchUser")?.value.toLowerCase() || "";
+    const roleFilter = $("filterUserRole")?.value || "";
+    const statusFilter = $("filterUserStatus")?.value || "";
+
+    let filtered = users;
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (u) =>
+          u.username?.toLowerCase().includes(searchTerm) ||
+          u.fullName?.toLowerCase().includes(searchTerm),
+      );
+    }
+    if (roleFilter) {
+      filtered = filtered.filter((u) => u.roleId === roleFilter);
+    }
+    if (statusFilter) {
+      filtered = filtered.filter((u) =>
+        statusFilter === "active" ? u.isActive : !u.isActive,
+      );
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;">Không có người dùng</td></tr>`;
+      return;
+    }
+
+    container.innerHTML = filtered
+      .map((user, idx) => {
+        const isSelf = user.id === currentUser.id;
+        return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>${Utils.escapeHtml(user.username)}</strong></td>
+          <td>${Utils.escapeHtml(user.fullName)}</td>
+          <td>${Utils.escapeHtml(user.email || "—")}</td>
+          <td><span class="status-badge ${user.roleId === "admin" ? "status-active" : "status-pending"}">${user.roleId === "admin" ? "Admin" : "Quản lý"}</span></td>
+          <td><span class="status-badge ${user.isActive ? "status-active" : "status-locked"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}</span></td>
+          <td>${Utils.formatDate(user.createdAt)}</td>
+          <td>
+            ${
+              !isSelf
+                ? `
+              <button class="action-btn edit" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
+              <button class="action-btn lock" onclick="toggleUserLock(${user.id}, ${!user.isActive})"><i class="fas fa-${user.isActive ? "lock" : "lock-open"}"></i></button>
+              <button class="action-btn delete" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i></button>
+            `
+                : `<span style="color:#6b82a0;font-size:11px;">(Bạn)</span>`
+            }
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+  }
+
+  // ========== USER MODAL ==========
+  let editingUserId = null;
+
+  function openUserModal(userId = null) {
+    editingUserId = userId;
+    const modal = $("userModal");
+    const title = $("modalTitle");
+    const passwordGroup = $("passwordGroup");
+
+    if (userId) {
+      const user = users.find((u) => u.id === userId);
+      if (!user) return;
+      title.textContent = "Sửa người dùng";
+      $("editUserId").value = user.id;
+      $("editUsername").value = user.username;
+      $("editUsername").disabled = true;
+      $("editFullName").value = user.fullName;
+      $("editEmail").value = user.email || "";
+      $("editRole").value = user.roleId;
+      $("editIsActive").value = user.isActive ? "true" : "false";
+      $("editPassword").value = "";
+      $("editPassword").placeholder = "Để trống nếu không đổi";
+      passwordGroup.querySelector("small").textContent =
+        "Để trống nếu không đổi mật khẩu";
+    } else {
+      title.textContent = "Thêm người dùng";
+      $("editUserId").value = "";
+      $("editUsername").value = "";
+      $("editUsername").disabled = false;
+      $("editFullName").value = "";
+      $("editEmail").value = "";
+      $("editRole").value = "quan_ly";
+      $("editIsActive").value = "true";
+      $("editPassword").value = "";
+      $("editPassword").placeholder = "Nhập mật khẩu";
+      passwordGroup.querySelector("small").textContent =
+        "Nhập mật khẩu cho tài khoản mới";
+    }
+
+    modal.style.display = "flex";
+  }
+
+  async function saveUser() {
+    const id = $("editUserId").value;
+    const data = {
+      username: $("editUsername").value.trim(),
+      fullName: $("editFullName").value.trim(),
+      email: $("editEmail").value.trim(),
+      roleId: $("editRole").value,
+      isActive: $("editIsActive").value === "true",
+    };
+
+    if ($("editPassword").value) {
+      data.password = $("editPassword").value;
+    }
+
+    if (!data.username || !data.fullName) {
+      Utils.showToast("Vui lòng nhập đầy đủ thông tin", "error");
+      return;
+    }
+
+    if (!id && !data.password) {
+      Utils.showToast("Vui lòng nhập mật khẩu cho tài khoản mới", "error");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang lưu...");
+    try {
+      const url = id
+        ? `${API_BASE_URL}/auth/users/${id}`
+        : `${API_BASE_URL}/auth/users`;
+      const method = id ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast(
+          id ? "✅ Cập nhật thành công" : "✅ Tạo người dùng thành công",
+        );
+        closeModal("userModal");
+        loadUsers();
+        loadDashboard();
+      } else {
+        Utils.showToast(result.message || "Lỗi khi lưu", "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi khi lưu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  async function toggleUserLock(id, unlock) {
+    if (
+      !confirm(`Bạn có chắc muốn ${unlock ? "mở khóa" : "khóa"} tài khoản này?`)
+    )
+      return;
+    Utils.showLoading(true, "Đang cập nhật...");
+    try {
+      await fetch(`${API_BASE_URL}/auth/users/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ isActive: unlock }),
+      });
+      Utils.showToast(`Đã ${unlock ? "mở khóa" : "khóa"} tài khoản`);
+      loadUsers();
+      loadDashboard();
+    } catch (error) {
+      Utils.showToast("Lỗi khi cập nhật", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  async function deleteUser(id) {
+    const user = users.find((u) => u.id === id);
+    if (!confirm(`Bạn có chắc muốn xóa tài khoản "${user?.username}"?`)) return;
+    Utils.showLoading(true, "Đang xóa...");
+    try {
+      await fetch(`${API_BASE_URL}/auth/users/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      Utils.showToast("Đã xóa tài khoản");
+      loadUsers();
+      loadDashboard();
+    } catch (error) {
+      Utils.showToast("Lỗi khi xóa", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== LOAD REQUESTS ==========
   async function loadRequests() {
     Utils.showLoading(true, "Đang tải...");
     try {
-      const [receiptRes, exportRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/receipt-requests`, {
-          headers: { Authorization: `Bearer ${API.getToken()}` },
-        }),
-        fetch(`${API_BASE_URL}/export-requests`, {
-          headers: { Authorization: `Bearer ${API.getToken()}` },
-        }),
-      ]);
-
-      const receiptData = await receiptRes.json();
-      const exportData = await exportRes.json();
-
-      receiptRequests = receiptData.success ? receiptData.data || [] : [];
-      exportRequests = exportData.success ? exportData.data || [] : [];
-
-      renderRequests();
+      const response = await fetch(`${API_BASE_URL}/approvals?status=pending`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        pendingRequests = result.data || [];
+        renderRequests();
+      }
     } catch (error) {
       Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
@@ -179,47 +400,81 @@
   }
 
   function renderRequests() {
-    const container = $("requestsList");
-    const allRequests = [
-      ...receiptRequests.map((r) => ({ ...r, type: "receipt" })),
-      ...exportRequests.map((r) => ({ ...r, type: "export" })),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    if (allRequests.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Bạn chưa có yêu cầu nào</p></div>`;
+    const container = $("approvalList");
+    if (pendingRequests.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu nào chờ duyệt</p></div>`;
       return;
     }
 
-    const statusMap = {
-      pending: { label: "⏳ Chờ duyệt", class: "status-pending" },
-      approved: { label: "✅ Đã duyệt", class: "status-approved" },
-      rejected: { label: "❌ Từ chối", class: "status-rejected" },
-    };
-
-    container.innerHTML = allRequests
-      .map((r) => {
-        const status = statusMap[r.status] || statusMap["pending"];
-        const typeIcon = r.type === "receipt" ? "📥" : "📤";
-        const typeName = r.type === "receipt" ? "Nhập hàng" : "Xuất kho";
-
-        return `
-        <div class="request-card">
-          <div class="request-card-header">
-            <div class="request-card-id">${typeIcon} ${Utils.escapeHtml(r.requestNo)}</div>
-            <div class="request-card-date">${Utils.formatDate(r.createdAt)}</div>
-            <span class="status-badge ${status.class}">${status.label}</span>
-          </div>
-          <div class="request-card-body">
-            <div><span class="label">Sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
-            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-            <div><span class="label">Loại:</span> <span class="value">${typeName}</span></div>
-            <div><span class="label">Trạng thái khớp:</span> <span class="value ${r.matchStatus === "matched" ? "text-success" : "text-warning"}">${r.matchStatus === "matched" ? "✅ Đã khớp" : "⚠️ Chưa khớp"}</span></div>
-            ${r.status === "rejected" ? `<div><span class="label">Lý do:</span> <span class="value" style="color:#f87171;">${Utils.escapeHtml(r.rejectedReason || "Không có lý do")}</span></div>` : ""}
+    container.innerHTML = pendingRequests
+      .map(
+        (req) => `
+      <div class="approval-card">
+        <div class="approval-card-header">
+          <div class="approval-card-id">📋 ${Utils.escapeHtml(req.requesterName || "Unknown")}</div>
+          <div class="approval-card-date">${Utils.formatDate(req.createdAt)}</div>
+        </div>
+        <div class="approval-card-body">
+          <div><span class="label">Số sản phẩm:</span> <span class="value">${req.productData?.products?.length || 0}</span></div>
+          <div><span class="label">Chi tiết:</span></div>
+          <div style="grid-column:1/-1; background:#1a2235; padding:8px; border-radius:4px; font-size:12px; color:#6b82a0;">
+            ${(req.productData?.products || [])
+              .map(
+                (p) =>
+                  `<div>📦 ${Utils.escapeHtml(p.tenThuongMai)} (${Utils.escapeHtml(p.maHang)})</div>`,
+              )
+              .join("")}
           </div>
         </div>
-      `;
-      })
+        <div class="approval-card-actions">
+          <button class="btn btn-danger" onclick="rejectRequest(${req.id})"><i class="fas fa-times"></i> Từ chối</button>
+          <button class="btn btn-success" onclick="approveRequest(${req.id})"><i class="fas fa-check"></i> Duyệt</button>
+        </div>
+      </div>
+    `,
+      )
       .join("");
+  }
+
+  async function approveRequest(id) {
+    if (!confirm("Bạn có chắc muốn duyệt yêu cầu này?")) return;
+    Utils.showLoading(true, "Đang duyệt...");
+    try {
+      await fetch(`${API_BASE_URL}/approvals/${id}/approve`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      Utils.showToast("✅ Đã duyệt yêu cầu");
+      loadRequests();
+      loadDashboard();
+    } catch (error) {
+      Utils.showToast("Lỗi khi duyệt", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  async function rejectRequest(id) {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await fetch(`${API_BASE_URL}/approvals/${id}/reject`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+      Utils.showToast("Đã từ chối yêu cầu");
+      loadRequests();
+      loadDashboard();
+    } catch (error) {
+      Utils.showToast("Lỗi khi từ chối", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
   }
 
   // ========== LOAD HISTORY ==========
@@ -260,8 +515,8 @@
                   <td>${h.action}</td>
                   <td>
                     ${h.fieldName ? `<strong>${h.fieldName}:</strong> ` : ""}
-                    ${h.oldValue ? `"${Utils.escapeHtml(h.oldValue.substring(0, 50))}" → ` : ""}
-                    ${h.newValue ? `"${Utils.escapeHtml(h.newValue.substring(0, 50))}"` : ""}
+                    ${h.oldValue ? `"${Utils.escapeHtml(String(h.oldValue).substring(0, 50))}" → ` : ""}
+                    ${h.newValue ? `"${Utils.escapeHtml(String(h.newValue).substring(0, 50))}"` : ""}
                   </td>
                 </tr>
               `,
@@ -278,72 +533,6 @@
     }
   }
 
-  // ========== MODAL TẠO YÊU CẦU NHẬP LIỆU ==========
-  function openCreateProductModal() {
-    const modal = $("productModal");
-    $("p_tenThuongMai").value = "";
-    $("p_maHang").value = "";
-    $("p_dvt").value = "";
-    $("p_hangSX").value = "";
-    $("p_phanLoai").value = "";
-    $("p_giaNhap").value = "";
-    $("p_soHopDongNhap").value = "";
-    $("p_soHoaDonNhap").value = "";
-    $("p_soHoaDonXuat").value = "";
-    $("p_ngayNhapHD").value = "";
-    $("p_ngayXuatHD").value = "";
-    $("p_ghiChu").value = "";
-    modal.style.display = "flex";
-  }
-
-  async function saveProductRequest() {
-    const data = {
-      tenThuongMai: $("p_tenThuongMai").value.trim(),
-      maHang: $("p_maHang").value.trim(),
-      dvt: $("p_dvt").value.trim(),
-      hangSX: $("p_hangSX").value.trim(),
-      phanLoai: $("p_phanLoai").value.trim(),
-      giaNhap: parseFloat($("p_giaNhap").value.replace(/[^0-9]/g, "")) || 0,
-      soHopDongNhap: $("p_soHopDongNhap").value.trim(),
-      soHoaDonNhap: $("p_soHoaDonNhap").value.trim(),
-      soHoaDonXuat: $("p_soHoaDonXuat").value.trim(),
-      ngayNhapHD: $("p_ngayNhapHD").value || null,
-      ngayXuatHD: $("p_ngayXuatHD").value || null,
-      ghiChu: $("p_ghiChu").value.trim(),
-    };
-
-    if (!data.tenThuongMai || !data.maHang) {
-      Utils.showToast("Vui lòng nhập Tên thương mại và Mã hàng", "error");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang gửi yêu cầu...");
-    try {
-      const response = await fetch(`${API_BASE_URL}/inventory`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        Utils.showToast("✅ Đã gửi yêu cầu nhập sản phẩm, chờ Quản lý duyệt");
-        closeModal("productModal");
-        loadDashboard();
-        loadRequests();
-      } else {
-        Utils.showToast(result.message || "Lỗi khi gửi yêu cầu", "error");
-      }
-    } catch (error) {
-      Utils.showToast("Lỗi khi gửi yêu cầu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
   // ========== CLOSE MODAL ==========
   function closeModal(id) {
     const modal = document.getElementById(id);
@@ -352,7 +541,6 @@
 
   // ========== BIND EVENTS ==========
   function bindEvents() {
-    // Navigation
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", (e) => {
         e.preventDefault();
@@ -360,27 +548,25 @@
       });
     });
 
-    // Refresh
     $("btnRefresh")?.addEventListener("click", () => {
       loadDashboard();
       Utils.showToast("Đã làm mới dữ liệu");
     });
 
-    // Create product request
-    $("btnCreateProduct")?.addEventListener("click", openCreateProductModal);
-    $("btnSaveProduct")?.addEventListener("click", saveProductRequest);
+    $("btnAddUser")?.addEventListener("click", () => openUserModal());
+    $("btnAddUser2")?.addEventListener("click", () => openUserModal());
+    $("btnSaveUser")?.addEventListener("click", saveUser);
 
-    // Create receipt request
-    $("btnCreateReceipt")?.addEventListener("click", () => {
-      window.open("receipt.html", "_blank");
+    $("searchUser")?.addEventListener("input", renderUsers);
+    $("filterUserRole")?.addEventListener("change", renderUsers);
+    $("filterUserStatus")?.addEventListener("change", renderUsers);
+    $("btnResetUserFilter")?.addEventListener("click", () => {
+      if ($("searchUser")) $("searchUser").value = "";
+      if ($("filterUserRole")) $("filterUserRole").value = "";
+      if ($("filterUserStatus")) $("filterUserStatus").value = "";
+      renderUsers();
     });
 
-    // Create export request
-    $("btnCreateExport")?.addEventListener("click", () => {
-      window.open("export.html", "_blank");
-    });
-
-    // Close modals on overlay
     document.querySelectorAll(".modal").forEach((modal) => {
       modal.addEventListener("click", (e) => {
         if (e.target === modal) modal.style.display = "none";
@@ -391,6 +577,12 @@
   // ========== EXPOSE GLOBALS ==========
   window.switchView = switchView;
   window.closeModal = closeModal;
+  window.editUser = openUserModal;
+  window.toggleUserLock = toggleUserLock;
+  window.deleteUser = deleteUser;
+  window.approveRequest = approveRequest;
+  window.rejectRequest = rejectRequest;
+  window.markAsRead = markAsRead;
 
   // ========== INIT ==========
   function init() {
