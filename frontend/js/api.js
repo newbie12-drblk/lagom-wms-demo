@@ -1,24 +1,19 @@
 // ==================== API WRAPPER ====================
 
-// SỬA: Dùng URL backend trên Render
 const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
 
-// Lấy token từ localStorage
 function getToken() {
   return localStorage.getItem("lagom_token");
 }
 
-// Lưu token
 function setToken(token) {
   localStorage.setItem("lagom_token", token);
 }
 
-// Xóa token
 function removeToken() {
   localStorage.removeItem("lagom_token");
 }
 
-// Gọi API chung
 async function apiCall(endpoint, options = {}) {
   const token = getToken();
   const headers = {
@@ -30,29 +25,24 @@ async function apiCall(endpoint, options = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        removeToken();
-        if (window.location.pathname !== "/login.html") {
-          window.location.href = "login.html";
-        }
+  if (!response.ok) {
+    if (response.status === 401) {
+      removeToken();
+      if (window.location.pathname !== "/login.html") {
+        window.location.href = "login.html";
       }
-      throw new Error(data.message || "Có lỗi xảy ra");
     }
-
-    return data;
-  } catch (error) {
-    console.error("API Error:", error);
-    throw error;
+    throw new Error(data.message || "Có lỗi xảy ra");
   }
+
+  return data;
 }
 
 // API Object
