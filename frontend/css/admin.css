@@ -1,7 +1,6 @@
 /* ==================== ADMIN PAGE STYLES ==================== */
 /* Quản lý người dùng và duyệt yêu cầu */
 
-/* ==================== CONTAINER ==================== */
 .admin-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -88,16 +87,6 @@
 .btn-sm {
   padding: 4px 10px;
   font-size: 11px;
-}
-
-.btn-warning {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-}
-
-.btn-warning:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 /* ==================== STATS CARDS ==================== */
@@ -241,13 +230,6 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.6px;
-}
-
-.stat-sub {
-  font-size: 10px;
-  color: var(--text-dim);
-  margin-top: 3px;
-  font-family: var(--font-mono);
 }
 
 /* ==================== PANEL ==================== */
