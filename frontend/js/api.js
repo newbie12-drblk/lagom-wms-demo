@@ -100,6 +100,10 @@ const API = {
       const data = await apiCall("/inventory/stats");
       return data.data;
     },
+    getPending: async () => {
+      const data = await apiCall("/inventory/pending");
+      return data.data || [];
+    },
     create: async (productData) =>
       await apiCall("/inventory", {
         method: "POST",
@@ -113,6 +117,16 @@ const API = {
     delete: async (id) =>
       await apiCall(`/inventory/${id}`, {
         method: "DELETE",
+      }),
+    approve: async (id, tonKho) =>
+      await apiCall(`/inventory/${id}/approve`, {
+        method: "PUT",
+        body: JSON.stringify({ tonKho }),
+      }),
+    reject: async (id, reason) =>
+      await apiCall(`/inventory/${id}/reject`, {
+        method: "PUT",
+        body: JSON.stringify({ reason }),
       }),
   },
 
@@ -207,6 +221,64 @@ const API = {
       }),
   },
 
+  receiptRequest: {
+    create: async (data) =>
+      await apiCall("/receipt-requests", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getPending: async () => {
+      const data = await apiCall("/receipt-requests/pending");
+      return data.data || [];
+    },
+    getAll: async (status = null) => {
+      const url = status
+        ? `/receipt-requests?status=${status}`
+        : "/receipt-requests";
+      const data = await apiCall(url);
+      return data.data || [];
+    },
+    approve: async (id, soLuongNhap) =>
+      await apiCall(`/receipt-requests/${id}/approve`, {
+        method: "PUT",
+        body: JSON.stringify({ soLuongNhap }),
+      }),
+    reject: async (id, reason) =>
+      await apiCall(`/receipt-requests/${id}/reject`, {
+        method: "PUT",
+        body: JSON.stringify({ reason }),
+      }),
+  },
+
+  exportRequest: {
+    create: async (data) =>
+      await apiCall("/export-requests", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getPending: async () => {
+      const data = await apiCall("/export-requests/pending");
+      return data.data || [];
+    },
+    getAll: async (status = null) => {
+      const url = status
+        ? `/export-requests?status=${status}`
+        : "/export-requests";
+      const data = await apiCall(url);
+      return data.data || [];
+    },
+    approve: async (id, extraData) =>
+      await apiCall(`/export-requests/${id}/approve`, {
+        method: "PUT",
+        body: JSON.stringify(extraData),
+      }),
+    reject: async (id, reason) =>
+      await apiCall(`/export-requests/${id}/reject`, {
+        method: "PUT",
+        body: JSON.stringify({ reason }),
+      }),
+  },
+
   approval: {
     createRequest: async (productData) =>
       await apiCall("/approvals", {
@@ -238,10 +310,10 @@ const API = {
   },
 
   deletion: {
-    createRequest: async (productId) =>
+    createRequest: async (data) =>
       await apiCall("/deletions", {
         method: "POST",
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify(data),
       }),
     getAllRequests: async (status = null) => {
       const url = status ? `/deletions?status=${status}` : "/deletions";

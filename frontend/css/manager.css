@@ -497,3 +497,44 @@
     font-size: 24px;
   }
 }
+/* Thêm vào cuối file manager.css */
+
+.stat-card.s-purple::before {
+  background: linear-gradient(90deg, var(--purple), transparent 70%);
+}
+.stat-card.s-purple .stat-icon-wrap {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.stat-card.s-purple .stat-value {
+  color: var(--purple);
+}
+
+.stat-card.s-red::before {
+  background: linear-gradient(90deg, var(--red), transparent 70%);
+}
+.stat-card.s-red .stat-icon-wrap {
+  background: var(--red-glow);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.stat-card.s-red .stat-value {
+  color: var(--red);
+}
+
+.badge-match {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-matched {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.badge-unmatched {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}

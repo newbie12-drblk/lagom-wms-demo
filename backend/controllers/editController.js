@@ -3,7 +3,7 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Tạo yêu cầu chỉnh sửa sản phẩm
+// Tạo yêu cầu chỉnh sửa sản phẩm (Admin)
 const createEditRequest = async (req, res) => {
   try {
     const { productId, updatedData } = req.body;
@@ -43,10 +43,19 @@ const createEditRequest = async (req, res) => {
       updatedData,
     );
 
+    // Gửi thông báo cho Quản lý
+    await Notification.createForManagers(
+      "✏️ Yêu cầu chỉnh sửa sản phẩm",
+      `Admin yêu cầu chỉnh sửa sản phẩm "${oldProduct.tenThuongMai}" (${oldProduct.maHang})`,
+      "approval",
+      requestId,
+      "edit_request",
+    );
+
     res.json({
       success: true,
       data: { id: requestId },
-      message: "Đã gửi yêu cầu chỉnh sửa sản phẩm, chờ admin duyệt",
+      message: "✅ Đã gửi yêu cầu chỉnh sửa sản phẩm, chờ Quản lý duyệt",
     });
   } catch (error) {
     console.error("Create edit request error:", error);
@@ -54,7 +63,7 @@ const createEditRequest = async (req, res) => {
   }
 };
 
-// Lấy tất cả yêu cầu chỉnh sửa (admin)
+// Lấy tất cả yêu cầu chỉnh sửa (Quản lý)
 const getAllEditRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -66,7 +75,7 @@ const getAllEditRequests = async (req, res) => {
   }
 };
 
-// Lấy yêu cầu chỉnh sửa của tôi (nhập liệu)
+// Lấy yêu cầu chỉnh sửa của tôi (Admin)
 const getMyEditRequests = async (req, res) => {
   try {
     const requests = await EditRequest.getByRequester(req.user.userId);
@@ -77,7 +86,7 @@ const getMyEditRequests = async (req, res) => {
   }
 };
 
-// Duyệt yêu cầu chỉnh sửa (admin)
+// Duyệt yêu cầu chỉnh sửa (Quản lý)
 const approveEditRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -94,8 +103,8 @@ const approveEditRequest = async (req, res) => {
     // Cập nhật sản phẩm trong inventory
     await Inventory.update(request.productId, request.newData);
 
-    // Xóa yêu cầu
-    await EditRequest.delete(id);
+    // Cập nhật trạng thái yêu cầu
+    await EditRequest.approve(id, approvedBy);
 
     // Ghi lịch sử
     await EditHistory.log(
@@ -108,13 +117,14 @@ const approveEditRequest = async (req, res) => {
       JSON.stringify(request.newData),
     );
 
-    // Gửi thông báo
+    // Gửi thông báo cho Admin
     await Notification.create(
       request.requesterId,
-      "Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
-      `Sản phẩm "${request.productName}" đã được cập nhật`,
+      "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
+      `Sản phẩm "${request.productName}" đã được cập nhật theo yêu cầu của bạn`,
       "success",
       id,
+      "edit_request",
     );
 
     res.json({
@@ -127,7 +137,7 @@ const approveEditRequest = async (req, res) => {
   }
 };
 
-// Từ chối yêu cầu chỉnh sửa (admin)
+// Từ chối yêu cầu chỉnh sửa (Quản lý)
 const rejectEditRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -143,14 +153,14 @@ const rejectEditRequest = async (req, res) => {
     }
 
     await EditRequest.reject(id, approvedBy, reason);
-    await EditRequest.delete(id);
 
     await Notification.create(
       request.requesterId,
-      "Yêu cầu chỉnh sửa sản phẩm đã bị từ chối",
-      reason || "Admin đã từ chối yêu cầu chỉnh sửa của bạn",
+      "❌ Yêu cầu chỉnh sửa sản phẩm bị từ chối",
+      `Sản phẩm "${request.productName}" không được chấp thuận chỉnh sửa.\nLý do: ${reason || "Không được chấp thuận"}`,
       "warning",
       id,
+      "edit_request",
     );
 
     res.json({ success: true, message: "Đã từ chối yêu cầu chỉnh sửa" });

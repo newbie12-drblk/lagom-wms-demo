@@ -30,6 +30,16 @@ const getProductByMaHang = async (req, res) => {
   }
 };
 
+// Lấy danh sách phân loại
+const getCategories = async (req, res) => {
+  try {
+    const categories = await Inventory.getCategories();
+    res.json({ success: true, data: categories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 // Lấy danh sách chờ duyệt (Quản lý)
 const getPendingProducts = async (req, res) => {
   try {
@@ -188,6 +198,7 @@ const getStats = async (req, res) => {
 module.exports = {
   getAllInventory,
   getProductByMaHang,
+  getCategories,
   getPendingProducts,
   createProduct,
   approveProduct,

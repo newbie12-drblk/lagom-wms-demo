@@ -38,7 +38,7 @@ const Inventory = {
     return rows;
   },
 
-  // Tạo sản phẩm mới (chờ duyệt)
+  // ADMIN: Tạo sản phẩm mới (chờ duyệt)
   create: async (data, createdBy) => {
     const [maxStt] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
@@ -47,18 +47,20 @@ const Inventory = {
 
     const [result] = await db.execute(
       `INSERT INTO inventory 
-        (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai, 
-         giaNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat, 
+        (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+         giaNhap, soLuongNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
          ngayNhapHD, ngayXuatHD, ghiChu, tonKho, status, createdBy) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         newStt,
         data.tenThuongMai,
         data.maHang,
-        data.dvt || "",
+        data.quyCach || "",
         data.hangSX || "",
+        data.dvt || "",
         data.phanLoai || "",
         data.giaNhap || 0,
+        data.soLuongNhap || 0,
         data.soHopDongNhap || "",
         data.soHoaDonNhap || "",
         data.soHoaDonXuat || "",
@@ -72,7 +74,7 @@ const Inventory = {
     return result.insertId;
   },
 
-  // Duyệt sản phẩm (Quản lý)
+  // QUẢN LÝ: Duyệt sản phẩm
   approve: async (id, approvedBy, tonKho = 0) => {
     await db.execute(
       `UPDATE inventory 
@@ -83,7 +85,7 @@ const Inventory = {
     return true;
   },
 
-  // Từ chối sản phẩm (Quản lý)
+  // QUẢN LÝ: Từ chối sản phẩm
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE inventory 
@@ -95,10 +97,55 @@ const Inventory = {
   },
 
   // Cập nhật tồn kho
-  updateStock: async (maHang, quantity) => {
+  updateStock: async (maHang, quantity, type = "import") => {
+    const operator = type === "import" ? "+" : "-";
     await db.execute(
-      "UPDATE inventory SET tonKho = tonKho + ? WHERE maHang = ?",
+      `UPDATE inventory SET tonKho = tonKho ${operator} ? WHERE maHang = ?`,
       [quantity, maHang],
+    );
+    return true;
+  },
+
+  // Cập nhật sản phẩm (dùng khi duyệt chỉnh sửa)
+  update: async (id, data) => {
+    const fields = [];
+    const values = [];
+
+    const allowedFields = [
+      "tenThuongMai",
+      "maHang",
+      "quyCach",
+      "hangSX",
+      "dvt",
+      "phanLoai",
+      "giaNhap",
+      "soLuongNhap",
+      "soLuongXuat",
+      "tonKho",
+      "soLot",
+      "ngayHetHan",
+      "soHopDongNhap",
+      "soHoaDonNhap",
+      "soHopDongXuat",
+      "soHoaDonXuat",
+      "ngayNhapHD",
+      "ngayXuatHD",
+      "ghiChu",
+    ];
+
+    for (const field of allowedFields) {
+      if (data[field] !== undefined) {
+        fields.push(`${field} = ?`);
+        values.push(data[field]);
+      }
+    }
+
+    if (fields.length === 0) return false;
+
+    values.push(id);
+    await db.execute(
+      `UPDATE inventory SET ${fields.join(", ")} WHERE id = ?`,
+      values,
     );
     return true;
   },
@@ -121,6 +168,14 @@ const Inventory = {
        FROM inventory WHERE status = 'approved'`,
     );
     return rows[0];
+  },
+
+  // Lấy danh sách phân loại
+  getCategories: async () => {
+    const [rows] = await db.execute(
+      "SELECT DISTINCT phanLoai FROM inventory WHERE status = 'approved' AND phanLoai IS NOT NULL AND phanLoai != '' ORDER BY phanLoai",
+    );
+    return rows.map((r) => r.phanLoai);
   },
 };
 

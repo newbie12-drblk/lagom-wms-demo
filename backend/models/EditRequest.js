@@ -37,7 +37,7 @@ const EditRequest = {
     return row;
   },
 
-  // Lấy tất cả yêu cầu (admin)
+  // Lấy tất cả yêu cầu (Quản lý)
   getAllRequests: async (status = null) => {
     let query = `
       SELECT er.*, u.fullName as requesterName, a.fullName as approverName,
@@ -63,7 +63,7 @@ const EditRequest = {
     }));
   },
 
-  // Lấy yêu cầu của tôi (nhập liệu)
+  // Lấy yêu cầu của tôi (Admin)
   getByRequester: async (requesterId) => {
     const [rows] = await db.execute(
       `SELECT er.*, a.fullName as approverName,

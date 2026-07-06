@@ -1,6 +1,7 @@
 /**
  * ==================== ROLE PANEL MODULE ====================
- * Quản lý tồn kho theo role - Phân quyền chỉnh sửa chi tiết
+ * Quản lý tồn kho - CHỈ XEM, KHÔNG SỬA TRỰC TIẾP
+ * Admin tạo yêu cầu → Quản lý duyệt → Cập nhật dữ liệu
  */
 
 (function () {
@@ -14,78 +15,8 @@
   const currentUser = Auth.getCurrentUser();
   const roleId = currentUser.roleId;
 
-  // Role definitions
   const isAdmin = roleId === "admin";
-  const isKeToan = roleId === "ke_toan";
-  const isQuanLyKho = roleId === "quan_ly_kho";
   const isQuanLy = roleId === "quan_ly";
-  const isNhanVien = roleId === "nhan_vien";
-  const isNhapLieu = roleId === "nhap_lieu";
-
-  // ========== QUYỀN CHỈNH SỬA THEO ROLE ==========
-
-  const keToanFields = [
-    "soHoaDonNhap",
-    "soHoaDonXuat",
-    "ngayNhapHD",
-    "ngayXuatHD",
-  ];
-
-  const quanLyKhoFields = [
-    "soLuongNhap",
-    "soHopDongNhap",
-    "soHoaDonNhap",
-    "soLot",
-    "ngayHetHan",
-    "soLuongXuat",
-    "soHopDongXuat",
-    "soHoaDonXuat",
-  ];
-
-  const allFields = [
-    "tenThuongMai",
-    "maHang",
-    "quyCach",
-    "hangSX",
-    "dvt",
-    "phanLoai",
-    "giaNhap",
-    "giaXuat",
-    "tonKho",
-    "soLuongNhap",
-    "soLuongXuat",
-    "soLot",
-    "ngayHetHan",
-    "soHopDongNhap",
-    "soHoaDonNhap",
-    "soHopDongXuat",
-    "soHoaDonXuat",
-    "ngayNhapHD",
-    "ngayXuatHD",
-    "ghiChu",
-  ];
-
-  const quanLyForbiddenFields = [
-    ...keToanFields,
-    ...quanLyKhoFields,
-    "giaNhap",
-    "giaXuat",
-  ];
-  const quanLyFields = allFields.filter(
-    (field) => !quanLyForbiddenFields.includes(field),
-  );
-
-  function canEditField(fieldName) {
-    if (isAdmin) return true;
-    if (isNhanVien) return false;
-    if (isKeToan && keToanFields.includes(fieldName)) return true;
-    if (isQuanLyKho && quanLyKhoFields.includes(fieldName)) return true;
-    if (isQuanLy && quanLyFields.includes(fieldName)) return true;
-    return false;
-  }
-
-  console.log("=== ROLE PANEL DEBUG ===");
-  console.log("roleId:", roleId);
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -114,6 +45,13 @@
   let currentPage = 1;
   const itemsPerPage = 20;
   let totalPages = 1;
+
+  // ========== QUYỀN CHỈNH SỬA - KHÔNG AI ĐƯỢC SỬA TRỰC TIẾP ==========
+  function canEditField(fieldName) {
+    // KHÔNG AI ĐƯỢC SỬA TRỰC TIẾP TRÊN BẢNG
+    // Tất cả đều phải qua yêu cầu duyệt
+    return false;
+  }
 
   // ========== UI ==========
   function updateUserUI() {
@@ -149,36 +87,29 @@
       pageTitle.textContent = `Bảng điều khiển - ${currentUser.roleName}`;
     }
 
+    // Cập nhật pageSub
     if (pageSub) {
-      if (isNhanVien) {
-        pageSub.textContent = "🔒 Chế độ XEM - Bạn không có quyền chỉnh sửa";
-      } else if (isAdmin) {
+      if (isAdmin) {
         pageSub.textContent =
-          "👑 ADMIN - Bạn có toàn quyền chỉnh sửa và quản lý hệ thống";
-      } else if (isKeToan) {
-        pageSub.textContent =
-          "💰 KẾ TOÁN - Bạn được sửa: Số hóa đơn, Ngày hóa đơn";
-      } else if (isQuanLyKho) {
-        pageSub.textContent =
-          "📦 QUẢN LÝ KHO - Bạn được sửa: Số lượng nhập, Số HĐ, Số lot, Ngày đến hạn, Số lượng xuất";
+          "👑 ADMIN - Chế độ XEM. Mọi thay đổi phải tạo yêu cầu và được Quản lý duyệt.";
       } else if (isQuanLy) {
-        pageSub.textContent =
-          "📋 QUẢN LÝ - Bạn được sửa: Tất cả các trường còn lại";
-      } else if (isNhapLieu) {
-        pageSub.textContent =
-          "✏️ NHẬP LIỆU - Bạn có quyền chỉnh sửa full, nhưng phải được Admin duyệt";
+        pageSub.textContent = "📋 QUẢN LÝ - Xem và duyệt các yêu cầu từ Admin.";
       } else {
-        pageSub.textContent = "✏️ Bạn có quyền chỉnh sửa các trường được phép";
+        pageSub.textContent =
+          "🔒 Chế độ XEM - Bạn không có quyền chỉnh sửa trực tiếp.";
       }
     }
 
-    if (isNhanVien && saveAllBtn) {
+    // Ẩn nút Lưu tất cả - KHÔNG AI ĐƯỢC SỬA TRỰC TIẾP
+    if (saveAllBtn) {
       saveAllBtn.style.display = "none";
     }
 
+    // Nút Tạo yêu cầu - CHỈ ADMIN
     if (btnCreateRequest) {
-      if (isNhapLieu) {
+      if (isAdmin) {
         btnCreateRequest.style.display = "inline-flex";
+        btnCreateRequest.innerHTML = '<i class="fas fa-plus"></i> Tạo yêu cầu';
         btnCreateRequest.onclick = () => openCreateRequestModal();
       } else {
         btnCreateRequest.style.display = "none";
@@ -256,18 +187,17 @@
       "margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;";
     row.innerHTML = `
       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-        <input type="text" placeholder="Tên thương mại *" class="product-name">
-        <input type="text" placeholder="Mã hàng *" class="product-code">
-        <input type="text" placeholder="Quy cách" class="product-quyCach">
-        <input type="text" placeholder="Hãng SX" class="product-hangSX">
-        <input type="text" placeholder="ĐVT" class="product-dvt">
-        <input type="text" placeholder="Phân loại" class="product-phanLoai">
-        <input type="text" placeholder="Giá nhập" class="product-giaNhap">
-        <input type="text" placeholder="Giá xuất" class="product-giaXuat">
-        <input type="text" placeholder="Tồn đầu" class="product-tonKho">
-        <input type="text" placeholder="Số lot" class="product-soLot">
-        <input type="date" placeholder="HSD" class="product-ngayHetHan">
-        <button type="button" class="btn-remove-row" data-id="${productRowCounter}"><i class="fas fa-trash"></i> Xóa</button>
+        <input type="text" placeholder="Tên thương mại *" class="product-name" style="min-width:200px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Mã hàng *" class="product-code" style="min-width:120px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Quy cách" class="product-quyCach" style="min-width:100px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Hãng SX" class="product-hangSX" style="min-width:120px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="ĐVT" class="product-dvt" style="min-width:60px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Phân loại" class="product-phanLoai" style="min-width:120px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Giá nhập" class="product-giaNhap" style="min-width:100px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="text" placeholder="Tồn đầu" class="product-tonKho" style="min-width:80px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;" value="0">
+        <input type="text" placeholder="Số lot" class="product-soLot" style="min-width:100px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <input type="date" placeholder="HSD" class="product-ngayHetHan" style="min-width:130px;padding:8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+        <button type="button" class="btn-remove-row" data-id="${productRowCounter}" style="padding:6px 12px;background:#dc2626;color:white;border:none;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i> Xóa</button>
       </div>
     `;
     if (data) {
@@ -278,7 +208,6 @@
       row.querySelector(".product-dvt").value = data.dvt || "";
       row.querySelector(".product-phanLoai").value = data.phanLoai || "";
       row.querySelector(".product-giaNhap").value = data.giaNhap || "";
-      row.querySelector(".product-giaXuat").value = data.giaXuat || "";
       row.querySelector(".product-tonKho").value = data.tonKho || "0";
       row.querySelector(".product-soLot").value = data.soLot || "";
       row.querySelector(".product-ngayHetHan").value = data.ngayHetHan || "";
@@ -309,9 +238,7 @@
         giaNhap: Utils.parseNumber(
           row.querySelector(".product-giaNhap")?.value,
         ),
-        giaXuat: Utils.parseNumber(
-          row.querySelector(".product-giaXuat")?.value,
-        ),
+        giaXuat: 0,
         tonKho:
           Utils.parseNumber(row.querySelector(".product-tonKho")?.value) || 0,
         soLuongNhap:
@@ -319,6 +246,13 @@
         soLuongXuat: 0,
         soLot: row.querySelector(".product-soLot")?.value || "",
         ngayHetHan: row.querySelector(".product-ngayHetHan")?.value || "",
+        soHopDongNhap: "",
+        soHoaDonNhap: "",
+        soHopDongXuat: "",
+        soHoaDonXuat: "",
+        ngayNhapHD: "",
+        ngayXuatHD: "",
+        ghiChu: "",
       });
     }
     return products;
@@ -330,11 +264,162 @@
       Utils.showToast("Vui lòng thêm ít nhất một sản phẩm hợp lệ", "error");
       return;
     }
+
+    // Kiểm tra mã hàng trùng
+    const maHangs = products.map((p) => p.maHang);
+    if (new Set(maHangs).size !== maHangs.length) {
+      Utils.showToast("Mã hàng bị trùng trong yêu cầu", "error");
+      return;
+    }
+
     Utils.showLoading(true, "Đang gửi yêu cầu...");
     try {
       await window.API.approval.createRequest({ products: products });
-      Utils.showToast("Yêu cầu đã được gửi đến Admin");
+      Utils.showToast("✅ Đã gửi yêu cầu thêm sản phẩm, chờ Quản lý duyệt");
       closeCreateRequestModal();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== MODAL YÊU CẦU CHỈNH SỬA SẢN PHẨM ==========
+  const editModal = document.getElementById("editProductModal");
+  let currentEditProduct = null;
+
+  function closeEditModal() {
+    if (editModal) {
+      editModal.style.display = "none";
+    }
+    document.body.style.overflow = "";
+  }
+
+  async function openEditRequestModal(productId) {
+    try {
+      const product = inventoryData.find((p) => p.id == productId);
+      if (!product) {
+        Utils.showToast("Không tìm thấy sản phẩm", "error");
+        return;
+      }
+      currentEditProduct = product;
+
+      document.getElementById("edit_productId").value = product.id;
+      document.getElementById("edit_tenThuongMai").value =
+        product.tenThuongMai || "";
+      document.getElementById("edit_maHang").value = product.maHang || "";
+      document.getElementById("edit_quyCach").value = product.quyCach || "";
+      document.getElementById("edit_hangSX").value = product.hangSX || "";
+      document.getElementById("edit_dvt").value = product.dvt || "";
+      document.getElementById("edit_phanLoai").value = product.phanLoai || "";
+      document.getElementById("edit_giaNhap").value =
+        Utils.formatNumber(product.giaNhap) || "0";
+      document.getElementById("edit_soLuongNhap").value =
+        product.soLuongNhap || "0";
+      document.getElementById("edit_soLuongXuat").value =
+        product.soLuongXuat || "0";
+      document.getElementById("edit_soLot").value = product.soLot || "";
+      document.getElementById("edit_ngayHetHan").value =
+        product.ngayHetHan || "";
+      document.getElementById("edit_soHopDongNhap").value =
+        product.soHopDongNhap || "";
+      document.getElementById("edit_soHoaDonNhap").value =
+        product.soHoaDonNhap || "";
+      document.getElementById("edit_soHopDongXuat").value =
+        product.soHopDongXuat || "";
+      document.getElementById("edit_soHoaDonXuat").value =
+        product.soHoaDonXuat || "";
+      document.getElementById("edit_ngayNhapHD").value =
+        product.ngayNhapHD || "";
+      document.getElementById("edit_ngayXuatHD").value =
+        product.ngayXuatHD || "";
+      document.getElementById("edit_ghiChu").value = product.ghiChu || "";
+
+      if (editModal) {
+        editModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+    } catch (error) {
+      console.error("Open edit modal error:", error);
+      Utils.showToast("Lỗi khi tải thông tin sản phẩm", "error");
+    }
+  }
+
+  async function submitEditRequest() {
+    const productId = document.getElementById("edit_productId").value;
+
+    const updatedData = {
+      tenThuongMai: document.getElementById("edit_tenThuongMai").value.trim(),
+      maHang: document.getElementById("edit_maHang").value.trim(),
+      quyCach: document.getElementById("edit_quyCach").value,
+      hangSX: document.getElementById("edit_hangSX").value,
+      dvt: document.getElementById("edit_dvt").value,
+      phanLoai: document.getElementById("edit_phanLoai").value,
+      giaNhap: Utils.parseNumber(document.getElementById("edit_giaNhap").value),
+      soLuongNhap: Utils.parseNumber(
+        document.getElementById("edit_soLuongNhap").value,
+      ),
+      soLuongXuat: Utils.parseNumber(
+        document.getElementById("edit_soLuongXuat").value,
+      ),
+      soLot: document.getElementById("edit_soLot").value,
+      ngayHetHan: document.getElementById("edit_ngayHetHan").value || null,
+      soHopDongNhap: document.getElementById("edit_soHopDongNhap").value,
+      soHoaDonNhap: document.getElementById("edit_soHoaDonNhap").value,
+      soHopDongXuat: document.getElementById("edit_soHopDongXuat").value,
+      soHoaDonXuat: document.getElementById("edit_soHoaDonXuat").value,
+      ngayNhapHD: document.getElementById("edit_ngayNhapHD").value || null,
+      ngayXuatHD: document.getElementById("edit_ngayXuatHD").value || null,
+      ghiChu: document.getElementById("edit_ghiChu").value,
+    };
+
+    // Kiểm tra có thay đổi không
+    let hasChanges = false;
+    for (const key in updatedData) {
+      if (updatedData[key] != currentEditProduct[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+
+    if (!hasChanges) {
+      Utils.showToast("Không có thay đổi nào", "warning");
+      return;
+    }
+
+    if (!updatedData.tenThuongMai || !updatedData.maHang) {
+      Utils.showToast("Tên thương mại và mã hàng không được để trống", "error");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu chỉnh sửa...");
+    try {
+      await window.API.edit.createRequest(productId, updatedData);
+      Utils.showToast("✅ Đã gửi yêu cầu chỉnh sửa, chờ Quản lý duyệt");
+      closeEditModal();
+    } catch (error) {
+      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== YÊU CẦU XÓA SẢN PHẨM ==========
+  async function requestDeleteProduct(productId, productName) {
+    if (
+      !confirm(
+        `Bạn có chắc muốn yêu cầu xóa sản phẩm "${productName}"?\n\nYêu cầu sẽ được gửi đến Quản lý để duyệt.`,
+      )
+    ) {
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu xóa...");
+    try {
+      await window.API.deletion.createRequest({ productId: productId });
+      Utils.showToast(
+        `✅ Đã gửi yêu cầu xóa sản phẩm "${productName}", chờ Quản lý duyệt`,
+      );
     } catch (error) {
       Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
     } finally {
@@ -353,7 +438,7 @@
       Utils.showToast("Lỗi khi tải dữ liệu tồn kho", "error");
       inventoryData = [];
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="24" class="text-center">Lỗi tải dữ liệu: ${error.message}<\/td><\/tr>`;
+        tbody.innerHTML = `<tr><td colspan="24" class="text-center">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
       }
     } finally {
       Utils.showLoading(false);
@@ -415,204 +500,93 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
-  function renderEditableField(value, fieldName, isNumber = false) {
-    if (isNhanVien) {
-      if (isNumber) {
-        return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
-      }
-      if (fieldName.includes("ngay")) {
-        return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
-      }
-      return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
-    }
-
-    const canEdit = canEditField(fieldName);
-
-    if (canEdit) {
-      if (isNumber) {
-        return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.formatNumber(value)}">`;
-      }
-      if (fieldName.includes("ngay")) {
-        const dateValue =
-          value && value !== "—" && value !== null
-            ? Utils.formatDate(value, "YYYY-MM-DD")
-            : "";
-        return `<input type="date" class="editable-field" data-field="${fieldName}" value="${dateValue}" placeholder="DD/MM/YYYY">`;
-      }
-      return `<input type="text" class="editable-field" data-field="${fieldName}" value="${Utils.escapeHtml(String(value || ""))}">`;
-    }
-
+  // ========== RENDER - CHỈ HIỂN THỊ READ-ONLY ==========
+  function renderReadonlyField(value, fieldName, isNumber = false) {
+    // TẤT CẢ ĐỀU READ-ONLY
     if (isNumber) {
-      return `<span class="readonly-field">${Utils.formatNumber(value)}</span>`;
+      return `<span class="readonly-field" style="color:#ffffff;">${Utils.formatNumber(value)}</span>`;
     }
     if (fieldName.includes("ngay")) {
-      return `<span class="readonly-field">${Utils.formatDate(value)}</span>`;
+      return `<span class="readonly-field" style="color:#ffffff;">${Utils.formatDate(value)}</span>`;
     }
-    return `<span class="readonly-field">${Utils.escapeHtml(String(value || "—"))}</span>`;
+    return `<span class="readonly-field" style="color:#ffffff;">${Utils.escapeHtml(String(value || "—"))}</span>`;
   }
 
   function renderTable() {
     if (!tbody) return;
     if (!filteredData || filteredData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
       updatePaginationControls();
       return;
     }
+
     const start = (currentPage - 1) * itemsPerPage;
     const pageData = filteredData.slice(start, start + itemsPerPage);
+
     if (pageData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho<\/td><\/tr>`;
+      tbody.innerHTML = `<tr><td colspan="24" class="text-center">Không có dữ liệu tồn kho</td></tr>`;
       updatePaginationControls();
       return;
     }
+
     tbody.innerHTML = pageData
       .map((item, idx) => {
         const globalIdx = start + idx + 1;
         const remainingDays = getRemainingDays(item);
         const isOutOfStock = (item.tonKho || 0) === 0;
+
+        // Chỉ Admin mới thấy nút hành động
+        const actionButtons = isAdmin
+          ? `
+        <td class="text-center">
+          <button class="btn-edit-product" onclick="window.openEditRequestModal(${item.id})" style="margin-right: 4px; padding: 4px 10px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">
+            <i class="fas fa-edit"></i> Sửa
+          </button>
+          <button class="btn-delete-product" onclick="window.requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')" style="padding: 4px 10px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">
+            <i class="fas fa-trash"></i> Xóa
+          </button>
+        </td>
+      `
+          : `<td class="text-center"><span style="color:#6b82a0;font-size:11px;">—</span></td>`;
+
         return `
         <tr class="${isOutOfStock ? "out-of-stock" : ""}">
-          <td class="sticky-col">${globalIdx}</td>
-          <td class="sticky-col-2"><strong>${renderEditableField(item.tenThuongMai, "tenThuongMai")}</strong></td>
-          <td>${renderEditableField(item.maHang, "maHang")}</td>
-          <td>${renderEditableField(item.quyCach, "quyCach")}</td>
-          <td>${renderEditableField(item.hangSX, "hangSX")}</td>
-          <td>${renderEditableField(item.dvt, "dvt")}</td>
-          <td>${renderEditableField(item.phanLoai, "phanLoai")}</td>
-          <td class="text-right">${renderEditableField(item.giaNhap, "giaNhap", true)}</td>
-          <td class="text-right">${renderEditableField(item.soLuongNhap, "soLuongNhap", true)}</td>
-          <td>${renderEditableField(item.soHopDongNhap, "soHopDongNhap")}</td>
-          <td>${renderEditableField(item.soHoaDonNhap, "soHoaDonNhap")}</td>
-          <td>${renderEditableField(item.ngayNhapHD, "ngayNhapHD")}</td>
-          <td>${renderEditableField(item.soLot, "soLot")}</td>
-          <td>${renderEditableField(item.ngayHetHan, "ngayHetHan")}</td>
-          <td class="text-right">${renderEditableField(item.soLuongXuat, "soLuongXuat", true)}</td>
-          <td class="text-right">${renderEditableField(item.giaXuat, "giaXuat", true)}</td>
-          <td>${renderEditableField(item.soHopDongXuat, "soHopDongXuat")}</td>
-          <td>${renderEditableField(item.soHoaDonXuat, "soHoaDonXuat")}</td>
-          <td>${renderEditableField(item.ngayXuatHD, "ngayXuatHD")}</td>
-          <td class="text-right"><strong>${renderEditableField(item.tonKho, "tonKho", true)}</strong></td>
+          <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff;">${globalIdx}</td>
+          <td class="sticky-col-2" style="position: sticky; left: 50px; z-index: 100; background: #0f172a;"><strong style="color: #60a5fa;">${renderReadonlyField(item.tenThuongMai, "tenThuongMai")}</strong></td>
+          <td>${renderReadonlyField(item.maHang, "maHang")}</td>
+          <td>${renderReadonlyField(item.quyCach, "quyCach")}</td>
+          <td>${renderReadonlyField(item.hangSX, "hangSX")}</td>
+          <td>${renderReadonlyField(item.dvt, "dvt")}</td>
+          <td>${renderReadonlyField(item.phanLoai, "phanLoai")}</td>
+          <td class="text-right">${renderReadonlyField(item.giaNhap, "giaNhap", true)}</td>
+          <td class="text-right">${renderReadonlyField(item.soLuongNhap, "soLuongNhap", true)}</td>
+          <td>${renderReadonlyField(item.soHopDongNhap, "soHopDongNhap")}</td>
+          <td>${renderReadonlyField(item.soHoaDonNhap, "soHoaDonNhap")}</td>
+          <td>${renderReadonlyField(item.ngayNhapHD, "ngayNhapHD")}</td>
+          <td>${renderReadonlyField(item.soLot, "soLot")}</td>
+          <td>${renderReadonlyField(item.ngayHetHan, "ngayHetHan")}</td>
+          <td class="text-right">${renderReadonlyField(item.soLuongXuat, "soLuongXuat", true)}</td>
+          <td class="text-right">${renderReadonlyField(item.giaXuat, "giaXuat", true)}</td>
+          <td>${renderReadonlyField(item.soHopDongXuat, "soHopDongXuat")}</td>
+          <td>${renderReadonlyField(item.soHoaDonXuat, "soHoaDonXuat")}</td>
+          <td>${renderReadonlyField(item.ngayXuatHD, "ngayXuatHD")}</td>
+          <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderReadonlyField(item.tonKho, "tonKho", true)}</strong></td>
           <td>${getDebtBadge(remainingDays)}</td>
-          ${
-            isNhapLieu
-              ? `
-          <td class="text-center">
-            <button class="btn-edit-product" onclick="openEditRequestModal(${item.id})" style="margin-right: 4px;">
-              <i class="fas fa-edit"></i> Sửa
-            </button>
-            <button class="btn-delete-product" onclick="requestDeleteProduct(${item.id}, '${Utils.escapeHtml(item.tenThuongMai).replace(/'/g, "\\'")}')">
-              <i class="fas fa-trash"></i> Xóa
-            </button>
-          <\/td>
-          `
-              : ""
-          }
+          ${actionButtons}
         </tr>
       `;
       })
       .join("");
-    attachEditEvents();
+
     updatePaginationControls();
     updateStats();
   }
 
-  function attachEditEvents() {
-    if (isNhanVien) return;
-    document.querySelectorAll(".editable-field").forEach((input) => {
-      input.removeEventListener("change", handleEdit);
-      input.addEventListener("change", handleEdit);
-    });
-  }
-
-  let pendingEdit = null;
-
-  async function handleEdit(e) {
-    if (pendingEdit) clearTimeout(pendingEdit);
-    pendingEdit = setTimeout(async () => {
-      const input = e.target;
-      const fieldName = input.dataset.field;
-      let newValue = input.value;
-      const row = input.closest("tr");
-      const rowIndex = Array.from(row.parentNode.children).indexOf(row);
-      const itemIndex = (currentPage - 1) * itemsPerPage + rowIndex;
-      if (itemIndex >= 0 && itemIndex < filteredData.length) {
-        const item = filteredData[itemIndex];
-        let parsedValue = newValue;
-        const numberFields = [
-          "giaNhap",
-          "giaXuat",
-          "soLuongNhap",
-          "soLuongXuat",
-          "tonKho",
-        ];
-
-        if (numberFields.includes(fieldName)) {
-          parsedValue = Utils.parseNumber(newValue);
-        }
-        if (fieldName.includes("ngay")) {
-          parsedValue = newValue === "" ? null : newValue;
-        }
-
-        const oldValue = item[fieldName];
-        if (oldValue == parsedValue) return;
-        item[fieldName] = parsedValue;
-        Utils.showLoading(true, "Đang lưu...");
-        try {
-          await window.API.inventory.update(item.id, {
-            [fieldName]: parsedValue,
-          });
-          Utils.showToast("Đã lưu thay đổi", "success");
-          if (numberFields.includes(fieldName)) {
-            input.value = Utils.formatNumber(parsedValue);
-          }
-          if (fieldName.includes("ngay") && !parsedValue) {
-            input.value = "";
-          }
-          updateStats();
-        } catch (error) {
-          Utils.showToast(error.message || "Lỗi khi lưu", "error");
-          item[fieldName] = oldValue;
-          if (numberFields.includes(fieldName)) {
-            input.value = Utils.formatNumber(oldValue);
-          } else if (fieldName.includes("ngay")) {
-            input.value = oldValue
-              ? Utils.formatDate(oldValue, "YYYY-MM-DD")
-              : "";
-          } else {
-            input.value = oldValue;
-          }
-        } finally {
-          Utils.showLoading(false);
-        }
-      }
-      pendingEdit = null;
-    }, 500);
-  }
-
-  async function saveAllChanges() {
-    Utils.showLoading(true, "Đang lưu tất cả thay đổi...");
-    try {
-      for (const item of filteredData) {
-        const originalItem = inventoryData.find((orig) => orig.id === item.id);
-        if (originalItem) {
-          const updates = {};
-          for (const key of Object.keys(item)) {
-            if (item[key] !== originalItem[key]) {
-              updates[key] = item[key];
-            }
-          }
-          if (Object.keys(updates).length > 0) {
-            await window.API.inventory.update(item.id, updates);
-          }
-        }
-      }
-      Utils.showToast("Đã lưu tất cả thay đổi", "success");
-      await loadInventoryData();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi lưu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
+  function updatePaginationControls() {
+    totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+    if (pageInfo) pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
+    if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+    if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
   }
 
   async function updateStats() {
@@ -632,18 +606,13 @@
     }
   }
 
-  function updatePaginationControls() {
-    totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-    if (pageInfo) pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
-    if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
-    if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
-  }
-
   function applyFilters() {
     const searchTerm = searchInput?.value.toLowerCase() || "";
     const category = catFilter?.value || "";
     const status = statusFilter?.value || "";
+
     let filtered = [...inventoryData];
+
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
@@ -652,9 +621,11 @@
           item.soLot?.toLowerCase().includes(searchTerm),
       );
     }
+
     if (category) {
       filtered = filtered.filter((item) => item.phanLoai === category);
     }
+
     if (status === "con-hang") {
       filtered = filtered.filter((item) => (item.tonKho || 0) > 0);
     } else if (status === "het-hang") {
@@ -670,6 +641,7 @@
         return remaining !== null && remaining < 0;
       });
     }
+
     filteredData = filtered;
     currentPage = 1;
     renderTable();
@@ -686,173 +658,6 @@
     loadInventoryData();
   }
 
-  // ========== YÊU CẦU XÓA SẢN PHẨM (DÙNG FETCH TRỰC TIẾP) ==========
-  async function requestDeleteProduct(productId, productName) {
-    if (
-      !confirm(
-        `Bạn có chắc muốn yêu cầu xóa sản phẩm "${productName}"?\n\nYêu cầu sẽ được gửi đến Admin để duyệt.`,
-      )
-    ) {
-      return;
-    }
-
-    Utils.showLoading(true, "Đang gửi yêu cầu xóa...");
-    try {
-      const token = localStorage.getItem("lagom_token");
-      const response = await fetch(
-        "https://lagom-wms-demo.onrender.com/api/deletions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId: productId }),
-        },
-      );
-      const data = await response.json();
-      if (data.success) {
-        Utils.showToast(
-          `Đã gửi yêu cầu xóa sản phẩm "${productName}"`,
-          "success",
-        );
-      } else {
-        throw new Error(data.message || "Lỗi không xác định");
-      }
-    } catch (error) {
-      console.error("Delete request error:", error);
-      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  // ========== YÊU CẦU CHỈNH SỬA SẢN PHẨM ==========
-  const editModal = document.getElementById("editProductModal");
-  let currentEditProduct = null;
-
-  function closeEditModal() {
-    if (editModal) {
-      editModal.style.display = "none";
-    }
-    document.body.style.overflow = "";
-  }
-
-  async function openEditRequestModal(productId) {
-    try {
-      const product = inventoryData.find((p) => p.id == productId);
-      if (!product) {
-        Utils.showToast("Không tìm thấy sản phẩm", "error");
-        return;
-      }
-      currentEditProduct = product;
-
-      document.getElementById("edit_productId").value = product.id;
-      document.getElementById("edit_tenThuongMai").value =
-        product.tenThuongMai || "";
-      document.getElementById("edit_maHang").value = product.maHang || "";
-      document.getElementById("edit_quyCach").value = product.quyCach || "";
-      document.getElementById("edit_hangSX").value = product.hangSX || "";
-      document.getElementById("edit_dvt").value = product.dvt || "";
-      document.getElementById("edit_phanLoai").value = product.phanLoai || "";
-      document.getElementById("edit_giaNhap").value =
-        Utils.formatNumber(product.giaNhap) || "0";
-      document.getElementById("edit_giaXuat").value =
-        Utils.formatNumber(product.giaXuat) || "0";
-      document.getElementById("edit_soLuongNhap").value =
-        product.soLuongNhap || "0";
-      document.getElementById("edit_soLuongXuat").value =
-        product.soLuongXuat || "0";
-      document.getElementById("edit_soLot").value = product.soLot || "";
-      document.getElementById("edit_ngayHetHan").value =
-        product.ngayHetHan || "";
-      document.getElementById("edit_soHopDongNhap").value =
-        product.soHopDongNhap || "";
-      document.getElementById("edit_soHoaDonNhap").value =
-        product.soHoaDonNhap || "";
-      document.getElementById("edit_soHopDongXuat").value =
-        product.soHopDongXuat || "";
-      document.getElementById("edit_soHoaDonXuat").value =
-        product.soHoaDonXuat || "";
-      document.getElementById("edit_ngayNhapHD").value =
-        product.ngayNhapHD || "";
-      document.getElementById("edit_ngayXuatHD").value =
-        product.ngayXuatHD || "";
-      document.getElementById("edit_ghiChu").value = product.ghiChu || "";
-
-      // HIỂN THỊ MODAL
-      if (editModal) {
-        editModal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-      }
-    } catch (error) {
-      console.error("Open edit modal error:", error);
-      Utils.showToast("Lỗi khi tải thông tin sản phẩm", "error");
-    }
-  }
-
-  async function submitEditRequest() {
-    const productId = document.getElementById("edit_productId").value;
-
-    const updatedData = {
-      tenThuongMai: document.getElementById("edit_tenThuongMai").value.trim(),
-      maHang: document.getElementById("edit_maHang").value.trim(),
-      quyCach: document.getElementById("edit_quyCach").value,
-      hangSX: document.getElementById("edit_hangSX").value,
-      dvt: document.getElementById("edit_dvt").value,
-      phanLoai: document.getElementById("edit_phanLoai").value,
-      giaNhap: Utils.parseNumber(document.getElementById("edit_giaNhap").value),
-      giaXuat: Utils.parseNumber(document.getElementById("edit_giaXuat").value),
-      soLuongNhap: Utils.parseNumber(
-        document.getElementById("edit_soLuongNhap").value,
-      ),
-      soLuongXuat: Utils.parseNumber(
-        document.getElementById("edit_soLuongXuat").value,
-      ),
-      soLot: document.getElementById("edit_soLot").value,
-      ngayHetHan: document.getElementById("edit_ngayHetHan").value || null,
-      soHopDongNhap: document.getElementById("edit_soHopDongNhap").value,
-      soHoaDonNhap: document.getElementById("edit_soHoaDonNhap").value,
-      soHopDongXuat: document.getElementById("edit_soHopDongXuat").value,
-      soHoaDonXuat: document.getElementById("edit_soHoaDonXuat").value,
-      ngayNhapHD: document.getElementById("edit_ngayNhapHD").value || null,
-      ngayXuatHD: document.getElementById("edit_ngayXuatHD").value || null,
-      ghiChu: document.getElementById("edit_ghiChu").value,
-    };
-
-    let hasChanges = false;
-    for (const key in updatedData) {
-      if (updatedData[key] != currentEditProduct[key]) {
-        hasChanges = true;
-        break;
-      }
-    }
-
-    if (!hasChanges) {
-      Utils.showToast("Không có thay đổi nào được thực hiện", "warning");
-      return;
-    }
-
-    if (!updatedData.tenThuongMai || !updatedData.maHang) {
-      Utils.showToast("Tên thương mại và mã hàng không được để trống", "error");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang gửi yêu cầu chỉnh sửa...");
-    try {
-      await window.API.edit.createRequest(productId, updatedData);
-      Utils.showToast(
-        `Đã gửi yêu cầu chỉnh sửa sản phẩm "${updatedData.tenThuongMai}"`,
-        "success",
-      );
-      closeEditModal();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi gửi yêu cầu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
   // ========== EVENTS ==========
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((link) => {
@@ -862,6 +667,7 @@
         if (view) switchView(view);
       });
     });
+
     if (searchInput)
       searchInput.addEventListener("input", () => applyFilters());
     if (catFilter) catFilter.addEventListener("change", () => applyFilters());
@@ -869,22 +675,24 @@
       statusFilter.addEventListener("change", () => applyFilters());
     if (resetBtn) resetBtn.addEventListener("click", resetFilters);
     if (refreshBtn) refreshBtn.addEventListener("click", refreshData);
-    if (saveAllBtn && !isNhanVien)
-      saveAllBtn.addEventListener("click", saveAllChanges);
-    if (prevPageBtn)
+
+    if (prevPageBtn) {
       prevPageBtn.addEventListener("click", () => {
         if (currentPage > 1) {
           currentPage--;
           renderTable();
         }
       });
-    if (nextPageBtn)
+    }
+
+    if (nextPageBtn) {
       nextPageBtn.addEventListener("click", () => {
         if (currentPage < totalPages) {
           currentPage++;
           renderTable();
         }
       });
+    }
 
     // Modal tạo yêu cầu
     const modal = document.getElementById("createRequestModal");
@@ -892,6 +700,7 @@
     const cancelBtn = document.getElementById("btnCancelRequest");
     const submitBtn = document.getElementById("btnSubmitRequest");
     const addProductBtn = document.getElementById("btnAddProductRow");
+
     if (closeBtn) closeBtn.addEventListener("click", closeCreateRequestModal);
     if (cancelBtn) cancelBtn.addEventListener("click", closeCreateRequestModal);
     if (submitBtn) submitBtn.addEventListener("click", submitCreateRequest);
@@ -902,6 +711,7 @@
     const closeEditBtn = document.querySelector(".close-edit-modal");
     const cancelEditBtn = document.getElementById("btnCancelEdit");
     const submitEditBtn = document.getElementById("btnSubmitEdit");
+
     if (closeEditBtn) closeEditBtn.addEventListener("click", closeEditModal);
     if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeEditModal);
     if (submitEditBtn)
@@ -913,6 +723,7 @@
     });
   }
 
+  // ========== INIT ==========
   async function init() {
     updateUserUI();
     await loadInventoryData();

@@ -25,14 +25,16 @@
     "pending-products",
     "pending-receipts",
     "pending-exports",
-    "users",
+    "pending-edits",
+    "pending-deletions",
   ];
 
   let currentView = "dashboard";
   let pendingProducts = [];
   let pendingReceipts = [];
   let pendingExports = [];
-  let users = [];
+  let pendingEdits = [];
+  let pendingDeletions = [];
 
   // ========== UPDATE TOPBAR ==========
   function updateTopbar() {
@@ -83,7 +85,8 @@
       "pending-products": "Sản phẩm chờ duyệt",
       "pending-receipts": "Nhập hàng chờ duyệt",
       "pending-exports": "Xuất kho chờ duyệt",
-      users: "Quản lý người dùng",
+      "pending-edits": "Chỉnh sửa chờ duyệt",
+      "pending-deletions": "Xóa sản phẩm chờ duyệt",
     };
     $("breadcrumb-title").textContent = titles[viewName] || viewName;
 
@@ -91,7 +94,8 @@
     else if (viewName === "pending-products") loadPendingProducts();
     else if (viewName === "pending-receipts") loadPendingReceipts();
     else if (viewName === "pending-exports") loadPendingExports();
-    else if (viewName === "users") loadUsers();
+    else if (viewName === "pending-edits") loadPendingEdits();
+    else if (viewName === "pending-deletions") loadPendingDeletions();
   }
 
   // ========== LOAD DASHBOARD ==========
@@ -106,10 +110,14 @@
         $("statPendingProducts").textContent = data.pendingProducts || 0;
         $("statPendingReceipts").textContent = data.pendingReceipts || 0;
         $("statPendingExports").textContent = data.pendingExports || 0;
+        $("statPendingEdits").textContent = data.pendingEdits || 0;
+        $("statPendingDeletions").textContent = data.pendingDeletions || 0;
 
         $("badgeProducts").textContent = data.pendingProducts || 0;
         $("badgeReceipts").textContent = data.pendingReceipts || 0;
         $("badgeExports").textContent = data.pendingExports || 0;
+        $("badgeEdits").textContent = data.pendingEdits || 0;
+        $("badgeDeletions").textContent = data.pendingDeletions || 0;
       }
     } catch (error) {
       console.error("Load dashboard error:", error);
@@ -137,16 +145,16 @@
           .slice(0, 10)
           .map(
             (n) => `
-          <div class="alert-row" onclick="markAsRead(${n.id})" style="${n.isRead ? "opacity:0.7;" : ""}">
-            <div class="alert-icon">${n.type === "approval" ? "📋" : n.type === "warning" ? "⚠️" : n.type === "success" ? "✅" : "ℹ️"}</div>
-            <div class="alert-body">
-              <div class="alert-title">${Utils.escapeHtml(n.title)}</div>
-              <div class="alert-message">${Utils.escapeHtml(n.message)}</div>
-              <div class="alert-time">${Utils.formatDate(n.createdAt)}</div>
+            <div class="alert-row" onclick="markAsRead(${n.id})" style="${n.isRead ? "opacity:0.7;" : ""}">
+              <div class="alert-icon">${n.type === "approval" ? "📋" : n.type === "warning" ? "⚠️" : n.type === "success" ? "✅" : "ℹ️"}</div>
+              <div class="alert-body">
+                <div class="alert-title">${Utils.escapeHtml(n.title)}</div>
+                <div class="alert-message">${Utils.escapeHtml(n.message)}</div>
+                <div class="alert-time">${Utils.formatDate(n.createdAt)}</div>
+              </div>
+              ${!n.isRead ? '<span style="color:#3b82f6;font-size:10px;">● Mới</span>' : ""}
             </div>
-            ${!n.isRead ? '<span style="color:#3b82f6;font-size:10px;">● Mới</span>' : ""}
-          </div>
-        `,
+          `,
           )
           .join("");
       }
@@ -172,14 +180,8 @@
     const container = $("pendingProductsList");
     Utils.showLoading(true, "Đang tải...");
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/pending`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        pendingProducts = result.data || [];
-        renderPendingProducts();
-      }
+      pendingProducts = await window.API.inventory.getPending();
+      renderPendingProducts();
     } catch (error) {
       Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
@@ -229,11 +231,9 @@
       .join("");
   }
 
-  // ========== APPROVE/REJECT PRODUCT ==========
   window.approveProduct = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt sản phẩm này?")) return;
 
-    // Lấy số lượng từ input
     const card = document.querySelector(
       `.approval-card:has([onclick="approveProduct(${id})"])`,
     );
@@ -242,14 +242,7 @@
 
     Utils.showLoading(true, "Đang duyệt...");
     try {
-      await fetch(`${API_BASE_URL}/inventory/${id}/approve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ tonKho }),
-      });
+      await window.API.inventory.approve(id, tonKho);
       Utils.showToast("✅ Đã duyệt sản phẩm thành công");
       loadPendingProducts();
       loadDashboard();
@@ -265,14 +258,7 @@
     if (reason === null) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/inventory/${id}/reject`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ reason }),
-      });
+      await window.API.inventory.reject(id, reason);
       Utils.showToast("Đã từ chối sản phẩm");
       loadPendingProducts();
       loadDashboard();
@@ -288,14 +274,8 @@
     const container = $("pendingReceiptsList");
     Utils.showLoading(true, "Đang tải...");
     try {
-      const response = await fetch(`${API_BASE_URL}/receipt-requests/pending`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        pendingReceipts = result.data || [];
-        renderPendingReceipts();
-      }
+      pendingReceipts = await window.API.receiptRequest.getPending();
+      renderPendingReceipts();
     } catch (error) {
       Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
@@ -314,93 +294,79 @@
       .map((r) => {
         const isMatched = r.matchStatus === "matched";
         return `
-      <div class="approval-card">
-        <div class="approval-card-header">
-          <div class="approval-card-id">📥 ${Utils.escapeHtml(r.requestNo)}</div>
-          <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-          <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-          <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
-            ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
-          </span>
+        <div class="approval-card">
+          <div class="approval-card-header">
+            <div class="approval-card-id">📥 ${Utils.escapeHtml(r.requestNo)}</div>
+            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+            <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
+              ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
+            </span>
+          </div>
+          <div class="approval-card-body">
+            <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
+            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
+            <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
+            <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
+            <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
+            <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
+            <div><span class="label">Số lượng nhập:</span> <span class="value">${r.soLuongNhap || "Chưa nhập"}</span></div>
+            ${isMatched ? `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#34d399;">Chờ xác nhận số lượng</span></div>` : `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#fbbf24;">Chờ duyệt</span></div>`}
+          </div>
+          <div class="approval-card-actions">
+            <button class="btn btn-danger" onclick="rejectReceiptRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+            <button class="btn btn-success" onclick="approveReceiptRequest(${r.id})"><i class="fas fa-check"></i> ${isMatched ? "Xác nhận" : "Duyệt"}</button>
+          </div>
         </div>
-        <div class="approval-card-body">
-          <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
-          <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
-          <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
-          <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
-          <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
-          <div><span class="label">Số lượng nhập:</span> <span class="value">${r.soLuongNhap || "Chưa nhập"}</span></div>
-          ${isMatched ? `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#34d399;">Chờ xác nhận số lượng</span></div>` : `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#fbbf24;">Chờ duyệt</span></div>`}
-        </div>
-        <div class="approval-card-actions">
-          <button class="btn btn-danger" onclick="rejectReceipt(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-          <button class="btn btn-success" onclick="openReceiptApprove(${r.id})"><i class="fas fa-check"></i> Xác nhận</button>
-        </div>
-      </div>
-    `;
+      `;
       })
       .join("");
   }
 
-  window.openReceiptApprove = (id) => {
+  window.approveReceiptRequest = async (id) => {
     const request = pendingReceipts.find((r) => r.id === id);
     if (!request) return;
 
+    let soLuongNhap = null;
     if (request.matchStatus === "matched") {
-      const soLuong = prompt("Nhập số lượng nhập:", request.soLuongNhap || "1");
-      if (soLuong === null) return;
-      const num = parseInt(soLuong);
+      const input = prompt("Nhập số lượng nhập:", request.soLuongNhap || "1");
+      if (input === null) return;
+      const num = parseInt(input);
       if (isNaN(num) || num <= 0) {
         Utils.showToast("Vui lòng nhập số lượng hợp lệ", "error");
         return;
       }
-      confirmReceipt(id, num);
-    } else {
-      if (
-        !confirm(
-          "Sản phẩm chưa khớp với kho. Bạn có chắc muốn duyệt và thêm mới?",
-        )
-      )
-        return;
-      confirmReceipt(id, request.soLuongNhap || 1);
+      soLuongNhap = num;
     }
-  };
 
-  async function confirmReceipt(id, soLuongNhap) {
-    Utils.showLoading(true, "Đang xác nhận...");
+    if (
+      !confirm(
+        `Bạn có chắc muốn ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị nhập hàng này?`,
+      )
+    )
+      return;
+
+    Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/receipt-requests/${id}/approve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ soLuongNhap }),
-      });
-      Utils.showToast("✅ Đã xác nhận đề nghị nhập hàng");
+      await window.API.receiptRequest.approve(id, soLuongNhap);
+      Utils.showToast(
+        `✅ Đã ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị nhập hàng`,
+      );
       loadPendingReceipts();
       loadDashboard();
     } catch (error) {
-      Utils.showToast("Lỗi khi xác nhận", "error");
+      Utils.showToast("Lỗi khi xử lý", "error");
     } finally {
       Utils.showLoading(false);
     }
-  }
+  };
 
-  window.rejectReceipt = async (id) => {
+  window.rejectReceiptRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/receipt-requests/${id}/reject`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ reason }),
-      });
+      await window.API.receiptRequest.reject(id, reason);
       Utils.showToast("Đã từ chối đề nghị nhập hàng");
       loadPendingReceipts();
       loadDashboard();
@@ -416,14 +382,8 @@
     const container = $("pendingExportsList");
     Utils.showLoading(true, "Đang tải...");
     try {
-      const response = await fetch(`${API_BASE_URL}/export-requests/pending`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        pendingExports = result.data || [];
-        renderPendingExports();
-      }
+      pendingExports = await window.API.exportRequest.getPending();
+      renderPendingExports();
     } catch (error) {
       Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
@@ -442,52 +402,55 @@
       .map((r) => {
         const isMatched = r.matchStatus === "matched";
         return `
-      <div class="approval-card">
-        <div class="approval-card-header">
-          <div class="approval-card-id">📤 ${Utils.escapeHtml(r.requestNo)}</div>
-          <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-          <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-          <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
-            ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
-          </span>
-        </div>
-        <div class="approval-card-body">
-          <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
-          <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
-          <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
-          <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
-          <div><span class="label">Tồn kho hiện tại:</span> <span class="value">${r.tonKho || 0}</span></div>
-          ${
-            isMatched
-              ? `
-            <div style="grid-column:1/-1; margin-top:8px; padding:8px; background:#1a2235; border-radius:6px;">
-              <strong style="color:#fbbf24;">📝 Cần nhập thêm thông tin:</strong>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; margin-top:4px;">
-                <div><span class="label">Đơn giá xuất:</span> <span class="value">${r.donGiaXuat ? Utils.formatCurrency(r.donGiaXuat) : "—"}</span></div>
-                <div><span class="label">Số lượng:</span> <span class="value">${r.soLuong || "—"}</span></div>
-                <div><span class="label">Số lot:</span> <span class="value">${Utils.escapeHtml(r.soLot || "—")}</span></div>
-                <div><span class="label">HSD:</span> <span class="value">${Utils.formatDate(r.ngayHetHan)}</span></div>
-                <div style="grid-column:1/-1;"><span class="label">Số hợp đồng xuất:</span> <span class="value">${Utils.escapeHtml(r.soHopDongXuat || "—")}</span></div>
+        <div class="approval-card">
+          <div class="approval-card-header">
+            <div class="approval-card-id">📤 ${Utils.escapeHtml(r.requestNo)}</div>
+            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+            <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
+              ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
+            </span>
+          </div>
+          <div class="approval-card-body">
+            <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
+            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
+            <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
+            <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
+            <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
+            <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
+            <div><span class="label">Tồn kho hiện tại:</span> <span class="value">${r.tonKho || 0}</span></div>
+            ${
+              isMatched
+                ? `
+              <div style="grid-column:1/-1; margin-top:8px; padding:8px; background:#1a2235; border-radius:6px;">
+                <strong style="color:#fbbf24;">📝 Cần nhập thêm thông tin:</strong>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; margin-top:4px;">
+                  <div><span class="label">Đơn giá xuất:</span> <span class="value">${r.donGiaXuat ? Utils.formatCurrency(r.donGiaXuat) : "—"}</span></div>
+                  <div><span class="label">Số lượng:</span> <span class="value">${r.soLuong || "—"}</span></div>
+                  <div><span class="label">Số lot:</span> <span class="value">${Utils.escapeHtml(r.soLot || "—")}</span></div>
+                  <div><span class="label">HSD:</span> <span class="value">${Utils.formatDate(r.ngayHetHan)}</span></div>
+                  <div style="grid-column:1/-1;"><span class="label">Số hợp đồng xuất:</span> <span class="value">${Utils.escapeHtml(r.soHopDongXuat || "—")}</span></div>
+                </div>
               </div>
-            </div>
-          `
-              : `<div style="grid-column:1/-1; color:#fbbf24;">⚠️ Sản phẩm chưa khớp với kho, cần duyệt thủ công</div>`
-          }
+            `
+                : `<div style="grid-column:1/-1; color:#fbbf24;">⚠️ Sản phẩm chưa khớp với kho, cần duyệt thủ công</div>`
+            }
+          </div>
+          <div class="approval-card-actions">
+            <button class="btn btn-danger" onclick="rejectExportRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+            <button class="btn btn-success" onclick="approveExportRequest(${r.id})"><i class="fas fa-check"></i> ${isMatched ? "Xác nhận" : "Duyệt"}</button>
+          </div>
         </div>
-        <div class="approval-card-actions">
-          <button class="btn btn-danger" onclick="rejectExport(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-          <button class="btn btn-success" onclick="openExportApprove(${r.id})"><i class="fas fa-check"></i> Xác nhận</button>
-        </div>
-      </div>
-    `;
+      `;
       })
       .join("");
   }
 
-  window.openExportApprove = (id) => {
+  window.approveExportRequest = async (id) => {
     const request = pendingExports.find((r) => r.id === id);
     if (!request) return;
+
+    let extraData = {};
 
     if (request.matchStatus === "matched") {
       const donGiaXuat = prompt(
@@ -518,54 +481,43 @@
         return;
       }
 
-      confirmExport(id, {
+      extraData = {
         donGiaXuat: numPrice,
         soLuong: numQty,
         soLot,
         ngayHetHan,
         soHopDongXuat,
-      });
-    } else {
-      if (!confirm("Sản phẩm chưa khớp với kho. Bạn có chắc muốn duyệt?"))
-        return;
-      confirmExport(id, {});
+      };
     }
-  };
 
-  async function confirmExport(id, extraData) {
-    Utils.showLoading(true, "Đang xác nhận...");
+    if (
+      !confirm(
+        `Bạn có chắc muốn ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị xuất kho này?`,
+      )
+    )
+      return;
+
+    Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/export-requests/${id}/approve`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify(extraData),
-      });
-      Utils.showToast("✅ Đã xác nhận đề nghị xuất kho");
+      await window.API.exportRequest.approve(id, extraData);
+      Utils.showToast(
+        `✅ Đã ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị xuất kho`,
+      );
       loadPendingExports();
       loadDashboard();
     } catch (error) {
-      Utils.showToast("Lỗi khi xác nhận", "error");
+      Utils.showToast("Lỗi khi xử lý", "error");
     } finally {
       Utils.showLoading(false);
     }
-  }
+  };
 
-  window.rejectExport = async (id) => {
+  window.rejectExportRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/export-requests/${id}/reject`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ reason }),
-      });
+      await window.API.exportRequest.reject(id, reason);
       Utils.showToast("Đã từ chối đề nghị xuất kho");
       loadPendingExports();
       loadDashboard();
@@ -576,19 +528,13 @@
     }
   };
 
-  // ========== USER MANAGEMENT ==========
-  async function loadUsers() {
-    const container = $("userTableBody");
+  // ========== LOAD PENDING EDITS ==========
+  async function loadPendingEdits() {
+    const container = $("pendingEditsList");
     Utils.showLoading(true, "Đang tải...");
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/users`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        users = result.users || [];
-        renderUsers();
-      }
+      pendingEdits = await window.API.edit.getAllRequests("pending");
+      renderPendingEdits();
     } catch (error) {
       Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
@@ -596,240 +542,163 @@
     }
   }
 
-  function renderUsers() {
-    const container = $("userTableBody");
-    if (users.length === 0) {
-      container.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;">Không có người dùng</td></tr>`;
+  function renderPendingEdits() {
+    const container = $("pendingEditsList");
+    if (pendingEdits.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu chỉnh sửa nào chờ duyệt</p></div>`;
       return;
     }
 
-    container.innerHTML = users
-      .map((user, idx) => {
-        const perms = user.permissions || {};
-        const permList = [];
-        const fieldPermissions = [
-          { key: "canEditTenThuongMai", label: "Tên TM" },
-          { key: "canEditMaHang", label: "Mã hàng" },
-          { key: "canEditDVT", label: "ĐVT" },
-          { key: "canEditHangSX", label: "Hãng SX" },
-          { key: "canEditPhanLoai", label: "Phân loại" },
-          { key: "canEditGiaNhap", label: "Giá nhập" },
-          { key: "canEditSoHopDongNhap", label: "Số HĐ nhập" },
-          { key: "canEditSoHoaDonNhap", label: "Số HĐơn nhập" },
-          { key: "canEditSoHoaDonXuat", label: "Số HĐơn xuất" },
-          { key: "canEditNgayNhapHD", label: "Ngày nhập HĐ" },
-          { key: "canEditNgayXuatHD", label: "Ngày xuất HĐ" },
-          { key: "canEditGhiChu", label: "Ghi chú" },
-        ];
-
-        for (const f of fieldPermissions) {
-          if (perms[f.key])
-            permList.push(
-              `<span class="permission-badge granted">${f.label}</span>`,
+    container.innerHTML = pendingEdits
+      .map((r) => {
+        const oldData = r.oldData || {};
+        const newData = r.newData || {};
+        const changedFields = [];
+        for (const key in newData) {
+          if (oldData[key] != newData[key]) {
+            changedFields.push(
+              `<div><span class="label">${key}:</span> <span style="color:#f87171;">${Utils.escapeHtml(String(oldData[key] || "—"))}</span> → <span style="color:#4ade80;">${Utils.escapeHtml(String(newData[key] || "—"))}</span></div>`,
             );
+          }
         }
-        if (perms.canCreateReceipt)
-          permList.push(
-            `<span class="permission-badge granted">📥 Nhập</span>`,
-          );
-        if (perms.canCreateExport)
-          permList.push(
-            `<span class="permission-badge granted">📤 Xuất</span>`,
-          );
-        if (perms.canViewAll)
-          permList.push(`<span class="permission-badge granted">👁️ Xem</span>`);
-
-        if (permList.length === 0)
-          permList.push(
-            `<span class="permission-badge denied">Không có</span>`,
-          );
-
-        const isSelf = user.id === currentUser.id;
-        const isManager = user.roleId === "quan_ly";
 
         return `
-      <tr>
-        <td>${idx + 1}</td>
-        <td><strong>${Utils.escapeHtml(user.username)}</strong></td>
-        <td>${Utils.escapeHtml(user.fullName)}</td>
-        <td>${Utils.escapeHtml(user.email || "—")}</td>
-        <td><span class="status-badge ${user.roleId === "admin" ? "status-pending" : "status-approved"}">${user.roleId === "admin" ? "Admin" : "Quản lý"}</span></td>
-        <td><span class="status-badge ${user.isActive ? "status-approved" : "status-rejected"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}</span></td>
-        <td style="font-size:11px;">${permList.join(" ")}</td>
-        <td>
-          ${
-            !isSelf && !isManager
-              ? `
-            <button class="action-btn edit" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
-            <button class="action-btn lock" onclick="toggleUserLock(${user.id}, ${!user.isActive})"><i class="fas fa-${user.isActive ? "lock" : "lock-open"}"></i></button>
-            <button class="action-btn delete" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i></button>
-          `
-              : isSelf
-                ? `<span style="color:#6b82a0;font-size:11px;">(Bạn)</span>`
-                : `<span style="color:#6b82a0;font-size:11px;">Quản lý</span>`
-          }
-        </td>
-      </tr>
-    `;
+        <div class="approval-card">
+          <div class="approval-card-header">
+            <div class="approval-card-id">✏️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
+            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
+          </div>
+          <div class="approval-card-body">
+            <div style="grid-column:1/-1; margin-bottom:8px;">
+              <strong style="color:#fbbf24;">📝 Thay đổi:</strong>
+            </div>
+            ${changedFields.join("")}
+          </div>
+          <div class="approval-card-actions">
+            <button class="btn btn-danger" onclick="rejectEditRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+            <button class="btn btn-success" onclick="approveEditRequest(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+          </div>
+        </div>
+      `;
       })
       .join("");
   }
 
-  // ========== USER MODAL ==========
-  let editingUserId = null;
-
-  function openUserModal(userId = null) {
-    editingUserId = userId;
-    const modal = $("userModal");
-    const title = $("modalTitle");
-    const passwordGroup = $("passwordGroup");
-
-    if (userId) {
-      const user = users.find((u) => u.id === userId);
-      if (!user) return;
-      title.textContent = "Sửa người dùng";
-      $("userId").value = user.id;
-      $("username").value = user.username;
-      $("username").disabled = true;
-      $("fullName").value = user.fullName;
-      $("email").value = user.email || "";
-      $("isActive").value = user.isActive ? "true" : "false";
-      $("password").value = "";
-      $("password").placeholder = "Để trống nếu không đổi";
-
-      const perms = user.permissions || {};
-      document.querySelectorAll(".perm-check").forEach((cb) => {
-        cb.checked = !!perms[cb.dataset.field];
-      });
-
-      passwordGroup.querySelector("small").textContent =
-        "Để trống nếu không đổi mật khẩu";
-    } else {
-      title.textContent = "Thêm người dùng";
-      $("userId").value = "";
-      $("username").value = "";
-      $("username").disabled = false;
-      $("fullName").value = "";
-      $("email").value = "";
-      $("isActive").value = "true";
-      $("password").value = "";
-      $("password").placeholder = "Nhập mật khẩu";
-      passwordGroup.querySelector("small").textContent =
-        "Nhập mật khẩu cho tài khoản mới";
-
-      document
-        .querySelectorAll(".perm-check")
-        .forEach((cb) => (cb.checked = false));
-    }
-
-    modal.style.display = "flex";
-  }
-
-  async function saveUser() {
-    const id = $("userId").value;
-    const data = {
-      username: $("username").value.trim(),
-      fullName: $("fullName").value.trim(),
-      email: $("email").value.trim(),
-      isActive: $("isActive").value === "true",
-      roleId: "admin",
-    };
-
-    if ($("password").value) {
-      data.password = $("password").value;
-    }
-
-    const permissions = {};
-    document.querySelectorAll(".perm-check").forEach((cb) => {
-      permissions[cb.dataset.field] = cb.checked;
-    });
-    data.permissions = permissions;
-
-    if (!data.username || !data.fullName) {
-      Utils.showToast("Vui lòng nhập đầy đủ thông tin", "error");
-      return;
-    }
-
-    if (!id && !data.password) {
-      Utils.showToast("Vui lòng nhập mật khẩu cho tài khoản mới", "error");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang lưu...");
+  window.approveEditRequest = async (id) => {
+    if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
+    Utils.showLoading(true, "Đang xử lý...");
     try {
-      const url = id
-        ? `${API_BASE_URL}/auth/users/${id}`
-        : `${API_BASE_URL}/auth/users`;
-      const method = id ? "PUT" : "POST";
-
-      await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      Utils.showToast(
-        id ? "✅ Cập nhật thành công" : "✅ Tạo người dùng thành công",
-      );
-      closeModal("userModal");
-      loadUsers();
+      await window.API.edit.approve(id);
+      Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa");
+      loadPendingEdits();
+      loadDashboard();
     } catch (error) {
-      Utils.showToast("Lỗi khi lưu", "error");
+      Utils.showToast("Lỗi khi duyệt", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  window.rejectEditRequest = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      await window.API.edit.reject(id, reason);
+      Utils.showToast("Đã từ chối yêu cầu chỉnh sửa");
+      loadPendingEdits();
+      loadDashboard();
+    } catch (error) {
+      Utils.showToast("Lỗi khi từ chối", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ========== LOAD PENDING DELETIONS ==========
+  async function loadPendingDeletions() {
+    const container = $("pendingDeletionsList");
+    Utils.showLoading(true, "Đang tải...");
+    try {
+      pendingDeletions = await window.API.deletion.getAllRequests("pending");
+      renderPendingDeletions();
+    } catch (error) {
+      Utils.showToast("Lỗi tải dữ liệu", "error");
     } finally {
       Utils.showLoading(false);
     }
   }
 
-  async function toggleUserLock(id, unlock) {
+  function renderPendingDeletions() {
+    const container = $("pendingDeletionsList");
+    if (pendingDeletions.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu xóa nào chờ duyệt</p></div>`;
+      return;
+    }
+
+    container.innerHTML = pendingDeletions
+      .map(
+        (r) => `
+      <div class="approval-card">
+        <div class="approval-card-header">
+          <div class="approval-card-id">🗑️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
+          <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+          <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
+        </div>
+        <div class="approval-card-body">
+          <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.productName)}</span></div>
+          <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.productCode)}</span></div>
+          <div><span class="label">Dữ liệu hiện tại:</span></div>
+          <div style="grid-column:1/-1; background:#1a2235; padding:8px; border-radius:4px; font-size:12px; color:#6b82a0;">
+            ${JSON.stringify(r.productData, null, 2)}
+          </div>
+        </div>
+        <div class="approval-card-actions">
+          <button class="btn btn-danger" onclick="rejectDeletionRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+          <button class="btn btn-success" onclick="approveDeletionRequest(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  }
+
+  window.approveDeletionRequest = async (id) => {
     if (
-      !confirm(`Bạn có chắc muốn ${unlock ? "mở khóa" : "khóa"} tài khoản này?`)
+      !confirm(
+        "Bạn có chắc muốn duyệt yêu cầu xóa này?\n\nHành động này sẽ xóa vĩnh viễn sản phẩm khỏi kho!",
+      )
     )
       return;
-    Utils.showLoading(true, "Đang cập nhật...");
+    Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/auth/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
-        },
-        body: JSON.stringify({ isActive: unlock }),
-      });
-      Utils.showToast(`Đã ${unlock ? "mở khóa" : "khóa"} tài khoản`);
-      loadUsers();
+      await window.API.deletion.approve(id);
+      Utils.showToast("✅ Đã duyệt yêu cầu xóa và xóa sản phẩm khỏi kho");
+      loadPendingDeletions();
+      loadDashboard();
     } catch (error) {
-      Utils.showToast("Lỗi khi cập nhật", "error");
+      Utils.showToast("Lỗi khi duyệt", "error");
     } finally {
       Utils.showLoading(false);
     }
-  }
+  };
 
-  async function deleteUser(id) {
-    const user = users.find((u) => u.id === id);
-    if (!confirm(`Bạn có chắc muốn xóa tài khoản "${user?.username}"?`)) return;
-    Utils.showLoading(true, "Đang xóa...");
+  window.rejectDeletionRequest = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+    Utils.showLoading(true, "Đang xử lý...");
     try {
-      await fetch(`${API_BASE_URL}/auth/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      Utils.showToast("Đã xóa tài khoản");
-      loadUsers();
+      await window.API.deletion.reject(id, reason);
+      Utils.showToast("Đã từ chối yêu cầu xóa");
+      loadPendingDeletions();
+      loadDashboard();
     } catch (error) {
-      Utils.showToast("Lỗi khi xóa", "error");
+      Utils.showToast("Lỗi khi từ chối", "error");
     } finally {
       Utils.showLoading(false);
     }
-  }
-
-  // ========== CLOSE MODAL ==========
-  function closeModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) modal.style.display = "none";
-  }
+  };
 
   // ========== BIND EVENTS ==========
   function bindEvents() {
@@ -844,23 +713,7 @@
       loadDashboard();
       Utils.showToast("Đã làm mới dữ liệu");
     });
-
-    $("btnAddUser")?.addEventListener("click", () => openUserModal());
-    $("btnSaveUser")?.addEventListener("click", saveUser);
-
-    document.querySelectorAll(".modal").forEach((modal) => {
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) modal.style.display = "none";
-      });
-    });
   }
-
-  // ========== EXPOSE GLOBALS ==========
-  window.switchView = switchView;
-  window.closeModal = closeModal;
-  window.editUser = openUserModal;
-  window.toggleUserLock = toggleUserLock;
-  window.deleteUser = deleteUser;
 
   // ========== INIT ==========
   function init() {
@@ -868,6 +721,19 @@
     bindEvents();
     loadDashboard();
   }
+
+  // ========== EXPOSE GLOBALS ==========
+  window.switchView = switchView;
+  window.approveProduct = approveProduct;
+  window.rejectProduct = rejectProduct;
+  window.approveReceiptRequest = approveReceiptRequest;
+  window.rejectReceiptRequest = rejectReceiptRequest;
+  window.approveExportRequest = approveExportRequest;
+  window.rejectExportRequest = rejectExportRequest;
+  window.approveEditRequest = approveEditRequest;
+  window.rejectEditRequest = rejectEditRequest;
+  window.approveDeletionRequest = approveDeletionRequest;
+  window.rejectDeletionRequest = rejectDeletionRequest;
 
   init();
 })();

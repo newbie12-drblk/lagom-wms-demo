@@ -3,7 +3,7 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Tạo yêu cầu xóa sản phẩm
+// Tạo yêu cầu xóa sản phẩm (Admin)
 const createDeletionRequest = async (req, res) => {
   try {
     const { productId } = req.body;
@@ -43,10 +43,19 @@ const createDeletionRequest = async (req, res) => {
       product,
     );
 
+    // Gửi thông báo cho Quản lý
+    await Notification.createForManagers(
+      "🗑️ Yêu cầu xóa sản phẩm",
+      `Admin yêu cầu xóa sản phẩm "${product.tenThuongMai}" (${product.maHang})`,
+      "approval",
+      requestId,
+      "deletion_request",
+    );
+
     res.json({
       success: true,
       data: { id: requestId },
-      message: "Đã gửi yêu cầu xóa sản phẩm, chờ admin duyệt",
+      message: "✅ Đã gửi yêu cầu xóa sản phẩm, chờ Quản lý duyệt",
     });
   } catch (error) {
     console.error("Create deletion request error:", error);
@@ -54,7 +63,7 @@ const createDeletionRequest = async (req, res) => {
   }
 };
 
-// Lấy tất cả yêu cầu xóa (admin)
+// Lấy tất cả yêu cầu xóa (Quản lý)
 const getAllDeletionRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -66,7 +75,7 @@ const getAllDeletionRequests = async (req, res) => {
   }
 };
 
-// Lấy yêu cầu xóa của tôi (nhập liệu)
+// Lấy yêu cầu xóa của tôi (Admin)
 const getMyDeletionRequests = async (req, res) => {
   try {
     const requests = await DeletionRequest.getByRequester(req.user.userId);
@@ -77,7 +86,7 @@ const getMyDeletionRequests = async (req, res) => {
   }
 };
 
-// Duyệt yêu cầu xóa (admin) - ĐÃ SỬA THỨ TỰ
+// Duyệt yêu cầu xóa (Quản lý)
 const approveDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -91,10 +100,10 @@ const approveDeletionRequest = async (req, res) => {
       });
     }
 
-    // QUAN TRỌNG: Xóa yêu cầu TRƯỚC để phá foreign key constraint
-    await DeletionRequest.delete(id);
+    // Cập nhật trạng thái yêu cầu
+    await DeletionRequest.approve(id, approvedBy);
 
-    // Sau đó xóa sản phẩm khỏi inventory
+    // Xóa sản phẩm khỏi inventory
     await Inventory.delete(request.productId);
 
     // Ghi lịch sử
@@ -108,13 +117,14 @@ const approveDeletionRequest = async (req, res) => {
       JSON.stringify(request.productData),
     );
 
-    // Gửi thông báo cho người yêu cầu
+    // Gửi thông báo cho Admin
     await Notification.create(
       request.requesterId,
-      "Yêu cầu xóa sản phẩm đã được duyệt",
-      `Sản phẩm "${request.productName}" đã được xóa khỏi kho`,
+      "✅ Yêu cầu xóa sản phẩm đã được duyệt",
+      `Sản phẩm "${request.productName}" đã được xóa khỏi kho theo yêu cầu của bạn`,
       "success",
       id,
+      "deletion_request",
     );
 
     res.json({
@@ -123,13 +133,11 @@ const approveDeletionRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve deletion request error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server: " + error.message });
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
-// Từ chối yêu cầu xóa (admin)
+// Từ chối yêu cầu xóa (Quản lý)
 const rejectDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,10 +156,11 @@ const rejectDeletionRequest = async (req, res) => {
 
     await Notification.create(
       request.requesterId,
-      "Yêu cầu xóa sản phẩm đã bị từ chối",
-      reason || "Admin đã từ chối yêu cầu xóa của bạn",
+      "❌ Yêu cầu xóa sản phẩm bị từ chối",
+      `Sản phẩm "${request.productName}" không được chấp thuận xóa.\nLý do: ${reason || "Không được chấp thuận"}`,
       "warning",
       id,
+      "deletion_request",
     );
 
     res.json({ success: true, message: "Đã từ chối yêu cầu xóa" });

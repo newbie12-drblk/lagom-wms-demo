@@ -32,7 +32,7 @@ const DeletionRequest = {
     return row;
   },
 
-  // Lấy tất cả yêu cầu (admin)
+  // Lấy tất cả yêu cầu (Quản lý)
   getAllRequests: async (status = null) => {
     let query = `
       SELECT dr.*, u.fullName as requesterName, a.fullName as approverName,
@@ -58,7 +58,7 @@ const DeletionRequest = {
     }));
   },
 
-  // Lấy yêu cầu của tôi (nhập liệu)
+  // Lấy yêu cầu của tôi (Admin)
   getByRequester: async (requesterId) => {
     const [rows] = await db.execute(
       `SELECT dr.*, a.fullName as approverName,
@@ -95,7 +95,7 @@ const DeletionRequest = {
     return true;
   },
 
-  // Xóa yêu cầu (nếu cần)
+  // Xóa yêu cầu
   delete: async (id) => {
     const [result] = await db.execute(
       "DELETE FROM deletion_requests WHERE id = ?",

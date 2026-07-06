@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getAllInventory,
   getProductByMaHang,
+  getCategories,
   getPendingProducts,
   createProduct,
   approveProduct,
@@ -16,6 +17,7 @@ const router = express.Router();
 // Tất cả user đã đăng nhập đều xem được
 router.get("/", verifyToken, getAllInventory);
 router.get("/stats", verifyToken, getStats);
+router.get("/categories", verifyToken, getCategories);
 router.get("/product/:maHang", verifyToken, getProductByMaHang);
 
 // Quản lý xem danh sách chờ duyệt

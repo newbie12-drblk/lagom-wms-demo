@@ -11,33 +11,26 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// Tạo yêu cầu xóa - cho phép admin và nhập liệu
-router.post(
-  "/",
-  verifyToken,
-  checkRole("admin", "nhap_lieu"),
-  createDeletionRequest,
-);
+// Admin tạo yêu cầu xóa
+router.post("/", verifyToken, checkRole("admin"), createDeletionRequest);
 
-// Lấy yêu cầu của tôi - bất kỳ user nào đã đăng nhập
-router.get("/my", verifyToken, getMyDeletionRequests);
+// Admin lấy yêu cầu của mình
+router.get("/my", verifyToken, checkRole("admin"), getMyDeletionRequests);
 
-// Lấy tất cả yêu cầu - chỉ admin
-router.get("/", verifyToken, checkRole("admin"), getAllDeletionRequests);
+// Quản lý lấy tất cả yêu cầu
+router.get("/", verifyToken, checkRole("quan_ly"), getAllDeletionRequests);
 
-// Duyệt yêu cầu xóa - chỉ admin
+// Quản lý duyệt/từ chối
 router.put(
   "/:id/approve",
   verifyToken,
-  checkRole("admin"),
+  checkRole("quan_ly"),
   approveDeletionRequest,
 );
-
-// Từ chối yêu cầu xóa - chỉ admin
 router.put(
   "/:id/reject",
   verifyToken,
-  checkRole("admin"),
+  checkRole("quan_ly"),
   rejectDeletionRequest,
 );
 
