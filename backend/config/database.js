@@ -1,16 +1,15 @@
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config();
+// ⭐ QUAN TRỌNG: Load .env từ thư mục gốc backend
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-let sslConfig = null;
-
-// Nếu có DB_SSL_CA thì cấu hình SSL
-if (process.env.DB_SSL_CA) {
-  sslConfig = {
-    ca: process.env.DB_SSL_CA,
-  };
-}
+console.log("🔍 DATABASE CONFIG:");
+console.log("  Host:", process.env.DB_HOST);
+console.log("  User:", process.env.DB_USER);
+console.log("  Database:", process.env.DB_NAME);
+console.log("  Port:", process.env.DB_PORT);
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
@@ -21,19 +20,23 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: sslConfig,
+  connectTimeout: 10000,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 const promisePool = pool.promise();
 
-// Kiểm tra kết nối
 (async () => {
   try {
     const connection = await promisePool.getConnection();
-    console.log("✅ Database connected successfully");
+    console.log("✅ Database connected successfully!");
     connection.release();
   } catch (error) {
-    console.error("❌ Database connection failed:", error.message);
+    console.error("❌ Database connection failed!");
+    console.error("  Code:", error.code);
+    console.error("  Message:", error.message);
   }
 })();
 

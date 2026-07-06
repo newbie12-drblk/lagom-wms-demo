@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>Quản lý - LAGOM</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/manager.css" />
+  </head>
+  <body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="app-shell">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-mark">
+            <div class="logo-icon">🧪</div>
+            <div class="logo-text-main">LAGOM</div>
+          </div>
+          <div class="logo-text-sub">Pharma &amp; Medical Supply</div>
+        </div>
+
+        <div class="nav-label">Quản lý</div>
+        <a href="#" class="nav-item active" data-view="dashboard">
+          <div class="nav-icon">📊</div>
+          Tổng quan
+        </a>
+        <a href="#" class="nav-item" data-view="pending-products">
+          <div class="nav-icon">📦</div>
+          Sản phẩm chờ duyệt
+          <span class="nav-badge" id="badgeProducts">0</span>
+        </a>
+        <a href="#" class="nav-item" data-view="pending-receipts">
+          <div class="nav-icon">📥</div>
+          Nhập hàng chờ duyệt
+          <span class="nav-badge" id="badgeReceipts">0</span>
+        </a>
+        <a href="#" class="nav-item" data-view="pending-exports">
+          <div class="nav-icon">📤</div>
+          Xuất kho chờ duyệt
+          <span class="nav-badge" id="badgeExports">0</span>
+        </a>
+        <a href="#" class="nav-item" data-view="users">
+          <div class="nav-icon">👤</div>
+          Quản lý người dùng
+        </a>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-ver">v2.0.0 · LAGOM WMS</div>
+        </div>
+      </aside>
+
+      <!-- CONTENT -->
+      <div class="content-area">
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="breadcrumb">
+              LAGOM <span>/</span>
+              <strong id="breadcrumb-title">Tổng quan</strong>
+            </div>
+          </div>
+          <div class="topbar-right" id="topbarRight">
+            <div class="top-pulse">
+              <div class="pulse-dot"></div>
+              Hệ thống hoạt động
+            </div>
+            <div class="top-date" id="currentDate"></div>
+          </div>
+        </div>
+
+        <div class="view-container">
+          <!-- VIEW: DASHBOARD -->
+          <div class="view active" id="view-dashboard">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">MANAGER</div>
+                  <div class="page-title">Tổng quan duyệt</div>
+                  <div class="page-sub" id="pageSub">
+                    Xin chào Quản lý! Dưới đây là các yêu cầu đang chờ bạn
+                    duyệt.
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-outline" id="btnRefresh">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                  </button>
+                </div>
+              </div>
+
+              <div class="stats-row">
+                <div
+                  class="stat-card s-blue"
+                  onclick="switchView('pending-products')"
+                >
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">📦</div>
+                    <div class="stat-trend trend-up">Sản phẩm</div>
+                  </div>
+                  <div class="stat-value" id="statPendingProducts">0</div>
+                  <div class="stat-label">Sản phẩm chờ duyệt</div>
+                </div>
+                <div
+                  class="stat-card s-yellow"
+                  onclick="switchView('pending-receipts')"
+                >
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">📥</div>
+                    <div class="stat-trend trend-warn">Nhập hàng</div>
+                  </div>
+                  <div class="stat-value" id="statPendingReceipts">0</div>
+                  <div class="stat-label">Nhập hàng chờ duyệt</div>
+                </div>
+                <div
+                  class="stat-card s-green"
+                  onclick="switchView('pending-exports')"
+                >
+                  <div class="stat-top">
+                    <div class="stat-icon-wrap">📤</div>
+                    <div class="stat-trend trend-up">Xuất kho</div>
+                  </div>
+                  <div class="stat-value" id="statPendingExports">0</div>
+                  <div class="stat-label">Xuất kho chờ duyệt</div>
+                </div>
+              </div>
+
+              <!-- Thông báo gần đây -->
+              <div class="panel" style="margin-top: 20px">
+                <div class="panel-head">
+                  <div class="panel-head-title">
+                    <span class="ph-icon">🔔</span> Thông báo gần đây
+                  </div>
+                  <span class="pill pill-blue" id="notificationCount">0</span>
+                </div>
+                <div
+                  class="alert-scroll"
+                  id="recentNotifications"
+                  style="max-height: 300px; overflow-y: auto"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW: SẢN PHẨM CHỜ DUYỆT -->
+          <div class="view" id="view-pending-products">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">PENDING PRODUCTS</div>
+                  <div class="page-title">Sản phẩm chờ duyệt</div>
+                  <div class="page-sub">
+                    Danh sách sản phẩm do Admin tạo, cần bạn xem xét
+                  </div>
+                </div>
+              </div>
+              <div id="pendingProductsList" class="approval-list"></div>
+            </div>
+          </div>
+
+          <!-- VIEW: NHẬP HÀNG CHỜ DUYỆT -->
+          <div class="view" id="view-pending-receipts">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">PENDING RECEIPTS</div>
+                  <div class="page-title">Đề nghị nhập hàng chờ duyệt</div>
+                  <div class="page-sub">
+                    Admin đề nghị nhập hàng, cần bạn xác nhận hoặc duyệt
+                  </div>
+                </div>
+              </div>
+              <div id="pendingReceiptsList" class="approval-list"></div>
+            </div>
+          </div>
+
+          <!-- VIEW: XUẤT KHO CHỜ DUYỆT -->
+          <div class="view" id="view-pending-exports">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">PENDING EXPORTS</div>
+                  <div class="page-title">Đề nghị xuất kho chờ duyệt</div>
+                  <div class="page-sub">
+                    Admin đề nghị xuất kho, cần bạn xác nhận hoặc duyệt
+                  </div>
+                </div>
+              </div>
+              <div id="pendingExportsList" class="approval-list"></div>
+            </div>
+          </div>
+
+          <!-- VIEW: QUẢN LÝ NGƯỜI DÙNG -->
+          <div class="view" id="view-users">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">USER MANAGEMENT</div>
+                  <div class="page-title">Quản lý người dùng</div>
+                  <div class="page-sub">Tạo và phân quyền cho Admin</div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnAddUser">
+                    <i class="fas fa-plus"></i> Thêm người dùng
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="user-table">
+                  <thead>
+                    <tr>
+                      <th>STT</th>
+                      <th>Username</th>
+                      <th>Họ tên</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Trạng thái</th>
+                      <th>Quyền</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CHI TIẾT SẢN PHẨM CHỜ DUYỆT -->
+    <div id="productDetailModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h3>📋 Chi tiết sản phẩm</h3>
+          <span class="close-modal" onclick="closeModal('productDetailModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body" id="productDetailBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="btnRejectProduct">Từ chối</button>
+          <button class="btn btn-success" id="btnApproveProduct">Duyệt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CHI TIẾT NHẬP HÀNG -->
+    <div id="receiptDetailModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 800px">
+        <div class="modal-header">
+          <h3>📋 Chi tiết đề nghị nhập hàng</h3>
+          <span class="close-modal" onclick="closeModal('receiptDetailModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body" id="receiptDetailBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="btnRejectReceipt">Từ chối</button>
+          <button class="btn btn-success" id="btnApproveReceipt">
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CHI TIẾT XUẤT KHO -->
+    <div id="exportDetailModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 900px">
+        <div class="modal-header">
+          <h3>📋 Chi tiết đề nghị xuất kho</h3>
+          <span class="close-modal" onclick="closeModal('exportDetailModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body" id="exportDetailBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="btnRejectExport">Từ chối</button>
+          <button class="btn btn-success" id="btnApproveExport">
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL THÊM/SỬA USER -->
+    <div id="userModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h3 id="modalTitle">Thêm người dùng</h3>
+          <span class="close-modal" onclick="closeModal('userModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <input type="hidden" id="userId" />
+            <div class="form-group">
+              <label>Tên đăng nhập *</label>
+              <input type="text" id="username" required />
+            </div>
+            <div class="form-group" id="passwordGroup">
+              <label>Mật khẩu *</label>
+              <input type="password" id="password" />
+              <small>Để trống nếu không đổi mật khẩu (khi sửa)</small>
+            </div>
+            <div class="form-group">
+              <label>Họ và tên *</label>
+              <input type="text" id="fullName" required />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="email" />
+            </div>
+            <div class="form-group">
+              <label>Trạng thái</label>
+              <select id="isActive">
+                <option value="true">Hoạt động</option>
+                <option value="false">Đã khóa</option>
+              </select>
+            </div>
+
+            <div class="permissions-section">
+              <h4 style="color: #60a5fa; margin: 16px 0 8px">
+                🔐 Phân quyền nhập liệu
+              </h4>
+              <div class="permissions-grid">
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditTenThuongMai"
+                  />
+                  Tên thương mại</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditMaHang"
+                  />
+                  Mã hàng</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditDVT"
+                  />
+                  Đơn vị tính</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditHangSX"
+                  />
+                  Hãng SX</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditPhanLoai"
+                  />
+                  Phân loại</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditGiaNhap"
+                  />
+                  Giá nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHopDongNhap"
+                  />
+                  Số HĐ nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHoaDonNhap"
+                  />
+                  Số HĐơn nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHoaDonXuat"
+                  />
+                  Số HĐơn xuất</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditNgayNhapHD"
+                  />
+                  Ngày nhập HĐ</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditNgayXuatHD"
+                  />
+                  Ngày xuất HĐ</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditGhiChu"
+                  />
+                  Ghi chú</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canCreateReceipt"
+                  />
+                  Tạo đề nghị nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canCreateExport"
+                  />
+                  Tạo đề nghị xuất</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canViewAll"
+                  />
+                  Xem tất cả</label
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal('userModal')">
+            Hủy
+          </button>
+          <button class="btn btn-primary" id="btnSaveUser">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/manager.js"></script>
+  </body>
+</html>
