@@ -66,10 +66,12 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
-    // Quan trọng: Admin vẫn có thể vào role-panel
+    // QUAN TRỌNG: Redirect dựa trên role
     let defaultRedirectUrl = "role-panel.html";
     if (user.roleId === "admin") {
-      defaultRedirectUrl = "admin.html";
+      defaultRedirectUrl = "admin.html"; // Admin → admin.html
+    } else if (user.roleId === "quan_ly") {
+      defaultRedirectUrl = "manager.html"; // Quản lý → manager.html
     }
 
     res.json({

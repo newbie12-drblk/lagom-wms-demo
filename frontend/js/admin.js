@@ -1,6 +1,6 @@
 /**
  * ==================== ADMIN MODULE ====================
- * Admin - Quản lý người dùng, duyệt yêu cầu
+ * Admin - Quản lý người dùng và duyệt yêu cầu
  */
 
 (function () {

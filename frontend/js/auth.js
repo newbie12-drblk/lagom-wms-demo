@@ -3,8 +3,6 @@
  * Quản lý xác thực, session, phân quyền
  * Tác giả: LAGOM
  * Ngày: 2026
- *
- * CẬP NHẬT: Admin có thể truy cập tất cả các trang
  */
 
 (function () {
@@ -30,34 +28,26 @@
 
   // ========== HELPER FUNCTIONS ==========
 
-  /**
-   * Lấy thông tin role theo ID
-   */
   function getRoleById(roleId) {
     return FIXED_ROLES.find((r) => r.id === roleId) || null;
   }
 
-  /**
-   * Lấy danh sách tất cả role
-   */
   function getAllRoles() {
     return [...FIXED_ROLES];
   }
 
-  /**
-   * Kiểm tra xem user có phải admin không
-   */
   function isAdmin() {
     const session = getCurrentSession();
     return session && session.roleId === "admin";
   }
 
+  function isManager() {
+    const session = getCurrentSession();
+    return session && session.roleId === "quan_ly";
+  }
+
   // ========== SESSION MANAGEMENT ==========
 
-  /**
-   * ĐĂNG NHẬP
-   * Gọi API login, lưu token và session
-   */
   async function login(username, password) {
     try {
       const result = await window.API.auth.login(username, password);
@@ -89,10 +79,6 @@
     }
   }
 
-  /**
-   * ĐĂNG XUẤT
-   * Xóa token và session
-   */
   function logout() {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
@@ -102,9 +88,6 @@
     return { success: true };
   }
 
-  /**
-   * Lấy session hiện tại (đã kiểm tra hết hạn)
-   */
   function getCurrentSession() {
     const session = localStorage.getItem(STORAGE_KEYS.SESSION);
     if (!session) return null;
@@ -119,18 +102,12 @@
     return sessionData;
   }
 
-  /**
-   * Kiểm tra đã đăng nhập chưa
-   */
   function isLoggedIn() {
     const session = getCurrentSession();
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
     return session !== null && !!token;
   }
 
-  /**
-   * Lấy thông tin user hiện tại
-   */
   function getCurrentUser() {
     const session = getCurrentSession();
     if (!session) return null;
@@ -145,77 +122,49 @@
     };
   }
 
-  /**
-   * Lấy role hiện tại
-   */
   function getCurrentRole() {
     return getCurrentSession()?.roleId || null;
   }
 
   // ========== PERMISSION CHECKS ==========
 
-  /**
-   * KIỂM TRA QUYỀN CHỈNH SỬA FIELD
-   * Admin có toàn quyền
-   */
   function canEditField(fieldName) {
-    if (isAdmin()) return true; // Admin được sửa tất cả
+    if (isAdmin()) return true;
     const role = getCurrentRole();
     if (role === "nhap_lieu") return true;
-    // Các role khác sẽ check từ permissions sau
     return false;
   }
 
-  /**
-   * KIỂM TRA QUYỀN THÊM DÒNG
-   */
   function canAddRow() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
     return role !== "nhan_vien";
   }
 
-  /**
-   * KIỂM TRA QUYỀN XÓA DÒNG
-   */
   function canDeleteRow() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
     return role !== "nhan_vien";
   }
 
-  /**
-   * KIỂM TRA QUYỀN LƯU
-   */
   function canSave() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
     return role !== "nhan_vien";
   }
 
-  /**
-   * KIỂM TRA QUYỀN XUẤT FILE
-   */
   function canExport() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
     return role !== "nhan_vien";
   }
 
-  /**
-   * KIỂM TRA QUYỀN QUẢN LÝ USER
-   * Chỉ admin mới có
-   */
   function canManageUsers() {
     return isAdmin();
   }
 
   // ========== ROUTE GUARDS ==========
 
-  /**
-   * YÊU CẦU ĐĂNG NHẬP
-   * Nếu chưa đăng nhập, chuyển về login
-   */
   function requireAuth(redirectUrl = "login.html") {
     if (!isLoggedIn()) {
       window.location.href = redirectUrl;
@@ -224,55 +173,50 @@
     return true;
   }
 
-  /**
-   * YÊU CẦU QUYỀN ADMIN
-   * Chỉ admin mới được vào
-   * Dùng cho trang admin.html
-   */
+  // ADMIN: Chỉ admin mới vào được
   function requireAdmin(redirectUrl = "role-panel.html") {
     if (!isLoggedIn()) {
       window.location.href = "login.html";
       return false;
     }
 
-    // Admin được vào
     if (isAdmin()) return true;
 
-    // Không phải admin thì chặn
     alert("❌ Bạn không có quyền truy cập trang này!");
     window.location.href = redirectUrl;
     return false;
   }
 
-  /**
-   * YÊU CẦU TRANG ROLE-PANEL
-   * Tất cả user đã đăng nhập đều vào được
-   * Admin cũng được vào (không chặn)
-   */
+  // MANAGER: Chỉ quản lý mới vào được
+  function requireManager(redirectUrl = "role-panel.html") {
+    if (!isLoggedIn()) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    if (isManager()) return true;
+
+    alert("❌ Bạn không có quyền truy cập trang này!");
+    window.location.href = redirectUrl;
+    return false;
+  }
+
   function requireRolePanel(redirectUrl = "login.html") {
     if (!isLoggedIn()) {
       window.location.href = redirectUrl;
       return false;
     }
-    // Tất cả user đã đăng nhập đều được vào role-panel
-    // Admin cũng được vào
     return true;
   }
 
-  /**
-   * YÊU CẦU MỘT TRONG CÁC ROLE ĐƯỢC PHÉP
-   * Admin luôn được phép
-   */
   function requireAnyRole(allowedRoles = []) {
     if (!isLoggedIn()) {
       window.location.href = "login.html";
       return false;
     }
 
-    // Admin luôn được phép
     if (isAdmin()) return true;
 
-    // Kiểm tra role có trong danh sách cho phép không
     const currentRole = getCurrentRole();
     if (allowedRoles.includes(currentRole)) {
       return true;
@@ -285,9 +229,6 @@
 
   // ========== USER MANAGEMENT (ASYNC) ==========
 
-  /**
-   * Lấy danh sách tất cả user (chỉ admin)
-   */
   async function getAllUsers() {
     try {
       const result = await window.API.auth.getAllUsers();
@@ -298,29 +239,19 @@
     }
   }
 
-  /**
-   * Tạo user mới (chỉ admin)
-   */
   async function createUser(userData) {
     return await window.API.auth.createUser(userData);
   }
 
-  /**
-   * Cập nhật user (chỉ admin)
-   */
   async function updateUser(id, userData) {
     return await window.API.auth.updateUser(id, userData);
   }
 
-  /**
-   * Xóa user (chỉ admin)
-   */
   async function deleteUser(id) {
     return await window.API.auth.deleteUser(id);
   }
 
-  // ========== LEGACY / COMPATIBILITY ==========
-  // Giữ lại cho tương thích với code cũ
+  // ========== LEGACY ==========
   function hashPassword(pwd) {
     return btoa(pwd);
   }
@@ -331,7 +262,6 @@
 
   // ========== EXPORTS ==========
   window.Auth = {
-    // Auth functions
     login,
     logout,
     isLoggedIn,
@@ -339,8 +269,8 @@
     getCurrentUser,
     getCurrentRole,
     isAdmin,
+    isManager,
 
-    // Permission checks
     canEditField,
     canAddRow,
     canDeleteRow,
@@ -348,23 +278,20 @@
     canExport,
     canManageUsers,
 
-    // Route guards
     requireAuth,
     requireAdmin,
+    requireManager,
     requireRolePanel,
     requireAnyRole,
 
-    // Role info
     getAllRoles,
     getRoleById,
 
-    // User management
     getAllUsers,
     createUser,
     updateUser,
     deleteUser,
 
-    // Legacy
     hashPassword,
     verifyPassword,
   };
