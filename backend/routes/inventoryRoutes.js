@@ -2,10 +2,10 @@ const express = require("express");
 const {
   getAllInventory,
   getProductByMaHang,
-  getCategories,
+  getPendingProducts,
   createProduct,
-  updateProduct,
-  deleteProduct,
+  approveProduct,
+  rejectProduct,
   getStats,
 } = require("../controllers/inventoryController");
 const { verifyToken } = require("../middleware/auth");
@@ -13,23 +13,19 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
+// Tất cả user đã đăng nhập đều xem được
 router.get("/", verifyToken, getAllInventory);
 router.get("/stats", verifyToken, getStats);
-router.get("/categories", verifyToken, getCategories);
 router.get("/product/:maHang", verifyToken, getProductByMaHang);
 
-// Tạo sản phẩm - chỉ admin và nhập liệu (nhưng nhập liệu phải qua approval)
-router.post("/", verifyToken, checkRole("admin", "nhap_lieu"), createProduct);
+// Quản lý xem danh sách chờ duyệt
+router.get("/pending", verifyToken, checkRole("quan_ly"), getPendingProducts);
 
-// CẬP NHẬT - cho phép admin, kế toán, quản lý kho, quản lý (NHẬP LIỆU KHÔNG ĐƯỢC)
-router.put(
-  "/:id",
-  verifyToken,
-  checkRole("admin", "ke_toan", "quan_ly_kho", "quan_ly"),
-  updateProduct,
-);
+// Admin tạo yêu cầu nhập sản phẩm (chờ duyệt)
+router.post("/", verifyToken, checkRole("admin"), createProduct);
 
-// Xóa - chỉ admin
-router.delete("/:id", verifyToken, checkRole("admin"), deleteProduct);
+// Quản lý duyệt/từ chối
+router.put("/:id/approve", verifyToken, checkRole("quan_ly"), approveProduct);
+router.put("/:id/reject", verifyToken, checkRole("quan_ly"), rejectProduct);
 
 module.exports = router;

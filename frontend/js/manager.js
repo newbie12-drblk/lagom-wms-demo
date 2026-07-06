@@ -6,7 +6,6 @@
 (function () {
   "use strict";
 
-  // ========== KIỂM TRA ĐĂNG NHẬP ==========
   if (!Auth.isLoggedIn()) {
     window.location.href = "login.html";
     return;
@@ -29,7 +28,6 @@
     "users",
   ];
 
-  // ========== STATE ==========
   let currentView = "dashboard";
   let pendingProducts = [];
   let pendingReceipts = [];
@@ -70,19 +68,16 @@
     if (!viewNames.includes(viewName)) return;
     currentView = viewName;
 
-    // Update views
     document
       .querySelectorAll(".view")
       .forEach((v) => v.classList.remove("active"));
     const targetView = document.getElementById(`view-${viewName}`);
     if (targetView) targetView.classList.add("active");
 
-    // Update nav
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.classList.toggle("active", item.dataset.view === viewName);
     });
 
-    // Update breadcrumb
     const titles = {
       dashboard: "Tổng quan",
       "pending-products": "Sản phẩm chờ duyệt",
@@ -92,7 +87,6 @@
     };
     $("breadcrumb-title").textContent = titles[viewName] || viewName;
 
-    // Load data
     if (viewName === "dashboard") loadDashboard();
     else if (viewName === "pending-products") loadPendingProducts();
     else if (viewName === "pending-receipts") loadPendingReceipts();
@@ -113,7 +107,6 @@
         $("statPendingReceipts").textContent = data.pendingReceipts || 0;
         $("statPendingExports").textContent = data.pendingExports || 0;
 
-        // Update badges
         $("badgeProducts").textContent = data.pendingProducts || 0;
         $("badgeReceipts").textContent = data.pendingReceipts || 0;
         $("badgeExports").textContent = data.pendingExports || 0;
@@ -121,8 +114,6 @@
     } catch (error) {
       console.error("Load dashboard error:", error);
     }
-
-    // Load notifications
     loadNotifications();
   }
 
@@ -135,7 +126,6 @@
       if (result.success) {
         const container = $("recentNotifications");
         const notifications = result.data || [];
-
         $("notificationCount").textContent = result.unreadCount || 0;
 
         if (notifications.length === 0) {
@@ -215,7 +205,7 @@
         </div>
         <div class="approval-card-body">
           <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(p.maHang)}</span></div>
-          <div><span class="label">Đơn vị tính:</span> <span class="value">${Utils.escapeHtml(p.dvt || "—")}</span></div>
+          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(p.dvt || "—")}</span></div>
           <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(p.hangSX || "—")}</span></div>
           <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(p.phanLoai || "—")}</span></div>
           <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(p.giaNhap)}</span></div>
@@ -226,6 +216,10 @@
           <div><span class="label">Ngày xuất HĐ:</span> <span class="value">${Utils.formatDate(p.ngayXuatHD)}</span></div>
         </div>
         <div class="approval-card-actions">
+          <label style="display:flex;align-items:center;gap:8px;color:#e2eaf5;font-size:13px;">
+            Số lượng tồn:
+            <input type="number" class="tonKho-input" value="0" min="0" style="width:80px;padding:4px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+          </label>
           <button class="btn btn-danger" onclick="rejectProduct(${p.id})"><i class="fas fa-times"></i> Từ chối</button>
           <button class="btn btn-success" onclick="approveProduct(${p.id})"><i class="fas fa-check"></i> Duyệt</button>
         </div>
@@ -238,11 +232,23 @@
   // ========== APPROVE/REJECT PRODUCT ==========
   window.approveProduct = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt sản phẩm này?")) return;
+
+    // Lấy số lượng từ input
+    const card = document.querySelector(
+      `.approval-card:has([onclick="approveProduct(${id})"])`,
+    );
+    const tonKhoInput = card?.querySelector(".tonKho-input");
+    const tonKho = parseInt(tonKhoInput?.value) || 0;
+
     Utils.showLoading(true, "Đang duyệt...");
     try {
       await fetch(`${API_BASE_URL}/inventory/${id}/approve`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${API.getToken()}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ tonKho }),
       });
       Utils.showToast("✅ Đã duyệt sản phẩm thành công");
       loadPendingProducts();
@@ -320,7 +326,7 @@
         <div class="approval-card-body">
           <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
           <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-          <div><span class="label">Đơn vị tính:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
+          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
           <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
           <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
           <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
@@ -337,13 +343,11 @@
       .join("");
   }
 
-  // ========== APPROVE/REJECT RECEIPT ==========
   window.openReceiptApprove = (id) => {
     const request = pendingReceipts.find((r) => r.id === id);
     if (!request) return;
 
     if (request.matchStatus === "matched") {
-      // Đã khớp: chỉ cần nhập số lượng
       const soLuong = prompt("Nhập số lượng nhập:", request.soLuongNhap || "1");
       if (soLuong === null) return;
       const num = parseInt(soLuong);
@@ -353,7 +357,6 @@
       }
       confirmReceipt(id, num);
     } else {
-      // Chưa khớp: duyệt trực tiếp
       if (
         !confirm(
           "Sản phẩm chưa khớp với kho. Bạn có chắc muốn duyệt và thêm mới?",
@@ -451,7 +454,7 @@
         <div class="approval-card-body">
           <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
           <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-          <div><span class="label">Đơn vị tính:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
+          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
           <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
           <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
           <div><span class="label">Tồn kho hiện tại:</span> <span class="value">${r.tonKho || 0}</span></div>
@@ -482,13 +485,11 @@
       .join("");
   }
 
-  // ========== APPROVE/REJECT EXPORT ==========
   window.openExportApprove = (id) => {
     const request = pendingExports.find((r) => r.id === id);
     if (!request) return;
 
     if (request.matchStatus === "matched") {
-      // Đã khớp: cần nhập đủ 5 trường
       const donGiaXuat = prompt(
         "Nhập đơn giá xuất:",
         request.donGiaXuat || "0",
@@ -525,7 +526,6 @@
         soHopDongXuat,
       });
     } else {
-      // Chưa khớp: duyệt trực tiếp
       if (!confirm("Sản phẩm chưa khớp với kho. Bạn có chắc muốn duyệt?"))
         return;
       confirmExport(id, {});
@@ -644,7 +644,6 @@
             `<span class="permission-badge denied">Không có</span>`,
           );
 
-        // Không cho sửa chính mình hoặc user khác là quan_ly
         const isSelf = user.id === currentUser.id;
         const isManager = user.roleId === "quan_ly";
 
@@ -654,7 +653,7 @@
         <td><strong>${Utils.escapeHtml(user.username)}</strong></td>
         <td>${Utils.escapeHtml(user.fullName)}</td>
         <td>${Utils.escapeHtml(user.email || "—")}</td>
-        <td><span class="status-badge ${user.roleId === "admin" ? "status-approved" : "status-pending"}">${user.roleId === "admin" ? "Admin" : "Quản lý"}</span></td>
+        <td><span class="status-badge ${user.roleId === "admin" ? "status-pending" : "status-approved"}">${user.roleId === "admin" ? "Admin" : "Quản lý"}</span></td>
         <td><span class="status-badge ${user.isActive ? "status-approved" : "status-rejected"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}</span></td>
         <td style="font-size:11px;">${permList.join(" ")}</td>
         <td>
@@ -698,7 +697,6 @@
       $("password").value = "";
       $("password").placeholder = "Để trống nếu không đổi";
 
-      // Set permissions
       const perms = user.permissions || {};
       document.querySelectorAll(".perm-check").forEach((cb) => {
         cb.checked = !!perms[cb.dataset.field];
@@ -741,7 +739,6 @@
       data.password = $("password").value;
     }
 
-    // Collect permissions
     const permissions = {};
     document.querySelectorAll(".perm-check").forEach((cb) => {
       permissions[cb.dataset.field] = cb.checked;
@@ -836,7 +833,6 @@
 
   // ========== BIND EVENTS ==========
   function bindEvents() {
-    // Navigation
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", (e) => {
         e.preventDefault();
@@ -844,17 +840,14 @@
       });
     });
 
-    // Refresh
     $("btnRefresh")?.addEventListener("click", () => {
       loadDashboard();
       Utils.showToast("Đã làm mới dữ liệu");
     });
 
-    // User modal
     $("btnAddUser")?.addEventListener("click", () => openUserModal());
     $("btnSaveUser")?.addEventListener("click", saveUser);
 
-    // Close modals on overlay click
     document.querySelectorAll(".modal").forEach((modal) => {
       modal.addEventListener("click", (e) => {
         if (e.target === modal) modal.style.display = "none";

@@ -1,756 +1,403 @@
 /**
  * ==================== ADMIN MODULE ====================
- * Quản lý người dùng, duyệt yêu cầu, xem lịch sử
+ * Admin - Nhập liệu (KHÔNG được sửa trực tiếp trên bảng)
+ * Chỉ tạo yêu cầu nhập liệu, đề nghị nhập/xuất hàng
  */
 
 (function () {
   "use strict";
 
-  let currentPage = 1;
-  const rowsPerPage = 10;
-  let users = [];
-
-  // DOM Elements
-  const userTableBody = document.getElementById("userTableBody");
-  const searchInput = document.getElementById("searchUser");
-  const roleFilter = document.getElementById("roleFilter");
-  const btnAddUser = document.getElementById("btnAddUser");
-  const prevPageBtn = document.getElementById("prevPage");
-  const nextPageBtn = document.getElementById("nextPage");
-  const pageInfo = document.getElementById("pageInfo");
-  const totalUsersSpan = document.getElementById("totalUsers");
-  const activeUsersSpan = document.getElementById("activeUsers");
-  const lockedUsersSpan = document.getElementById("lockedUsers");
-
-  // Modal elements
-  const userModal = document.getElementById("userModal");
-  const passwordModal = document.getElementById("passwordModal");
-  const modalTitle = document.getElementById("modalTitle");
-  const userIdInput = document.getElementById("userId");
-  const usernameInput = document.getElementById("username");
-  const passwordInput = document.getElementById("password");
-  const fullNameInput = document.getElementById("fullName");
-  const emailInput = document.getElementById("email");
-  const roleSelect = document.getElementById("roleId");
-  const isActiveSelect = document.getElementById("isActive");
-  const useCustomCheckbox = document.getElementById("useCustomPermissions");
-  const customPanel = document.getElementById("customPermissionsPanel");
-
-  // Tab elements
-  const tabBtns = document.querySelectorAll(".tab-btn");
-  const tabContents = document.querySelectorAll(".tab-content");
-
-  let currentUserId = null;
-
-  // Check auth
-  if (!Auth.requireAdmin("index.html")) return;
-
-  // Load user info
-  async function loadAdminInfo() {
-    const user = Auth.getCurrentUser();
-    const adminInfo = document.getElementById("adminUserInfo");
-    if (adminInfo && user) {
-      adminInfo.innerHTML = `<i class="fas fa-user-shield"></i> ${Utils.escapeHtml(user.fullName)} (${user.roleName})`;
-    }
+  if (!Auth.isLoggedIn()) {
+    window.location.href = "login.html";
+    return;
   }
 
-  // Load users from API
-  async function loadUsers() {
-    Utils.showLoading(true, "Đang tải danh sách người dùng...");
-    try {
-      const result = await window.API.auth.getAllUsers();
-      users = result.users || [];
-      updateStats();
-      filterAndRenderUsers();
-    } catch (error) {
-      Utils.showToast("Lỗi khi tải danh sách người dùng", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
+  const currentUser = Auth.getCurrentUser();
+  if (currentUser.roleId !== "admin") {
+    alert("❌ Bạn không có quyền truy cập trang này!");
+    window.location.href = "role-panel.html";
+    return;
   }
 
-  function updateStats() {
-    totalUsersSpan.textContent = users.length;
-    activeUsersSpan.textContent = users.filter((u) => u.isActive).length;
-    lockedUsersSpan.textContent = users.filter((u) => !u.isActive).length;
-  }
+  // ========== DOM REFS ==========
+  const $ = (id) => document.getElementById(id);
+  const viewNames = ["dashboard", "requests", "history"];
 
-  function filterAndRenderUsers() {
-    const searchTerm = searchInput?.value.toLowerCase() || "";
-    const roleValue = roleFilter?.value || "";
+  let currentView = "dashboard";
+  let inventoryData = [];
+  let receiptRequests = [];
+  let exportRequests = [];
 
-    let filtered = users.filter((user) => {
-      if (
-        searchTerm &&
-        !user.username.toLowerCase().includes(searchTerm) &&
-        !user.fullName.toLowerCase().includes(searchTerm)
-      ) {
-        return false;
-      }
-      if (roleValue && user.roleId !== roleValue) return false;
-      return true;
-    });
+  // ========== UPDATE TOPBAR ==========
+  function updateTopbar() {
+    const topbarRight = $("topbarRight");
+    if (!topbarRight) return;
 
-    const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
-    const start = (currentPage - 1) * rowsPerPage;
-    const pageData = filtered.slice(start, start + rowsPerPage);
-
-    renderUserTable(pageData, start);
-
-    pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
-    prevPageBtn.disabled = currentPage === 1;
-    nextPageBtn.disabled = currentPage === totalPages;
-  }
-
-  function renderUserTable(pageData, startIndex) {
-    if (!userTableBody) return;
-
-    if (pageData.length === 0) {
-      userTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;">Không có dữ liệu người dùng<\/td><\/tr>`;
-      return;
+    let userBar = document.querySelector(".user-info");
+    if (!userBar) {
+      userBar = document.createElement("div");
+      userBar.className = "user-info";
+      topbarRight.insertBefore(userBar, topbarRight.firstChild);
     }
 
-    const currentUser = Auth.getCurrentUser();
+    userBar.innerHTML = `
+      <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+      <div class="user-details">
+        <span class="user-name">${Utils.escapeHtml(currentUser.fullName)}</span>
+        <span class="user-role role-admin">Admin (Nhập liệu)</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
+    `;
 
-    userTableBody.innerHTML = pageData
-      .map((user, idx) => {
-        const isCurrentUser =
-          currentUser && currentUser.username === user.username;
-        return `
-          <tr>
-            <td>${startIndex + idx + 1}<\/td>
-            <td><strong>${Utils.escapeHtml(user.username)}<\/strong><\/td>
-            <td>${Utils.escapeHtml(user.fullName)}<\/td>
-            <td>${Utils.escapeHtml(user.email || "—")}<\/td>
-            <td><span class="status-badge">${user.roleId}<\/span><\/td>
-            <td><span class="status-badge ${user.isActive ? "status-approved" : "status-rejected"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}<\/span><\/td>
-            <td class="action-buttons">
-              <button class="action-btn edit" onclick="adminEditUser(${user.id})"><i class="fas fa-edit"></i><\/button>
-              <button class="action-btn password" onclick="adminChangePassword(${user.id}, '${Utils.escapeHtml(user.username)}')"><i class="fas fa-key"></i><\/button>
-              <button class="action-btn lock" onclick="adminToggleLock(${user.id}, ${!user.isActive})"><i class="fas fa-${user.isActive ? "lock" : "lock-open"}"></i><\/button>
-              ${!isCurrentUser ? `<button class="action-btn delete" onclick="adminDeleteUser(${user.id})"><i class="fas fa-trash"></i><\/button>` : ""}
-            <\/td>
-          <\/tr>
-        `;
-      })
-      .join("");
-  }
-
-  // Load role filter options
-  async function loadRoleFilter() {
-    const roles = Auth.getAllRoles();
-    roleFilter.innerHTML =
-      '<option value="">Tất cả role</option>' +
-      roles
-        .map((role) => `<option value="${role.id}">${role.name}</option>`)
-        .join("");
-  }
-
-  // Open user modal
-  function openUserModal(userId = null) {
-    modalTitle.textContent = userId ? "Sửa người dùng" : "Thêm người dùng";
-    userIdInput.value = userId || "";
-    usernameInput.disabled = !!userId;
-
-    if (userId) {
-      const user = users.find((u) => u.id == userId);
-      if (user) {
-        usernameInput.value = user.username;
-        fullNameInput.value = user.fullName;
-        emailInput.value = user.email || "";
-        roleSelect.value = user.roleId;
-        isActiveSelect.value = user.isActive ? "true" : "false";
-        passwordInput.value = "";
-        useCustomCheckbox.checked = !!user.customPermissions;
-        toggleCustomPanel();
-      }
-    } else {
-      document.getElementById("userForm").reset();
-      usernameInput.disabled = false;
-      useCustomCheckbox.checked = false;
-      toggleCustomPanel();
-    }
-    userModal.style.display = "block";
-  }
-
-  function toggleCustomPanel() {
-    customPanel.style.display = useCustomCheckbox.checked ? "block" : "none";
-  }
-
-  // Save user
-  async function saveUser() {
-    const userId = userIdInput.value;
-    const userData = {
-      username: usernameInput.value.trim(),
-      fullName: fullNameInput.value.trim(),
-      email: emailInput.value.trim(),
-      roleId: roleSelect.value,
-      isActive: isActiveSelect.value === "true",
-    };
-
-    if (passwordInput.value) {
-      userData.password = passwordInput.value;
-    }
-
-    if (useCustomCheckbox.checked) {
-      const editableFields = [];
-      document
-        .querySelectorAll(
-          '#customPermissionsPanel input[type="checkbox"][value]',
-        )
-        .forEach((cb) => {
-          if (cb.checked) editableFields.push(cb.value);
-        });
-      userData.customPermissions = {
-        editableFields,
-        canAddRow: document.getElementById("permAddRow")?.checked || false,
-        canDeleteRow:
-          document.getElementById("permDeleteRow")?.checked || false,
-        canSave: document.getElementById("permSave")?.checked || false,
-        canExport: document.getElementById("permExport")?.checked || false,
-      };
-    }
-
-    Utils.showLoading(true, "Đang lưu...");
-    try {
-      if (userId) {
-        await window.API.auth.updateUser(userId, userData);
-        Utils.showToast("Cập nhật người dùng thành công");
-      } else {
-        if (!userData.password) {
-          Utils.showToast("Vui lòng nhập mật khẩu", "error");
-          return;
-        }
-        await window.API.auth.createUser(userData);
-        Utils.showToast("Tạo người dùng thành công");
-      }
-      closeModal();
-      await loadUsers();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi lưu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  // Change password
-  async function savePassword() {
-    const newPassword = document.getElementById("newPassword").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-
-    if (!newPassword) {
-      Utils.showToast("Vui lòng nhập mật khẩu mới", "error");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Utils.showToast("Mật khẩu xác nhận không khớp", "error");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang đổi mật khẩu...");
-    try {
-      await window.API.auth.updateUser(currentUserId, {
-        password: newPassword,
-      });
-      Utils.showToast("Đổi mật khẩu thành công");
-      closePasswordModal();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi đổi mật khẩu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  // Toggle lock
-  async function adminToggleLock(userId, unlock) {
-    if (
-      !confirm(`Bạn có chắc muốn ${unlock ? "mở khóa" : "khóa"} tài khoản này?`)
-    )
-      return;
-
-    Utils.showLoading(true);
-    try {
-      await window.API.auth.updateUser(userId, { isActive: unlock });
-      Utils.showToast(`Đã ${unlock ? "mở khóa" : "khóa"} tài khoản`);
-      await loadUsers();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi cập nhật", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  // Delete user
-  async function adminDeleteUser(userId) {
-    const user = users.find((u) => u.id == userId);
-    if (!confirm(`Bạn có chắc muốn xóa tài khoản "${user?.username}"?`)) return;
-
-    Utils.showLoading(true);
-    try {
-      await window.API.auth.deleteUser(userId);
-      Utils.showToast("Xóa tài khoản thành công");
-      await loadUsers();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi xóa", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  function adminChangePassword(userId, username) {
-    currentUserId = userId;
-    document.getElementById("pwUsername").textContent = username;
-    document.getElementById("newPassword").value = "";
-    document.getElementById("confirmPassword").value = "";
-    passwordModal.style.display = "block";
-  }
-
-  function closeModal() {
-    userModal.style.display = "none";
-  }
-
-  function closePasswordModal() {
-    passwordModal.style.display = "none";
-    currentUserId = null;
-  }
-
-  // Tab switching
-  function switchTab(tabId) {
-    tabBtns.forEach((btn) => btn.classList.remove("active"));
-    tabContents.forEach((content) => content.classList.remove("active"));
-
-    document
-      .querySelector(`.tab-btn[data-tab="${tabId}"]`)
-      ?.classList.add("active");
-    document.getElementById(`tab-${tabId}`)?.classList.add("active");
-
-    if (tabId === "approvals") loadApprovalRequests();
-    if (tabId === "deletions") loadDeletionRequests();
-    if (tabId === "edits") loadEditRequests();
-    if (tabId === "history") loadEditHistory();
-  }
-
-  // ========== YÊU CẦU DUYỆT (thêm sản phẩm) ==========
-  async function loadApprovalRequests() {
-    const container = document.getElementById("approvalRequestsList");
-    if (!container) return;
-
-    Utils.showLoading(true, "Đang tải yêu cầu duyệt...");
-    try {
-      const requests = await window.API.approval.getAllRequests("pending");
-
-      if (requests.length === 0) {
-        container.innerHTML =
-          '<div class="empty-state">Không có yêu cầu nào đang chờ duyệt</div>';
-        Utils.showLoading(false);
-        return;
-      }
-
-      container.innerHTML = requests
-        .map((req) => {
-          const productList = req.productData.products || [];
-          return `
-          <div class="approval-card">
-            <div class="approval-header" style="margin-bottom: 10px;">
-              <strong>Yêu cầu #${req.id}</strong> - 
-              Người gửi: ${Utils.escapeHtml(req.requesterName)} - 
-              Ngày: ${Utils.formatDate(req.createdAt)}
-            </div>
-            <div class="approval-body">
-              <table style="width:100%; border-collapse: collapse; font-size: 12px;">
-                <thead>
-                  <tr>
-                    <th style="border:1px solid var(--border); padding: 6px;">Tên sản phẩm</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Mã hàng</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Giá nhập</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Giá xuất</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Tồn đầu</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">HSD</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${productList
-                    .map(
-                      (p) => `
-                    <tr>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.tenThuongMai)}<\/td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(p.maHang)}<\/td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaNhap)}<\/td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatCurrency(p.giaXuat)}<\/td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${p.tonKho}<\/td>
-                      <td style="border:1px solid var(--border); padding: 6px;">${p.ngayHetHan || "—"}<\/td>
-                    <\/tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-            <div class="approval-actions" style="margin-top: 15px;">
-              <button class="btn btn-success btn-sm" onclick="approveRequest(${req.id})" style="margin-right: 10px;">
-                <i class="fas fa-check"></i> Duyệt toàn bộ
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="rejectRequest(${req.id})">
-                <i class="fas fa-times"></i> Từ chối
-              </button>
-            </div>
-          </div>
-        `;
-        })
-        .join("");
-    } catch (error) {
-      console.error("Load approval requests error:", error);
-      Utils.showToast("Lỗi khi tải yêu cầu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  window.approveRequest = async (id) => {
-    Utils.showLoading(true, "Đang duyệt...");
-    try {
-      await window.API.approval.approve(id);
-      Utils.showToast("Đã duyệt yêu cầu và thêm sản phẩm vào kho");
-      loadApprovalRequests();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi duyệt", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  window.rejectRequest = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.approval.reject(id, reason);
-      Utils.showToast("Đã từ chối yêu cầu");
-      loadApprovalRequests();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi từ chối", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== YÊU CẦU XÓA ==========
-  async function loadDeletionRequests() {
-    const container = document.getElementById("deletionRequestsList");
-    if (!container) return;
-
-    Utils.showLoading(true, "Đang tải yêu cầu xóa...");
-    try {
-      const requests = await window.API.deletion.getAllRequests("pending");
-
-      if (requests.length === 0) {
-        container.innerHTML =
-          '<div class="empty-state">Không có yêu cầu xóa nào đang chờ duyệt</div>';
-        Utils.showLoading(false);
-        return;
-      }
-
-      container.innerHTML = requests
-        .map((req) => {
-          const product = req.productData;
-          return `
-          <div class="approval-card">
-            <div class="approval-header">
-              <strong>Yêu cầu xóa #${req.id}</strong> - 
-              Người gửi: ${Utils.escapeHtml(req.requesterName)} - 
-              Ngày: ${Utils.formatDate(req.createdAt)}
-            </div>
-            <div class="approval-body">
-              <table style="width:100%; border-collapse: collapse; font-size: 12px;">
-                <thead>
-                  <tr>
-                    <th style="border:1px solid var(--border); padding: 6px;">Tên sản phẩm</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Mã hàng</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">Số lot</th>
-                    <th style="border:1px solid var(--border); padding: 6px;">HSD</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.tenThuongMai)}<\/td>
-                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.maHang)}<\/td>
-                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.escapeHtml(product.soLot || "—")}<\/td>
-                    <td style="border:1px solid var(--border); padding: 6px;">${Utils.formatDate(product.ngayHetHan) || "—"}<\/td>
-                  <\/tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="approval-actions" style="margin-top: 15px;">
-              <button class="btn btn-success btn-sm" onclick="approveDeletionRequest(${req.id})" style="margin-right: 10px;">
-                <i class="fas fa-check"></i> Duyệt xóa
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="rejectDeletionRequest(${req.id})">
-                <i class="fas fa-times"></i> Từ chối
-              </button>
-            </div>
-          </div>
-        `;
-        })
-        .join("");
-    } catch (error) {
-      console.error("Load deletion requests error:", error);
-      Utils.showToast("Lỗi khi tải yêu cầu xóa", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  window.approveDeletionRequest = async (id) => {
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.deletion.approve(id);
-      Utils.showToast("Đã duyệt và xóa sản phẩm khỏi kho", "success");
-      loadDeletionRequests();
-      if (typeof loadInventoryData === "function") loadInventoryData();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi duyệt", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  window.rejectDeletionRequest = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.deletion.reject(id, reason);
-      Utils.showToast("Đã từ chối yêu cầu xóa", "success");
-      loadDeletionRequests();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi từ chối", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== YÊU CẦU CHỈNH SỬA ==========
-  async function loadEditRequests() {
-    const container = document.getElementById("editRequestsList");
-    if (!container) return;
-
-    Utils.showLoading(true, "Đang tải yêu cầu chỉnh sửa...");
-    try {
-      const requests = await window.API.edit.getAllRequests("pending");
-
-      if (requests.length === 0) {
-        container.innerHTML =
-          '<div class="empty-state">Không có yêu cầu chỉnh sửa nào đang chờ duyệt</div>';
-        Utils.showLoading(false);
-        return;
-      }
-
-      container.innerHTML = requests
-        .map((req) => {
-          const oldData = req.oldData;
-          const newData = req.newData;
-          const changes = [];
-          for (const key in newData) {
-            if (JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])) {
-              changes.push(
-                `<strong>${key}:</strong> ${oldData[key] || "—"} → ${newData[key] || "—"}`,
-              );
-            }
-          }
-          return `
-          <div class="approval-card">
-            <div class="approval-header">
-              <strong>Yêu cầu chỉnh sửa #${req.id}</strong> - 
-              Người gửi: ${Utils.escapeHtml(req.requesterName)} - 
-              Ngày: ${Utils.formatDate(req.createdAt)}<br>
-              <strong>Sản phẩm:</strong> ${Utils.escapeHtml(req.productName)} (${req.productCode})
-            </div>
-            <div class="approval-body">
-              <div style="margin-bottom: 10px; font-size: 12px;">
-                <strong>Thay đổi đề xuất:</strong>
-                <ul style="margin: 5px 0 0 20px;">
-                  ${changes.map((change) => `<li>${change}</li>`).join("")}
-                </ul>
-              </div>
-            </div>
-            <div class="approval-actions" style="margin-top: 15px;">
-              <button class="btn btn-success btn-sm" onclick="approveEditRequest(${req.id})" style="margin-right: 10px;">
-                <i class="fas fa-check"></i> Duyệt
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="rejectEditRequest(${req.id})">
-                <i class="fas fa-times"></i> Từ chối
-              </button>
-            </div>
-          </div>
-        `;
-        })
-        .join("");
-    } catch (error) {
-      console.error("Load edit requests error:", error);
-      Utils.showToast("Lỗi khi tải yêu cầu chỉnh sửa", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  window.approveEditRequest = async (id) => {
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.edit.approve(id);
-      Utils.showToast("Đã duyệt và cập nhật sản phẩm", "success");
-      loadEditRequests();
-      if (typeof loadInventoryData === "function") loadInventoryData();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi duyệt", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  window.rejectEditRequest = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.edit.reject(id, reason);
-      Utils.showToast("Đã từ chối yêu cầu chỉnh sửa", "success");
-      loadEditRequests();
-    } catch (error) {
-      Utils.showToast(error.message || "Lỗi khi từ chối", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== LỊCH SỬ CHỈNH SỬA ==========
-  async function loadEditHistory() {
-    const container = document.getElementById("editHistoryList");
-    if (!container) return;
-
-    Utils.showLoading(true, "Đang tải lịch sử chỉnh sửa...");
-    try {
-      const history = await window.API.history.getAll(100);
-
-      if (history.length === 0) {
-        container.innerHTML =
-          '<div class="empty-state">Chưa có lịch sử chỉnh sửa</div>';
-        Utils.showLoading(false);
-        return;
-      }
-
-      container.innerHTML = `
-        <table class="history-table">
-          <thead>
-            <tr><th>Thời gian</th><th>Người dùng</th><th>Bảng</th><th>Record ID</th><th>Trường</th><th>Giá trị cũ</th><th>Giá trị mới</th></tr>
-          </thead>
-          <tbody>
-            ${history
-              .map(
-                (h) => `
-              <tr>
-                <td>${Utils.formatDate(h.editedAt, "DD/MM/YYYY HH:mm")}<\/td>
-                <td>${Utils.escapeHtml(h.userName)}<\/td>
-                <td>${h.tableName}<\/td>
-                <td>${h.recordId}<\/td>
-                <td>${h.fieldName || "CREATE/DELETE"}<\/td>
-                <td><small>${Utils.escapeHtml(h.oldValue?.substring(0, 50) || "—")}</small><\/td>
-                <td><small>${Utils.escapeHtml(h.newValue?.substring(0, 50) || "—")}</small><\/td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
-      `;
-    } catch (error) {
-      Utils.showToast("Lỗi khi tải lịch sử", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  // ========== EVENT BINDING ==========
-  function bindEvents() {
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    $("logoutBtn")?.addEventListener("click", () => {
       Auth.logout();
       window.location.href = "login.html";
     });
 
-    document.getElementById("btnOpenIndex")?.addEventListener("click", () => {
-      window.open("index.html", "_blank");
-    });
+    $("currentDate").textContent = new Date().toLocaleDateString("vi-VN");
+  }
+
+  // ========== SWITCH VIEW ==========
+  function switchView(viewName) {
+    if (!viewNames.includes(viewName)) return;
+    currentView = viewName;
 
     document
-      .getElementById("btnOpenRolePanel")
-      ?.addEventListener("click", () => {
-        window.location.href = "role-panel.html";
+      .querySelectorAll(".view")
+      .forEach((v) => v.classList.remove("active"));
+    const targetView = document.getElementById(`view-${viewName}`);
+    if (targetView) targetView.classList.add("active");
+
+    document.querySelectorAll(".nav-item").forEach((item) => {
+      item.classList.toggle("active", item.dataset.view === viewName);
+    });
+
+    const titles = {
+      dashboard: "Tổng quan",
+      requests: "Yêu cầu của tôi",
+      history: "Lịch sử",
+    };
+    $("breadcrumb-title").textContent = titles[viewName] || viewName;
+
+    if (viewName === "dashboard") loadDashboard();
+    else if (viewName === "requests") loadRequests();
+    else if (viewName === "history") loadHistory();
+  }
+
+  // ========== LOAD DASHBOARD ==========
+  async function loadDashboard() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/inventory`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
       });
-
-    btnAddUser?.addEventListener("click", () => openUserModal());
-    searchInput?.addEventListener("input", () => {
-      currentPage = 1;
-      filterAndRenderUsers();
-    });
-    roleFilter?.addEventListener("change", () => {
-      currentPage = 1;
-      filterAndRenderUsers();
-    });
-    prevPageBtn?.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage--;
-        filterAndRenderUsers();
+      const result = await response.json();
+      if (result.success) {
+        const data = result.data || [];
+        $("statTotalItems").textContent = data.length;
       }
+    } catch (error) {
+      console.error("Load dashboard error:", error);
+    }
+    loadNotifications();
+  }
+
+  async function loadNotifications() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        const container = $("recentNotifications");
+        const notifications = result.data || [];
+        $("notificationCount").textContent = result.unreadCount || 0;
+
+        if (notifications.length === 0) {
+          container.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i><p>Không có thông báo</p></div>`;
+          return;
+        }
+
+        container.innerHTML = notifications
+          .slice(0, 10)
+          .map(
+            (n) => `
+          <div class="alert-row" onclick="markAsRead(${n.id})" style="${n.isRead ? "opacity:0.7;" : ""}">
+            <div class="alert-icon">${n.type === "approval" ? "📋" : n.type === "warning" ? "⚠️" : n.type === "success" ? "✅" : "ℹ️"}</div>
+            <div class="alert-body">
+              <div class="alert-title">${Utils.escapeHtml(n.title)}</div>
+              <div class="alert-message">${Utils.escapeHtml(n.message)}</div>
+              <div class="alert-time">${Utils.formatDate(n.createdAt)}</div>
+            </div>
+            ${!n.isRead ? '<span style="color:#3b82f6;font-size:10px;">● Mới</span>' : ""}
+          </div>
+        `,
+          )
+          .join("");
+      }
+    } catch (error) {
+      console.error("Load notifications error:", error);
+    }
+  }
+
+  window.markAsRead = async (id) => {
+    try {
+      await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      loadNotifications();
+    } catch (error) {
+      console.error("Mark as read error:", error);
+    }
+  };
+
+  // ========== LOAD REQUESTS (Yêu cầu của Admin) ==========
+  async function loadRequests() {
+    Utils.showLoading(true, "Đang tải...");
+    try {
+      const [receiptRes, exportRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/receipt-requests`, {
+          headers: { Authorization: `Bearer ${API.getToken()}` },
+        }),
+        fetch(`${API_BASE_URL}/export-requests`, {
+          headers: { Authorization: `Bearer ${API.getToken()}` },
+        }),
+      ]);
+
+      const receiptData = await receiptRes.json();
+      const exportData = await exportRes.json();
+
+      receiptRequests = receiptData.success ? receiptData.data || [] : [];
+      exportRequests = exportData.success ? exportData.data || [] : [];
+
+      renderRequests();
+    } catch (error) {
+      Utils.showToast("Lỗi tải dữ liệu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  function renderRequests() {
+    const container = $("requestsList");
+    const allRequests = [
+      ...receiptRequests.map((r) => ({ ...r, type: "receipt" })),
+      ...exportRequests.map((r) => ({ ...r, type: "export" })),
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    if (allRequests.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Bạn chưa có yêu cầu nào</p></div>`;
+      return;
+    }
+
+    const statusMap = {
+      pending: { label: "⏳ Chờ duyệt", class: "status-pending" },
+      approved: { label: "✅ Đã duyệt", class: "status-approved" },
+      rejected: { label: "❌ Từ chối", class: "status-rejected" },
+    };
+
+    container.innerHTML = allRequests
+      .map((r) => {
+        const status = statusMap[r.status] || statusMap["pending"];
+        const typeIcon = r.type === "receipt" ? "📥" : "📤";
+        const typeName = r.type === "receipt" ? "Nhập hàng" : "Xuất kho";
+
+        return `
+        <div class="request-card">
+          <div class="request-card-header">
+            <div class="request-card-id">${typeIcon} ${Utils.escapeHtml(r.requestNo)}</div>
+            <div class="request-card-date">${Utils.formatDate(r.createdAt)}</div>
+            <span class="status-badge ${status.class}">${status.label}</span>
+          </div>
+          <div class="request-card-body">
+            <div><span class="label">Sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
+            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
+            <div><span class="label">Loại:</span> <span class="value">${typeName}</span></div>
+            <div><span class="label">Trạng thái khớp:</span> <span class="value ${r.matchStatus === "matched" ? "text-success" : "text-warning"}">${r.matchStatus === "matched" ? "✅ Đã khớp" : "⚠️ Chưa khớp"}</span></div>
+            ${r.status === "rejected" ? `<div><span class="label">Lý do:</span> <span class="value" style="color:#f87171;">${Utils.escapeHtml(r.rejectedReason || "Không có lý do")}</span></div>` : ""}
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  // ========== LOAD HISTORY ==========
+  async function loadHistory() {
+    const container = $("historyList");
+    Utils.showLoading(true, "Đang tải...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/history/all?limit=50`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        const history = result.data || [];
+        if (history.length === 0) {
+          container.innerHTML = `<div class="empty-state"><i class="fas fa-history"></i><p>Chưa có lịch sử</p></div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Người dùng</th>
+                <th>Bảng</th>
+                <th>Hành động</th>
+                <th>Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${history
+                .map(
+                  (h) => `
+                <tr>
+                  <td>${Utils.formatDate(h.editedAt, "DD/MM/YYYY HH:mm")}</td>
+                  <td>${Utils.escapeHtml(h.userName || "—")}</td>
+                  <td>${Utils.escapeHtml(h.tableName)}</td>
+                  <td>${h.action}</td>
+                  <td>
+                    ${h.fieldName ? `<strong>${h.fieldName}:</strong> ` : ""}
+                    ${h.oldValue ? `"${Utils.escapeHtml(h.oldValue.substring(0, 50))}" → ` : ""}
+                    ${h.newValue ? `"${Utils.escapeHtml(h.newValue.substring(0, 50))}"` : ""}
+                  </td>
+                </tr>
+              `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi tải lịch sử", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== MODAL TẠO YÊU CẦU NHẬP LIỆU ==========
+  function openCreateProductModal() {
+    const modal = $("productModal");
+    $("p_tenThuongMai").value = "";
+    $("p_maHang").value = "";
+    $("p_dvt").value = "";
+    $("p_hangSX").value = "";
+    $("p_phanLoai").value = "";
+    $("p_giaNhap").value = "";
+    $("p_soHopDongNhap").value = "";
+    $("p_soHoaDonNhap").value = "";
+    $("p_soHoaDonXuat").value = "";
+    $("p_ngayNhapHD").value = "";
+    $("p_ngayXuatHD").value = "";
+    $("p_ghiChu").value = "";
+    modal.style.display = "flex";
+  }
+
+  async function saveProductRequest() {
+    const data = {
+      tenThuongMai: $("p_tenThuongMai").value.trim(),
+      maHang: $("p_maHang").value.trim(),
+      dvt: $("p_dvt").value.trim(),
+      hangSX: $("p_hangSX").value.trim(),
+      phanLoai: $("p_phanLoai").value.trim(),
+      giaNhap: parseFloat($("p_giaNhap").value.replace(/[^0-9]/g, "")) || 0,
+      soHopDongNhap: $("p_soHopDongNhap").value.trim(),
+      soHoaDonNhap: $("p_soHoaDonNhap").value.trim(),
+      soHoaDonXuat: $("p_soHoaDonXuat").value.trim(),
+      ngayNhapHD: $("p_ngayNhapHD").value || null,
+      ngayXuatHD: $("p_ngayXuatHD").value || null,
+      ghiChu: $("p_ghiChu").value.trim(),
+    };
+
+    if (!data.tenThuongMai || !data.maHang) {
+      Utils.showToast("Vui lòng nhập Tên thương mại và Mã hàng", "error");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/inventory`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã gửi yêu cầu nhập sản phẩm, chờ Quản lý duyệt");
+        closeModal("productModal");
+        loadDashboard();
+        loadRequests();
+      } else {
+        Utils.showToast(result.message || "Lỗi khi gửi yêu cầu", "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi khi gửi yêu cầu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== CLOSE MODAL ==========
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.style.display = "none";
+  }
+
+  // ========== BIND EVENTS ==========
+  function bindEvents() {
+    // Navigation
+    document.querySelectorAll(".nav-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.preventDefault();
+        switchView(item.dataset.view);
+      });
     });
-    nextPageBtn?.addEventListener("click", () => {
-      currentPage++;
-      filterAndRenderUsers();
+
+    // Refresh
+    $("btnRefresh")?.addEventListener("click", () => {
+      loadDashboard();
+      Utils.showToast("Đã làm mới dữ liệu");
     });
 
-    document
-      .querySelector("#userModal .close")
-      ?.addEventListener("click", closeModal);
-    document
-      .getElementById("btnCancelModal")
-      ?.addEventListener("click", closeModal);
-    document.getElementById("btnSaveUser")?.addEventListener("click", saveUser);
+    // Create product request
+    $("btnCreateProduct")?.addEventListener("click", openCreateProductModal);
+    $("btnSaveProduct")?.addEventListener("click", saveProductRequest);
 
-    document
-      .querySelector("#passwordModal .close-pw")
-      ?.addEventListener("click", closePasswordModal);
-    document
-      .getElementById("btnCancelPw")
-      ?.addEventListener("click", closePasswordModal);
-    document
-      .getElementById("btnSavePassword")
-      ?.addEventListener("click", savePassword);
+    // Create receipt request
+    $("btnCreateReceipt")?.addEventListener("click", () => {
+      window.open("receipt.html", "_blank");
+    });
 
-    useCustomCheckbox?.addEventListener("change", toggleCustomPanel);
+    // Create export request
+    $("btnCreateExport")?.addEventListener("click", () => {
+      window.open("export.html", "_blank");
+    });
 
-    tabBtns.forEach((btn) => {
-      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    // Close modals on overlay
+    document.querySelectorAll(".modal").forEach((modal) => {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+      });
     });
   }
+
+  // ========== EXPOSE GLOBALS ==========
+  window.switchView = switchView;
+  window.closeModal = closeModal;
 
   // ========== INIT ==========
-  async function init() {
-    await loadAdminInfo();
-    await loadRoleFilter();
-    await loadUsers();
+  function init() {
+    updateTopbar();
     bindEvents();
-
-    const dateEl = document.getElementById("currentDate");
-    if (dateEl) dateEl.textContent = new Date().toLocaleDateString("vi-VN");
+    loadDashboard();
   }
-
-  // Global functions
-  window.adminEditUser = (id) => openUserModal(id);
-  window.adminChangePassword = (id, username) =>
-    adminChangePassword(id, username);
-  window.adminToggleLock = (id, unlock) => adminToggleLock(id, unlock);
-  window.adminDeleteUser = (id) => adminDeleteUser(id);
 
   init();
 })();

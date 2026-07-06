@@ -1,7 +1,8 @@
 const Inventory = require("../models/Inventory");
+const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Lấy tất cả sản phẩm
+// Lấy tất cả sản phẩm đã duyệt
 const getAllInventory = async (req, res) => {
   try {
     const inventory = await Inventory.getAll();
@@ -18,9 +19,10 @@ const getProductByMaHang = async (req, res) => {
     const { maHang } = req.params;
     const product = await Inventory.findByMaHang(maHang);
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy sản phẩm" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm",
+      });
     }
     res.json({ success: true, data: product });
   } catch (error) {
@@ -28,17 +30,18 @@ const getProductByMaHang = async (req, res) => {
   }
 };
 
-// Lấy danh sách phân loại
-const getCategories = async (req, res) => {
+// Lấy danh sách chờ duyệt (Quản lý)
+const getPendingProducts = async (req, res) => {
   try {
-    const categories = await Inventory.getAllCategories();
-    res.json({ success: true, data: categories });
+    const products = await Inventory.getPending();
+    res.json({ success: true, data: products });
   } catch (error) {
+    console.error("Get pending products error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
-// Tạo sản phẩm mới (chỉ admin)
+// ADMIN: Tạo yêu cầu nhập sản phẩm mới (chờ duyệt)
 const createProduct = async (req, res) => {
   try {
     const productData = req.body;
@@ -47,117 +50,136 @@ const createProduct = async (req, res) => {
     // Kiểm tra mã hàng đã tồn tại chưa
     const existing = await Inventory.findByMaHang(productData.maHang);
     if (existing) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Mã hàng đã tồn tại" });
+      return res.status(400).json({
+        success: false,
+        message: "Mã hàng đã tồn tại trong kho",
+      });
     }
 
     const productId = await Inventory.create(productData, createdBy);
+
+    // Gửi thông báo cho Quản lý
+    await Notification.createForManagers(
+      "📦 Yêu cầu nhập sản phẩm mới",
+      `Admin đã tạo yêu cầu nhập sản phẩm "${productData.tenThuongMai}" (${productData.maHang})`,
+      "approval",
+      productId,
+      "inventory",
+    );
 
     // Ghi lịch sử
     await EditHistory.log(
       createdBy,
       "inventory",
       productId,
-      "CREATE",
+      "CREATE_PENDING",
+      null,
       null,
       JSON.stringify(productData),
     );
 
     res.json({
       success: true,
-      data: { id: productId },
-      message: "Tạo sản phẩm thành công",
+      data: { id: productId, status: "pending" },
+      message: "✅ Đã gửi yêu cầu nhập sản phẩm, chờ Quản lý duyệt",
     });
   } catch (error) {
     console.error("Create product error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// Cập nhật sản phẩm
-const updateProduct = async (req, res) => {
+// QUẢN LÝ: Duyệt sản phẩm
+const approveProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-    const userId = req.user.userId;
+    const { tonKho } = req.body;
+    const approvedBy = req.user.userId;
 
-    // Lấy sản phẩm cũ để ghi lịch sử
-    const oldProduct = await Inventory.findById(id);
-    if (!oldProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy sản phẩm" });
+    const product = await Inventory.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm",
+      });
     }
 
-    await Inventory.update(id, updateData);
+    await Inventory.approve(id, approvedBy, tonKho || 0);
 
-    // Ghi lịch sử từng field thay đổi
-    for (const [field, newValue] of Object.entries(updateData)) {
-      if (oldProduct[field] != newValue) {
-        await EditHistory.log(
-          userId,
-          "inventory",
-          id,
-          "UPDATE",
-          field,
-          String(oldProduct[field] || ""),
-          String(newValue || ""),
-        );
-      }
-    }
-
-    res.json({ success: true, message: "Cập nhật thành công" });
-  } catch (error) {
-    console.error("Update product error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
-  }
-};
-
-// Xóa sản phẩm
-const deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    const oldProduct = await Inventory.findById(id);
-    if (!oldProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy sản phẩm" });
-    }
-
-    await Inventory.delete(id);
-
-    await EditHistory.log(
-      userId,
-      "inventory",
+    // Gửi thông báo cho Admin
+    await Notification.create(
+      product.createdBy,
+      "✅ Yêu cầu nhập sản phẩm đã được duyệt",
+      `Sản phẩm "${product.tenThuongMai}" (${product.maHang}) đã được Quản lý duyệt với số lượng: ${tonKho || 0}`,
+      "success",
       id,
-      "DELETE",
-      null,
-      null,
-      JSON.stringify(oldProduct),
+      "inventory",
     );
 
-    res.json({ success: true, message: "Xóa thành công" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
-  }
-};
-
-// Lấy thống kê
-const getStats = async (req, res) => {
-  try {
-    const totalStats = await Inventory.getTotalStats();
-    const expiryStats = await Inventory.getExpiryStats();
+    // Ghi lịch sử
+    await EditHistory.log(
+      approvedBy,
+      "inventory",
+      id,
+      "APPROVED",
+      null,
+      null,
+      JSON.stringify({ ...product, tonKho }),
+    );
 
     res.json({
       success: true,
-      data: {
-        ...totalStats,
-        ...expiryStats,
-      },
+      message: `✅ Đã duyệt sản phẩm "${product.tenThuongMai}"`,
     });
+  } catch (error) {
+    console.error("Approve product error:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// QUẢN LÝ: Từ chối sản phẩm
+const rejectProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const approvedBy = req.user.userId;
+
+    const product = await Inventory.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm",
+      });
+    }
+
+    await Inventory.reject(id, approvedBy, reason);
+
+    await Notification.create(
+      product.createdBy,
+      "❌ Yêu cầu nhập sản phẩm bị từ chối",
+      `Sản phẩm "${product.tenThuongMai}" (${product.maHang}) đã bị từ chối.\nLý do: ${reason || "Không được chấp thuận"}`,
+      "warning",
+      id,
+      "inventory",
+    );
+
+    res.json({
+      success: true,
+      message: `Đã từ chối sản phẩm "${product.tenThuongMai}"`,
+    });
+  } catch (error) {
+    console.error("Reject product error:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// Thống kê
+const getStats = async (req, res) => {
+  try {
+    const stats = await Inventory.getStats();
+    res.json({ success: true, data: stats });
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
@@ -166,9 +188,9 @@ const getStats = async (req, res) => {
 module.exports = {
   getAllInventory,
   getProductByMaHang,
-  getCategories,
+  getPendingProducts,
   createProduct,
-  updateProduct,
-  deleteProduct,
+  approveProduct,
+  rejectProduct,
   getStats,
 };

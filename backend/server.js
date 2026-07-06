@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// CORS
 app.use(
   cors({
     origin: "*",
@@ -16,11 +16,11 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Middleware log request
+// Log requests
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.url}`);
   if (req.body && Object.keys(req.body).length > 0) {
@@ -32,30 +32,35 @@ app.use((req, res, next) => {
 // Import routes
 const authRoutes = require("./routes/authRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
-const receiptRoutes = require("./routes/receiptRoutes");
-const exportRoutes = require("./routes/exportRoutes");
-const fileRoutes = require("./routes/fileRoutes");
-const approvalRoutes = require("./routes/approvalRoutes");
-const historyRoutes = require("./routes/historyRoutes");
+const receiptRequestRoutes = require("./routes/receiptRequestRoutes");
+const exportRequestRoutes = require("./routes/exportRequestRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const deletionRoutes = require("./routes/deletionRoutes");
-const editRoutes = require("./routes/editRoutes");
+const managerRoutes = require("./routes/managerRoutes");
+const historyRoutes = require("./routes/historyRoutes");
+const fileRoutes = require("./routes/fileRoutes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);
-app.use("/api/receipts", receiptRoutes);
-app.use("/api/exports", exportRoutes);
-app.use("/api/files", fileRoutes);
-app.use("/api/approvals", approvalRoutes);
-app.use("/api/history", historyRoutes);
+app.use("/api/receipt-requests", receiptRequestRoutes);
+app.use("/api/export-requests", exportRequestRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/deletions", deletionRoutes);
-app.use("/api/edits", editRoutes);
+app.use("/api/manager", managerRoutes);
+app.use("/api/history", historyRoutes);
+app.use("/api/files", fileRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "LAGOM WMS Backend is running" });
+  res.json({ status: "OK", message: "LAGOM WMS Backend v2.0 is running" });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("❌", err.stack);
+  res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
 });
 
 app.listen(PORT, () => {
