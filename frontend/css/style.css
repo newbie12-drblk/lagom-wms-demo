@@ -1084,3 +1084,20 @@ body::before {
     opacity: 0.6;
   }
 }
+/* ==================== STATUS BADGE - CHỜ XÁC NHẬN ==================== */
+.status-awaiting {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  animation: pulseAwaiting 1.5s infinite;
+}
+
+@keyframes pulseAwaiting {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

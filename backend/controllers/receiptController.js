@@ -3,6 +3,7 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
+// Lấy tất cả phiếu nhập
 const getAllReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getAll();
@@ -13,6 +14,7 @@ const getAllReceipts = async (req, res) => {
   }
 };
 
+// Lấy phiếu nhập theo ID
 const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -28,19 +30,28 @@ const getReceiptById = async (req, res) => {
   }
 };
 
+// Tạo phiếu nhập mới - TỰ ĐỘNG KIỂM TRA
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
     const createdBy = req.user.userId;
 
+    console.log("📥 Tạo phiếu nhập bởi user:", createdBy);
+    console.log("📦 Dữ liệu:", JSON.stringify(receiptData, null, 2));
+
+    // 1. Tạo phiếu với status = "pending"
     const receiptId = await Receipt.create(receiptData, createdBy);
     const receipt = await Receipt.findById(receiptId);
+
     if (!receipt) {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
 
+    console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
+
+    // 2. TỰ ĐỘNG KIỂM TRA SẢN PHẨM TRONG KHO
     let allMatched = true;
     let mismatchDetails = [];
     let matchedProducts = [];
@@ -92,7 +103,9 @@ const createReceipt = async (req, res) => {
       }
     }
 
+    // 3. XỬ LÝ THEO KẾT QUẢ KIỂM TRA
     if (allMatched) {
+      // TỰ ĐỘNG DUYỆT
       await Receipt.updateStatus(receiptId, "approved", createdBy, null);
 
       for (const item of matchedProducts) {
@@ -128,6 +141,7 @@ const createReceipt = async (req, res) => {
           "✅ Tạo phiếu nhập thành công! Phiếu đã được tự động xác nhận.",
       });
     } else {
+      // CHUYỂN SANG "awaiting_confirmation" - CHỜ QUẢN LÝ XÁC NHẬN
       await Receipt.updateStatus(
         receiptId,
         "awaiting_confirmation",
@@ -145,6 +159,7 @@ const createReceipt = async (req, res) => {
         JSON.stringify(receiptData),
       );
 
+      // 🔥 QUAN TRỌNG: Gửi thông báo cho Admin (người tạo)
       await Notification.create(
         createdBy,
         `⚠️ Phiếu nhập ${receipt.receiptNo} đang chờ xác nhận`,
@@ -153,13 +168,16 @@ const createReceipt = async (req, res) => {
         receiptId,
       );
 
-      await Notification.createForManagers(
+      // 🔥 QUAN TRỌNG: Gửi thông báo cho Quản lý
+      const managerNotification = await Notification.createForManagers(
         `📥 Phiếu nhập ${receipt.receiptNo} chờ xác nhận`,
-        `Admin vừa tạo phiếu nhập có ${mismatchDetails.length} sản phẩm không khớp với kho. Vui lòng kiểm tra.`,
+        `Admin vừa tạo phiếu nhập có ${mismatchDetails.length} sản phẩm không khớp với kho.\nVui lòng kiểm tra và xác nhận.`,
         "approval",
         receiptId,
         "receipt",
       );
+
+      console.log("📨 Đã gửi thông báo cho Quản lý:", managerNotification);
 
       res.json({
         success: true,
@@ -174,13 +192,14 @@ const createReceipt = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Create receipt error:", error);
+    console.error("❌ Create receipt error:", error);
     res
       .status(500)
       .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
+// Cập nhật trạng thái duyệt phiếu nhập
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -196,19 +215,18 @@ const updateReceiptStatus = async (req, res) => {
 
     await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
 
-    if (receipt) {
-      const statusText =
-        status === "approved" ? "đã được duyệt" : "đã bị từ chối";
-      await Notification.create(
-        receipt.createdBy,
-        `Phiếu nhập ${receipt.receiptNo} ${statusText}`,
-        status === "rejected"
-          ? `Lý do: ${rejectedReason}`
-          : `Phiếu nhập của bạn đã được duyệt`,
-        status === "approved" ? "success" : "warning",
-        id,
-      );
-    }
+    const statusText =
+      status === "approved" ? "đã được duyệt" : "đã bị từ chối";
+
+    await Notification.create(
+      receipt.createdBy,
+      `Phiếu nhập ${receipt.receiptNo} ${statusText}`,
+      status === "rejected"
+        ? `Lý do: ${rejectedReason}`
+        : `Phiếu nhập của bạn đã được Quản lý duyệt`,
+      status === "approved" ? "success" : "warning",
+      id,
+    );
 
     await EditHistory.log(
       approvedBy,
@@ -230,15 +248,19 @@ const updateReceiptStatus = async (req, res) => {
   }
 };
 
+// Lấy danh sách phiếu chờ duyệt
 const getPendingReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getPendingApprovals();
+    console.log("📋 Phiếu chờ duyệt:", receipts.length);
     res.json({ success: true, data: receipts });
   } catch (error) {
+    console.error("Get pending receipts error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
+// Xóa phiếu nhập
 const deleteReceipt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -264,6 +286,7 @@ const deleteReceipt = async (req, res) => {
 
     res.json({ success: true, message: "Xóa phiếu thành công" });
   } catch (error) {
+    console.error("Delete receipt error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };

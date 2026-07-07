@@ -1,6 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin
+ * ĐÃ SỬA: Hiển thị đúng phiếu chờ duyệt
  */
 
 (function () {
@@ -175,6 +176,353 @@
     }
   };
 
+  // ========== LOAD PENDING RECEIPTS ==========
+  async function loadPendingReceipts() {
+    const container = $("pendingReceiptsList");
+    Utils.showLoading(true, "Đang tải danh sách phiếu nhập...");
+    try {
+      // 🔥 Gọi API lấy phiếu nhập chờ duyệt
+      const response = await fetch(`${API_BASE_URL}/receipts/pending`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        pendingReceipts = result.data || [];
+        console.log("📥 Phiếu nhập chờ duyệt:", pendingReceipts);
+        renderPendingReceipts();
+      } else {
+        Utils.showToast("Lỗi tải dữ liệu", "error");
+        pendingReceipts = [];
+        renderPendingReceipts();
+      }
+    } catch (error) {
+      console.error("Load pending receipts error:", error);
+      Utils.showToast("Lỗi tải dữ liệu", "error");
+      pendingReceipts = [];
+      renderPendingReceipts();
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  function renderPendingReceipts() {
+    const container = $("pendingReceiptsList");
+    if (!pendingReceipts || pendingReceipts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-check-circle"></i>
+          <p>Không có đề nghị nhập hàng nào chờ duyệt</p>
+          <small style="color: #6b82a0;">Khi Admin tạo phiếu nhập có sản phẩm không khớp với kho, phiếu sẽ xuất hiện ở đây</small>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = pendingReceipts
+      .map((r) => {
+        const statusMap = {
+          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+          awaiting_confirmation: {
+            class: "status-awaiting",
+            text: "🔄 Chờ xác nhận",
+          },
+          approved: { class: "status-approved", text: "✅ Đã duyệt" },
+          rejected: { class: "status-rejected", text: "❌ Từ chối" },
+        };
+        const status = statusMap[r.status] || statusMap["pending"];
+
+        return `
+          <div class="approval-card">
+            <div class="approval-card-header">
+              <div class="approval-card-id">📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}</div>
+              <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+              <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+              <span class="status-badge ${status.class}">${status.text}</span>
+            </div>
+            <div class="approval-card-body">
+              <div><span class="label">Nhà cung cấp:</span> <span class="value">${Utils.escapeHtml(r.supplierName || "—")}</span></div>
+              <div><span class="label">Ngày nhập:</span> <span class="value">${Utils.formatDate(r.receiptDate)}</span></div>
+              <div><span class="label">Số sản phẩm:</span> <span class="value">${r.items?.length || 0}</span></div>
+              <div><span class="label">Tổng giá trị:</span> <span class="value" style="color: #fbbf24;">${Utils.formatCurrency(r.total || 0)}</span></div>
+            </div>
+            <div style="margin: 10px 0; padding: 10px; background: #1a2235; border-radius: 6px; max-height: 200px; overflow-y: auto;">
+              <table style="width:100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="background: #0f172a;">
+                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Tên sản phẩm</th>
+                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Mã hàng</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">SL</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Đơn giá</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(r.items || [])
+                    .map(
+                      (item) => `
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 3px 6px;">${Utils.escapeHtml(item.tenThuongMai)}</td>
+                      <td style="padding: 3px 6px; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #86efac;">${item.soLuongNhap || 0}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap)}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #fbbf24;">${Utils.formatCurrency(item.thanhTien)}</td>
+                    </tr>
+                  `,
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </div>
+            <div class="approval-card-actions">
+              <button class="btn btn-danger" onclick="rejectReceipt(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+              <button class="btn btn-success" onclick="approveReceipt(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  // ========== APPROVE / REJECT RECEIPT ==========
+  window.approveReceipt = async (id) => {
+    if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
+
+    Utils.showLoading(true, "Đang duyệt phiếu...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã duyệt phiếu nhập thành công!");
+        loadPendingReceipts();
+        loadDashboard();
+      } else {
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể duyệt"),
+          "error",
+        );
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  window.rejectReceipt = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã từ chối phiếu nhập!");
+        loadPendingReceipts();
+        loadDashboard();
+      } else {
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể từ chối"),
+          "error",
+        );
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ========== LOAD PENDING EXPORTS ==========
+  async function loadPendingExports() {
+    const container = $("pendingExportsList");
+    Utils.showLoading(true, "Đang tải danh sách phiếu xuất...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/exports/pending`, {
+        headers: { Authorization: `Bearer ${API.getToken()}` },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        pendingExports = result.data || [];
+        console.log("📤 Phiếu xuất chờ duyệt:", pendingExports);
+        renderPendingExports();
+      } else {
+        Utils.showToast("Lỗi tải dữ liệu", "error");
+        pendingExports = [];
+        renderPendingExports();
+      }
+    } catch (error) {
+      console.error("Load pending exports error:", error);
+      Utils.showToast("Lỗi tải dữ liệu", "error");
+      pendingExports = [];
+      renderPendingExports();
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  function renderPendingExports() {
+    const container = $("pendingExportsList");
+    if (!pendingExports || pendingExports.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-check-circle"></i>
+          <p>Không có đề nghị xuất kho nào chờ duyệt</p>
+          <small style="color: #6b82a0;">Khi Admin tạo phiếu xuất có sản phẩm không khớp với kho, phiếu sẽ xuất hiện ở đây</small>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = pendingExports
+      .map((r) => {
+        const statusMap = {
+          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+          awaiting_confirmation: {
+            class: "status-awaiting",
+            text: "🔄 Chờ xác nhận",
+          },
+          approved: { class: "status-approved", text: "✅ Đã duyệt" },
+          rejected: { class: "status-rejected", text: "❌ Từ chối" },
+        };
+        const status = statusMap[r.status] || statusMap["pending"];
+
+        return `
+          <div class="approval-card">
+            <div class="approval-card-header">
+              <div class="approval-card-id">📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}</div>
+              <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
+              <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+              <span class="status-badge ${status.class}">${status.text}</span>
+            </div>
+            <div class="approval-card-body">
+              <div><span class="label">Người nhận:</span> <span class="value">${Utils.escapeHtml(r.receiverName || "—")}</span></div>
+              <div><span class="label">Ngày xuất:</span> <span class="value">${Utils.formatDate(r.exportDate)}</span></div>
+              <div><span class="label">Số sản phẩm:</span> <span class="value">${r.items?.length || 0}</span></div>
+              <div><span class="label">Tổng giá trị:</span> <span class="value" style="color: #fbbf24;">${Utils.formatCurrency(r.total || 0)}</span></div>
+            </div>
+            <div style="margin: 10px 0; padding: 10px; background: #1a2235; border-radius: 6px; max-height: 200px; overflow-y: auto;">
+              <table style="width:100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="background: #0f172a;">
+                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Tên sản phẩm</th>
+                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Mã hàng</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">SL</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Đơn giá</th>
+                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(r.items || [])
+                    .map(
+                      (item) => `
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 3px 6px;">${Utils.escapeHtml(item.tenThuongMai)}</td>
+                      <td style="padding: 3px 6px; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #86efac;">${item.soLuong || 0}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia)}</td>
+                      <td style="padding: 3px 6px; text-align: right; color: #fbbf24;">${Utils.formatCurrency(item.thanhTien)}</td>
+                    </tr>
+                  `,
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </div>
+            <div class="approval-card-actions">
+              <button class="btn btn-danger" onclick="rejectExport(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
+              <button class="btn btn-success" onclick="approveExport(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  // ========== APPROVE / REJECT EXPORT ==========
+  window.approveExport = async (id) => {
+    if (!confirm("Bạn có chắc muốn duyệt phiếu xuất này?")) return;
+
+    Utils.showLoading(true, "Đang duyệt phiếu...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/exports/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã duyệt phiếu xuất thành công!");
+        loadPendingExports();
+        loadDashboard();
+      } else {
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể duyệt"),
+          "error",
+        );
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  window.rejectExport = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/exports/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API.getToken()}`,
+        },
+        body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã từ chối phiếu xuất!");
+        loadPendingExports();
+        loadDashboard();
+      } else {
+        Utils.showToast(
+          "❌ Lỗi: " + (result.message || "Không thể từ chối"),
+          "error",
+        );
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
   // ========== LOAD PENDING PRODUCTS ==========
   async function loadPendingProducts() {
     const container = $("pendingProductsList");
@@ -261,265 +609,6 @@
       await window.API.inventory.reject(id, reason);
       Utils.showToast("Đã từ chối sản phẩm");
       loadPendingProducts();
-      loadDashboard();
-    } catch (error) {
-      Utils.showToast("Lỗi khi từ chối", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== LOAD PENDING RECEIPTS ==========
-  async function loadPendingReceipts() {
-    const container = $("pendingReceiptsList");
-    Utils.showLoading(true, "Đang tải...");
-    try {
-      pendingReceipts = await window.API.receiptRequest.getPending();
-      renderPendingReceipts();
-    } catch (error) {
-      Utils.showToast("Lỗi tải dữ liệu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  function renderPendingReceipts() {
-    const container = $("pendingReceiptsList");
-    if (pendingReceipts.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có đề nghị nhập hàng nào chờ duyệt</p></div>`;
-      return;
-    }
-
-    container.innerHTML = pendingReceipts
-      .map((r) => {
-        const isMatched = r.matchStatus === "matched";
-        return `
-        <div class="approval-card">
-          <div class="approval-card-header">
-            <div class="approval-card-id">📥 ${Utils.escapeHtml(r.requestNo)}</div>
-            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-            <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
-              ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
-            </span>
-          </div>
-          <div class="approval-card-body">
-            <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
-            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-            <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
-            <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
-            <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
-            <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
-            <div><span class="label">Số lượng nhập:</span> <span class="value">${r.soLuongNhap || "Chưa nhập"}</span></div>
-            ${isMatched ? `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#34d399;">Chờ xác nhận số lượng</span></div>` : `<div><span class="label">Trạng thái:</span> <span class="value" style="color:#fbbf24;">Chờ duyệt</span></div>`}
-          </div>
-          <div class="approval-card-actions">
-            <button class="btn btn-danger" onclick="rejectReceiptRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-            <button class="btn btn-success" onclick="approveReceiptRequest(${r.id})"><i class="fas fa-check"></i> ${isMatched ? "Xác nhận" : "Duyệt"}</button>
-          </div>
-        </div>
-      `;
-      })
-      .join("");
-  }
-
-  window.approveReceiptRequest = async (id) => {
-    const request = pendingReceipts.find((r) => r.id === id);
-    if (!request) return;
-
-    let soLuongNhap = null;
-    if (request.matchStatus === "matched") {
-      const input = prompt("Nhập số lượng nhập:", request.soLuongNhap || "1");
-      if (input === null) return;
-      const num = parseInt(input);
-      if (isNaN(num) || num <= 0) {
-        Utils.showToast("Vui lòng nhập số lượng hợp lệ", "error");
-        return;
-      }
-      soLuongNhap = num;
-    }
-
-    if (
-      !confirm(
-        `Bạn có chắc muốn ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị nhập hàng này?`,
-      )
-    )
-      return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.receiptRequest.approve(id, soLuongNhap);
-      Utils.showToast(
-        `✅ Đã ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị nhập hàng`,
-      );
-      loadPendingReceipts();
-      loadDashboard();
-    } catch (error) {
-      Utils.showToast("Lỗi khi xử lý", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  window.rejectReceiptRequest = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.receiptRequest.reject(id, reason);
-      Utils.showToast("Đã từ chối đề nghị nhập hàng");
-      loadPendingReceipts();
-      loadDashboard();
-    } catch (error) {
-      Utils.showToast("Lỗi khi từ chối", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== LOAD PENDING EXPORTS ==========
-  async function loadPendingExports() {
-    const container = $("pendingExportsList");
-    Utils.showLoading(true, "Đang tải...");
-    try {
-      pendingExports = await window.API.exportRequest.getPending();
-      renderPendingExports();
-    } catch (error) {
-      Utils.showToast("Lỗi tải dữ liệu", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  function renderPendingExports() {
-    const container = $("pendingExportsList");
-    if (pendingExports.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có đề nghị xuất kho nào chờ duyệt</p></div>`;
-      return;
-    }
-
-    container.innerHTML = pendingExports
-      .map((r) => {
-        const isMatched = r.matchStatus === "matched";
-        return `
-        <div class="approval-card">
-          <div class="approval-card-header">
-            <div class="approval-card-id">📤 ${Utils.escapeHtml(r.requestNo)}</div>
-            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-            <span class="badge-match ${isMatched ? "badge-matched" : "badge-unmatched"}">
-              ${isMatched ? "✅ Đã khớp" : "⚠️ Chưa khớp"}
-            </span>
-          </div>
-          <div class="approval-card-body">
-            <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.tenThuongMai)}</span></div>
-            <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.maHang)}</span></div>
-            <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(r.dvt || "—")}</span></div>
-            <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(r.hangSX || "—")}</span></div>
-            <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(r.phanLoai || "—")}</span></div>
-            <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(r.giaNhap)}</span></div>
-            <div><span class="label">Tồn kho hiện tại:</span> <span class="value">${r.tonKho || 0}</span></div>
-            ${
-              isMatched
-                ? `
-              <div style="grid-column:1/-1; margin-top:8px; padding:8px; background:#1a2235; border-radius:6px;">
-                <strong style="color:#fbbf24;">📝 Cần nhập thêm thông tin:</strong>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; margin-top:4px;">
-                  <div><span class="label">Đơn giá xuất:</span> <span class="value">${r.donGiaXuat ? Utils.formatCurrency(r.donGiaXuat) : "—"}</span></div>
-                  <div><span class="label">Số lượng:</span> <span class="value">${r.soLuong || "—"}</span></div>
-                  <div><span class="label">Số lot:</span> <span class="value">${Utils.escapeHtml(r.soLot || "—")}</span></div>
-                  <div><span class="label">HSD:</span> <span class="value">${Utils.formatDate(r.ngayHetHan)}</span></div>
-                  <div style="grid-column:1/-1;"><span class="label">Số hợp đồng xuất:</span> <span class="value">${Utils.escapeHtml(r.soHopDongXuat || "—")}</span></div>
-                </div>
-              </div>
-            `
-                : `<div style="grid-column:1/-1; color:#fbbf24;">⚠️ Sản phẩm chưa khớp với kho, cần duyệt thủ công</div>`
-            }
-          </div>
-          <div class="approval-card-actions">
-            <button class="btn btn-danger" onclick="rejectExportRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-            <button class="btn btn-success" onclick="approveExportRequest(${r.id})"><i class="fas fa-check"></i> ${isMatched ? "Xác nhận" : "Duyệt"}</button>
-          </div>
-        </div>
-      `;
-      })
-      .join("");
-  }
-
-  window.approveExportRequest = async (id) => {
-    const request = pendingExports.find((r) => r.id === id);
-    if (!request) return;
-
-    let extraData = {};
-
-    if (request.matchStatus === "matched") {
-      const donGiaXuat = prompt(
-        "Nhập đơn giá xuất:",
-        request.donGiaXuat || "0",
-      );
-      if (donGiaXuat === null) return;
-      const soLuong = prompt("Nhập số lượng xuất:", request.soLuong || "1");
-      if (soLuong === null) return;
-      const soLot = prompt("Nhập số lot:", request.soLot || "");
-      if (soLot === null) return;
-      const ngayHetHan = prompt(
-        "Nhập ngày hết hạn (YYYY-MM-DD):",
-        request.ngayHetHan || "",
-      );
-      if (ngayHetHan === null) return;
-      const soHopDongXuat = prompt(
-        "Nhập số hợp đồng xuất:",
-        request.soHopDongXuat || "",
-      );
-      if (soHopDongXuat === null) return;
-
-      const numPrice = parseFloat(donGiaXuat.replace(/[^0-9]/g, "")) || 0;
-      const numQty = parseInt(soLuong) || 0;
-
-      if (numQty <= 0) {
-        Utils.showToast("Vui lòng nhập số lượng hợp lệ", "error");
-        return;
-      }
-
-      extraData = {
-        donGiaXuat: numPrice,
-        soLuong: numQty,
-        soLot,
-        ngayHetHan,
-        soHopDongXuat,
-      };
-    }
-
-    if (
-      !confirm(
-        `Bạn có chắc muốn ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị xuất kho này?`,
-      )
-    )
-      return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.exportRequest.approve(id, extraData);
-      Utils.showToast(
-        `✅ Đã ${request.matchStatus === "matched" ? "xác nhận" : "duyệt"} đề nghị xuất kho`,
-      );
-      loadPendingExports();
-      loadDashboard();
-    } catch (error) {
-      Utils.showToast("Lỗi khi xử lý", "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  window.rejectExportRequest = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      await window.API.exportRequest.reject(id, reason);
-      Utils.showToast("Đã từ chối đề nghị xuất kho");
-      loadPendingExports();
       loadDashboard();
     } catch (error) {
       Utils.showToast("Lỗi khi từ chối", "error");
@@ -726,10 +815,10 @@
   window.switchView = switchView;
   window.approveProduct = approveProduct;
   window.rejectProduct = rejectProduct;
-  window.approveReceiptRequest = approveReceiptRequest;
-  window.rejectReceiptRequest = rejectReceiptRequest;
-  window.approveExportRequest = approveExportRequest;
-  window.rejectExportRequest = rejectExportRequest;
+  window.approveReceipt = approveReceipt;
+  window.rejectReceipt = rejectReceipt;
+  window.approveExport = approveExport;
+  window.rejectExport = rejectExport;
   window.approveEditRequest = approveEditRequest;
   window.rejectEditRequest = rejectEditRequest;
   window.approveDeletionRequest = approveDeletionRequest;

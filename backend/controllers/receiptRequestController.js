@@ -19,6 +19,7 @@ const createReceiptRequest = async (req, res) => {
 
     const statusText = result.isMatched ? "Chờ xác nhận" : "Chờ duyệt";
 
+    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Đề nghị nhập hàng - ${statusText}`,
       `Admin đề nghị nhập "${data.tenThuongMai}" (${data.maHang})`,
@@ -44,10 +45,12 @@ const createReceiptRequest = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy danh sách chờ duyệt
+// QUẢN LÝ: Lấy danh sách chờ duyệt - SỬA LẠI
 const getPendingReceiptRequests = async (req, res) => {
   try {
+    // Lấy tất cả status pending và awaiting_confirmation
     const requests = await ReceiptRequest.getPending();
+    console.log(`📥 Found ${requests.length} pending receipt requests`);
     res.json({ success: true, data: requests });
   } catch (error) {
     console.error("Get pending receipt requests error:", error);
@@ -82,7 +85,10 @@ const approveReceiptRequest = async (req, res) => {
       });
     }
 
-    if (request.status !== "pending") {
+    if (
+      request.status !== "pending" &&
+      request.status !== "awaiting_confirmation"
+    ) {
       return res.status(400).json({
         success: false,
         message: "Đề nghị này đã được xử lý",

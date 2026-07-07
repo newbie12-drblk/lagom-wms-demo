@@ -3,6 +3,7 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
+// Lấy tất cả phiếu xuất
 const getAllExports = async (req, res) => {
   try {
     const exports = await Export.getAll();
@@ -13,6 +14,7 @@ const getAllExports = async (req, res) => {
   }
 };
 
+// Lấy phiếu xuất theo ID
 const getExportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -28,11 +30,16 @@ const getExportById = async (req, res) => {
   }
 };
 
+// Tạo phiếu xuất mới - TỰ ĐỘNG KIỂM TRA
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
+    console.log("📤 Tạo phiếu xuất bởi user:", createdBy);
+    console.log("📦 Dữ liệu:", JSON.stringify(exportData, null, 2));
+
+    // Kiểm tra tồn kho trước khi tạo
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -52,6 +59,15 @@ const createExport = async (req, res) => {
     const exportId = await Export.create(exportData, createdBy);
     const exportItem = await Export.findById(exportId);
 
+    if (!exportItem) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
+    }
+
+    console.log("✅ Phiếu xuất tạo thành công:", exportItem.exportNo);
+
+    // TỰ ĐỘNG KIỂM TRA
     let allMatched = true;
     let mismatchDetails = [];
 
@@ -81,6 +97,7 @@ const createExport = async (req, res) => {
     }
 
     if (allMatched) {
+      // TỰ ĐỘNG DUYỆT
       await Export.updateStatus(exportId, "approved", createdBy, null);
 
       for (const item of exportItem.items || []) {
@@ -112,6 +129,7 @@ const createExport = async (req, res) => {
           "✅ Tạo phiếu xuất thành công! Phiếu đã được tự động xác nhận.",
       });
     } else {
+      // CHUYỂN SANG "awaiting_confirmation"
       await Export.updateStatus(
         exportId,
         "awaiting_confirmation",
@@ -129,6 +147,7 @@ const createExport = async (req, res) => {
         JSON.stringify(exportData),
       );
 
+      // 🔥 Gửi thông báo cho Admin
       await Notification.create(
         createdBy,
         `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xác nhận`,
@@ -137,9 +156,10 @@ const createExport = async (req, res) => {
         exportId,
       );
 
+      // 🔥 Gửi thông báo cho Quản lý
       await Notification.createForManagers(
         `📤 Phiếu xuất ${exportItem.exportNo} chờ xác nhận`,
-        `Admin vừa tạo phiếu xuất có ${mismatchDetails.length} sản phẩm không khớp với kho. Vui lòng kiểm tra.`,
+        `Admin vừa tạo phiếu xuất có ${mismatchDetails.length} sản phẩm không khớp với kho.\nVui lòng kiểm tra và xác nhận.`,
         "approval",
         exportId,
         "export",
@@ -154,11 +174,14 @@ const createExport = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Create export error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("❌ Create export error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
+// Cập nhật trạng thái duyệt phiếu xuất
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -176,7 +199,7 @@ const updateExportStatus = async (req, res) => {
         `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
         status === "rejected"
           ? `Lý do: ${rejectedReason}`
-          : `Phiếu xuất của bạn đã được duyệt`,
+          : `Phiếu xuất của bạn đã được Quản lý duyệt`,
         status === "approved" ? "success" : "warning",
         id,
       );
@@ -202,15 +225,19 @@ const updateExportStatus = async (req, res) => {
   }
 };
 
+// Lấy danh sách phiếu chờ duyệt
 const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
+    console.log("📋 Phiếu xuất chờ duyệt:", exports.length);
     res.json({ success: true, data: exports });
   } catch (error) {
+    console.error("Get pending exports error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
+// Xóa phiếu xuất
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -236,6 +263,7 @@ const deleteExport = async (req, res) => {
 
     res.json({ success: true, message: "Xóa phiếu thành công" });
   } catch (error) {
+    console.error("Delete export error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };

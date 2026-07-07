@@ -1,7 +1,7 @@
 const db = require("../config/database");
 
 const Notification = {
-  // Tạo thông báo mới
+  // Tạo thông báo cho 1 user
   create: async (
     userId,
     title,
@@ -18,7 +18,7 @@ const Notification = {
     return result.insertId;
   },
 
-  // Tạo thông báo cho Quản lý (roleId = 'quan_ly')
+  // 🔥 QUAN TRỌNG: Tạo thông báo cho Quản lý
   createForManagers: async (
     title,
     message,
@@ -31,7 +31,12 @@ const Notification = {
       "SELECT id FROM users WHERE roleId = 'quan_ly' AND isActive = TRUE",
     );
 
-    if (rows.length === 0) return;
+    console.log("📨 Tìm thấy Quản lý:", rows.length);
+
+    if (rows.length === 0) {
+      console.log("⚠️ Không có Quản lý nào để gửi thông báo!");
+      return;
+    }
 
     const values = rows.map((row) => [
       row.id,
@@ -48,7 +53,7 @@ const Notification = {
     );
   },
 
-  // Tạo thông báo cho nhiều người dùng
+  // Tạo thông báo cho nhiều user
   createForMultiple: async (
     userIds,
     title,
