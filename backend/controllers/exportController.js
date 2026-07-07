@@ -26,20 +26,21 @@ const getExportById = async (req, res) => {
     }
     res.json({ success: true, data: exportItem });
   } catch (error) {
+    console.error("Get export by id error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
-// Tạo phiếu xuất mới - TỰ ĐỘNG KIỂM TRA
+// Tạo phiếu xuất mới
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
     console.log("📤 Tạo phiếu xuất bởi user:", createdBy);
-    console.log("📦 Dữ liệu:", JSON.stringify(exportData, null, 2));
+    console.log("📦 Số lượng items:", exportData.items?.length || 0);
 
-    // Kiểm tra tồn kho trước khi tạo
+    // Kiểm tra tồn kho
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -66,8 +67,9 @@ const createExport = async (req, res) => {
     }
 
     console.log("✅ Phiếu xuất tạo thành công:", exportItem.exportNo);
+    console.log("📦 Số items trong phiếu:", exportItem.items?.length || 0);
 
-    // TỰ ĐỘNG KIỂM TRA
+    // Kiểm tra sản phẩm
     let allMatched = true;
     let mismatchDetails = [];
 
@@ -97,7 +99,6 @@ const createExport = async (req, res) => {
     }
 
     if (allMatched) {
-      // TỰ ĐỘNG DUYỆT
       await Export.updateStatus(exportId, "approved", createdBy, null);
 
       for (const item of exportItem.items || []) {
@@ -117,7 +118,7 @@ const createExport = async (req, res) => {
       await Notification.create(
         createdBy,
         `✅ Phiếu xuất ${exportItem.exportNo} đã được tự động xác nhận`,
-        "Tất cả sản phẩm trong phiếu đều khớp với kho, hệ thống tự động duyệt thành công.",
+        "Tất cả sản phẩm trong phiếu đều khớp với kho.",
         "success",
         exportId,
       );
@@ -129,7 +130,6 @@ const createExport = async (req, res) => {
           "✅ Tạo phiếu xuất thành công! Phiếu đã được tự động xác nhận.",
       });
     } else {
-      // CHUYỂN SANG "awaiting_confirmation"
       await Export.updateStatus(
         exportId,
         "awaiting_confirmation",
@@ -147,16 +147,14 @@ const createExport = async (req, res) => {
         JSON.stringify(exportData),
       );
 
-      // 🔥 Gửi thông báo cho Admin
       await Notification.create(
         createdBy,
         `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xác nhận`,
-        `Có ${mismatchDetails.length} sản phẩm không khớp với kho.\n\nChi tiết:\n${mismatchDetails.join("\n")}`,
+        `Có ${mismatchDetails.length} sản phẩm không khớp với kho.`,
         "warning",
         exportId,
       );
 
-      // 🔥 Gửi thông báo cho Quản lý
       await Notification.createForManagers(
         `📤 Phiếu xuất ${exportItem.exportNo} chờ xác nhận`,
         `Admin vừa tạo phiếu xuất có ${mismatchDetails.length} sản phẩm không khớp với kho.\nVui lòng kiểm tra và xác nhận.`,
@@ -167,7 +165,11 @@ const createExport = async (req, res) => {
 
       res.json({
         success: true,
-        data: { id: exportId, status: "awaiting_confirmation" },
+        data: {
+          id: exportId,
+          status: "awaiting_confirmation",
+          items: exportItem.items || [],
+        },
         message:
           "⚠️ Tạo phiếu xuất thành công! Phiếu đang chờ xác nhận từ Quản lý.",
         details: mismatchDetails,
@@ -181,29 +183,34 @@ const createExport = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái duyệt phiếu xuất
+// Cập nhật trạng thái
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, rejectedReason } = req.body;
     const approvedBy = req.user.userId;
 
+    const exportItem = await Export.findById(id);
+    if (!exportItem) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy phiếu" });
+    }
+
     await Export.updateStatus(id, status, approvedBy, rejectedReason);
 
-    const exportItem = await Export.findById(id);
-    if (exportItem) {
-      const statusText =
-        status === "approved" ? "đã được duyệt" : "đã bị từ chối";
-      await Notification.create(
-        exportItem.createdBy,
-        `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
-        status === "rejected"
-          ? `Lý do: ${rejectedReason}`
-          : `Phiếu xuất của bạn đã được Quản lý duyệt`,
-        status === "approved" ? "success" : "warning",
-        id,
-      );
-    }
+    const statusText =
+      status === "approved" ? "đã được duyệt" : "đã bị từ chối";
+
+    await Notification.create(
+      exportItem.createdBy,
+      `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
+      status === "rejected"
+        ? `Lý do: ${rejectedReason}`
+        : `Phiếu xuất của bạn đã được Quản lý duyệt`,
+      status === "approved" ? "success" : "warning",
+      id,
+    );
 
     await EditHistory.log(
       approvedBy,
@@ -229,7 +236,12 @@ const updateExportStatus = async (req, res) => {
 const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
-    console.log("📋 Phiếu xuất chờ duyệt:", exports.length);
+    console.log(`📋 Trả về ${exports.length} phiếu xuất chờ duyệt`);
+
+    for (const e of exports) {
+      console.log(`  - ${e.exportNo}: ${e.items?.length || 0} items`);
+    }
+
     res.json({ success: true, data: exports });
   } catch (error) {
     console.error("Get pending exports error:", error);
@@ -237,7 +249,7 @@ const getPendingExports = async (req, res) => {
   }
 };
 
-// Xóa phiếu xuất
+// Xóa phiếu
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;

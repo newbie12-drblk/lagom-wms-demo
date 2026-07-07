@@ -1,6 +1,7 @@
 const db = require("../config/database");
 
 const Export = {
+  // Lấy tất cả phiếu xuất
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
@@ -11,6 +12,7 @@ const Export = {
     return rows;
   },
 
+  // Lấy phiếu xuất theo ID KÈM ITEMS
   findById: async (id) => {
     const [exports] = await db.execute(
       `SELECT e.*, u.fullName as creatorName, a.fullName as approverName
@@ -24,14 +26,43 @@ const Export = {
     if (exports.length === 0) return null;
 
     const exportItem = exports[0];
+
+    // 🔥 LẤY DANH SÁCH ITEMS
     const [items] = await db.execute(
-      "SELECT * FROM export_items WHERE exportId = ?",
+      `SELECT * FROM export_items WHERE exportId = ?`,
       [id],
     );
+
+    console.log(`📦 Export ${id} has ${items.length} items`);
 
     return { ...exportItem, items };
   },
 
+  // Lấy danh sách phiếu chờ duyệt (KÈM ITEMS)
+  getPendingApprovals: async () => {
+    const [rows] = await db.execute(
+      `SELECT e.*, u.fullName as creatorName 
+       FROM exports e 
+       LEFT JOIN users u ON e.createdBy = u.id 
+       WHERE e.status IN ('pending', 'awaiting_confirmation')
+       ORDER BY e.createdAt ASC`,
+    );
+
+    // 🔥 LẤY ITEMS CHO TỪNG PHIẾU
+    const result = [];
+    for (const row of rows) {
+      const [items] = await db.execute(
+        `SELECT * FROM export_items WHERE exportId = ?`,
+        [row.id],
+      );
+      result.push({ ...row, items });
+    }
+
+    console.log(`📋 Found ${result.length} pending exports with items`);
+    return result;
+  },
+
+  // Tạo phiếu xuất mới
   create: async (data, createdBy) => {
     const [lastExport] = await db.execute(
       "SELECT exportNo FROM exports ORDER BY id DESC LIMIT 1",
@@ -99,6 +130,7 @@ const Export = {
     return exportId;
   },
 
+  // Cập nhật trạng thái
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE exports 
@@ -109,17 +141,7 @@ const Export = {
     return true;
   },
 
-  getPendingApprovals: async () => {
-    const [rows] = await db.execute(
-      `SELECT e.*, u.fullName as creatorName 
-       FROM exports e 
-       LEFT JOIN users u ON e.createdBy = u.id 
-       WHERE e.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY e.createdAt ASC`,
-    );
-    return rows;
-  },
-
+  // Xóa phiếu
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM exports WHERE id = ?", [id]);
     return result.affectedRows > 0;

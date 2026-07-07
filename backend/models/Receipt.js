@@ -1,6 +1,7 @@
 const db = require("../config/database");
 
 const Receipt = {
+  // Lấy tất cả phiếu nhập
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
@@ -11,7 +12,9 @@ const Receipt = {
     return rows;
   },
 
+  // Lấy phiếu nhập theo ID KÈM ITEMS
   findById: async (id) => {
+    // Lấy thông tin phiếu
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
        FROM receipts r 
@@ -24,14 +27,43 @@ const Receipt = {
     if (receipts.length === 0) return null;
 
     const receipt = receipts[0];
+
+    // 🔥 LẤY DANH SÁCH ITEMS
     const [items] = await db.execute(
-      "SELECT * FROM receipt_items WHERE receiptId = ?",
+      `SELECT * FROM receipt_items WHERE receiptId = ?`,
       [id],
     );
+
+    console.log(`📦 Receipt ${id} has ${items.length} items`);
 
     return { ...receipt, items };
   },
 
+  // Lấy danh sách phiếu chờ duyệt (KÈM ITEMS)
+  getPendingApprovals: async () => {
+    const [rows] = await db.execute(
+      `SELECT r.*, u.fullName as creatorName 
+       FROM receipts r 
+       LEFT JOIN users u ON r.createdBy = u.id 
+       WHERE r.status IN ('pending', 'awaiting_confirmation')
+       ORDER BY r.createdAt ASC`,
+    );
+
+    // 🔥 LẤY ITEMS CHO TỪNG PHIẾU
+    const result = [];
+    for (const row of rows) {
+      const [items] = await db.execute(
+        `SELECT * FROM receipt_items WHERE receiptId = ?`,
+        [row.id],
+      );
+      result.push({ ...row, items });
+    }
+
+    console.log(`📋 Found ${result.length} pending receipts with items`);
+    return result;
+  },
+
+  // Tạo phiếu nhập mới
   create: async (data, createdBy) => {
     const [lastReceipt] = await db.execute(
       "SELECT receiptNo FROM receipts ORDER BY id DESC LIMIT 1",
@@ -102,6 +134,7 @@ const Receipt = {
     return receiptId;
   },
 
+  // Cập nhật trạng thái
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE receipts 
@@ -112,17 +145,7 @@ const Receipt = {
     return true;
   },
 
-  getPendingApprovals: async () => {
-    const [rows] = await db.execute(
-      `SELECT r.*, u.fullName as creatorName 
-       FROM receipts r 
-       LEFT JOIN users u ON r.createdBy = u.id 
-       WHERE r.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY r.createdAt ASC`,
-    );
-    return rows;
-  },
-
+  // Xóa phiếu
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM receipts WHERE id = ?", [
       id,
