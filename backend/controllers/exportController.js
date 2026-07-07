@@ -4,7 +4,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Lấy tất cả phiếu xuất
 const getAllExports = async (req, res) => {
   try {
     const exports = await Export.getAll();
@@ -15,7 +14,6 @@ const getAllExports = async (req, res) => {
   }
 };
 
-// Lấy phiếu xuất theo ID
 const getExportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -32,14 +30,10 @@ const getExportById = async (req, res) => {
   }
 };
 
-// Tạo phiếu xuất mới
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
-
-    console.log("📤 Tạo phiếu xuất bởi user:", createdBy);
-    console.log("📦 Số lượng items:", exportData.items?.length || 0);
 
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
@@ -65,9 +59,6 @@ const createExport = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
-
-    console.log("✅ Phiếu xuất tạo thành công:", exportItem.exportNo);
-    console.log("📦 Số items trong phiếu:", exportItem.items?.length || 0);
 
     let allMatched = true;
     let mismatchDetails = [];
@@ -182,7 +173,6 @@ const createExport = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -231,45 +221,19 @@ const updateExportStatus = async (req, res) => {
   }
 };
 
-// Lấy danh sách phiếu chờ duyệt
 const getPendingExports = async (req, res) => {
   try {
-    console.log("📋 Fetching pending exports...");
-
-    const [rows] = await db.execute(
-      `SELECT e.*, u.fullName as creatorName 
-       FROM exports e 
-       LEFT JOIN users u ON e.createdBy = u.id 
-       WHERE e.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY e.createdAt DESC`,
-    );
-
-    console.log(`📋 Found ${rows.length} pending exports`);
-
-    const result = [];
-    for (const row of rows) {
-      const [items] = await db.execute(
-        `SELECT * FROM export_items WHERE exportId = ?`,
-        [row.id],
-      );
-      console.log(`  - ${row.exportNo}: ${items.length} items`);
-      result.push({ ...row, items });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    const exports = await Export.getPendingApprovals();
+    console.log(`📋 ${exports.length} phiếu xuất chờ duyệt`);
+    res.json({ success: true, data: exports });
   } catch (error) {
-    console.error("❌ Get pending exports error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server: " + error.message,
-    });
+    console.error("Get pending exports error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// Xóa phiếu
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;

@@ -12,8 +12,6 @@ router.get(
   checkRole("quan_ly"),
   async (req, res) => {
     try {
-      console.log("📊 Fetching dashboard stats...");
-
       // Đếm sản phẩm chờ duyệt
       const [productResult] = await db.execute(
         "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
@@ -40,24 +38,24 @@ router.get(
       );
 
       const data = {
-        pendingProducts: parseInt(productResult[0]?.count || 0),
-        pendingReceipts: parseInt(receiptResult[0]?.count || 0),
-        pendingExports: parseInt(exportResult[0]?.count || 0),
-        pendingEdits: parseInt(editResult[0]?.count || 0),
-        pendingDeletions: parseInt(deleteResult[0]?.count || 0),
+        pendingProducts: productResult[0]?.count || 0,
+        pendingReceipts: receiptResult[0]?.count || 0,
+        pendingExports: exportResult[0]?.count || 0,
+        pendingEdits: editResult[0]?.count || 0,
+        pendingDeletions: deleteResult[0]?.count || 0,
       };
 
-      console.log("📊 Stats result:", data);
+      console.log("📊 Stats:", data);
 
-      res.status(200).json({
+      res.json({
         success: true,
         data: data,
       });
     } catch (error) {
-      console.error("❌ Dashboard stats error:", error);
+      console.error("❌ Error:", error);
       res.status(500).json({
         success: false,
-        message: "Lỗi server: " + error.message,
+        message: error.message,
       });
     }
   },

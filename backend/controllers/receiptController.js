@@ -4,7 +4,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Lấy tất cả phiếu nhập
 const getAllReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getAll();
@@ -15,7 +14,6 @@ const getAllReceipts = async (req, res) => {
   }
 };
 
-// Lấy phiếu nhập theo ID
 const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -32,14 +30,10 @@ const getReceiptById = async (req, res) => {
   }
 };
 
-// Tạo phiếu nhập mới
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
     const createdBy = req.user.userId;
-
-    console.log("📥 Tạo phiếu nhập bởi user:", createdBy);
-    console.log("📦 Số lượng items:", receiptData.items?.length || 0);
 
     const receiptId = await Receipt.create(receiptData, createdBy);
     const receipt = await Receipt.findById(receiptId);
@@ -49,9 +43,6 @@ const createReceipt = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
-
-    console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
-    console.log("📦 Số items trong phiếu:", receipt.items?.length || 0);
 
     let allMatched = true;
     let mismatchDetails = [];
@@ -194,7 +185,6 @@ const createReceipt = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -243,45 +233,19 @@ const updateReceiptStatus = async (req, res) => {
   }
 };
 
-// Lấy danh sách phiếu chờ duyệt
 const getPendingReceipts = async (req, res) => {
   try {
-    console.log("📋 Fetching pending receipts...");
-
-    const [rows] = await db.execute(
-      `SELECT r.*, u.fullName as creatorName 
-       FROM receipts r 
-       LEFT JOIN users u ON r.createdBy = u.id 
-       WHERE r.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY r.createdAt DESC`,
-    );
-
-    console.log(`📋 Found ${rows.length} pending receipts`);
-
-    const result = [];
-    for (const row of rows) {
-      const [items] = await db.execute(
-        `SELECT * FROM receipt_items WHERE receiptId = ?`,
-        [row.id],
-      );
-      console.log(`  - ${row.receiptNo}: ${items.length} items`);
-      result.push({ ...row, items });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
+    const receipts = await Receipt.getPendingApprovals();
+    console.log(`📋 ${receipts.length} phiếu chờ duyệt`);
+    res.json({ success: true, data: receipts });
   } catch (error) {
-    console.error("❌ Get pending receipts error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server: " + error.message,
-    });
+    console.error("Get pending receipts error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// Xóa phiếu
 const deleteReceipt = async (req, res) => {
   try {
     const { id } = req.params;

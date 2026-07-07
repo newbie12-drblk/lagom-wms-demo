@@ -12,7 +12,7 @@ const Receipt = {
     return rows;
   },
 
-  // Lấy phiếu nhập theo ID KÈM ITEMS
+  // Lấy phiếu nhập theo ID kèm items
   findById: async (id) => {
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
@@ -26,7 +26,6 @@ const Receipt = {
     if (receipts.length === 0) return null;
 
     const receipt = receipts[0];
-
     const [items] = await db.execute(
       `SELECT * FROM receipt_items WHERE receiptId = ?`,
       [id],
@@ -35,7 +34,7 @@ const Receipt = {
     return { ...receipt, items };
   },
 
-  // Lấy danh sách phiếu chờ duyệt (KÈM ITEMS)
+  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
@@ -57,7 +56,7 @@ const Receipt = {
     return result;
   },
 
-  // Tạo phiếu nhập mới
+  // Tạo phiếu nhập
   create: async (data, createdBy) => {
     const [lastReceipt] = await db.execute(
       "SELECT receiptNo FROM receipts ORDER BY id DESC LIMIT 1",

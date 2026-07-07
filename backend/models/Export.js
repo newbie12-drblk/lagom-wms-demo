@@ -12,7 +12,7 @@ const Export = {
     return rows;
   },
 
-  // Lấy phiếu xuất theo ID KÈM ITEMS
+  // Lấy phiếu xuất theo ID kèm items
   findById: async (id) => {
     const [exports] = await db.execute(
       `SELECT e.*, u.fullName as creatorName, a.fullName as approverName
@@ -26,7 +26,6 @@ const Export = {
     if (exports.length === 0) return null;
 
     const exportItem = exports[0];
-
     const [items] = await db.execute(
       `SELECT * FROM export_items WHERE exportId = ?`,
       [id],
@@ -35,7 +34,7 @@ const Export = {
     return { ...exportItem, items };
   },
 
-  // Lấy danh sách phiếu chờ duyệt (KÈM ITEMS)
+  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
@@ -57,7 +56,7 @@ const Export = {
     return result;
   },
 
-  // Tạo phiếu xuất mới
+  // Tạo phiếu xuất
   create: async (data, createdBy) => {
     const [lastExport] = await db.execute(
       "SELECT exportNo FROM exports ORDER BY id DESC LIMIT 1",
