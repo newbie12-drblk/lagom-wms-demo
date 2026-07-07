@@ -9,11 +9,31 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// CORS - FIX LỖI CORS ERROR
+// CORS - CHO PHÉP CẢ origin = null (file://)
 // ============================================
+const allowedOrigins = [
+  "https://lagom-wms-demo.onrender.com",
+  "http://127.0.0.1:5500",
+  "http://localhost:5500",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "null", // 👈 THÊM DÒNG NÀY CHO file://
+];
+
 app.use(
   cors({
-    origin: "*",
+    origin: function (origin, callback) {
+      // Cho phép request không có origin (như Postman, curl)
+      if (!origin) return callback(null, true);
+
+      // Cho phép nếu origin nằm trong danh sách hoặc là null
+      if (allowedOrigins.indexOf(origin) !== -1 || origin === "null") {
+        callback(null, true);
+      } else {
+        console.log(`❌ CORS blocked: ${origin}`);
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
       "Content-Type",
