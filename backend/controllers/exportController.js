@@ -256,12 +256,16 @@ const getPendingExports = async (req, res) => {
       result.push({ ...row, items });
     }
 
-    res.json({ success: true, data: result });
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   } catch (error) {
-    console.error("Get pending exports error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server: " + error.message });
+    console.error("❌ Get pending exports error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 

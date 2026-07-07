@@ -258,7 +258,6 @@ const getPendingReceipts = async (req, res) => {
 
     console.log(`📋 Found ${rows.length} pending receipts`);
 
-    // Lấy items cho từng phiếu
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
@@ -269,12 +268,16 @@ const getPendingReceipts = async (req, res) => {
       result.push({ ...row, items });
     }
 
-    res.json({ success: true, data: result });
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   } catch (error) {
-    console.error("Get pending receipts error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server: " + error.message });
+    console.error("❌ Get pending receipts error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 

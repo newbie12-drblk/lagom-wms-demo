@@ -14,42 +14,42 @@ router.get(
     try {
       console.log("📊 Fetching dashboard stats...");
 
-      // Lấy số lượng sản phẩm chờ duyệt
-      const [pendingProducts] = await db.execute(
+      // Đếm sản phẩm chờ duyệt
+      const [productResult] = await db.execute(
         "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
       );
 
-      // Lấy số lượng phiếu nhập chờ duyệt
-      const [pendingReceipts] = await db.execute(
+      // Đếm phiếu nhập chờ duyệt
+      const [receiptResult] = await db.execute(
         "SELECT COUNT(*) as count FROM receipts WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
-      // Lấy số lượng phiếu xuất chờ duyệt
-      const [pendingExports] = await db.execute(
+      // Đếm phiếu xuất chờ duyệt
+      const [exportResult] = await db.execute(
         "SELECT COUNT(*) as count FROM exports WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
-      // Lấy số lượng yêu cầu chỉnh sửa chờ duyệt
-      const [pendingEdits] = await db.execute(
+      // Đếm yêu cầu chỉnh sửa
+      const [editResult] = await db.execute(
         "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'",
       );
 
-      // Lấy số lượng yêu cầu xóa chờ duyệt
-      const [pendingDeletions] = await db.execute(
+      // Đếm yêu cầu xóa
+      const [deleteResult] = await db.execute(
         "SELECT COUNT(*) as count FROM deletion_requests WHERE status = 'pending'",
       );
 
       const data = {
-        pendingProducts: pendingProducts[0]?.count || 0,
-        pendingReceipts: pendingReceipts[0]?.count || 0,
-        pendingExports: pendingExports[0]?.count || 0,
-        pendingEdits: pendingEdits[0]?.count || 0,
-        pendingDeletions: pendingDeletions[0]?.count || 0,
+        pendingProducts: parseInt(productResult[0]?.count || 0),
+        pendingReceipts: parseInt(receiptResult[0]?.count || 0),
+        pendingExports: parseInt(exportResult[0]?.count || 0),
+        pendingEdits: parseInt(editResult[0]?.count || 0),
+        pendingDeletions: parseInt(deleteResult[0]?.count || 0),
       };
 
       console.log("📊 Stats result:", data);
 
-      res.json({
+      res.status(200).json({
         success: true,
         data: data,
       });
