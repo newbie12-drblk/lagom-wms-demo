@@ -103,7 +103,7 @@ CREATE TABLE receipt_requests (
     ghiChu TEXT,
     soLuongNhap INT DEFAULT 0,
     matchStatus ENUM('matched', 'unmatched') DEFAULT 'unmatched',
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
     approvedBy INT,
     approvedAt DATETIME,
@@ -141,7 +141,7 @@ CREATE TABLE export_requests (
     soHopDongXuat VARCHAR(50),
     tonKho INT DEFAULT 0,
     matchStatus ENUM('matched', 'unmatched') DEFAULT 'unmatched',
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
     approvedBy INT,
     approvedAt DATETIME,
@@ -170,7 +170,7 @@ CREATE TABLE receipts (
     customerContract VARCHAR(100),
     total DECIMAL(15,0) DEFAULT 0,
     notes TEXT,
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     rejectedReason TEXT,
     createdBy INT NOT NULL,
     approvedBy INT,
@@ -197,6 +197,12 @@ CREATE TABLE receipt_items (
     giaNhap DECIMAL(15,0) DEFAULT 0,
     soLuongNhap INT DEFAULT 0,
     thanhTien DECIMAL(15,0) DEFAULT 0,
+    soLot VARCHAR(50),
+    ngayHetHan DATE,
+    soHopDongNhap VARCHAR(50),
+    soHoaDonNhap VARCHAR(50),
+    ngayNhapHD DATE,
+    ghiChu TEXT,
     FOREIGN KEY (receiptId) REFERENCES receipts(id) ON DELETE CASCADE
 );
 
@@ -215,7 +221,7 @@ CREATE TABLE exports (
     customerContract VARCHAR(100),
     exportReason VARCHAR(200),
     total DECIMAL(15,0) DEFAULT 0,
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     rejectedReason TEXT,
     createdBy INT NOT NULL,
     approvedBy INT,
@@ -244,6 +250,9 @@ CREATE TABLE export_items (
     thanhTien DECIMAL(15,0) DEFAULT 0,
     soLot VARCHAR(50),
     ngayHetHan DATE,
+    soHopDongXuat VARCHAR(50),
+    soHoaDonXuat VARCHAR(50),
+    ngayXuatHD DATE,
     ghiChu TEXT,
     FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE
 );

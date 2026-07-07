@@ -3,7 +3,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Lấy tất cả phiếu nhập
 const getAllReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getAll();
@@ -14,7 +13,6 @@ const getAllReceipts = async (req, res) => {
   }
 };
 
-// Lấy phiếu nhập theo ID
 const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -30,16 +28,12 @@ const getReceiptById = async (req, res) => {
   }
 };
 
-// Tạo phiếu nhập mới - TỰ ĐỘNG KIỂM TRA
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
     const createdBy = req.user.userId;
 
-    // 1. Tạo phiếu với status = "pending"
     const receiptId = await Receipt.create(receiptData, createdBy);
-
-    // 2. Lấy phiếu vừa tạo để kiểm tra
     const receipt = await Receipt.findById(receiptId);
     if (!receipt) {
       return res
@@ -47,13 +41,11 @@ const createReceipt = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
 
-    // 3. TỰ ĐỘNG KIỂM TRA SẢN PHẨM TRONG KHO
     let allMatched = true;
     let mismatchDetails = [];
     let matchedProducts = [];
 
     for (const item of receipt.items || []) {
-      // Kiểm tra sản phẩm có tồn tại trong kho không
       const product = await Inventory.findByMaHang(item.maHang);
 
       if (!product) {
@@ -64,7 +56,6 @@ const createReceipt = async (req, res) => {
         continue;
       }
 
-      // So sánh các trường
       let itemMatched = true;
       let itemErrors = [];
 
@@ -101,17 +92,13 @@ const createReceipt = async (req, res) => {
       }
     }
 
-    // 4. Nếu tất cả khớp → TỰ ĐỘNG DUYỆT
     if (allMatched) {
-      // Cập nhật trạng thái thành "approved"
       await Receipt.updateStatus(receiptId, "approved", createdBy, null);
 
-      // Cập nhật tồn kho
       for (const item of matchedProducts) {
         await Inventory.updateStock(item.maHang, item.soLuongNhap, "import");
       }
 
-      // Ghi log
       await EditHistory.log(
         createdBy,
         "receipts",
@@ -122,7 +109,6 @@ const createReceipt = async (req, res) => {
         JSON.stringify(receiptData),
       );
 
-      // Gửi thông báo
       await Notification.create(
         createdBy,
         `✅ Phiếu nhập ${receipt.receiptNo} đã được tự động xác nhận`,
@@ -142,7 +128,13 @@ const createReceipt = async (req, res) => {
           "✅ Tạo phiếu nhập thành công! Phiếu đã được tự động xác nhận.",
       });
     } else {
-      // Nếu không khớp → VẪN GIỮ "pending"
+      await Receipt.updateStatus(
+        receiptId,
+        "awaiting_confirmation",
+        createdBy,
+        null,
+      );
+
       await EditHistory.log(
         createdBy,
         "receipts",
@@ -153,24 +145,31 @@ const createReceipt = async (req, res) => {
         JSON.stringify(receiptData),
       );
 
-      // Gửi thông báo lỗi cho user
       await Notification.create(
         createdBy,
-        `⚠️ Phiếu nhập ${receipt.receiptNo} đang chờ xử lý`,
+        `⚠️ Phiếu nhập ${receipt.receiptNo} đang chờ xác nhận`,
         `Có ${mismatchDetails.length} sản phẩm không khớp với kho.\n\nChi tiết:\n${mismatchDetails.join("\n")}`,
         "warning",
         receiptId,
+      );
+
+      await Notification.createForManagers(
+        `📥 Phiếu nhập ${receipt.receiptNo} chờ xác nhận`,
+        `Admin vừa tạo phiếu nhập có ${mismatchDetails.length} sản phẩm không khớp với kho. Vui lòng kiểm tra.`,
+        "approval",
+        receiptId,
+        "receipt",
       );
 
       res.json({
         success: true,
         data: {
           id: receiptId,
-          status: "pending",
+          status: "awaiting_confirmation",
           receiptNo: receipt.receiptNo,
         },
         message:
-          "⚠️ Tạo phiếu nhập thành công! Nhưng có sản phẩm không khớp với kho, vui lòng kiểm tra lại.",
+          "⚠️ Tạo phiếu nhập thành công! Phiếu đang chờ xác nhận từ Quản lý.",
         details: mismatchDetails,
       });
     }
@@ -182,7 +181,6 @@ const createReceipt = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái duyệt phiếu nhập (vẫn giữ cho admin nếu cần)
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -232,7 +230,6 @@ const updateReceiptStatus = async (req, res) => {
   }
 };
 
-// Lấy danh sách phiếu chờ duyệt
 const getPendingReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getPendingApprovals();
@@ -242,7 +239,6 @@ const getPendingReceipts = async (req, res) => {
   }
 };
 
-// Xóa phiếu nhập
 const deleteReceipt = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Export = {
-  // Lấy tất cả phiếu xuất
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
@@ -12,7 +11,6 @@ const Export = {
     return rows;
   },
 
-  // Lấy phiếu xuất theo ID kèm items
   findById: async (id) => {
     const [exports] = await db.execute(
       `SELECT e.*, u.fullName as creatorName, a.fullName as approverName
@@ -34,9 +32,7 @@ const Export = {
     return { ...exportItem, items };
   },
 
-  // Tạo phiếu xuất mới
   create: async (data, createdBy) => {
-    // Tạo số phiếu tự động
     const [lastExport] = await db.execute(
       "SELECT exportNo FROM exports ORDER BY id DESC LIMIT 1",
     );
@@ -47,7 +43,6 @@ const Export = {
     }
     const exportNo = `PX-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
-    // ÉP KIỂU total THÀNH NUMBER
     const total = parseFloat(data.total) || 0;
 
     const [result] = await db.execute(
@@ -71,14 +66,14 @@ const Export = {
     );
     const exportId = result.insertId;
 
-    // Thêm items
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         await db.execute(
           `INSERT INTO export_items 
             (exportId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
-             phanLoai, donGia, soLuong, thanhTien, soLot, ngayHetHan, ghiChu) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             phanLoai, donGia, soLuong, thanhTien, soLot, ngayHetHan, 
+             soHopDongXuat, soHoaDonXuat, ngayXuatHD, ghiChu) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             exportId,
             item.tenThuongMai || "",
@@ -92,6 +87,9 @@ const Export = {
             item.thanhTien || 0,
             item.soLot || "",
             item.ngayHetHan || null,
+            item.soHopDongXuat || "",
+            item.soHoaDonXuat || "",
+            item.ngayXuatHD || null,
             item.ghiChu || "",
           ],
         );
@@ -101,7 +99,6 @@ const Export = {
     return exportId;
   },
 
-  // Cập nhật trạng thái duyệt
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE exports 
@@ -112,19 +109,17 @@ const Export = {
     return true;
   },
 
-  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
        FROM exports e 
        LEFT JOIN users u ON e.createdBy = u.id 
-       WHERE e.status = 'pending'
+       WHERE e.status IN ('pending', 'awaiting_confirmation')
        ORDER BY e.createdAt ASC`,
     );
     return rows;
   },
 
-  // Xóa phiếu xuất
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM exports WHERE id = ?", [id]);
     return result.affectedRows > 0;

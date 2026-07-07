@@ -8,9 +8,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================
-// CORS - CHỈ SỬA PHẦN NÀY
-// ============================================
+// CORS
 app.use(
   cors({
     origin: "*",

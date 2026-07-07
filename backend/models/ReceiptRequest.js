@@ -2,7 +2,6 @@ const db = require("../config/database");
 const Inventory = require("./Inventory");
 
 const ReceiptRequest = {
-  // Tạo đề nghị nhập hàng
   create: async (data, createdBy) => {
     const [last] = await db.execute(
       "SELECT requestNo FROM receipt_requests ORDER BY id DESC LIMIT 1",
@@ -14,7 +13,6 @@ const ReceiptRequest = {
     }
     const requestNo = `RN-${new Date().getFullYear()}-${String(num).padStart(3, "0")}`;
 
-    // Kiểm tra khớp với inventory
     const product = await Inventory.findByMaHang(data.maHang);
 
     let matchStatus = "unmatched";
@@ -117,7 +115,7 @@ const ReceiptRequest = {
       `SELECT r.*, u.fullName as creatorName
        FROM receipt_requests r
        LEFT JOIN users u ON r.createdBy = u.id
-       WHERE r.status = 'pending'
+       WHERE r.status IN ('pending', 'awaiting_confirmation')
        ORDER BY r.createdAt ASC`,
     );
     return rows;

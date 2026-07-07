@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Receipt = {
-  // Lấy tất cả phiếu nhập
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
@@ -12,7 +11,6 @@ const Receipt = {
     return rows;
   },
 
-  // Lấy phiếu nhập theo ID kèm items
   findById: async (id) => {
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
@@ -34,9 +32,7 @@ const Receipt = {
     return { ...receipt, items };
   },
 
-  // Tạo phiếu nhập mới
   create: async (data, createdBy) => {
-    // Tạo số phiếu tự động
     const [lastReceipt] = await db.execute(
       "SELECT receiptNo FROM receipts ORDER BY id DESC LIMIT 1",
     );
@@ -47,7 +43,6 @@ const Receipt = {
     }
     const receiptNo = `PN-${new Date().getFullYear()}-${String(newNumber).padStart(3, "0")}`;
 
-    // ÉP KIỂU total THÀNH NUMBER
     const total = parseFloat(data.total) || 0;
 
     const [result] = await db.execute(
@@ -74,14 +69,14 @@ const Receipt = {
     );
     const receiptId = result.insertId;
 
-    // Thêm items
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         await db.execute(
           `INSERT INTO receipt_items 
             (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
-             phanLoai, giaNhap, soLuongNhap, thanhTien) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             phanLoai, giaNhap, soLuongNhap, thanhTien,
+             soLot, ngayHetHan, soHopDongNhap, soHoaDonNhap, ngayNhapHD, ghiChu) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             receiptId,
             item.tenThuongMai || "",
@@ -93,6 +88,12 @@ const Receipt = {
             item.giaNhap || 0,
             item.soLuongNhap || 0,
             item.thanhTien || 0,
+            item.soLot || "",
+            item.ngayHetHan || null,
+            item.soHopDongNhap || "",
+            item.soHoaDonNhap || "",
+            item.ngayNhapHD || null,
+            item.ghiChu || "",
           ],
         );
       }
@@ -101,7 +102,6 @@ const Receipt = {
     return receiptId;
   },
 
-  // Cập nhật trạng thái duyệt
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE receipts 
@@ -112,19 +112,17 @@ const Receipt = {
     return true;
   },
 
-  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
        FROM receipts r 
        LEFT JOIN users u ON r.createdBy = u.id 
-       WHERE r.status = 'pending'
+       WHERE r.status IN ('pending', 'awaiting_confirmation')
        ORDER BY r.createdAt ASC`,
     );
     return rows;
   },
 
-  // Xóa phiếu nhập
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM receipts WHERE id = ?", [
       id,

@@ -3,7 +3,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Lấy tất cả phiếu xuất
 const getAllExports = async (req, res) => {
   try {
     const exports = await Export.getAll();
@@ -14,7 +13,6 @@ const getAllExports = async (req, res) => {
   }
 };
 
-// Lấy phiếu xuất theo ID
 const getExportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -30,13 +28,11 @@ const getExportById = async (req, res) => {
   }
 };
 
-// Tạo phiếu xuất mới - TỰ ĐỘNG KIỂM TRA
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
-    // Kiểm tra tồn kho trước khi tạo
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -54,11 +50,8 @@ const createExport = async (req, res) => {
     }
 
     const exportId = await Export.create(exportData, createdBy);
-
-    // Lấy phiếu vừa tạo
     const exportItem = await Export.findById(exportId);
 
-    // TỰ ĐỘNG KIỂM TRA VÀ DUYỆT
     let allMatched = true;
     let mismatchDetails = [];
 
@@ -73,7 +66,6 @@ const createExport = async (req, res) => {
         continue;
       }
 
-      // So sánh các trường
       if (product.tenThuongMai !== item.tenThuongMai) {
         allMatched = false;
         mismatchDetails.push(
@@ -89,10 +81,8 @@ const createExport = async (req, res) => {
     }
 
     if (allMatched) {
-      // TỰ ĐỘNG DUYỆT
       await Export.updateStatus(exportId, "approved", createdBy, null);
 
-      // Cập nhật tồn kho
       for (const item of exportItem.items || []) {
         await Inventory.updateStock(item.maHang, item.soLuong, "export");
       }
@@ -122,6 +112,13 @@ const createExport = async (req, res) => {
           "✅ Tạo phiếu xuất thành công! Phiếu đã được tự động xác nhận.",
       });
     } else {
+      await Export.updateStatus(
+        exportId,
+        "awaiting_confirmation",
+        createdBy,
+        null,
+      );
+
       await EditHistory.log(
         createdBy,
         "exports",
@@ -134,17 +131,25 @@ const createExport = async (req, res) => {
 
       await Notification.create(
         createdBy,
-        `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xử lý`,
+        `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xác nhận`,
         `Có ${mismatchDetails.length} sản phẩm không khớp với kho.\n\nChi tiết:\n${mismatchDetails.join("\n")}`,
         "warning",
         exportId,
       );
 
+      await Notification.createForManagers(
+        `📤 Phiếu xuất ${exportItem.exportNo} chờ xác nhận`,
+        `Admin vừa tạo phiếu xuất có ${mismatchDetails.length} sản phẩm không khớp với kho. Vui lòng kiểm tra.`,
+        "approval",
+        exportId,
+        "export",
+      );
+
       res.json({
         success: true,
-        data: { id: exportId, status: "pending" },
+        data: { id: exportId, status: "awaiting_confirmation" },
         message:
-          "⚠️ Tạo phiếu xuất thành công! Nhưng có sản phẩm không khớp với kho, vui lòng kiểm tra lại.",
+          "⚠️ Tạo phiếu xuất thành công! Phiếu đang chờ xác nhận từ Quản lý.",
         details: mismatchDetails,
       });
     }
@@ -154,7 +159,6 @@ const createExport = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái duyệt phiếu xuất
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -198,7 +202,6 @@ const updateExportStatus = async (req, res) => {
   }
 };
 
-// Lấy danh sách phiếu chờ duyệt
 const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
@@ -208,7 +211,6 @@ const getPendingExports = async (req, res) => {
   }
 };
 
-// Xóa phiếu xuất
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;

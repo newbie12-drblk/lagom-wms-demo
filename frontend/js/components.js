@@ -9,6 +9,10 @@ const Components = {
   createReceiptCard: (receipt) => {
     const statusMap = {
       pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      awaiting_confirmation: {
+        class: "status-awaiting",
+        text: "🔄 Chờ xác nhận",
+      },
       approved: { class: "status-approved", text: "✅ Đã xác nhận" },
       rejected: { class: "status-rejected", text: "❌ Từ chối" },
     };
@@ -50,6 +54,10 @@ const Components = {
   createExportCard: (exportItem) => {
     const statusMap = {
       pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      awaiting_confirmation: {
+        class: "status-awaiting",
+        text: "🔄 Chờ xác nhận",
+      },
       approved: { class: "status-approved", text: "✅ Đã xác nhận" },
       rejected: { class: "status-rejected", text: "❌ Từ chối" },
     };

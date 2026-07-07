@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Inventory = {
-  // Lấy tất cả sản phẩm đã duyệt
   getAll: async () => {
     const [rows] = await db.execute(
       "SELECT * FROM inventory WHERE status = 'approved' ORDER BY stt ASC",
@@ -9,7 +8,6 @@ const Inventory = {
     return rows;
   },
 
-  // Lấy sản phẩm theo mã hàng
   findByMaHang: async (maHang) => {
     const [rows] = await db.execute(
       "SELECT * FROM inventory WHERE maHang = ? AND status = 'approved'",
@@ -18,7 +16,6 @@ const Inventory = {
     return rows[0];
   },
 
-  // Lấy sản phẩm theo ID
   findById: async (id) => {
     const [rows] = await db.execute("SELECT * FROM inventory WHERE id = ?", [
       id,
@@ -26,7 +23,6 @@ const Inventory = {
     return rows[0];
   },
 
-  // Lấy danh sách chờ duyệt (cho Quản lý)
   getPending: async () => {
     const [rows] = await db.execute(
       `SELECT i.*, u.fullName as creatorName
@@ -38,7 +34,6 @@ const Inventory = {
     return rows;
   },
 
-  // ADMIN: Tạo sản phẩm mới (chờ duyệt)
   create: async (data, createdBy) => {
     const [maxStt] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
@@ -81,7 +76,6 @@ const Inventory = {
     return result.insertId;
   },
 
-  // QUẢN LÝ: Duyệt sản phẩm
   approve: async (id, approvedBy, tonKho = 0) => {
     await db.execute(
       `UPDATE inventory 
@@ -92,7 +86,6 @@ const Inventory = {
     return true;
   },
 
-  // QUẢN LÝ: Từ chối sản phẩm
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE inventory 
@@ -103,7 +96,6 @@ const Inventory = {
     return true;
   },
 
-  // Cập nhật tồn kho
   updateStock: async (maHang, quantity, type = "import") => {
     const operator = type === "import" ? "+" : "-";
     await db.execute(
@@ -113,7 +105,6 @@ const Inventory = {
     return true;
   },
 
-  // Cập nhật sản phẩm
   update: async (id, data) => {
     const fields = [];
     const values = [];
@@ -157,7 +148,6 @@ const Inventory = {
     return true;
   },
 
-  // Xóa sản phẩm
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM inventory WHERE id = ?", [
       id,
@@ -165,7 +155,6 @@ const Inventory = {
     return result.affectedRows > 0;
   },
 
-  // Thống kê
   getStats: async () => {
     const [rows] = await db.execute(
       `SELECT 
@@ -177,7 +166,6 @@ const Inventory = {
     return rows[0];
   },
 
-  // Lấy danh sách phân loại
   getCategories: async () => {
     const [rows] = await db.execute(
       "SELECT DISTINCT phanLoai FROM inventory WHERE status = 'approved' AND phanLoai IS NOT NULL AND phanLoai != '' ORDER BY phanLoai",

@@ -1,6 +1,7 @@
 /**
  * ==================== RECEIPT MODULE ====================
  * Quản lý phiếu nhập hàng - TỰ ĐỘNG DUYỆT
+ * ĐÃ CẬP NHẬT: Thêm trường, auto-fill, "Trình duyệt"
  */
 
 (function () {
@@ -22,7 +23,6 @@
 
   // ========== DOM Elements ==========
   const DOM = {
-    btnExportExcel: document.getElementById("btnExportExcel"),
     day: document.getElementById("day"),
     month: document.getElementById("month"),
     year: document.getElementById("year"),
@@ -116,6 +116,11 @@
         const unitInput = row.querySelector(".unit");
         const categoryInput = row.querySelector(".category");
         const priceInput = row.querySelector(".price-input");
+        const lotInput = row.querySelector(".lot-input");
+        const expiryInput = row.querySelector(".expiry-input");
+        const contractInput = row.querySelector(".contract-input");
+        const invoiceInput = row.querySelector(".invoice-input");
+        const invoiceDateInput = row.querySelector(".invoice-date-input");
 
         if (nameInput) nameInput.value = product.tenThuongMai || "";
         if (packingInput) packingInput.value = product.quyCach || "";
@@ -126,6 +131,15 @@
           priceInput.value = formatCurrency(product.giaNhap || 0);
           updateRowTotal(row);
         }
+        if (lotInput && product.soLot) lotInput.value = product.soLot;
+        if (expiryInput && product.ngayHetHan)
+          expiryInput.value = product.ngayHetHan;
+        if (contractInput && product.soHopDongNhap)
+          contractInput.value = product.soHopDongNhap;
+        if (invoiceInput && product.soHoaDonNhap)
+          invoiceInput.value = product.soHoaDonNhap;
+        if (invoiceDateInput && product.ngayNhapHD)
+          invoiceDateInput.value = product.ngayNhapHD;
       }
     } catch (error) {
       console.log("Không tìm thấy sản phẩm với mã:", maHang);
@@ -151,6 +165,12 @@
       <td><input type="text" class="price-input" value="${data?.giaNhap ? formatCurrency(data.giaNhap) : "0"}"></td>
       <td><input type="text" class="qty-input" value="${data?.soLuongNhap || "0"}"></td>
       <td class="row-total" data-total="0">0</td>
+      <td><input type="text" class="lot-input" value="${escapeHtml(data?.soLot || "")}" placeholder="Số lot"></td>
+      <td><input type="date" class="expiry-input" value="${data?.ngayHetHan || ""}"></td>
+      <td><input type="text" class="contract-input" value="${escapeHtml(data?.soHopDongNhap || "")}" placeholder="Số HĐ nhập"></td>
+      <td><input type="text" class="invoice-input" value="${escapeHtml(data?.soHoaDonNhap || "")}" placeholder="Số HĐơn nhập"></td>
+      <td><input type="date" class="invoice-date-input" value="${data?.ngayNhapHD || ""}"></td>
+      <td><input type="text" class="note-input" value="${escapeHtml(data?.ghiChu || "")}" placeholder="Ghi chú"></td>
       <td class="text-center">${removeButton}</td>
     `;
 
@@ -234,6 +254,12 @@
       const priceInput = row.querySelector(".price-input");
       const qtyInput = row.querySelector(".qty-input");
       const totalSpan = row.querySelector(".row-total");
+      const lotInput = row.querySelector(".lot-input");
+      const expiryInput = row.querySelector(".expiry-input");
+      const contractInput = row.querySelector(".contract-input");
+      const invoiceInput = row.querySelector(".invoice-input");
+      const invoiceDateInput = row.querySelector(".invoice-date-input");
+      const noteInput = row.querySelector(".note-input");
 
       items.push({
         tenThuongMai: nameInput?.value || "",
@@ -245,6 +271,12 @@
         giaNhap: parseNumber(priceInput?.value),
         soLuongNhap: parseNumber(qtyInput?.value),
         thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
+        soLot: lotInput?.value || "",
+        ngayHetHan: expiryInput?.value || "",
+        soHopDongNhap: contractInput?.value || "",
+        soHoaDonNhap: invoiceInput?.value || "",
+        ngayNhapHD: invoiceDateInput?.value || "",
+        ghiChu: noteInput?.value || "",
       });
     });
 
@@ -339,7 +371,6 @@
         } else {
           Utils.showToast("✅ " + result.message);
         }
-        // 👇 GỌI resetFormData() KHÔNG CONFIRM
         resetFormData();
       } else {
         Utils.showToast(
@@ -373,130 +404,6 @@
     if (DOM.year) DOM.year.textContent = today.getFullYear();
   }
 
-  // ========== EXPORT TO EXCEL ==========
-  function exportToExcel() {
-    const data = getReceiptData();
-
-    if (data.items.length === 0) {
-      alert("Không có dữ liệu để xuất!");
-      return;
-    }
-
-    let itemsHTML = data.items
-      .map(
-        (item, idx) => `
-      <tr>
-        <td class="excel-text-center">${idx + 1}</td>
-        <td class="excel-text-left">${escapeHtml(item.tenThuongMai)}</td>
-        <td class="excel-text-left">${escapeHtml(item.maHang)}</td>
-        <td class="excel-text-left">${escapeHtml(item.quyCach)}</td>
-        <td class="excel-text-left">${escapeHtml(item.hangSX)}</td>
-        <td class="excel-text-center">${escapeHtml(item.dvt)}</td>
-        <td class="excel-text-left">${escapeHtml(item.phanLoai)}</td>
-        <td class="excel-text-right">${formatCurrency(item.giaNhap)}</td>
-        <td class="excel-text-right">${item.soLuongNhap}</td>
-        <td class="excel-text-right">${formatCurrency(item.thanhTien)}</td>
-        <td class="excel-text-left">${escapeHtml(item.ghiChu || "")}</td>
-      </tr>
-    `,
-      )
-      .join("");
-
-    const totalHTML = `
-    <tr class="excel-total-row">
-      <td colspan="9" class="excel-text-right"><strong>TỔNG CỘNG:</strong></td>
-      <td class="excel-text-right excel-total-amount"><strong>${formatCurrency(data.total)}</strong></td>
-      <td></td>
-    </tr>
-  `;
-
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-
-    const htmlContent = `
-    <div class="excel-company-header">
-      <div class="excel-company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
-      <div class="excel-company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
-      <div class="excel-company-tax">MST: 0316156162</div>
-    </div>
-    
-    <div class="excel-title">
-      <h2>PHIẾU ĐỀ NGHỊ NHẬP HÀNG HÓA</h2>
-    </div>
-    
-    <div class="excel-date-row">
-      Ngày ${day} tháng ${month} năm ${year}
-    </div>
-    
-    <div class="excel-info-grid">
-      <div class="excel-info-box">
-        <strong>📦 Thông tin nhà cung cấp</strong>
-        <div class="excel-info-line"><label>Công ty:</label> <span class="excel-value">${escapeHtml(data.supplierName)}</span></div>
-        <div class="excel-info-line"><label>Địa chỉ:</label> <span class="excel-value">${escapeHtml(data.supplierAddress)}</span></div>
-        <div class="excel-info-line"><label>MST:</label> <span class="excel-value">${escapeHtml(data.supplierTax)}</span></div>
-      </div>
-      <div class="excel-info-box">
-        <strong>🏥 Thông tin khách hàng</strong>
-        <div class="excel-info-line"><label>Tên đơn vị:</label> <span class="excel-value">${escapeHtml(data.customerName)}</span></div>
-        <div class="excel-info-line"><label>Địa chỉ:</label> <span class="excel-value">${escapeHtml(data.customerAddress)}</span></div>
-        <div class="excel-info-line"><label>MST:</label> <span class="excel-value">${escapeHtml(data.customerTax)}</span></div>
-        <div class="excel-info-line"><label>Số HĐ:</label> <span class="excel-value">${escapeHtml(data.customerContract)}</span></div>
-      </div>
-    </div>
-    
-    <table class="excel-table">
-      <thead>
-        <tr>
-          <th style="width:35px;">TT</th>
-          <th style="width:170px;">Tên thương mại</th>
-          <th style="width:95px;">Mã hàng</th>
-          <th style="width:110px;">Quy cách</th>
-          <th style="width:150px;">Hãng SX</th>
-          <th style="width:40px;">ĐVT</th>
-          <th style="width:130px;">Phân loại</th>
-          <th style="width:110px;">Đơn giá</th>
-          <th style="width:65px;">Số lượng</th>
-          <th style="width:130px;">Thành tiền</th>
-          <th style="width:90px;">Ghi chú</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHTML}
-        ${totalHTML}
-      </tbody>
-    </table>
-    
-    <div style="height: 45px;"></div>
-    
-    <table style="width: 100%; border: none; margin-top: 20px;">
-      <tr>
-        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
-          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
-            <strong>Bộ phận đặt hàng</strong><br>
-            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
-          </div>
-        </td>
-        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
-          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
-            <strong>Người lập phiếu</strong><br>
-            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
-          </div>
-        </td>
-        <td style="width: 33.33%; text-align: center; border: none; padding: 0 10px;">
-          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 90%; margin: 0 auto;">
-            <strong>Giám đốc</strong><br>
-            <span style="font-size: 11px; color: #718096;">(Ký, họ tên, đóng dấu)</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-  `;
-
-    Utils.exportToExcel(htmlContent, "phieu_nhap_hang");
-  }
-
   // ========== INIT ==========
   function init() {
     if (!checkAuthAndRedirect()) return;
@@ -526,10 +433,6 @@
 
     if (DOM.btnSave) {
       DOM.btnSave.addEventListener("click", saveReceipt);
-    }
-
-    if (DOM.btnExportExcel) {
-      DOM.btnExportExcel.addEventListener("click", exportToExcel);
     }
   }
 

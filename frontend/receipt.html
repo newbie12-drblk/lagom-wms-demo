@@ -93,32 +93,38 @@
           </div>
         </div>
 
-        <!-- Bảng sản phẩm -->
+        <!-- Bảng sản phẩm - THÊM CỘT MỚI -->
         <div class="items-table-wrapper">
           <table class="items-table" id="itemsTable">
             <thead>
               <tr>
-                <th style="width: 40px">TT</th>
-                <th style="width: 200px">Tên thương mại</th>
-                <th style="width: 100px">Mã hàng</th>
-                <th style="width: 120px">Quy cách đóng gói</th>
-                <th style="width: 180px">Hãng/ Nước sản xuất</th>
-                <th style="width: 60px">ĐVT</th>
-                <th style="width: 200px">Phân loại</th>
-                <th style="width: 100px">Đơn giá</th>
-                <th style="width: 80px">Số lượng</th>
-                <th style="width: 120px">Thành tiền</th>
-                <th style="width: 80px">Ghi chú</th>
+                <th style="width: 35px">TT</th>
+                <th style="width: 130px">Tên thương mại</th>
+                <th style="width: 80px">Mã hàng</th>
+                <th style="width: 90px">Quy cách</th>
+                <th style="width: 120px">Hãng SX</th>
+                <th style="width: 45px">ĐVT</th>
+                <th style="width: 120px">Phân loại</th>
+                <th style="width: 90px">Đơn giá</th>
+                <th style="width: 55px">SL</th>
+                <th style="width: 100px">Thành tiền</th>
+                <th style="width: 80px">Số lot</th>
+                <th style="width: 90px">HSD</th>
+                <th style="width: 100px">Số HĐ nhập</th>
+                <th style="width: 100px">Số HĐơn nhập</th>
+                <th style="width: 100px">Ngày nhập HĐ</th>
+                <th style="width: 70px">Ghi chú</th>
+                <th style="width: 40px"></th>
               </tr>
             </thead>
             <tbody id="itemsBody"></tbody>
             <tfoot>
               <tr class="total-row">
-                <td colspan="8" class="text-right">
+                <td colspan="9" class="text-right">
                   <strong>TỔNG CỘNG:</strong>
                 </td>
                 <td class="text-right"><strong id="totalAmount">0</strong></td>
-                <td colspan="2"></td>
+                <td colspan="6"></td>
               </tr>
             </tfoot>
           </table>
@@ -143,22 +149,19 @@
           </div>
         </div>
 
-        <!-- Action buttons -->
+        <!-- Action buttons - ĐÃ SỬA -->
         <div class="action-buttons no-print">
           <button class="btn btn-outline" id="btnBack">
             <i class="fas fa-arrow-left"></i> Quay lại
           </button>
           <button class="btn btn-success" id="btnSave">
-            <i class="fas fa-save"></i> Lưu phiếu
-          </button>
-          <button class="btn btn-primary" id="btnExportExcel">
-            <i class="fas fa-file-excel"></i> Xuất Excel
-          </button>
-          <button class="btn btn-danger" id="btnClear">
-            <i class="fas fa-trash"></i> Làm mới
+            <i class="fas fa-save"></i> Trình duyệt
           </button>
           <button class="btn btn-primary" id="btnPrint">
             <i class="fas fa-print"></i> In phiếu
+          </button>
+          <button class="btn btn-danger" id="btnClear">
+            <i class="fas fa-trash"></i> Làm mới
           </button>
         </div>
       </div>

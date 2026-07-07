@@ -124,7 +124,7 @@ const ExportRequest = {
       `SELECT r.*, u.fullName as creatorName
        FROM export_requests r
        LEFT JOIN users u ON r.createdBy = u.id
-       WHERE r.status = 'pending'
+       WHERE r.status IN ('pending', 'awaiting_confirmation')
        ORDER BY r.createdAt ASC`,
     );
     return rows;

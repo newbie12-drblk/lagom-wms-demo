@@ -1,5 +1,4 @@
 const db = require("../config/database");
-// KHÔNG dùng bcrypt nữa
 
 const User = {
   findByUsername: async (username) => {
@@ -29,13 +28,12 @@ const User = {
   },
 
   create: async (userData) => {
-    // Lưu password plain text (KHÔNG HASH)
     const [result] = await db.execute(
       `INSERT INTO users (username, password, fullName, email, roleId, isActive, customPermissions) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userData.username,
-        userData.password, // plain text
+        userData.password,
         userData.fullName,
         userData.email,
         userData.roleId,
@@ -71,7 +69,6 @@ const User = {
       values.push(JSON.stringify(userData.customPermissions));
     }
     if (userData.password) {
-      // Lưu plain text (KHÔNG HASH)
       updates.push("password = ?");
       values.push(userData.password);
     }
@@ -91,7 +88,6 @@ const User = {
     return result.affectedRows > 0;
   },
 
-  // SO SÁNH TRỰC TIẾP (KHÔNG BCRYPT)
   verifyPassword: async (plainPassword, hashedPassword) => {
     return plainPassword === hashedPassword;
   },
