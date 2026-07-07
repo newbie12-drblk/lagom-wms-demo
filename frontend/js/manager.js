@@ -18,23 +18,7 @@
     return;
   }
 
-  // ========== DOM REFS ==========
   const $ = (id) => document.getElementById(id);
-  const viewNames = [
-    "dashboard",
-    "pending-products",
-    "pending-receipts",
-    "pending-exports",
-    "pending-edits",
-    "pending-deletions",
-  ];
-
-  let currentView = "dashboard";
-  let pendingProducts = [];
-  let pendingReceipts = [];
-  let pendingExports = [];
-  let pendingEdits = [];
-  let pendingDeletions = [];
 
   // ========== UPDATE TOPBAR ==========
   function updateTopbar() {
@@ -67,14 +51,11 @@
 
   // ========== SWITCH VIEW ==========
   function switchView(viewName) {
-    if (!viewNames.includes(viewName)) return;
-    currentView = viewName;
-
     document
       .querySelectorAll(".view")
       .forEach((v) => v.classList.remove("active"));
-    const targetView = document.getElementById(`view-${viewName}`);
-    if (targetView) targetView.classList.add("active");
+    const target = document.getElementById(`view-${viewName}`);
+    if (target) target.classList.add("active");
 
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.classList.toggle("active", item.dataset.view === viewName);
@@ -86,25 +67,36 @@
       "pending-receipts": "Nhập hàng chờ duyệt",
       "pending-exports": "Xuất kho chờ duyệt",
       "pending-edits": "Chỉnh sửa chờ duyệt",
-      "pending-deletions": "Xóa sản phẩm chờ duyệt",
+      "pending-deletions": "Xóa chờ duyệt",
     };
-    $("breadcrumb-title").textContent = titles[viewName] || viewName;
+    const breadcrumb = document.getElementById("breadcrumb-title");
+    if (breadcrumb) breadcrumb.textContent = titles[viewName] || viewName;
 
-    if (viewName === "dashboard") loadDashboard();
-    else if (viewName === "pending-products") loadPendingProducts();
-    else if (viewName === "pending-receipts") loadPendingReceipts();
-    else if (viewName === "pending-exports") loadPendingExports();
-    else if (viewName === "pending-edits") loadPendingEdits();
-    else if (viewName === "pending-deletions") loadPendingDeletions();
+    if (viewName === "dashboard") {
+      loadDashboardStats();
+      loadNotifications();
+    } else if (viewName === "pending-receipts") {
+      loadPendingReceipts();
+    } else if (viewName === "pending-exports") {
+      loadPendingExports();
+    } else if (viewName === "pending-products") {
+      loadPendingProducts();
+    } else if (viewName === "pending-edits") {
+      loadPendingEdits();
+    } else if (viewName === "pending-deletions") {
+      loadPendingDeletions();
+    }
   }
 
-  // ========== LOAD DASHBOARD ==========
-  async function loadDashboard() {
+  // ========== LOAD DASHBOARD STATS ==========
+  async function loadDashboardStats() {
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/manager/dashboard/stats`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const result = await response.json();
+
       if (result.success) {
         const data = result.data;
         $("statPendingProducts").textContent = data.pendingProducts || 0;
@@ -120,15 +112,16 @@
         $("badgeDeletions").textContent = data.pendingDeletions || 0;
       }
     } catch (error) {
-      console.error("Load dashboard error:", error);
+      console.error("Load dashboard stats error:", error);
     }
-    loadNotifications();
   }
 
+  // ========== LOAD NOTIFICATIONS ==========
   async function loadNotifications() {
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const result = await response.json();
       if (result.success) {
@@ -137,7 +130,7 @@
         $("notificationCount").textContent = result.unreadCount || 0;
 
         if (notifications.length === 0) {
-          container.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i><p>Không có thông báo mới</p></div>`;
+          container.innerHTML = `<div class="empty-state"><p>Không có thông báo</p></div>`;
           return;
         }
 
@@ -145,16 +138,16 @@
           .slice(0, 10)
           .map(
             (n) => `
-            <div class="alert-row" onclick="markAsRead(${n.id})" style="${n.isRead ? "opacity:0.7;" : ""}">
-              <div class="alert-icon">${n.type === "approval" ? "📋" : n.type === "warning" ? "⚠️" : n.type === "success" ? "✅" : "ℹ️"}</div>
-              <div class="alert-body">
-                <div class="alert-title">${Utils.escapeHtml(n.title)}</div>
-                <div class="alert-message">${Utils.escapeHtml(n.message)}</div>
-                <div class="alert-time">${Utils.formatDate(n.createdAt)}</div>
-              </div>
-              ${!n.isRead ? '<span style="color:#3b82f6;font-size:10px;">● Mới</span>' : ""}
+          <div class="alert-row" style="padding: 10px 14px; border-bottom: 1px solid #1e2d45; display: flex; gap: 10px; align-items: flex-start;">
+            <div style="font-size: 20px;">${n.type === "approval" ? "📋" : n.type === "warning" ? "⚠️" : "ℹ️"}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(n.title)}</div>
+              <div style="font-size: 12px; color: #6b82a0;">${Utils.escapeHtml(n.message)}</div>
+              <div style="font-size: 10px; color: #374b66;">${Utils.formatDate(n.createdAt)}</div>
             </div>
-          `,
+            ${!n.isRead ? '<span style="color:#3b82f6;font-size:10px;">● Mới</span>' : ""}
+          </div>
+        `,
           )
           .join("");
       }
@@ -163,140 +156,71 @@
     }
   }
 
-  window.markAsRead = async (id) => {
-    try {
-      await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      loadNotifications();
-    } catch (error) {
-      console.error("Mark as read error:", error);
-    }
-  };
-
   // ========== LOAD PENDING RECEIPTS ==========
   async function loadPendingReceipts() {
     const container = $("pendingReceiptsList");
-    Utils.showLoading(true, "Đang tải danh sách phiếu nhập...");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải phiếu nhập...");
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/receipts/pending`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const result = await response.json();
 
+      console.log("📥 Receipts response:", result);
+
       if (result.success) {
-        pendingReceipts = result.data || [];
-        console.log("📥 Phiếu nhập chờ duyệt:", pendingReceipts.length);
-        renderPendingReceipts();
-      } else {
-        Utils.showToast("Lỗi tải dữ liệu", "error");
-        pendingReceipts = [];
-        renderPendingReceipts();
-      }
-    } catch (error) {
-      console.error("Load pending receipts error:", error);
-      Utils.showToast("Lỗi tải dữ liệu", "error");
-      pendingReceipts = [];
-      renderPendingReceipts();
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
+        const receipts = result.data || [];
+        console.log(`📋 Found ${receipts.length} pending receipts`);
 
-  function renderPendingReceipts() {
-    const container = $("pendingReceiptsList");
-    if (!pendingReceipts || pendingReceipts.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-check-circle"></i>
-          <p>Không có đề nghị nhập hàng nào chờ duyệt</p>
-          <small style="color: #6b82a0;">Khi Admin tạo phiếu nhập có sản phẩm không khớp với kho, phiếu sẽ xuất hiện ở đây</small>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = pendingReceipts
-      .map((r) => {
-        const statusMap = {
-          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
-          awaiting_confirmation: {
-            class: "status-awaiting",
-            text: "🔄 Chờ xác nhận",
-          },
-          approved: { class: "status-approved", text: "✅ Đã duyệt" },
-          rejected: { class: "status-rejected", text: "❌ Từ chối" },
-        };
-        const status = statusMap[r.status] || statusMap["pending"];
-
-        const items = r.items || [];
-        const totalItems = items.length;
-        const totalValue = r.total || 0;
-
-        return `
-          <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b;">
-            <div class="approval-card-header">
-              <div class="approval-card-id" style="font-size: 18px;">
-                📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}
-              </div>
-              <div class="approval-card-date">
-                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
-              </div>
-              <div class="approval-card-creator">
-                👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
-              </div>
-              <span class="status-badge ${status.class}" style="font-size: 13px; padding: 6px 14px;">
-                ${status.text}
-              </span>
+        if (receipts.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>Không có đề nghị nhập hàng nào chờ duyệt</p>
             </div>
-            
-            <!-- THÔNG TIN CHI TIẾT PHIẾU -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin: 10px 0;">
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Nhà cung cấp</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.supplierName || "—")}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày nhập</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.receiptDate)}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
-                <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
-                <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Khách hàng</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerName || "—")}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số HĐ</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerContract || "—")}</div>
-              </div>
-            </div>
-            
-            <!-- BẢNG SẢN PHẨM CHI TIẾT -->
-            ${
-              items.length > 0
-                ? `
+          `;
+          Utils.showLoading(false);
+          return;
+        }
+
+        // Render từng phiếu
+        container.innerHTML = receipts
+          .map((r) => {
+            const items = r.items || [];
+            const totalItems = items.length;
+            const totalValue = r.total || 0;
+
+            const statusMap = {
+              pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+              awaiting_confirmation: {
+                class: "status-awaiting",
+                text: "🔄 Chờ xác nhận",
+              },
+              approved: { class: "status-approved", text: "✅ Đã duyệt" },
+              rejected: { class: "status-rejected", text: "❌ Từ chối" },
+            };
+            const status = statusMap[r.status] || statusMap["pending"];
+
+            let itemsHtml = "";
+            if (totalItems > 0) {
+              itemsHtml = `
               <div style="margin: 10px 0; background: #1a2235; border-radius: 8px; overflow: hidden;">
-                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+                <div style="overflow-x: auto; max-height: 250px; overflow-y: auto;">
                   <table style="width:100%; border-collapse: collapse; font-size: 12px;">
                     <thead style="position: sticky; top: 0; z-index: 10;">
                       <tr style="background: #0f172a; border-bottom: 2px solid #3b82f6;">
-                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 40px;">STT</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 150px;">Tên thương mại</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Mã hàng</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Quy cách</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">Hãng SX</th>
-                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 50px;">ĐVT</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">Đơn giá</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 60px;">SL</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 120px;">Thành tiền</th>
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">STT</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Tên thương mại</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Mã hàng</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Quy cách</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Hãng SX</th>
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">ĐVT</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Đơn giá</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">SL</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Thành tiền</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -304,15 +228,15 @@
                         .map(
                           (item, idx) => `
                         <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}">
-                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
                         </tr>
                       `,
                         )
@@ -320,81 +244,297 @@
                     </tbody>
                     <tfoot>
                       <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                        <td colspan="8" style="padding: 10px 10px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                        <td style="padding: 10px 10px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
+                        <td colspan="8" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td style="padding: 8px 8px; text-align: right; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
               </div>
-            `
-                : `
+            `;
+            } else {
+              itemsHtml = `
               <div style="padding: 20px; text-align: center; color: #6b82a0; background: #1a2235; border-radius: 8px;">
                 <i class="fas fa-box-open" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
                 Không có sản phẩm trong phiếu này
               </div>
-            `
+            `;
             }
-            
-            <!-- NÚT DUYỆT / TỪ CHỐI -->
-            <div class="approval-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;">
-              <button class="btn btn-danger" onclick="rejectReceipt(${r.id})" style="padding: 10px 24px; font-size: 14px;">
-                <i class="fas fa-times"></i> Từ chối
-              </button>
-              <button class="btn btn-success" onclick="approveReceipt(${r.id})" style="padding: 10px 24px; font-size: 14px;">
-                <i class="fas fa-check"></i> Duyệt
-              </button>
+
+            return `
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b; background: #111827; border-radius: 12px; padding: 16px 20px;">
+              <!-- HEADER -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+                <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">
+                  📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}
+                </div>
+                <div style="font-size: 12px; color: #6b82a0;">
+                  <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
+                </div>
+                <div style="font-size: 13px; color: #e2eaf5;">
+                  👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
+                </div>
+                <span class="status-badge ${status.class}" style="font-size: 13px; padding: 4px 14px;">
+                  ${status.text}
+                </span>
+              </div>
+
+              <!-- INFO -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Nhà cung cấp</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.supplierName || "—")}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày nhập</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.receiptDate)}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
+                  <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
+                </div>
+              </div>
+
+              <!-- ITEMS TABLE -->
+              ${itemsHtml}
+
+              <!-- BUTTONS -->
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="btn btn-danger" onclick="window.rejectReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                  <i class="fas fa-times"></i> Từ chối
+                </button>
+                <button class="btn btn-success" onclick="window.approveReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                  <i class="fas fa-check"></i> Duyệt
+                </button>
+              </div>
             </div>
-          </div>
-        `;
-      })
-      .join("");
+          `;
+          })
+          .join("");
+      } else {
+        container.innerHTML = `<div class="empty-state"><p>Lỗi tải dữ liệu: ${result.message}</p></div>`;
+      }
+    } catch (error) {
+      console.error("Load pending receipts error:", error);
+      container.innerHTML = `<div class="empty-state"><p>Lỗi: ${error.message}</p></div>`;
+    } finally {
+      Utils.showLoading(false);
+    }
   }
 
-  // ========== APPROVE / REJECT RECEIPT ==========
+  // ========== LOAD PENDING EXPORTS ==========
+  async function loadPendingExports() {
+    const container = $("pendingExportsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải phiếu xuất...");
+    try {
+      const token = API.getToken();
+      const response = await fetch(`${API_BASE_URL}/exports/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+
+      console.log("📤 Exports response:", result);
+
+      if (result.success) {
+        const exports = result.data || [];
+        console.log(`📋 Found ${exports.length} pending exports`);
+
+        if (exports.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>Không có đề nghị xuất kho nào chờ duyệt</p>
+            </div>
+          `;
+          Utils.showLoading(false);
+          return;
+        }
+
+        container.innerHTML = exports
+          .map((r) => {
+            const items = r.items || [];
+            const totalItems = items.length;
+            const totalValue = r.total || 0;
+
+            const statusMap = {
+              pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+              awaiting_confirmation: {
+                class: "status-awaiting",
+                text: "🔄 Chờ xác nhận",
+              },
+              approved: { class: "status-approved", text: "✅ Đã duyệt" },
+              rejected: { class: "status-rejected", text: "❌ Từ chối" },
+            };
+            const status = statusMap[r.status] || statusMap["pending"];
+
+            let itemsHtml = "";
+            if (totalItems > 0) {
+              itemsHtml = `
+              <div style="margin: 10px 0; background: #1a2235; border-radius: 8px; overflow: hidden;">
+                <div style="overflow-x: auto; max-height: 250px; overflow-y: auto;">
+                  <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                      <tr style="background: #0f172a; border-bottom: 2px solid #3b82f6;">
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">STT</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Tên thương mại</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Mã hàng</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Quy cách</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Hãng SX</th>
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">ĐVT</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Đơn giá</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">SL</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${items
+                        .map(
+                          (item, idx) => `
+                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}">
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia || 0)}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                        </tr>
+                      `,
+                        )
+                        .join("")}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                        <td colspan="8" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td style="padding: 8px 8px; text-align: right; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            `;
+            } else {
+              itemsHtml = `
+              <div style="padding: 20px; text-align: center; color: #6b82a0; background: #1a2235; border-radius: 8px;">
+                <i class="fas fa-box-open" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                Không có sản phẩm trong phiếu này
+              </div>
+            `;
+            }
+
+            return `
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #3b82f6; background: #111827; border-radius: 12px; padding: 16px 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+                <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">
+                  📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}
+                </div>
+                <div style="font-size: 12px; color: #6b82a0;">
+                  <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
+                </div>
+                <div style="font-size: 13px; color: #e2eaf5;">
+                  👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
+                </div>
+                <span class="status-badge ${status.class}" style="font-size: 13px; padding: 4px 14px;">
+                  ${status.text}
+                </span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Người nhận</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.receiverName || "—")}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày xuất</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.exportDate)}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
+                  <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
+                </div>
+                <div>
+                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
+                  <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
+                </div>
+              </div>
+
+              ${itemsHtml}
+
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="btn btn-danger" onclick="window.rejectExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                  <i class="fas fa-times"></i> Từ chối
+                </button>
+                <button class="btn btn-success" onclick="window.approveExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                  <i class="fas fa-check"></i> Duyệt
+                </button>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+      } else {
+        container.innerHTML = `<div class="empty-state"><p>Lỗi tải dữ liệu: ${result.message}</p></div>`;
+      }
+    } catch (error) {
+      console.error("Load pending exports error:", error);
+      container.innerHTML = `<div class="empty-state"><p>Lỗi: ${error.message}</p></div>`;
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ========== APPROVE RECEIPT ==========
   window.approveReceipt = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
 
-    Utils.showLoading(true, "Đang duyệt phiếu...");
+    Utils.showLoading(true, "Đang duyệt...");
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: "approved" }),
       });
       const result = await response.json();
 
       if (result.success) {
-        Utils.showToast("✅ Đã duyệt phiếu nhập thành công!");
+        Utils.showToast("✅ Đã duyệt phiếu nhập!");
         loadPendingReceipts();
-        loadDashboard();
+        loadDashboardStats();
       } else {
-        Utils.showToast(
-          "❌ Lỗi: " + (result.message || "Không thể duyệt"),
-          "error",
-        );
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
     } catch (error) {
-      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
+  // ========== REJECT RECEIPT ==========
   window.rejectReceipt = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
 
     Utils.showLoading(true, "Đang xử lý...");
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
       });
@@ -403,240 +543,61 @@
       if (result.success) {
         Utils.showToast("✅ Đã từ chối phiếu nhập!");
         loadPendingReceipts();
-        loadDashboard();
+        loadDashboardStats();
       } else {
-        Utils.showToast(
-          "❌ Lỗi: " + (result.message || "Không thể từ chối"),
-          "error",
-        );
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
     } catch (error) {
-      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
-  // ========== LOAD PENDING EXPORTS ==========
-  async function loadPendingExports() {
-    const container = $("pendingExportsList");
-    Utils.showLoading(true, "Đang tải danh sách phiếu xuất...");
-    try {
-      const response = await fetch(`${API_BASE_URL}/exports/pending`, {
-        headers: { Authorization: `Bearer ${API.getToken()}` },
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        pendingExports = result.data || [];
-        console.log("📤 Phiếu xuất chờ duyệt:", pendingExports.length);
-        renderPendingExports();
-      } else {
-        Utils.showToast("Lỗi tải dữ liệu", "error");
-        pendingExports = [];
-        renderPendingExports();
-      }
-    } catch (error) {
-      console.error("Load pending exports error:", error);
-      Utils.showToast("Lỗi tải dữ liệu", "error");
-      pendingExports = [];
-      renderPendingExports();
-    } finally {
-      Utils.showLoading(false);
-    }
-  }
-
-  function renderPendingExports() {
-    const container = $("pendingExportsList");
-    if (!pendingExports || pendingExports.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-check-circle"></i>
-          <p>Không có đề nghị xuất kho nào chờ duyệt</p>
-          <small style="color: #6b82a0;">Khi Admin tạo phiếu xuất có sản phẩm không khớp với kho, phiếu sẽ xuất hiện ở đây</small>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = pendingExports
-      .map((r) => {
-        const statusMap = {
-          pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
-          awaiting_confirmation: {
-            class: "status-awaiting",
-            text: "🔄 Chờ xác nhận",
-          },
-          approved: { class: "status-approved", text: "✅ Đã duyệt" },
-          rejected: { class: "status-rejected", text: "❌ Từ chối" },
-        };
-        const status = statusMap[r.status] || statusMap["pending"];
-
-        const items = r.items || [];
-        const totalItems = items.length;
-        const totalValue = r.total || 0;
-
-        return `
-          <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #3b82f6;">
-            <div class="approval-card-header">
-              <div class="approval-card-id" style="font-size: 18px;">
-                📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}
-              </div>
-              <div class="approval-card-date">
-                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
-              </div>
-              <div class="approval-card-creator">
-                👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
-              </div>
-              <span class="status-badge ${status.class}" style="font-size: 13px; padding: 6px 14px;">
-                ${status.text}
-              </span>
-            </div>
-            
-            <!-- THÔNG TIN CHI TIẾT PHIẾU -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin: 10px 0;">
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Người nhận</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.receiverName || "—")}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày xuất</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.exportDate)}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
-                <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
-                <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Khách hàng</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerName || "—")}</div>
-              </div>
-              <div>
-                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Lý do xuất</div>
-                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.exportReason || "—")}</div>
-              </div>
-            </div>
-            
-            <!-- BẢNG SẢN PHẨM CHI TIẾT -->
-            ${
-              items.length > 0
-                ? `
-              <div style="margin: 10px 0; background: #1a2235; border-radius: 8px; overflow: hidden;">
-                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
-                  <table style="width:100%; border-collapse: collapse; font-size: 12px;">
-                    <thead style="position: sticky; top: 0; z-index: 10;">
-                      <tr style="background: #0f172a; border-bottom: 2px solid #3b82f6;">
-                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 40px;">STT</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 150px;">Tên thương mại</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Mã hàng</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Quy cách</th>
-                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">Hãng SX</th>
-                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 50px;">ĐVT</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">Đơn giá</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 60px;">SL</th>
-                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 120px;">Thành tiền</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${items
-                        .map(
-                          (item, idx) => `
-                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}">
-                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia || 0)}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
-                          <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                        </tr>
-                      `,
-                        )
-                        .join("")}
-                    </tbody>
-                    <tfoot>
-                      <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                        <td colspan="8" style="padding: 10px 10px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                        <td style="padding: 10px 10px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-            `
-                : `
-              <div style="padding: 20px; text-align: center; color: #6b82a0; background: #1a2235; border-radius: 8px;">
-                <i class="fas fa-box-open" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
-                Không có sản phẩm trong phiếu này
-              </div>
-            `
-            }
-            
-            <!-- NÚT DUYỆT / TỪ CHỐI -->
-            <div class="approval-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;">
-              <button class="btn btn-danger" onclick="rejectExport(${r.id})" style="padding: 10px 24px; font-size: 14px;">
-                <i class="fas fa-times"></i> Từ chối
-              </button>
-              <button class="btn btn-success" onclick="approveExport(${r.id})" style="padding: 10px 24px; font-size: 14px;">
-                <i class="fas fa-check"></i> Duyệt
-              </button>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-  }
-
-  // ========== APPROVE / REJECT EXPORT ==========
+  // ========== APPROVE EXPORT ==========
   window.approveExport = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt phiếu xuất này?")) return;
 
-    Utils.showLoading(true, "Đang duyệt phiếu...");
+    Utils.showLoading(true, "Đang duyệt...");
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/exports/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: "approved" }),
       });
       const result = await response.json();
 
       if (result.success) {
-        Utils.showToast("✅ Đã duyệt phiếu xuất thành công!");
+        Utils.showToast("✅ Đã duyệt phiếu xuất!");
         loadPendingExports();
-        loadDashboard();
+        loadDashboardStats();
       } else {
-        Utils.showToast(
-          "❌ Lỗi: " + (result.message || "Không thể duyệt"),
-          "error",
-        );
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
     } catch (error) {
-      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
+  // ========== REJECT EXPORT ==========
   window.rejectExport = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
 
     Utils.showLoading(true, "Đang xử lý...");
     try {
+      const token = API.getToken();
       const response = await fetch(`${API_BASE_URL}/exports/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API.getToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
       });
@@ -645,15 +606,12 @@
       if (result.success) {
         Utils.showToast("✅ Đã từ chối phiếu xuất!");
         loadPendingExports();
-        loadDashboard();
+        loadDashboardStats();
       } else {
-        Utils.showToast(
-          "❌ Lỗi: " + (result.message || "Không thể từ chối"),
-          "error",
-        );
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
     } catch (error) {
-      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -662,64 +620,64 @@
   // ========== LOAD PENDING PRODUCTS ==========
   async function loadPendingProducts() {
     const container = $("pendingProductsList");
-    Utils.showLoading(true, "Đang tải...");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải sản phẩm...");
     try {
-      pendingProducts = await window.API.inventory.getPending();
-      renderPendingProducts();
+      const products = await window.API.inventory.getPending();
+      console.log("📦 Pending products:", products);
+
+      if (products.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có sản phẩm nào chờ duyệt</p></div>`;
+        Utils.showLoading(false);
+        return;
+      }
+
+      container.innerHTML = products
+        .map(
+          (p) => `
+        <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">📦 ${Utils.escapeHtml(p.tenThuongMai)}</div>
+            <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(p.createdAt)}</div>
+            <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(p.creatorName || "Admin")}</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+            <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd;">${Utils.escapeHtml(p.maHang)}</span></div>
+            <div><span style="color: #6b82a0;">ĐVT:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(p.dvt || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Hãng SX:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(p.hangSX || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(p.phanLoai || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #fbbf24;">${Utils.formatCurrency(p.giaNhap)}</span></div>
+          </div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+            <label style="display:flex;align-items:center;gap:8px;color:#e2eaf5;font-size:13px;">
+              Số lượng tồn:
+              <input type="number" class="tonKho-input" value="0" min="0" style="width:80px;padding:4px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
+            </label>
+            <button class="btn btn-danger" onclick="window.rejectProduct(${p.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveProduct(${p.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt
+            </button>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
     } catch (error) {
-      Utils.showToast("Lỗi tải dữ liệu", "error");
+      container.innerHTML = `<div class="empty-state"><p>Lỗi: ${error.message}</p></div>`;
     } finally {
       Utils.showLoading(false);
     }
   }
 
-  function renderPendingProducts() {
-    const container = $("pendingProductsList");
-    if (pendingProducts.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có sản phẩm nào chờ duyệt</p></div>`;
-      return;
-    }
-
-    container.innerHTML = pendingProducts
-      .map(
-        (p) => `
-      <div class="approval-card">
-        <div class="approval-card-header">
-          <div class="approval-card-id">📦 ${Utils.escapeHtml(p.tenThuongMai)}</div>
-          <div class="approval-card-date">${Utils.formatDate(p.createdAt)}</div>
-          <div class="approval-card-creator">👤 ${Utils.escapeHtml(p.creatorName || "Admin")}</div>
-        </div>
-        <div class="approval-card-body">
-          <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(p.maHang)}</span></div>
-          <div><span class="label">ĐVT:</span> <span class="value">${Utils.escapeHtml(p.dvt || "—")}</span></div>
-          <div><span class="label">Hãng SX:</span> <span class="value">${Utils.escapeHtml(p.hangSX || "—")}</span></div>
-          <div><span class="label">Phân loại:</span> <span class="value">${Utils.escapeHtml(p.phanLoai || "—")}</span></div>
-          <div><span class="label">Giá nhập:</span> <span class="value">${Utils.formatCurrency(p.giaNhap)}</span></div>
-          <div><span class="label">Số HĐ nhập:</span> <span class="value">${Utils.escapeHtml(p.soHopDongNhap || "—")}</span></div>
-          <div><span class="label">Số HĐơn nhập:</span> <span class="value">${Utils.escapeHtml(p.soHoaDonNhap || "—")}</span></div>
-          <div><span class="label">Số HĐơn xuất:</span> <span class="value">${Utils.escapeHtml(p.soHoaDonXuat || "—")}</span></div>
-          <div><span class="label">Ngày nhập HĐ:</span> <span class="value">${Utils.formatDate(p.ngayNhapHD)}</span></div>
-          <div><span class="label">Ngày xuất HĐ:</span> <span class="value">${Utils.formatDate(p.ngayXuatHD)}</span></div>
-        </div>
-        <div class="approval-card-actions">
-          <label style="display:flex;align-items:center;gap:8px;color:#e2eaf5;font-size:13px;">
-            Số lượng tồn:
-            <input type="number" class="tonKho-input" value="0" min="0" style="width:80px;padding:4px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;">
-          </label>
-          <button class="btn btn-danger" onclick="rejectProduct(${p.id})"><i class="fas fa-times"></i> Từ chối</button>
-          <button class="btn btn-success" onclick="approveProduct(${p.id})"><i class="fas fa-check"></i> Duyệt</button>
-        </div>
-      </div>
-    `,
-      )
-      .join("");
-  }
-
+  // ========== APPROVE PRODUCT ==========
   window.approveProduct = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt sản phẩm này?")) return;
 
     const card = document.querySelector(
-      `.approval-card:has([onclick="approveProduct(${id})"])`,
+      `.approval-card:has([onclick="window.approveProduct(${id})"])`,
     );
     const tonKhoInput = card?.querySelector(".tonKho-input");
     const tonKho = parseInt(tonKhoInput?.value) || 0;
@@ -727,27 +685,29 @@
     Utils.showLoading(true, "Đang duyệt...");
     try {
       await window.API.inventory.approve(id, tonKho);
-      Utils.showToast("✅ Đã duyệt sản phẩm thành công");
+      Utils.showToast("✅ Đã duyệt sản phẩm!");
       loadPendingProducts();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi duyệt", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
+  // ========== REJECT PRODUCT ==========
   window.rejectProduct = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
+
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.inventory.reject(id, reason);
-      Utils.showToast("Đã từ chối sản phẩm");
+      Utils.showToast("✅ Đã từ chối sản phẩm!");
       loadPendingProducts();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi từ chối", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -756,86 +716,88 @@
   // ========== LOAD PENDING EDITS ==========
   async function loadPendingEdits() {
     const container = $("pendingEditsList");
-    Utils.showLoading(true, "Đang tải...");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải yêu cầu chỉnh sửa...");
     try {
-      pendingEdits = await window.API.edit.getAllRequests("pending");
-      renderPendingEdits();
+      const edits = await window.API.edit.getAllRequests("pending");
+      console.log("✏️ Pending edits:", edits);
+
+      if (edits.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu chỉnh sửa nào</p></div>`;
+        Utils.showLoading(false);
+        return;
+      }
+
+      container.innerHTML = edits
+        .map((r) => {
+          const oldData = r.oldData || {};
+          const newData = r.newData || {};
+          let changesHtml = "";
+          for (const key in newData) {
+            if (oldData[key] != newData[key]) {
+              changesHtml += `<div><span style="color:#6b82a0;">${key}:</span> <span style="color:#f87171;">${Utils.escapeHtml(String(oldData[key] || "—"))}</span> → <span style="color:#4ade80;">${Utils.escapeHtml(String(newData[key] || "—"))}</span></div>`;
+            }
+          }
+
+          return `
+          <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+              <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">✏️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
+              <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
+              <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
+            </div>
+            <div style="background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+              <div style="font-weight: 600; color: #fbbf24; margin-bottom: 8px;">📝 Thay đổi:</div>
+              ${changesHtml}
+            </div>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
+              <button class="btn btn-danger" onclick="window.rejectEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+              <button class="btn btn-success" onclick="window.approveEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+                <i class="fas fa-check"></i> Duyệt
+              </button>
+            </div>
+          </div>
+        `;
+        })
+        .join("");
     } catch (error) {
-      Utils.showToast("Lỗi tải dữ liệu", "error");
+      container.innerHTML = `<div class="empty-state"><p>Lỗi: ${error.message}</p></div>`;
     } finally {
       Utils.showLoading(false);
     }
   }
 
-  function renderPendingEdits() {
-    const container = $("pendingEditsList");
-    if (pendingEdits.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu chỉnh sửa nào chờ duyệt</p></div>`;
-      return;
-    }
-
-    container.innerHTML = pendingEdits
-      .map((r) => {
-        const oldData = r.oldData || {};
-        const newData = r.newData || {};
-        const changedFields = [];
-        for (const key in newData) {
-          if (oldData[key] != newData[key]) {
-            changedFields.push(
-              `<div><span class="label">${key}:</span> <span style="color:#f87171;">${Utils.escapeHtml(String(oldData[key] || "—"))}</span> → <span style="color:#4ade80;">${Utils.escapeHtml(String(newData[key] || "—"))}</span></div>`,
-            );
-          }
-        }
-
-        return `
-        <div class="approval-card">
-          <div class="approval-card-header">
-            <div class="approval-card-id">✏️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
-            <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-            <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
-          </div>
-          <div class="approval-card-body">
-            <div style="grid-column:1/-1; margin-bottom:8px;">
-              <strong style="color:#fbbf24;">📝 Thay đổi:</strong>
-            </div>
-            ${changedFields.join("")}
-          </div>
-          <div class="approval-card-actions">
-            <button class="btn btn-danger" onclick="rejectEditRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-            <button class="btn btn-success" onclick="approveEditRequest(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
-          </div>
-        </div>
-      `;
-      })
-      .join("");
-  }
-
+  // ========== APPROVE EDIT ==========
   window.approveEditRequest = async (id) => {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.edit.approve(id);
-      Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa");
+      Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa!");
       loadPendingEdits();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi duyệt", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
+  // ========== REJECT EDIT ==========
   window.rejectEditRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.edit.reject(id, reason);
-      Utils.showToast("Đã từ chối yêu cầu chỉnh sửa");
+      Utils.showToast("✅ Đã từ chối yêu cầu chỉnh sửa!");
       loadPendingEdits();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi từ chối", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -844,82 +806,83 @@
   // ========== LOAD PENDING DELETIONS ==========
   async function loadPendingDeletions() {
     const container = $("pendingDeletionsList");
-    Utils.showLoading(true, "Đang tải...");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải yêu cầu xóa...");
     try {
-      pendingDeletions = await window.API.deletion.getAllRequests("pending");
-      renderPendingDeletions();
+      const deletions = await window.API.deletion.getAllRequests("pending");
+      console.log("🗑️ Pending deletions:", deletions);
+
+      if (deletions.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu xóa nào</p></div>`;
+        Utils.showLoading(false);
+        return;
+      }
+
+      container.innerHTML = deletions
+        .map(
+          (r) => `
+        <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div style="font-size: 18px; font-weight: 700; color: #f87171;">🗑️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
+            <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
+            <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
+          </div>
+          <div style="background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 12px; color: #6b82a0; max-height: 200px; overflow-y: auto;">
+            <pre style="margin:0;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(r.productData, null, 2)}</pre>
+          </div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn btn-danger" onclick="window.rejectDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt xóa
+            </button>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
     } catch (error) {
-      Utils.showToast("Lỗi tải dữ liệu", "error");
+      container.innerHTML = `<div class="empty-state"><p>Lỗi: ${error.message}</p></div>`;
     } finally {
       Utils.showLoading(false);
     }
   }
 
-  function renderPendingDeletions() {
-    const container = $("pendingDeletionsList");
-    if (pendingDeletions.length === 0) {
-      container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i><p>Không có yêu cầu xóa nào chờ duyệt</p></div>`;
-      return;
-    }
-
-    container.innerHTML = pendingDeletions
-      .map(
-        (r) => `
-      <div class="approval-card">
-        <div class="approval-card-header">
-          <div class="approval-card-id">🗑️ ${Utils.escapeHtml(r.productName)} (${Utils.escapeHtml(r.productCode)})</div>
-          <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-          <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
-        </div>
-        <div class="approval-card-body">
-          <div><span class="label">Tên sản phẩm:</span> <span class="value">${Utils.escapeHtml(r.productName)}</span></div>
-          <div><span class="label">Mã hàng:</span> <span class="value">${Utils.escapeHtml(r.productCode)}</span></div>
-          <div><span class="label">Dữ liệu hiện tại:</span></div>
-          <div style="grid-column:1/-1; background:#1a2235; padding:8px; border-radius:4px; font-size:12px; color:#6b82a0;">
-            ${JSON.stringify(r.productData, null, 2)}
-          </div>
-        </div>
-        <div class="approval-card-actions">
-          <button class="btn btn-danger" onclick="rejectDeletionRequest(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-          <button class="btn btn-success" onclick="approveDeletionRequest(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
-        </div>
-      </div>
-    `,
-      )
-      .join("");
-  }
-
+  // ========== APPROVE DELETION ==========
   window.approveDeletionRequest = async (id) => {
     if (
       !confirm(
-        "Bạn có chắc muốn duyệt yêu cầu xóa này?\n\nHành động này sẽ xóa vĩnh viễn sản phẩm khỏi kho!",
+        "Bạn có chắc muốn duyệt xóa sản phẩm này? Hành động này KHÔNG thể hoàn tác!",
       )
     )
       return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.deletion.approve(id);
-      Utils.showToast("✅ Đã duyệt yêu cầu xóa và xóa sản phẩm khỏi kho");
+      Utils.showToast("✅ Đã duyệt xóa sản phẩm!");
       loadPendingDeletions();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi duyệt", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
   };
 
+  // ========== REJECT DELETION ==========
   window.rejectDeletionRequest = async (id) => {
     const reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
     Utils.showLoading(true, "Đang xử lý...");
     try {
       await window.API.deletion.reject(id, reason);
-      Utils.showToast("Đã từ chối yêu cầu xóa");
+      Utils.showToast("✅ Đã từ chối yêu cầu xóa!");
       loadPendingDeletions();
-      loadDashboard();
+      loadDashboardStats();
     } catch (error) {
-      Utils.showToast("Lỗi khi từ chối", "error");
+      Utils.showToast("❌ " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -935,7 +898,8 @@
     });
 
     $("btnRefresh")?.addEventListener("click", () => {
-      loadDashboard();
+      loadDashboardStats();
+      loadNotifications();
       Utils.showToast("Đã làm mới dữ liệu");
     });
   }
@@ -944,21 +908,38 @@
   function init() {
     updateTopbar();
     bindEvents();
-    loadDashboard();
+    loadDashboardStats();
+    loadNotifications();
+
+    // Kiểm tra view hiện tại
+    const activeView = document.querySelector(".view.active");
+    if (activeView) {
+      const viewId = activeView.id.replace("view-", "");
+      if (viewId === "pending-receipts") loadPendingReceipts();
+      else if (viewId === "pending-exports") loadPendingExports();
+      else if (viewId === "pending-products") loadPendingProducts();
+      else if (viewId === "pending-edits") loadPendingEdits();
+      else if (viewId === "pending-deletions") loadPendingDeletions();
+    }
   }
 
-  // ========== EXPOSE GLOBALS ==========
+  // Expose functions to window
   window.switchView = switchView;
-  window.approveProduct = approveProduct;
-  window.rejectProduct = rejectProduct;
   window.approveReceipt = approveReceipt;
   window.rejectReceipt = rejectReceipt;
   window.approveExport = approveExport;
   window.rejectExport = rejectExport;
+  window.approveProduct = approveProduct;
+  window.rejectProduct = rejectProduct;
   window.approveEditRequest = approveEditRequest;
   window.rejectEditRequest = rejectEditRequest;
   window.approveDeletionRequest = approveDeletionRequest;
   window.rejectDeletionRequest = rejectDeletionRequest;
 
-  init();
+  // Chạy khi DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
