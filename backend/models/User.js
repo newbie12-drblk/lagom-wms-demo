@@ -1,5 +1,5 @@
 const db = require("../config/database");
-const bcrypt = require("bcryptjs");
+// KHÔNG dùng bcrypt nữa
 
 const User = {
   findByUsername: async (username) => {
@@ -29,16 +29,13 @@ const User = {
   },
 
   create: async (userData) => {
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(userData.password, salt);
-
+    // Lưu password plain text (KHÔNG HASH)
     const [result] = await db.execute(
       `INSERT INTO users (username, password, fullName, email, roleId, isActive, customPermissions) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userData.username,
-        hashedPassword,
+        userData.password, // plain text
         userData.fullName,
         userData.email,
         userData.roleId,
@@ -74,10 +71,9 @@ const User = {
       values.push(JSON.stringify(userData.customPermissions));
     }
     if (userData.password) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
+      // Lưu plain text (KHÔNG HASH)
       updates.push("password = ?");
-      values.push(hashedPassword);
+      values.push(userData.password);
     }
 
     if (updates.length === 0) return false;
@@ -95,9 +91,9 @@ const User = {
     return result.affectedRows > 0;
   },
 
-  // Kiểm tra mật khẩu
+  // SO SÁNH TRỰC TIẾP (KHÔNG BCRYPT)
   verifyPassword: async (plainPassword, hashedPassword) => {
-    return await bcrypt.compare(plainPassword, hashedPassword);
+    return plainPassword === hashedPassword;
   },
 };
 
