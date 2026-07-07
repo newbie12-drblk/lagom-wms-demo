@@ -9,33 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// CORS - CHÍNH THỨC, AN TOÀN
+// CORS - FIX LỖI CORS ERROR
 // ============================================
-// Danh sách các domain được phép truy cập API
-const allowedOrigins = [
-  // Frontend domain (thay bằng domain thật của bạn)
-  "https://lagom-wms-demo.onrender.com",
-  "http://localhost:5500",
-  "http://127.0.0.1:5500",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  // Thêm domain frontend của bạn ở đây
-  // Ví dụ: "https://your-frontend.vercel.app",
-];
-
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Cho phép request không có origin (như Postman, curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log(`❌ CORS blocked: ${origin}`);
-        callback(new Error(`Origin ${origin} not allowed by CORS`));
-      }
-    },
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
       "Content-Type",
@@ -44,31 +22,31 @@ app.use(
       "Accept",
       "Origin",
       "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Allow-Methods",
     ],
     credentials: true,
     optionsSuccessStatus: 200,
   }),
 );
 
-// ============================================
-// MIDDLEWARE
-// ============================================
+// Xử lý preflight requests
+app.options("*", cors());
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Log requests (chỉ log trong development)
-if (process.env.NODE_ENV !== "production") {
-  app.use((req, res, next) => {
-    console.log(`📥 ${req.method} ${req.url}`);
-    if (req.body && Object.keys(req.body).length > 0) {
-      console.log("📦 Body:", JSON.stringify(req.body, null, 2));
-    }
-    next();
-  });
-}
+// Log requests
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.url}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log("📦 Body:", JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
 
 // ============================================
-// ROUTES
+// IMPORT ROUTES
 // ============================================
 const authRoutes = require("./routes/authRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
@@ -84,6 +62,9 @@ const fileRoutes = require("./routes/fileRoutes");
 const editRoutes = require("./routes/editRoutes");
 const deletionRoutes = require("./routes/deletionRoutes");
 
+// ============================================
+// USE ROUTES
+// ============================================
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/receipt-requests", receiptRequestRoutes);
@@ -106,7 +87,6 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     timestamp: new Date().toISOString(),
     message: "LAGOM WMS Backend v2.0 is running",
-    environment: process.env.NODE_ENV || "development",
   });
 });
 
@@ -125,19 +105,9 @@ app.use((req, res) => {
 // ============================================
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.stack);
-
-  // Lỗi CORS
-  if (err.message && err.message.includes("not allowed by CORS")) {
-    return res.status(403).json({
-      success: false,
-      message: err.message,
-    });
-  }
-
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
   });
 });
 
@@ -146,6 +116,4 @@ app.use((err, req, res, next) => {
 // ============================================
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔒 CORS: ${allowedOrigins.length} origins allowed`);
 });

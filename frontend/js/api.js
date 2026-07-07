@@ -25,24 +25,29 @@ async function apiCall(endpoint, options = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      removeToken();
-      if (window.location.pathname !== "/login.html") {
-        window.location.href = "login.html";
+    if (!response.ok) {
+      if (response.status === 401) {
+        removeToken();
+        if (window.location.pathname !== "/login.html") {
+          window.location.href = "login.html";
+        }
       }
+      throw new Error(data.message || "Có lỗi xảy ra");
     }
-    throw new Error(data.message || "Có lỗi xảy ra");
-  }
 
-  return data;
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
 }
 
 // API Object
