@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin
- * ĐÃ SỬA: Hiển thị đúng phiếu chờ duyệt
+ * ĐÃ SỬA: Hiển thị chi tiết phiếu đầy đủ
  */
 
 (function () {
@@ -176,12 +176,11 @@
     }
   };
 
-  // ========== LOAD PENDING RECEIPTS ==========
+  // ========== LOAD PENDING RECEIPTS - CHI TIẾT ==========
   async function loadPendingReceipts() {
     const container = $("pendingReceiptsList");
     Utils.showLoading(true, "Đang tải danh sách phiếu nhập...");
     try {
-      // 🔥 Gọi API lấy phiếu nhập chờ duyệt
       const response = await fetch(`${API_BASE_URL}/receipts/pending`, {
         headers: { Authorization: `Bearer ${API.getToken()}` },
       });
@@ -232,51 +231,121 @@
         };
         const status = statusMap[r.status] || statusMap["pending"];
 
+        // Lấy items từ phiếu
+        const items = r.items || [];
+        const totalItems = items.length;
+        const totalValue = r.total || 0;
+
         return `
-          <div class="approval-card">
+          <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b;">
             <div class="approval-card-header">
-              <div class="approval-card-id">📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}</div>
-              <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-              <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-              <span class="status-badge ${status.class}">${status.text}</span>
+              <div class="approval-card-id" style="font-size: 18px;">
+                📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}
+              </div>
+              <div class="approval-card-date">
+                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
+              </div>
+              <div class="approval-card-creator">
+                👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
+              </div>
+              <span class="status-badge ${status.class}" style="font-size: 13px; padding: 6px 14px;">
+                ${status.text}
+              </span>
             </div>
-            <div class="approval-card-body">
-              <div><span class="label">Nhà cung cấp:</span> <span class="value">${Utils.escapeHtml(r.supplierName || "—")}</span></div>
-              <div><span class="label">Ngày nhập:</span> <span class="value">${Utils.formatDate(r.receiptDate)}</span></div>
-              <div><span class="label">Số sản phẩm:</span> <span class="value">${r.items?.length || 0}</span></div>
-              <div><span class="label">Tổng giá trị:</span> <span class="value" style="color: #fbbf24;">${Utils.formatCurrency(r.total || 0)}</span></div>
+            
+            <!-- THÔNG TIN CHI TIẾT PHIẾU -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin: 10px 0;">
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Nhà cung cấp</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.supplierName || "—")}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày nhập</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.receiptDate)}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
+                <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
+                <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Khách hàng</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerName || "—")}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số HĐ</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerContract || "—")}</div>
+              </div>
             </div>
-            <div style="margin: 10px 0; padding: 10px; background: #1a2235; border-radius: 6px; max-height: 200px; overflow-y: auto;">
-              <table style="width:100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                  <tr style="background: #0f172a;">
-                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Tên sản phẩm</th>
-                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Mã hàng</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">SL</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Đơn giá</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(r.items || [])
-                    .map(
-                      (item) => `
-                    <tr style="border-bottom: 1px solid #1e2d45;">
-                      <td style="padding: 3px 6px;">${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td style="padding: 3px 6px; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #86efac;">${item.soLuongNhap || 0}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap)}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #fbbf24;">${Utils.formatCurrency(item.thanhTien)}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-            <div class="approval-card-actions">
-              <button class="btn btn-danger" onclick="rejectReceipt(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-              <button class="btn btn-success" onclick="approveReceipt(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+            
+            <!-- BẢNG SẢN PHẨM CHI TIẾT -->
+            ${
+              items.length > 0
+                ? `
+              <div style="margin: 10px 0; background: #1a2235; border-radius: 8px; overflow: hidden;">
+                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+                  <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                      <tr style="background: #0f172a; border-bottom: 2px solid #3b82f6;">
+                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 40px;">STT</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 150px;">Tên thương mại</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Mã hàng</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Quy cách</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">Hãng SX</th>
+                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 50px;">ĐVT</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">Đơn giá</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 60px;">SL</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 120px;">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${items
+                        .map(
+                          (item, idx) => `
+                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}"
+                        <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                        <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                        <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                        <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                        <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                        <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                      </tr>
+                      `,
+                        )
+                        .join("")}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                        <td colspan="8" style="padding: 10px 10px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td style="padding: 10px 10px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            `
+                : `
+              <div style="padding: 20px; text-align: center; color: #6b82a0; background: #1a2235; border-radius: 8px;">
+                <i class="fas fa-box-open" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                Không có sản phẩm trong phiếu này
+              </div>
+            `
+            }
+            
+            <!-- NÚT DUYỆT / TỪ CHỐI -->
+            <div class="approval-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;">
+              <button class="btn btn-danger" onclick="rejectReceipt(${r.id})" style="padding: 10px 24px; font-size: 14px;">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+              <button class="btn btn-success" onclick="approveReceipt(${r.id})" style="padding: 10px 24px; font-size: 14px;">
+                <i class="fas fa-check"></i> Duyệt
+              </button>
             </div>
           </div>
         `;
@@ -350,7 +419,7 @@
     }
   };
 
-  // ========== LOAD PENDING EXPORTS ==========
+  // ========== LOAD PENDING EXPORTS - CHI TIẾT ==========
   async function loadPendingExports() {
     const container = $("pendingExportsList");
     Utils.showLoading(true, "Đang tải danh sách phiếu xuất...");
@@ -405,51 +474,120 @@
         };
         const status = statusMap[r.status] || statusMap["pending"];
 
+        const items = r.items || [];
+        const totalItems = items.length;
+        const totalValue = r.total || 0;
+
         return `
-          <div class="approval-card">
+          <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #3b82f6;">
             <div class="approval-card-header">
-              <div class="approval-card-id">📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}</div>
-              <div class="approval-card-date">${Utils.formatDate(r.createdAt)}</div>
-              <div class="approval-card-creator">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
-              <span class="status-badge ${status.class}">${status.text}</span>
+              <div class="approval-card-id" style="font-size: 18px;">
+                📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}
+              </div>
+              <div class="approval-card-date">
+                <i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}
+              </div>
+              <div class="approval-card-creator">
+                👤 ${Utils.escapeHtml(r.creatorName || "Admin")}
+              </div>
+              <span class="status-badge ${status.class}" style="font-size: 13px; padding: 6px 14px;">
+                ${status.text}
+              </span>
             </div>
-            <div class="approval-card-body">
-              <div><span class="label">Người nhận:</span> <span class="value">${Utils.escapeHtml(r.receiverName || "—")}</span></div>
-              <div><span class="label">Ngày xuất:</span> <span class="value">${Utils.formatDate(r.exportDate)}</span></div>
-              <div><span class="label">Số sản phẩm:</span> <span class="value">${r.items?.length || 0}</span></div>
-              <div><span class="label">Tổng giá trị:</span> <span class="value" style="color: #fbbf24;">${Utils.formatCurrency(r.total || 0)}</span></div>
+            
+            <!-- THÔNG TIN CHI TIẾT PHIẾU -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin: 10px 0;">
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Người nhận</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.receiverName || "—")}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Ngày xuất</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.formatDate(r.exportDate)}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Tổng giá trị</div>
+                <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
+                <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalItems}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Khách hàng</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.customerName || "—")}</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Lý do xuất</div>
+                <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.exportReason || "—")}</div>
+              </div>
             </div>
-            <div style="margin: 10px 0; padding: 10px; background: #1a2235; border-radius: 6px; max-height: 200px; overflow-y: auto;">
-              <table style="width:100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                  <tr style="background: #0f172a;">
-                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Tên sản phẩm</th>
-                    <th style="padding: 4px 6px; text-align: left; color: #60a5fa;">Mã hàng</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">SL</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Đơn giá</th>
-                    <th style="padding: 4px 6px; text-align: right; color: #60a5fa;">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(r.items || [])
-                    .map(
-                      (item) => `
-                    <tr style="border-bottom: 1px solid #1e2d45;">
-                      <td style="padding: 3px 6px;">${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td style="padding: 3px 6px; color: #93c5fd;">${Utils.escapeHtml(item.maHang)}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #86efac;">${item.soLuong || 0}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia)}</td>
-                      <td style="padding: 3px 6px; text-align: right; color: #fbbf24;">${Utils.formatCurrency(item.thanhTien)}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-            <div class="approval-card-actions">
-              <button class="btn btn-danger" onclick="rejectExport(${r.id})"><i class="fas fa-times"></i> Từ chối</button>
-              <button class="btn btn-success" onclick="approveExport(${r.id})"><i class="fas fa-check"></i> Duyệt</button>
+            
+            <!-- BẢNG SẢN PHẨM CHI TIẾT -->
+            ${
+              items.length > 0
+                ? `
+              <div style="margin: 10px 0; background: #1a2235; border-radius: 8px; overflow: hidden;">
+                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+                  <table style="width:100%; border-collapse: collapse; font-size: 12px;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                      <tr style="background: #0f172a; border-bottom: 2px solid #3b82f6;">
+                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 40px;">STT</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 150px;">Tên thương mại</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Mã hàng</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 100px;">Quy cách</th>
+                        <th style="padding: 8px 10px; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">Hãng SX</th>
+                        <th style="padding: 8px 10px; text-align: center; color: #60a5fa; font-weight: 600; min-width: 50px;">ĐVT</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">Đơn giá</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 60px;">SL</th>
+                        <th style="padding: 8px 10px; text-align: right; color: #60a5fa; font-weight: 600; min-width: 120px;">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${items
+                        .map(
+                          (item, idx) => `
+                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}">
+                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia || 0)}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                        </tr>
+                      `,
+                        )
+                        .join("")}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                        <td colspan="8" style="padding: 10px 10px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td style="padding: 10px 10px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            `
+                : `
+              <div style="padding: 20px; text-align: center; color: #6b82a0; background: #1a2235; border-radius: 8px;">
+                <i class="fas fa-box-open" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                Không có sản phẩm trong phiếu này
+              </div>
+            `
+            }
+            
+            <!-- NÚT DUYỆT / TỪ CHỐI -->
+            <div class="approval-card-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;">
+              <button class="btn btn-danger" onclick="rejectExport(${r.id})" style="padding: 10px 24px; font-size: 14px;">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+              <button class="btn btn-success" onclick="approveExport(${r.id})" style="padding: 10px 24px; font-size: 14px;">
+                <i class="fas fa-check"></i> Duyệt
+              </button>
             </div>
           </div>
         `;
