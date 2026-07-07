@@ -66,9 +66,9 @@
       const session = Auth.getCurrentSession();
       let redirectUrl = "role-panel.html";
 
-      // Admin → thẳng admin.html
+      // Admin → thẳng index.html
       if (session.roleId === "admin") {
-        redirectUrl = "admin.html";
+        redirectUrl = "index.html";
       }
       // Quản lý → role-panel
       else if (session.roleId === "quan_ly") {

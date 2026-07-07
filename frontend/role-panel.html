@@ -57,67 +57,6 @@
 
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script>
-      function handleLogout() {
-        if (confirm("Bạn có chắc muốn đăng xuất?")) {
-          Auth.logout();
-          window.location.href = "login.html";
-        }
-      }
-
-      // Kiểm tra nếu chưa đăng nhập thì redirect về login
-      if (!Auth.isLoggedIn()) {
-        window.location.href = "login.html";
-      }
-
-      // 🔥 Nếu là admin thì chuyển thẳng về admin.html (không vào role-panel)
-      const user = Auth.getCurrentUser();
-      if (user && user.roleId === "admin") {
-        window.location.href = "admin.html";
-        return;
-      }
-
-      // Cập nhật tên user
-      if (user) {
-        document.getElementById("greetingText").textContent =
-          `Xin chào ${user.fullName || user.username}! Chọn vai trò để tiếp tục.`;
-      }
-
-      // Lọc các role không có quyền
-      const currentRole = Auth.getCurrentRole();
-      const roleGrid = document.getElementById("roleGrid");
-      const roleCards = roleGrid.querySelectorAll(".role-card");
-
-      roleCards.forEach((card) => {
-        const cardRole = card.dataset.role;
-
-        // Nếu là nhập liệu: chỉ hiện Nhập liệu và Xem kho
-        if (currentRole === "nhap_lieu") {
-          if (cardRole === "quan_ly") {
-            card.style.display = "none";
-          } else {
-            card.style.display = "block";
-          }
-          return;
-        }
-
-        // Nếu là quản lý: chỉ hiện Quản lý và Xem kho
-        if (currentRole === "quan_ly") {
-          if (cardRole === "nhap_lieu") {
-            card.style.display = "none";
-          } else {
-            card.style.display = "block";
-          }
-          return;
-        }
-
-        // Mặc định: chỉ hiện Xem kho
-        if (cardRole !== "nhan_vien") {
-          card.style.display = "none";
-        } else {
-          card.style.display = "block";
-        }
-      });
-    </script>
+    <script src="js/role-panel.js"></script>
   </body>
 </html>

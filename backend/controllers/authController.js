@@ -10,9 +10,6 @@ const jwt = require("jsonwebtoken");
 
 /**
  * ĐĂNG NHẬP
- * - Kiểm tra username/password
- * - Tạo JWT token
- * - Trả về redirectUrl dựa trên role
  */
 const login = async (req, res) => {
   try {
@@ -62,11 +59,11 @@ const login = async (req, res) => {
     // 🔥 QUAN TRỌNG: Redirect theo role
     let defaultRedirectUrl = "role-panel.html";
 
-    // Admin → thẳng admin.html
+    // Admin → thẳng index.html (trang tồn kho)
     if (user.roleId === "admin") {
-      defaultRedirectUrl = "admin.html";
+      defaultRedirectUrl = "index.html";
     }
-    // Quản lý → role-panel.html (để chọn role)
+    // Quản lý → role-panel.html
     else if (user.roleId === "quan_ly") {
       defaultRedirectUrl = "role-panel.html";
     }
