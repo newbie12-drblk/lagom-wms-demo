@@ -25,15 +25,8 @@
 
 .role-panel .sub {
   color: #6b82a0;
-  margin-bottom: 4px;
-  font-size: 14px;
-}
-
-.role-panel .user-name {
-  color: #60a5fa;
-  font-size: 16px;
-  font-weight: 600;
   margin-bottom: 32px;
+  font-size: 14px;
 }
 
 .role-panel .footer {
@@ -42,21 +35,27 @@
   color: var(--text-dim);
 }
 
-/* ==================== ROLE GRID ==================== */
+/* ==================== ROLE GRID - CANH GIỮA ==================== */
 .role-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 20px;
   max-width: 750px;
   width: 100%;
+  margin: 0 auto;
 }
 
 /* ==================== ROLE CARD ==================== */
 .role-card {
+  flex: 1 1 200px;
+  max-width: 240px;
+  min-width: 180px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px 18px;
+  padding: 28px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -72,15 +71,15 @@
 }
 
 .role-card .icon {
-  font-size: 38px;
-  margin-bottom: 10px;
+  font-size: 40px;
+  margin-bottom: 12px;
   display: block;
 }
 
 .role-card .name {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .role-card .desc {
@@ -97,11 +96,6 @@
   border-radius: 20px;
   font-size: 10px;
   font-weight: 600;
-}
-
-.badge-admin {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
 }
 
 .badge-nhap-lieu {
@@ -121,7 +115,7 @@
 
 /* ==================== LOGOUT BUTTON ==================== */
 .logout-link {
-  margin-top: 28px;
+  margin-top: 32px;
   color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
@@ -138,20 +132,21 @@
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .role-grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    gap: 14px;
   }
 
   .role-card {
-    padding: 18px 14px;
+    flex: 1 1 160px;
+    min-width: 140px;
+    padding: 20px 14px;
   }
 
   .role-card .icon {
-    font-size: 30px;
+    font-size: 32px;
   }
 
   .role-card .name {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .role-panel h1 {
@@ -161,29 +156,33 @@
 
 @media (max-width: 480px) {
   .role-grid {
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
 
   .role-card {
+    flex: 1 1 130px;
+    min-width: 110px;
     padding: 14px 10px;
   }
 
   .role-card .icon {
     font-size: 24px;
+    margin-bottom: 8px;
   }
 
   .role-card .name {
     font-size: 13px;
+    margin-bottom: 4px;
   }
 
   .role-card .desc {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .role-card .badge {
-    font-size: 9px;
+    font-size: 8px;
     padding: 2px 8px;
+    margin-top: 6px;
   }
 
   .role-panel {
@@ -192,5 +191,10 @@
 
   .role-panel h1 {
     font-size: 18px;
+  }
+
+  .role-panel .sub {
+    font-size: 12px;
+    margin-bottom: 20px;
   }
 }

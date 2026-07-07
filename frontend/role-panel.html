@@ -22,13 +22,7 @@
         <p class="sub" id="greetingText">Chọn vai trò để tiếp tục</p>
 
         <div class="role-grid" id="roleGrid">
-          <!-- Admin -->
-          <a href="admin.html" class="role-card" data-role="admin">
-            <span class="icon">👑</span>
-            <div class="name">Quản trị</div>
-            <div class="desc">Quản lý người dùng, duyệt yêu cầu</div>
-            <span class="badge badge-admin">Admin</span>
-          </a>
+          <!-- 🔥 ĐÃ XÓA CARD QUẢN TRỊ (ADMIN) -->
 
           <!-- Nhập liệu -->
           <a href="index.html" class="role-card" data-role="nhap_lieu">
@@ -93,7 +87,7 @@
       roleCards.forEach((card) => {
         const cardRole = card.dataset.role;
 
-        // Nếu là admin thì hiện tất cả
+        // Nếu là admin thì hiện tất cả (trừ card admin đã xóa)
         if (currentRole === "admin") {
           card.style.display = "block";
           return;
@@ -101,7 +95,7 @@
 
         // Nếu là nhập liệu: chỉ hiện Nhập liệu và Xem kho
         if (currentRole === "nhap_lieu") {
-          if (cardRole === "admin" || cardRole === "quan_ly") {
+          if (cardRole === "quan_ly") {
             card.style.display = "none";
           } else {
             card.style.display = "block";
@@ -111,7 +105,7 @@
 
         // Nếu là quản lý: chỉ hiện Quản lý và Xem kho
         if (currentRole === "quan_ly") {
-          if (cardRole === "admin" || cardRole === "nhap_lieu") {
+          if (cardRole === "nhap_lieu") {
             card.style.display = "none";
           } else {
             card.style.display = "block";
