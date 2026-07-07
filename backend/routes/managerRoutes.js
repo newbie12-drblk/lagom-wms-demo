@@ -2,8 +2,8 @@ const express = require("express");
 const { verifyToken } = require("../middleware/auth");
 const { checkRole } = require("../middleware/roleCheck");
 const Inventory = require("../models/Inventory");
-const ReceiptRequest = require("../models/ReceiptRequest");
-const ExportRequest = require("../models/ExportRequest");
+const Receipt = require("../models/Receipt");
+const Export = require("../models/Export");
 const EditRequest = require("../models/EditRequest");
 const DeletionRequest = require("../models/DeletionRequest");
 
@@ -24,11 +24,18 @@ router.get(
         pendingDeletions,
       ] = await Promise.all([
         Inventory.getPending(),
-        ReceiptRequest.getPending(),
-        ExportRequest.getPending(),
+        Receipt.getPendingApprovals(),
+        Export.getPendingApprovals(),
         EditRequest.getAllRequests("pending"),
         DeletionRequest.getAllRequests("pending"),
       ]);
+
+      console.log("📊 Dashboard stats:");
+      console.log("  - Pending Products:", pendingProducts.length);
+      console.log("  - Pending Receipts:", pendingReceipts.length);
+      console.log("  - Pending Exports:", pendingExports.length);
+      console.log("  - Pending Edits:", pendingEdits.length);
+      console.log("  - Pending Deletions:", pendingDeletions.length);
 
       res.json({
         success: true,

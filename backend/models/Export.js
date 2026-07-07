@@ -27,13 +27,10 @@ const Export = {
 
     const exportItem = exports[0];
 
-    // 🔥 LẤY DANH SÁCH ITEMS
     const [items] = await db.execute(
       `SELECT * FROM export_items WHERE exportId = ?`,
       [id],
     );
-
-    console.log(`📦 Export ${id} has ${items.length} items`);
 
     return { ...exportItem, items };
   },
@@ -45,10 +42,9 @@ const Export = {
        FROM exports e 
        LEFT JOIN users u ON e.createdBy = u.id 
        WHERE e.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY e.createdAt ASC`,
+       ORDER BY e.createdAt DESC`,
     );
 
-    // 🔥 LẤY ITEMS CHO TỪNG PHIẾU
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
@@ -58,7 +54,6 @@ const Export = {
       result.push({ ...row, items });
     }
 
-    console.log(`📋 Found ${result.length} pending exports with items`);
     return result;
   },
 

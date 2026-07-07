@@ -52,7 +52,6 @@ const createReceipt = async (req, res) => {
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
     console.log("📦 Số items trong phiếu:", receipt.items?.length || 0);
 
-    // Kiểm tra sản phẩm
     let allMatched = true;
     let mismatchDetails = [];
     let matchedProducts = [];
@@ -248,12 +247,6 @@ const getPendingReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getPendingApprovals();
     console.log(`📋 Trả về ${receipts.length} phiếu chờ duyệt`);
-
-    // Log số items của từng phiếu
-    for (const r of receipts) {
-      console.log(`  - ${r.receiptNo}: ${r.items?.length || 0} items`);
-    }
-
     res.json({ success: true, data: receipts });
   } catch (error) {
     console.error("Get pending receipts error:", error);

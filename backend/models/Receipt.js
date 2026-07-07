@@ -27,13 +27,11 @@ const Receipt = {
 
     const receipt = receipts[0];
 
-    // Lấy danh sách items
     const [items] = await db.execute(
       `SELECT * FROM receipt_items WHERE receiptId = ?`,
       [id],
     );
 
-    console.log(`📦 Receipt ${id} has ${items.length} items`);
     return { ...receipt, items };
   },
 
@@ -47,16 +45,12 @@ const Receipt = {
        ORDER BY r.createdAt DESC`,
     );
 
-    console.log(`📋 Found ${rows.length} pending receipts`);
-
-    // Lấy items cho từng phiếu
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
         `SELECT * FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
-      console.log(`  - ${row.receiptNo}: ${items.length} items`);
       result.push({ ...row, items });
     }
 
@@ -101,7 +95,6 @@ const Receipt = {
     );
     const receiptId = result.insertId;
 
-    // Thêm items
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         await db.execute(
@@ -132,9 +125,6 @@ const Receipt = {
       }
     }
 
-    console.log(
-      `✅ Created receipt ${receiptNo} with ${data.items?.length || 0} items`,
-    );
     return receiptId;
   },
 

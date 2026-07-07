@@ -40,7 +40,6 @@ const createExport = async (req, res) => {
     console.log("📤 Tạo phiếu xuất bởi user:", createdBy);
     console.log("📦 Số lượng items:", exportData.items?.length || 0);
 
-    // Kiểm tra tồn kho
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -69,7 +68,6 @@ const createExport = async (req, res) => {
     console.log("✅ Phiếu xuất tạo thành công:", exportItem.exportNo);
     console.log("📦 Số items trong phiếu:", exportItem.items?.length || 0);
 
-    // Kiểm tra sản phẩm
     let allMatched = true;
     let mismatchDetails = [];
 
@@ -237,11 +235,6 @@ const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
     console.log(`📋 Trả về ${exports.length} phiếu xuất chờ duyệt`);
-
-    for (const e of exports) {
-      console.log(`  - ${e.exportNo}: ${e.items?.length || 0} items`);
-    }
-
     res.json({ success: true, data: exports });
   } catch (error) {
     console.error("Get pending exports error:", error);
