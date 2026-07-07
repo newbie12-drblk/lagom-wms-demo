@@ -72,6 +72,8 @@ const login = async (req, res) => {
       defaultRedirectUrl = "role-panel.html";
     }
 
+    console.log(`🔑 User ${username} (${user.roleId}) → ${defaultRedirectUrl}`);
+
     res.json({
       success: true,
       token,

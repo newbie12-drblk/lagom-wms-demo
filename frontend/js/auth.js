@@ -71,6 +71,12 @@
         };
         localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
 
+        console.log("✅ Login successful:", {
+          username: session.username,
+          role: session.roleId,
+          redirect: result.redirectUrl,
+        });
+
         return {
           success: true,
           redirectUrl: result.redirectUrl || "role-panel.html",

@@ -30,6 +30,7 @@
 
       if (result.success) {
         // 🔥 Chuyển hướng theo URL từ backend
+        console.log("🔑 Redirecting to:", result.redirectUrl);
         window.location.href = result.redirectUrl;
         return true;
       } else {
@@ -79,6 +80,7 @@
         redirectUrl = "role-panel.html";
       }
 
+      console.log("🔑 Session redirect to:", redirectUrl);
       window.location.href = redirectUrl;
     }
   }
