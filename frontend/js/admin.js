@@ -216,7 +216,7 @@
           <td><strong>${Utils.escapeHtml(user.username)}</strong></td>
           <td>${Utils.escapeHtml(user.fullName)}</td>
           <td>${Utils.escapeHtml(user.email || "—")}</td>
-          <td><span class="status-badge ${user.roleId === "admin" ? "status-active" : "status-pending"}">${user.roleId === "admin" ? "Admin" : "Quản lý"}</span></td>
+          <td><span class="status-badge ${user.roleId === "admin" ? "status-active" : user.roleId === "nhap_lieu" ? "status-pending" : "status-approved"}">${user.roleId === "admin" ? "Admin" : user.roleId === "nhap_lieu" ? "Nhập liệu" : "Quản lý"}</span></td>
           <td><span class="status-badge ${user.isActive ? "status-active" : "status-locked"}">${user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa"}</span></td>
           <td>${Utils.formatDate(user.createdAt)}</td>
           <td>
@@ -267,7 +267,7 @@
       $("editUsername").disabled = false;
       $("editFullName").value = "";
       $("editEmail").value = "";
-      $("editRole").value = "quan_ly";
+      $("editRole").value = "nhan_vien";
       $("editIsActive").value = "true";
       $("editPassword").value = "";
       $("editPassword").placeholder = "Nhập mật khẩu";

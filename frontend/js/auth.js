@@ -46,6 +46,11 @@
     return session && session.roleId === "quan_ly";
   }
 
+  function isNhapLieu() {
+    const session = getCurrentSession();
+    return session && session.roleId === "nhap_lieu";
+  }
+
   // ========== SESSION MANAGEMENT ==========
 
   async function login(username, password) {
@@ -68,7 +73,7 @@
 
         return {
           success: true,
-          redirectUrl: result.redirectUrl,
+          redirectUrl: result.redirectUrl || "role-panel.html",
           user: session,
         };
       }
@@ -138,25 +143,25 @@
   function canAddRow() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
-    return role !== "nhan_vien";
+    return role === "nhap_lieu" || role === "admin";
   }
 
   function canDeleteRow() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
-    return role !== "nhan_vien";
+    return role === "nhap_lieu" || role === "admin";
   }
 
   function canSave() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
-    return role !== "nhan_vien";
+    return role === "nhap_lieu" || role === "admin";
   }
 
   function canExport() {
     if (isAdmin()) return true;
     const role = getCurrentRole();
-    return role !== "nhan_vien";
+    return role === "nhap_lieu" || role === "admin";
   }
 
   function canManageUsers() {
@@ -195,6 +200,20 @@
     }
 
     if (isManager()) return true;
+
+    alert("❌ Bạn không có quyền truy cập trang này!");
+    window.location.href = redirectUrl;
+    return false;
+  }
+
+  // NHẬP LIỆU: Chỉ nhập liệu hoặc admin mới vào được
+  function requireNhapLieu(redirectUrl = "role-panel.html") {
+    if (!isLoggedIn()) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    if (isAdmin() || isNhapLieu()) return true;
 
     alert("❌ Bạn không có quyền truy cập trang này!");
     window.location.href = redirectUrl;
@@ -270,6 +289,7 @@
     getCurrentRole,
     isAdmin,
     isManager,
+    isNhapLieu,
 
     canEditField,
     canAddRow,
@@ -281,6 +301,7 @@
     requireAuth,
     requireAdmin,
     requireManager,
+    requireNhapLieu,
     requireRolePanel,
     requireAnyRole,
 

@@ -42,7 +42,7 @@ const login = async (req, res) => {
         .json({ success: false, message: "Tài khoản đã bị khóa" });
     }
 
-    // So sánh mật khẩu (dùng bcrypt)
+    // So sánh mật khẩu
     const isValidPassword = await User.verifyPassword(password, user.password);
 
     if (!isValidPassword) {
@@ -66,13 +66,9 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
-    // QUAN TRỌNG: Redirect dựa trên role
+    // 🔥 QUAN TRỌNG: Tất cả user đều vào role-panel.html
+    // Admin cũng vào role-panel để chọn vai trò
     let defaultRedirectUrl = "role-panel.html";
-    if (user.roleId === "admin") {
-      defaultRedirectUrl = "admin.html"; // Admin → admin.html
-    } else if (user.roleId === "quan_ly") {
-      defaultRedirectUrl = "manager.html"; // Quản lý → manager.html
-    }
 
     res.json({
       success: true,
@@ -155,7 +151,7 @@ const createUser = async (req, res) => {
       password,
       fullName,
       email,
-      roleId: roleId || "quan_ly",
+      roleId: roleId || "nhan_vien",
       isActive: isActive !== undefined ? isActive : true,
       customPermissions: customPermissions || null,
     });

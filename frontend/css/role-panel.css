@@ -1,0 +1,196 @@
+/* ======================================================
+   FILE: role-panel.css
+   MÔ TẢ: Styles riêng cho trang chọn vai trò
+   NGÀY: 2026
+====================================================== */
+
+/* ==================== ROLE PANEL ==================== */
+.role-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.role-panel h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, #60a5fa, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.role-panel .sub {
+  color: #6b82a0;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.role-panel .user-name {
+  color: #60a5fa;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+
+.role-panel .footer {
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ==================== ROLE GRID ==================== */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 750px;
+  width: 100%;
+}
+
+/* ==================== ROLE CARD ==================== */
+.role-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: var(--text);
+  display: block;
+}
+
+.role-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--blue);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+}
+
+.role-card .icon {
+  font-size: 38px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.role-card .name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.role-card .desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ==================== BADGES ==================== */
+.role-card .badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge-admin {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.badge-nhap-lieu {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.badge-nhan-vien {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.badge-quan-ly {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+/* ==================== LOGOUT BUTTON ==================== */
+.logout-link {
+  margin-top: 28px;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+.logout-link:hover {
+  color: var(--red);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .role-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .role-card {
+    padding: 18px 14px;
+  }
+
+  .role-card .icon {
+    font-size: 30px;
+  }
+
+  .role-card .name {
+    font-size: 14px;
+  }
+
+  .role-panel h1 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .role-card {
+    padding: 14px 10px;
+  }
+
+  .role-card .icon {
+    font-size: 24px;
+  }
+
+  .role-card .name {
+    font-size: 13px;
+  }
+
+  .role-card .desc {
+    font-size: 11px;
+  }
+
+  .role-card .badge {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .role-panel {
+    padding: 20px 12px;
+  }
+
+  .role-panel h1 {
+    font-size: 18px;
+  }
+}
