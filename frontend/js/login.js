@@ -29,8 +29,8 @@
       const result = await Auth.login(username, password);
 
       if (result.success) {
-        // 🔥 Tất cả user đều vào role-panel.html
-        window.location.href = "role-panel.html";
+        // 🔥 Chuyển hướng theo URL từ backend
+        window.location.href = result.redirectUrl;
         return true;
       } else {
         showError(result.message || "Đăng nhập thất bại!");
@@ -63,8 +63,23 @@
 
   function checkExistingSession() {
     if (Auth.isLoggedIn()) {
-      // Tất cả user vào role-panel
-      window.location.href = "role-panel.html";
+      const session = Auth.getCurrentSession();
+      let redirectUrl = "role-panel.html";
+
+      // Admin → thẳng admin.html
+      if (session.roleId === "admin") {
+        redirectUrl = "admin.html";
+      }
+      // Quản lý → role-panel
+      else if (session.roleId === "quan_ly") {
+        redirectUrl = "role-panel.html";
+      }
+      // Nhân viên/Nhập liệu → role-panel
+      else {
+        redirectUrl = "role-panel.html";
+      }
+
+      window.location.href = redirectUrl;
     }
   }
 

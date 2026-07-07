@@ -22,8 +22,6 @@
         <p class="sub" id="greetingText">Chọn vai trò để tiếp tục</p>
 
         <div class="role-grid" id="roleGrid">
-          <!-- 🔥 ĐÃ XÓA CARD QUẢN TRỊ (ADMIN) -->
-
           <!-- Nhập liệu -->
           <a href="index.html" class="role-card" data-role="nhap_lieu">
             <span class="icon">📝</span>
@@ -72,8 +70,14 @@
         window.location.href = "login.html";
       }
 
-      // Cập nhật tên user
+      // 🔥 Nếu là admin thì chuyển thẳng về admin.html (không vào role-panel)
       const user = Auth.getCurrentUser();
+      if (user && user.roleId === "admin") {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      // Cập nhật tên user
       if (user) {
         document.getElementById("greetingText").textContent =
           `Xin chào ${user.fullName || user.username}! Chọn vai trò để tiếp tục.`;
@@ -86,12 +90,6 @@
 
       roleCards.forEach((card) => {
         const cardRole = card.dataset.role;
-
-        // Nếu là admin thì hiện tất cả (trừ card admin đã xóa)
-        if (currentRole === "admin") {
-          card.style.display = "block";
-          return;
-        }
 
         // Nếu là nhập liệu: chỉ hiện Nhập liệu và Xem kho
         if (currentRole === "nhap_lieu") {

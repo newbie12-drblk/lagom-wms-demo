@@ -18,31 +18,26 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Kiểm tra đầu vào
     if (!username || !password) {
       return res
         .status(400)
         .json({ success: false, message: "Vui lòng nhập đầy đủ thông tin" });
     }
 
-    // Tìm user trong database
     const user = await User.findByUsername(username);
 
-    // Kiểm tra user tồn tại
     if (!user) {
       return res
         .status(401)
         .json({ success: false, message: "Tài khoản không tồn tại" });
     }
 
-    // Kiểm tra tài khoản bị khóa
     if (!user.isActive) {
       return res
         .status(401)
         .json({ success: false, message: "Tài khoản đã bị khóa" });
     }
 
-    // So sánh mật khẩu
     const isValidPassword = await User.verifyPassword(password, user.password);
 
     if (!isValidPassword) {
@@ -51,10 +46,8 @@ const login = async (req, res) => {
         .json({ success: false, message: "Mật khẩu không chính xác" });
     }
 
-    // Cập nhật thời gian đăng nhập cuối
     await User.updateLastLogin(user.id);
 
-    // Tạo JWT token
     const token = jwt.sign(
       {
         userId: user.id,
@@ -66,9 +59,21 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
-    // 🔥 QUAN TRỌNG: Tất cả user đều vào role-panel.html
-    // Admin cũng vào role-panel để chọn vai trò
+    // 🔥 QUAN TRỌNG: Redirect theo role
     let defaultRedirectUrl = "role-panel.html";
+
+    // Admin → thẳng admin.html
+    if (user.roleId === "admin") {
+      defaultRedirectUrl = "admin.html";
+    }
+    // Quản lý → role-panel.html (để chọn role)
+    else if (user.roleId === "quan_ly") {
+      defaultRedirectUrl = "role-panel.html";
+    }
+    // Nhân viên/Nhập liệu → role-panel.html
+    else {
+      defaultRedirectUrl = "role-panel.html";
+    }
 
     res.json({
       success: true,
@@ -137,7 +142,6 @@ const createUser = async (req, res) => {
       customPermissions,
     } = req.body;
 
-    // Kiểm tra username đã tồn tại
     const existing = await User.findByUsername(username);
     if (existing) {
       return res
@@ -145,7 +149,6 @@ const createUser = async (req, res) => {
         .json({ success: false, message: "Tên đăng nhập đã tồn tại" });
     }
 
-    // Tạo user mới
     const userId = await User.create({
       username,
       password,

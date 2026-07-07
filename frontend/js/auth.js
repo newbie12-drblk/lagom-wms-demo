@@ -99,7 +99,6 @@
 
     const sessionData = JSON.parse(session);
 
-    // Kiểm tra hết hạn
     if (new Date(sessionData.expiresAt) < new Date()) {
       logout();
       return null;
@@ -178,8 +177,7 @@
     return true;
   }
 
-  // ADMIN: Chỉ admin mới vào được
-  function requireAdmin(redirectUrl = "role-panel.html") {
+  function requireAdmin(redirectUrl = "login.html") {
     if (!isLoggedIn()) {
       window.location.href = "login.html";
       return false;
@@ -192,7 +190,6 @@
     return false;
   }
 
-  // MANAGER: Chỉ quản lý mới vào được
   function requireManager(redirectUrl = "role-panel.html") {
     if (!isLoggedIn()) {
       window.location.href = "login.html";
@@ -206,7 +203,6 @@
     return false;
   }
 
-  // NHẬP LIỆU: Chỉ nhập liệu hoặc admin mới vào được
   function requireNhapLieu(redirectUrl = "role-panel.html") {
     if (!isLoggedIn()) {
       window.location.href = "login.html";
@@ -246,7 +242,7 @@
     return false;
   }
 
-  // ========== USER MANAGEMENT (ASYNC) ==========
+  // ========== USER MANAGEMENT ==========
 
   async function getAllUsers() {
     try {
