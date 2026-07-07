@@ -1,3 +1,4 @@
+const db = require("../config/database");
 const Receipt = require("../models/Receipt");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
@@ -245,12 +246,35 @@ const updateReceiptStatus = async (req, res) => {
 // Lấy danh sách phiếu chờ duyệt
 const getPendingReceipts = async (req, res) => {
   try {
-    const receipts = await Receipt.getPendingApprovals();
-    console.log(`📋 Trả về ${receipts.length} phiếu chờ duyệt`);
-    res.json({ success: true, data: receipts });
+    console.log("📋 Fetching pending receipts...");
+
+    const [rows] = await db.execute(
+      `SELECT r.*, u.fullName as creatorName 
+       FROM receipts r 
+       LEFT JOIN users u ON r.createdBy = u.id 
+       WHERE r.status IN ('pending', 'awaiting_confirmation')
+       ORDER BY r.createdAt DESC`,
+    );
+
+    console.log(`📋 Found ${rows.length} pending receipts`);
+
+    // Lấy items cho từng phiếu
+    const result = [];
+    for (const row of rows) {
+      const [items] = await db.execute(
+        `SELECT * FROM receipt_items WHERE receiptId = ?`,
+        [row.id],
+      );
+      console.log(`  - ${row.receiptNo}: ${items.length} items`);
+      result.push({ ...row, items });
+    }
+
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error("Get pending receipts error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 

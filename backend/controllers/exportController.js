@@ -1,3 +1,4 @@
+const db = require("../config/database");
 const Export = require("../models/Export");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
@@ -233,12 +234,34 @@ const updateExportStatus = async (req, res) => {
 // Lấy danh sách phiếu chờ duyệt
 const getPendingExports = async (req, res) => {
   try {
-    const exports = await Export.getPendingApprovals();
-    console.log(`📋 Trả về ${exports.length} phiếu xuất chờ duyệt`);
-    res.json({ success: true, data: exports });
+    console.log("📋 Fetching pending exports...");
+
+    const [rows] = await db.execute(
+      `SELECT e.*, u.fullName as creatorName 
+       FROM exports e 
+       LEFT JOIN users u ON e.createdBy = u.id 
+       WHERE e.status IN ('pending', 'awaiting_confirmation')
+       ORDER BY e.createdAt DESC`,
+    );
+
+    console.log(`📋 Found ${rows.length} pending exports`);
+
+    const result = [];
+    for (const row of rows) {
+      const [items] = await db.execute(
+        `SELECT * FROM export_items WHERE exportId = ?`,
+        [row.id],
+      );
+      console.log(`  - ${row.exportNo}: ${items.length} items`);
+      result.push({ ...row, items });
+    }
+
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error("Get pending exports error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
