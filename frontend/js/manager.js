@@ -1,7 +1,6 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin
- * ĐÃ SỬA: Hiển thị chi tiết phiếu đầy đủ
  */
 
 (function () {
@@ -176,7 +175,7 @@
     }
   };
 
-  // ========== LOAD PENDING RECEIPTS - CHI TIẾT ==========
+  // ========== LOAD PENDING RECEIPTS ==========
   async function loadPendingReceipts() {
     const container = $("pendingReceiptsList");
     Utils.showLoading(true, "Đang tải danh sách phiếu nhập...");
@@ -188,7 +187,7 @@
 
       if (result.success) {
         pendingReceipts = result.data || [];
-        console.log("📥 Phiếu nhập chờ duyệt:", pendingReceipts);
+        console.log("📥 Phiếu nhập chờ duyệt:", pendingReceipts.length);
         renderPendingReceipts();
       } else {
         Utils.showToast("Lỗi tải dữ liệu", "error");
@@ -231,7 +230,6 @@
         };
         const status = statusMap[r.status] || statusMap["pending"];
 
-        // Lấy items từ phiếu
         const items = r.items || [];
         const totalItems = items.length;
         const totalValue = r.total || 0;
@@ -305,17 +303,17 @@
                       ${items
                         .map(
                           (item, idx) => `
-                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}"
-                        <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                        <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                        <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                        <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                        <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                        <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                        <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                      </tr>
+                        <tr style="border-bottom: 1px solid #1e2d45; ${idx % 2 === 0 ? "background: #111827;" : "background: #0f172a;"}">
+                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #93c5fd;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                          <td style="padding: 6px 10px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                        </tr>
                       `,
                         )
                         .join("")}
@@ -419,7 +417,7 @@
     }
   };
 
-  // ========== LOAD PENDING EXPORTS - CHI TIẾT ==========
+  // ========== LOAD PENDING EXPORTS ==========
   async function loadPendingExports() {
     const container = $("pendingExportsList");
     Utils.showLoading(true, "Đang tải danh sách phiếu xuất...");
@@ -431,7 +429,7 @@
 
       if (result.success) {
         pendingExports = result.data || [];
-        console.log("📤 Phiếu xuất chờ duyệt:", pendingExports);
+        console.log("📤 Phiếu xuất chờ duyệt:", pendingExports.length);
         renderPendingExports();
       } else {
         Utils.showToast("Lỗi tải dữ liệu", "error");

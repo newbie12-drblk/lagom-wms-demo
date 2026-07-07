@@ -13,12 +13,7 @@ const { checkRole } = require("../middleware/roleCheck");
 const router = express.Router();
 
 router.get("/", verifyToken, getAllReceipts);
-router.get(
-  "/pending",
-  verifyToken,
-  checkRole("admin", "ke_toan", "quan_ly"),
-  getPendingReceipts,
-);
+router.get("/pending", verifyToken, checkRole("quan_ly"), getPendingReceipts);
 router.get("/:id", verifyToken, getReceiptById);
 router.post(
   "/",

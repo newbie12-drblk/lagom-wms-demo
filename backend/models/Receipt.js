@@ -14,7 +14,6 @@ const Receipt = {
 
   // Lấy phiếu nhập theo ID KÈM ITEMS
   findById: async (id) => {
-    // Lấy thông tin phiếu
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
        FROM receipts r 
@@ -28,14 +27,13 @@ const Receipt = {
 
     const receipt = receipts[0];
 
-    // 🔥 LẤY DANH SÁCH ITEMS
+    // Lấy danh sách items
     const [items] = await db.execute(
       `SELECT * FROM receipt_items WHERE receiptId = ?`,
       [id],
     );
 
     console.log(`📦 Receipt ${id} has ${items.length} items`);
-
     return { ...receipt, items };
   },
 
@@ -46,20 +44,22 @@ const Receipt = {
        FROM receipts r 
        LEFT JOIN users u ON r.createdBy = u.id 
        WHERE r.status IN ('pending', 'awaiting_confirmation')
-       ORDER BY r.createdAt ASC`,
+       ORDER BY r.createdAt DESC`,
     );
 
-    // 🔥 LẤY ITEMS CHO TỪNG PHIẾU
+    console.log(`📋 Found ${rows.length} pending receipts`);
+
+    // Lấy items cho từng phiếu
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
         `SELECT * FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
+      console.log(`  - ${row.receiptNo}: ${items.length} items`);
       result.push({ ...row, items });
     }
 
-    console.log(`📋 Found ${result.length} pending receipts with items`);
     return result;
   },
 
@@ -101,6 +101,7 @@ const Receipt = {
     );
     const receiptId = result.insertId;
 
+    // Thêm items
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         await db.execute(
@@ -131,6 +132,9 @@ const Receipt = {
       }
     }
 
+    console.log(
+      `✅ Created receipt ${receiptNo} with ${data.items?.length || 0} items`,
+    );
     return receiptId;
   },
 
