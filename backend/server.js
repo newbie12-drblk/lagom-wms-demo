@@ -9,22 +9,36 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// CORS - FIX BLOCKED:ORIGIN - CÁCH ĐƠN GIẢN NHẤT
+// CORS - GIẢI PHÁP ĐƠN GIẢN NHẤT
 // ============================================
-// Cho phép tất cả các origin (dùng trong development)
-app.use(cors());
+// THÊM MIDDLEWARE NÀY ĐẦU TIÊN
+app.use((req, res, next) => {
+  // Cho phép tất cả origin
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With",
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
 
-// Hoặc nếu muốn chỉ định cụ thể:
+  // Xử lý preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Vẫn giữ cors middleware
 app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
 
-// Xử lý preflight OPTIONS cho tất cả routes
 app.options("*", cors());
 
 app.use(express.json());
@@ -72,7 +86,11 @@ app.use("/api/deletions", deletionRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "LAGOM WMS Backend v2.0 is running" });
+  res.json({
+    status: "OK",
+    message: "LAGOM WMS Backend v2.0 is running",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Error handler
