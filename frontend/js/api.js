@@ -1,5 +1,6 @@
 // ==================== API WRAPPER ====================
 
+// SỬA: Thêm https cho API_BASE_URL
 const API_BASE_URL = "https://lagom-wms-demo.onrender.com/api";
 
 function getToken() {
@@ -29,6 +30,7 @@ async function apiCall(endpoint, options = {}) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: "include", // Thêm dòng này
     });
 
     const data = await response.json();

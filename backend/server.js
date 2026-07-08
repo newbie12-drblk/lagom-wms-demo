@@ -9,28 +9,38 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// CORS - FIX
+// CORS - FIX BLOCKED:ORIGIN
 // ============================================
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "https://lagom-wms-demo.vercel.app",
+  "https://lagom-wms-demo.vercel.app",
+  "https://*.vercel.app",
+  "https://lagom-wms.vercel.app",
+];
 
 app.use(
   cors({
-    origin: "*",
+    origin: function (origin, callback) {
+      // Cho phép request không có origin (như từ Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        // Cho phép tất cả trong development
+        callback(null, true);
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
 );
+
+// Xử lý preflight OPTIONS
+app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 // Log requests
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.url}`);
+  console.log(`  Origin: ${req.headers.origin}`);
   if (req.body && Object.keys(req.body).length > 0) {
     console.log("📦 Body:", JSON.stringify(req.body, null, 2));
   }

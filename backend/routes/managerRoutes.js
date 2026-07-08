@@ -5,13 +5,14 @@ const db = require("../config/database");
 
 const router = express.Router();
 
-// Dashboard stats cho Quản lý
 router.get(
   "/dashboard/stats",
   verifyToken,
   checkRole("quan_ly"),
   async (req, res) => {
     try {
+      console.log("📊 Fetching dashboard stats...");
+
       // Đếm sản phẩm chờ duyệt
       const [productResult] = await db.execute(
         "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
@@ -38,24 +39,24 @@ router.get(
       );
 
       const data = {
-        pendingProducts: productResult[0]?.count || 0,
-        pendingReceipts: receiptResult[0]?.count || 0,
-        pendingExports: exportResult[0]?.count || 0,
-        pendingEdits: editResult[0]?.count || 0,
-        pendingDeletions: deleteResult[0]?.count || 0,
+        pendingProducts: parseInt(productResult[0]?.count || 0),
+        pendingReceipts: parseInt(receiptResult[0]?.count || 0),
+        pendingExports: parseInt(exportResult[0]?.count || 0),
+        pendingEdits: parseInt(editResult[0]?.count || 0),
+        pendingDeletions: parseInt(deleteResult[0]?.count || 0),
       };
 
-      console.log("📊 Stats:", data);
+      console.log("📊 Stats result:", JSON.stringify(data, null, 2));
 
-      res.json({
+      res.status(200).json({
         success: true,
         data: data,
       });
     } catch (error) {
-      console.error("❌ Error:", error);
+      console.error("❌ Dashboard stats error:", error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: error.message || "Lỗi server",
       });
     }
   },
