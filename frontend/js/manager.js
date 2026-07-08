@@ -156,7 +156,7 @@
     }
   }
 
-  // ========== LOAD PENDING RECEIPTS ==========
+  // ========== LOAD PENDING RECEIPTS - SỬA CỘT HIỂN THỊ ==========
   async function loadPendingReceipts() {
     const container = $("pendingReceiptsList");
     if (!container) return;
@@ -186,7 +186,6 @@
           return;
         }
 
-        // Render từng phiếu
         container.innerHTML = receipts
           .map((r) => {
             const items = r.items || [];
@@ -218,9 +217,16 @@
                         <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Quy cách</th>
                         <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Hãng SX</th>
                         <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">ĐVT</th>
-                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Đơn giá</th>
-                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">SL</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Phân loại</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Giá nhập</th>
+                        <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">SL nhập</th>
                         <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Thành tiền</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Số HĐ</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Số HĐơn nhập</th>
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">Ngày nhập HĐ</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Số lot</th>
+                        <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">HSD</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Ghi chú</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -234,9 +240,16 @@
                           <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
                           <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
                           <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
                           <td style="padding: 4px 8px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                          <td style="padding: 4px 8px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #86efac;">${item.soLuongNhap || 0}</td>
                           <td style="padding: 4px 8px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayHetHan)}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
                         </tr>
                       `,
                         )
@@ -244,8 +257,9 @@
                     </tbody>
                     <tfoot>
                       <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                        <td colspan="8" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td colspan="9" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
                         <td style="padding: 8px 8px; text-align: right; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
+                        <td colspan="5"></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -263,7 +277,6 @@
 
             return `
             <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b; background: #111827; border-radius: 12px; padding: 16px 20px;">
-              <!-- HEADER -->
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
                 <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">
                   📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}
@@ -279,7 +292,6 @@
                 </span>
               </div>
 
-              <!-- INFO -->
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
                 <div>
                   <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Nhà cung cấp</div>
@@ -299,10 +311,8 @@
                 </div>
               </div>
 
-              <!-- ITEMS TABLE -->
               ${itemsHtml}
 
-              <!-- BUTTONS -->
               <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
                 <button class="btn btn-danger" onclick="window.rejectReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
                   <i class="fas fa-times"></i> Từ chối
@@ -326,7 +336,70 @@
     }
   }
 
-  // ========== LOAD PENDING EXPORTS ==========
+  // ========== APPROVE RECEIPT ==========
+  window.approveReceipt = async (id) => {
+    if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
+
+    Utils.showLoading(true, "Đang duyệt...");
+    try {
+      const token = API.getToken();
+      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã duyệt phiếu nhập!");
+        loadPendingReceipts();
+        loadDashboardStats();
+      } else {
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ========== REJECT RECEIPT ==========
+  window.rejectReceipt = async (id) => {
+    const reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      const token = API.getToken();
+      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ Đã từ chối phiếu nhập!");
+        loadPendingReceipts();
+        loadDashboardStats();
+      } else {
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ========== LOAD PENDING EXPORTS (GIỮ NGUYÊN) ==========
   async function loadPendingExports() {
     const container = $("pendingExportsList");
     if (!container) return;
@@ -387,6 +460,7 @@
                         <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Quy cách</th>
                         <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Hãng SX</th>
                         <th style="padding: 6px 8px; text-align: center; color: #60a5fa;">ĐVT</th>
+                        <th style="padding: 6px 8px; text-align: left; color: #60a5fa;">Phân loại</th>
                         <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Đơn giá</th>
                         <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">SL</th>
                         <th style="padding: 6px 8px; text-align: right; color: #60a5fa;">Thành tiền</th>
@@ -403,8 +477,9 @@
                           <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
                           <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
                           <td style="padding: 4px 8px; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 4px 8px; text-align: left; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
                           <td style="padding: 4px 8px; text-align: right; color: #93c5fd;">${Utils.formatCurrency(item.donGia || 0)}</td>
-                          <td style="padding: 4px 8px; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                          <td style="padding: 4px 8px; text-align: right; color: #86efac;">${item.soLuong || 0}</td>
                           <td style="padding: 4px 8px; text-align: right; color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
                         </tr>
                       `,
@@ -413,7 +488,7 @@
                     </tbody>
                     <tfoot>
                       <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                        <td colspan="8" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                        <td colspan="9" style="padding: 8px 8px; text-align: right; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
                         <td style="padding: 8px 8px; text-align: right; font-weight: 700; color: #fbbf24;">${Utils.formatCurrency(totalValue)}</td>
                       </tr>
                     </tfoot>
@@ -490,69 +565,6 @@
       Utils.showLoading(false);
     }
   }
-
-  // ========== APPROVE RECEIPT ==========
-  window.approveReceipt = async (id) => {
-    if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
-
-    Utils.showLoading(true, "Đang duyệt...");
-    try {
-      const token = API.getToken();
-      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: "approved" }),
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        Utils.showToast("✅ Đã duyệt phiếu nhập!");
-        loadPendingReceipts();
-        loadDashboardStats();
-      } else {
-        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
-      }
-    } catch (error) {
-      Utils.showToast("❌ " + error.message, "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ========== REJECT RECEIPT ==========
-  window.rejectReceipt = async (id) => {
-    const reason = prompt("Nhập lý do từ chối:");
-    if (reason === null) return;
-
-    Utils.showLoading(true, "Đang xử lý...");
-    try {
-      const token = API.getToken();
-      const response = await fetch(`${API_BASE_URL}/receipts/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: "rejected", rejectedReason: reason }),
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        Utils.showToast("✅ Đã từ chối phiếu nhập!");
-        loadPendingReceipts();
-        loadDashboardStats();
-      } else {
-        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
-      }
-    } catch (error) {
-      Utils.showToast("❌ " + error.message, "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
 
   // ========== APPROVE EXPORT ==========
   window.approveExport = async (id) => {
@@ -911,7 +923,6 @@
     loadDashboardStats();
     loadNotifications();
 
-    // Kiểm tra view hiện tại
     const activeView = document.querySelector(".view.active");
     if (activeView) {
       const viewId = activeView.id.replace("view-", "");
@@ -936,7 +947,6 @@
   window.approveDeletionRequest = approveDeletionRequest;
   window.rejectDeletionRequest = rejectDeletionRequest;
 
-  // Chạy khi DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
