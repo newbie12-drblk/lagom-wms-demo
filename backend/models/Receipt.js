@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Receipt = {
-  // Lấy tất cả phiếu nhập
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
@@ -12,7 +11,6 @@ const Receipt = {
     return rows;
   },
 
-  // Lấy phiếu nhập theo ID kèm items
   findById: async (id) => {
     const [receipts] = await db.execute(
       `SELECT r.*, u.fullName as creatorName, a.fullName as approverName
@@ -34,7 +32,6 @@ const Receipt = {
     return { ...receipt, items };
   },
 
-  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT r.*, u.fullName as creatorName 
@@ -56,7 +53,6 @@ const Receipt = {
     return result;
   },
 
-  // Tạo phiếu nhập
   create: async (data, createdBy) => {
     const [lastReceipt] = await db.execute(
       "SELECT receiptNo FROM receipts ORDER BY id DESC LIMIT 1",
@@ -88,14 +84,17 @@ const Receipt = {
         data.customerContract || "",
         total,
         data.notes || "",
-        "pending",
+        "awaiting_confirmation",
         createdBy,
       ],
     );
     const receiptId = result.insertId;
 
+    console.log(`📝 Tạo receipt_items cho phiếu ${receiptId}`);
+
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
+        console.log(`  - ${item.maHang}: ${item.tenThuongMai}`);
         await db.execute(
           `INSERT INTO receipt_items 
             (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
@@ -127,8 +126,8 @@ const Receipt = {
     return receiptId;
   },
 
-  // Cập nhật trạng thái
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
+    console.log(`📝 Cập nhật status phiếu ${id} -> ${status}`);
     await db.execute(
       `UPDATE receipts 
        SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
@@ -138,7 +137,6 @@ const Receipt = {
     return true;
   },
 
-  // Xóa phiếu
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM receipts WHERE id = ?", [
       id,

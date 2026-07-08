@@ -38,7 +38,12 @@ const createReceipt = async (req, res) => {
     console.log("📥 Tạo phiếu nhập bởi user:", createdBy);
     console.log("📦 Số lượng items:", receiptData.items?.length || 0);
 
+    // Tạo phiếu với status = 'awaiting_confirmation'
     const receiptId = await Receipt.create(receiptData, createdBy);
+
+    // Cập nhật status thành awaiting_confirmation
+    await Receipt.updateStatus(receiptId, "awaiting_confirmation", null, null);
+
     const receipt = await Receipt.findById(receiptId);
 
     if (!receipt) {
@@ -50,9 +55,7 @@ const createReceipt = async (req, res) => {
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
     console.log("📦 Số items trong phiếu:", receipt.items?.length || 0);
 
-    // Luôn để awaiting_confirmation để Quản lý duyệt
-    await Receipt.updateStatus(receiptId, "awaiting_confirmation", null, null);
-
+    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Phiếu nhập ${receipt.receiptNo} chờ duyệt`,
       `Admin vừa tạo phiếu nhập mới. Vui lòng kiểm tra và duyệt.`,
@@ -88,6 +91,9 @@ const updateReceiptStatus = async (req, res) => {
     const { status, rejectedReason } = req.body;
     const approvedBy = req.user.userId;
 
+    console.log(`📋 Cập nhật phiếu ID: ${id}, Status: ${status}`);
+
+    // Lấy phiếu và items
     const receipt = await Receipt.findById(id);
     if (!receipt) {
       return res
@@ -95,30 +101,50 @@ const updateReceiptStatus = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu" });
     }
 
+    console.log(
+      `📦 Phiếu ${receipt.receiptNo} có ${receipt.items?.length || 0} sản phẩm`,
+    );
+
     // Nếu duyệt phiếu -> thêm sản phẩm vào kho
     if (status === "approved") {
-      console.log(
-        `✅ Duyệt phiếu ${receipt.receiptNo}, thêm sản phẩm vào kho...`,
-      );
-
       const items = receipt.items || [];
+
+      if (items.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Phiếu không có sản phẩm để nhập kho!",
+        });
+      }
+
       let addedCount = 0;
       let errorItems = [];
 
+      // Lấy STT max hiện tại
+      const [maxSttResult] = await db.execute(
+        "SELECT MAX(stt) as maxStt FROM inventory",
+      );
+      let currentStt = maxSttResult[0]?.maxStt || 0;
+
       for (const item of items) {
         try {
-          // Kiểm tra sản phẩm đã tồn tại trong kho chưa
-          const existing = await Inventory.findByMaHang(item.maHang);
+          console.log(
+            `📦 Xử lý sản phẩm: ${item.maHang} - ${item.tenThuongMai}`,
+          );
 
-          if (existing) {
+          // Kiểm tra sản phẩm đã tồn tại trong kho chưa
+          const [existing] = await db.execute(
+            "SELECT * FROM inventory WHERE maHang = ?",
+            [item.maHang],
+          );
+
+          if (existing.length > 0) {
             // Nếu đã tồn tại -> CẬP NHẬT số lượng
             console.log(
               `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
             );
-            await Inventory.updateStock(
-              item.maHang,
-              item.soLuongNhap,
-              "import",
+            await db.execute(
+              `UPDATE inventory SET tonKho = tonKho + ? WHERE maHang = ?`,
+              [item.soLuongNhap || 0, item.maHang],
             );
             addedCount++;
           } else {
@@ -127,23 +153,20 @@ const updateReceiptStatus = async (req, res) => {
               `📦 Thêm sản phẩm mới: ${item.maHang} - ${item.tenThuongMai}`,
             );
 
-            // Lấy STT max
-            const [maxStt] = await db.execute(
-              "SELECT MAX(stt) as maxStt FROM inventory",
-            );
-            const newStt = (maxStt[0]?.maxStt || 0) + 1;
+            currentStt++;
 
             // Thêm vào bảng inventory
             await db.execute(
               `INSERT INTO inventory (
                 stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-                giaNhap, soLuongNhap, tonKho, soLot, ngayHetHan,
+                giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho, 
+                soLot, ngayHetHan,
                 soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
                 ngayNhapHD, ngayXuatHD, ghiChu,
                 status, createdBy, approvedBy, approvedAt
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
               [
-                newStt,
+                currentStt,
                 item.tenThuongMai || "",
                 item.maHang || "",
                 item.quyCach || "",
@@ -151,8 +174,10 @@ const updateReceiptStatus = async (req, res) => {
                 item.dvt || "",
                 item.phanLoai || "",
                 item.giaNhap || 0,
+                item.giaNhap || 0, // giaXuat = giaNhap
                 item.soLuongNhap || 0,
-                item.soLuongNhap || 0,
+                0, // soLuongXuat
+                item.soLuongNhap || 0, // tonKho = soLuongNhap
                 item.soLot || "",
                 item.ngayHetHan || null,
                 item.soHopDongNhap || "",
@@ -188,38 +213,16 @@ const updateReceiptStatus = async (req, res) => {
     // Cập nhật trạng thái phiếu
     await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
 
-    const statusText =
-      status === "approved" ? "đã được duyệt" : "đã bị từ chối";
-
-    await Notification.create(
-      receipt.createdBy,
-      `Phiếu nhập ${receipt.receiptNo} ${statusText}`,
-      status === "rejected"
-        ? `Lý do: ${rejectedReason}`
-        : `Phiếu nhập của bạn đã được Quản lý duyệt`,
-      status === "approved" ? "success" : "warning",
-      id,
-    );
-
-    await EditHistory.log(
-      approvedBy,
-      "receipts",
-      id,
-      "UPDATE",
-      "status",
-      null,
-      status,
-    );
-
     res.json({
       success: true,
       message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu`,
     });
   } catch (error) {
-    console.error("Update receipt status error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server: " + error.message });
+    console.error("❌ Update receipt status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 
