@@ -80,6 +80,7 @@ const createReceipt = async (req, res) => {
 
 // ============================================================
 // QUAN TRỌNG: HÀM DUYỆT PHIẾU NHẬP - THÊM SẢN PHẨM VÀO KHO
+// ĐÃ SỬA: THÊM ĐẦY ĐỦ CÁC TRƯỜNG VÀ GÁN GIÁ TRỊ MẶC ĐỊNH
 // ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
@@ -112,6 +113,7 @@ const updateReceiptStatus = async (req, res) => {
       }
 
       let addedCount = 0;
+      let updatedCount = 0;
 
       const [maxSttResult] = await db.execute(
         "SELECT MAX(stt) as maxStt FROM inventory",
@@ -130,15 +132,27 @@ const updateReceiptStatus = async (req, res) => {
           );
 
           if (existing.length > 0) {
+            // Nếu đã tồn tại -> CẬP NHẬT số lượng
             console.log(
               `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
             );
             await db.execute(
-              `UPDATE inventory SET tonKho = tonKho + ? WHERE maHang = ?`,
-              [item.soLuongNhap || 0, item.maHang],
+              `UPDATE inventory SET 
+                tonKho = tonKho + ?,
+                soLuongNhap = soLuongNhap + ?,
+                giaNhap = ?,
+                updatedAt = NOW()
+              WHERE maHang = ?`,
+              [
+                item.soLuongNhap || 0,
+                item.soLuongNhap || 0,
+                item.giaNhap || 0,
+                item.maHang,
+              ],
             );
-            addedCount++;
+            updatedCount++;
           } else {
+            // Nếu chưa tồn tại -> THÊM MỚI VỚI ĐẦY ĐỦ TRƯỜNG
             console.log(
               `📦 Thêm sản phẩm mới: ${item.maHang} - ${item.tenThuongMai}`,
             );
@@ -162,17 +176,17 @@ const updateReceiptStatus = async (req, res) => {
                 item.dvt || "",
                 item.phanLoai || "",
                 item.giaNhap || 0,
-                item.giaNhap || 0,
+                item.giaNhap || 0, // giaXuat = giaNhap (mặc định)
                 item.soLuongNhap || 0,
-                0,
-                item.soLuongNhap || 0,
+                0, // soLuongXuat = 0 (mặc định)
+                item.soLuongNhap || 0, // tonKho = soLuongNhap (mặc định)
                 item.soLot || "",
                 item.ngayHetHan || null,
                 item.soHopDongNhap || "",
                 item.soHoaDonNhap || "",
-                item.soHoaDonXuat || "",
+                "", // soHoaDonXuat = "" (mặc định)
                 item.ngayNhapHD || null,
-                item.ngayXuatHD || null,
+                null, // ngayXuatHD = NULL (mặc định)
                 item.ghiChu || "",
                 receipt.createdBy,
                 approvedBy,
@@ -188,12 +202,14 @@ const updateReceiptStatus = async (req, res) => {
         }
       }
 
-      console.log(`✅ Đã thêm/cập nhật ${addedCount} sản phẩm vào kho`);
+      console.log(
+        `✅ Đã thêm ${addedCount} sản phẩm mới, cập nhật ${updatedCount} sản phẩm vào kho`,
+      );
 
       await Notification.create(
         receipt.createdBy,
         `✅ Phiếu nhập ${receipt.receiptNo} đã được duyệt`,
-        `Quản lý đã duyệt phiếu nhập. Đã thêm ${addedCount} sản phẩm vào kho.`,
+        `Quản lý đã duyệt phiếu nhập. Đã thêm ${addedCount} sản phẩm mới và cập nhật ${updatedCount} sản phẩm vào kho.`,
         "success",
         id,
       );
@@ -231,7 +247,14 @@ const getPendingReceipts = async (req, res) => {
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
-        `SELECT * FROM receipt_items WHERE receiptId = ?`,
+        `SELECT 
+          id, receiptId, 
+          tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+          giaNhap, soLuongNhap, thanhTien,
+          soLot, ngayHetHan,
+          soHopDongNhap, soHoaDonNhap, ngayNhapHD,
+          ghiChu
+         FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
       console.log(`  - ${row.receiptNo}: ${items.length} items`);

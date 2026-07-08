@@ -1,7 +1,7 @@
 /**
  * ==================== RECEIPT MODULE ====================
  * Quản lý phiếu nhập hàng - TỰ ĐỘNG DUYỆT
- * ĐÃ CẬP NHẬT: Thêm trường, auto-fill, "Trình duyệt"
+ * ĐÃ CẬP NHẬT: Đồng bộ trường với bảng inventory
  */
 
 (function () {
@@ -312,7 +312,7 @@
     return data;
   }
 
-  // ========== Reset form (không confirm - dùng sau khi lưu) ==========
+  // ========== Reset form ==========
   function resetFormData() {
     if (DOM.supplierName) DOM.supplierName.value = "";
     if (DOM.supplierAddress) DOM.supplierAddress.value = "";
@@ -327,7 +327,6 @@
     calculateTotal();
   }
 
-  // ========== Làm mới form (có confirm - dùng cho nút Làm mới) ==========
   function clearForm() {
     if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu?")) {
       resetFormData();

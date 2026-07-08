@@ -24,11 +24,21 @@ const Receipt = {
     if (receipts.length === 0) return null;
 
     const receipt = receipts[0];
+
+    // LẤY ĐẦY ĐỦ CÁC TRƯỜNG từ receipt_items
     const [items] = await db.execute(
-      `SELECT * FROM receipt_items WHERE receiptId = ?`,
+      `SELECT 
+        id, receiptId, 
+        tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+        giaNhap, soLuongNhap, thanhTien,
+        soLot, ngayHetHan,
+        soHopDongNhap, soHoaDonNhap, ngayNhapHD,
+        ghiChu
+       FROM receipt_items WHERE receiptId = ?`,
       [id],
     );
 
+    console.log(`📦 Receipt ${id} has ${items.length} items`);
     return { ...receipt, items };
   },
 
@@ -44,7 +54,14 @@ const Receipt = {
     const result = [];
     for (const row of rows) {
       const [items] = await db.execute(
-        `SELECT * FROM receipt_items WHERE receiptId = ?`,
+        `SELECT 
+          id, receiptId, 
+          tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+          giaNhap, soLuongNhap, thanhTien,
+          soLot, ngayHetHan,
+          soHopDongNhap, soHoaDonNhap, ngayNhapHD,
+          ghiChu
+         FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
       result.push({ ...row, items });
