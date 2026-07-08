@@ -9,37 +9,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// CORS - FIX BLOCKED:ORIGIN
+// CORS - FIX BLOCKED:ORIGIN - CÁCH ĐƠN GIẢN NHẤT
 // ============================================
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5500",
-  "https://lagom-wms-demo.vercel.app",
-  "https://lagom-wms-demo.vercel.app",
-  "https://*.vercel.app",
-  "https://lagom-wms.vercel.app",
-];
+// Cho phép tất cả các origin (dùng trong development)
+app.use(cors());
 
+// Hoặc nếu muốn chỉ định cụ thể:
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Cho phép request không có origin (như từ Postman)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        // Cho phép tất cả trong development
-        callback(null, true);
-      }
-    },
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
   }),
 );
 
-// Xử lý preflight OPTIONS
+// Xử lý preflight OPTIONS cho tất cả routes
 app.options("*", cors());
 
 app.use(express.json());
@@ -48,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 // Log requests
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.url}`);
-  console.log(`  Origin: ${req.headers.origin}`);
+  console.log(`  Origin: ${req.headers.origin || "No origin"}`);
   if (req.body && Object.keys(req.body).length > 0) {
     console.log("📦 Body:", JSON.stringify(req.body, null, 2));
   }
@@ -101,4 +86,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 API URL: http://localhost:${PORT}/api`);
 });
