@@ -60,111 +60,26 @@ const createExport = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
 
-    let allMatched = true;
-    let mismatchDetails = [];
+    // Luôn để awaiting_confirmation
+    await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
-    for (const item of exportItem.items || []) {
-      const product = await Inventory.findByMaHang(item.maHang);
+    await Notification.createForManagers(
+      `📤 Phiếu xuất ${exportItem.exportNo} chờ duyệt`,
+      `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`,
+      "approval",
+      exportId,
+      "export",
+    );
 
-      if (!product) {
-        allMatched = false;
-        mismatchDetails.push(
-          `❌ Sản phẩm "${item.tenThuongMai}" (${item.maHang}) chưa có trong kho`,
-        );
-        continue;
-      }
-
-      if (product.tenThuongMai !== item.tenThuongMai) {
-        allMatched = false;
-        mismatchDetails.push(
-          `❌ Tên sản phẩm "${item.maHang}" không khớp (kho: ${product.tenThuongMai}, phiếu: ${item.tenThuongMai})`,
-        );
-      }
-      if (product.quyCach !== item.quyCach) {
-        allMatched = false;
-        mismatchDetails.push(
-          `❌ Quy cách của "${item.maHang}" không khớp (kho: ${product.quyCach}, phiếu: ${item.quyCach})`,
-        );
-      }
-    }
-
-    if (allMatched) {
-      await Export.updateStatus(exportId, "approved", createdBy, null);
-
-      for (const item of exportItem.items || []) {
-        await Inventory.updateStock(item.maHang, item.soLuong, "export");
-      }
-
-      await EditHistory.log(
-        createdBy,
-        "exports",
-        exportId,
-        "AUTO_APPROVED",
-        null,
-        null,
-        JSON.stringify(exportData),
-      );
-
-      await Notification.create(
-        createdBy,
-        `✅ Phiếu xuất ${exportItem.exportNo} đã được tự động xác nhận`,
-        "Tất cả sản phẩm trong phiếu đều khớp với kho.",
-        "success",
-        exportId,
-      );
-
-      res.json({
-        success: true,
-        data: { id: exportId, status: "approved" },
-        message:
-          "✅ Tạo phiếu xuất thành công! Phiếu đã được tự động xác nhận.",
-      });
-    } else {
-      await Export.updateStatus(
-        exportId,
-        "awaiting_confirmation",
-        createdBy,
-        null,
-      );
-
-      await EditHistory.log(
-        createdBy,
-        "exports",
-        exportId,
-        "CREATE",
-        null,
-        null,
-        JSON.stringify(exportData),
-      );
-
-      await Notification.create(
-        createdBy,
-        `⚠️ Phiếu xuất ${exportItem.exportNo} đang chờ xác nhận`,
-        `Có ${mismatchDetails.length} sản phẩm không khớp với kho.`,
-        "warning",
-        exportId,
-      );
-
-      await Notification.createForManagers(
-        `📤 Phiếu xuất ${exportItem.exportNo} chờ xác nhận`,
-        `Admin vừa tạo phiếu xuất có ${mismatchDetails.length} sản phẩm không khớp với kho.\nVui lòng kiểm tra và xác nhận.`,
-        "approval",
-        exportId,
-        "export",
-      );
-
-      res.json({
-        success: true,
-        data: {
-          id: exportId,
-          status: "awaiting_confirmation",
-          items: exportItem.items || [],
-        },
-        message:
-          "⚠️ Tạo phiếu xuất thành công! Phiếu đang chờ xác nhận từ Quản lý.",
-        details: mismatchDetails,
-      });
-    }
+    res.json({
+      success: true,
+      data: {
+        id: exportId,
+        status: "awaiting_confirmation",
+        items: exportItem.items || [],
+      },
+      message: "✅ Tạo phiếu xuất thành công! Phiếu đang chờ Quản lý duyệt.",
+    });
   } catch (error) {
     console.error("❌ Create export error:", error);
     res
@@ -186,6 +101,21 @@ const updateExportStatus = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu" });
     }
 
+    // Nếu duyệt -> trừ tồn kho
+    if (status === "approved") {
+      const items = exportItem.items || [];
+      for (const item of items) {
+        await Inventory.updateStock(item.maHang, item.soLuong, "export");
+      }
+      await Notification.create(
+        exportItem.createdBy,
+        `✅ Phiếu xuất ${exportItem.exportNo} đã được duyệt`,
+        `Quản lý đã duyệt phiếu xuất. Đã xuất ${items.length} sản phẩm.`,
+        "success",
+        id,
+      );
+    }
+
     await Export.updateStatus(id, status, approvedBy, rejectedReason);
 
     const statusText =
@@ -201,23 +131,15 @@ const updateExportStatus = async (req, res) => {
       id,
     );
 
-    await EditHistory.log(
-      approvedBy,
-      "exports",
-      id,
-      "UPDATE",
-      "status",
-      null,
-      status,
-    );
-
     res.json({
       success: true,
       message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu`,
     });
   } catch (error) {
     console.error("Update export status error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
@@ -247,16 +169,6 @@ const deleteExport = async (req, res) => {
     }
 
     await Export.delete(id);
-    await EditHistory.log(
-      userId,
-      "exports",
-      id,
-      "DELETE",
-      null,
-      null,
-      JSON.stringify(exportItem),
-    );
-
     res.json({ success: true, message: "Xóa phiếu thành công" });
   } catch (error) {
     console.error("Delete export error:", error);
