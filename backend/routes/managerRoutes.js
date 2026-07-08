@@ -5,7 +5,6 @@ const db = require("../config/database");
 
 const router = express.Router();
 
-// Dashboard stats cho Quản lý
 router.get(
   "/dashboard/stats",
   verifyToken,
@@ -29,7 +28,7 @@ router.get(
         "SELECT COUNT(*) as count FROM exports WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
-      // Đếm yêu cầu chỉnh sửa - DÙNG TRY CATCH ĐỂ TRÁNH LỖI
+      // Đếm yêu cầu chỉnh sửa - DÙNG TRY CATCH
       let editCount = 0;
       try {
         const [editResult] = await db.execute(
@@ -37,10 +36,10 @@ router.get(
         );
         editCount = editResult[0]?.count || 0;
       } catch (err) {
-        console.log("⚠️ Bảng edit_requests chưa tồn tại, bỏ qua");
+        console.log("⚠️ Bảng edit_requests chưa tồn tại");
       }
 
-      // Đếm yêu cầu xóa - DÙNG TRY CATCH ĐỂ TRÁNH LỖI
+      // Đếm yêu cầu xóa - DÙNG TRY CATCH
       let deleteCount = 0;
       try {
         const [deleteResult] = await db.execute(
@@ -48,7 +47,7 @@ router.get(
         );
         deleteCount = deleteResult[0]?.count || 0;
       } catch (err) {
-        console.log("⚠️ Bảng deletion_requests chưa tồn tại, bỏ qua");
+        console.log("⚠️ Bảng deletion_requests chưa tồn tại");
       }
 
       const data = {
@@ -59,17 +58,17 @@ router.get(
         pendingDeletions: deleteCount,
       };
 
-      console.log("📊 Stats result:", JSON.stringify(data, null, 2));
+      console.log("📊 Stats:", data);
 
-      res.status(200).json({
+      res.json({
         success: true,
         data: data,
       });
     } catch (error) {
-      console.error("❌ Dashboard stats error:", error);
+      console.error("❌ Error:", error);
       res.status(500).json({
         success: false,
-        message: error.message || "Lỗi server",
+        message: error.message,
       });
     }
   },

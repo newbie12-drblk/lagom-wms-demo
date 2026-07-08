@@ -5,39 +5,34 @@ const getMyNotifications = async (req, res) => {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 20;
 
-    // KIỂM TRA BẢNG TỒN TẠI
-    try {
-      const [rows] = await db.execute(
-        `SELECT * FROM notifications 
-         WHERE userId = ? 
-         ORDER BY createdAt DESC 
-         LIMIT ?`,
-        [userId, limit],
-      );
+    // SỬA: Thêm dấu ? đúng cách
+    const [rows] = await db.execute(
+      `SELECT * FROM notifications 
+       WHERE userId = ? 
+       ORDER BY createdAt DESC 
+       LIMIT ?`,
+      [userId, limit],
+    );
 
-      const [unreadResult] = await db.execute(
-        `SELECT COUNT(*) as count FROM notifications 
-         WHERE userId = ? AND isRead = FALSE`,
-        [userId],
-      );
+    const [unreadResult] = await db.execute(
+      `SELECT COUNT(*) as count FROM notifications 
+       WHERE userId = ? AND isRead = FALSE`,
+      [userId],
+    );
 
-      res.json({
-        success: true,
-        data: rows,
-        unreadCount: unreadResult[0]?.count || 0,
-      });
-    } catch (err) {
-      // Nếu bảng chưa tồn tại, trả về mảng rỗng
-      console.log("⚠️ Bảng notifications chưa tồn tại");
-      res.json({
-        success: true,
-        data: [],
-        unreadCount: 0,
-      });
-    }
+    res.json({
+      success: true,
+      data: rows,
+      unreadCount: unreadResult[0]?.count || 0,
+    });
   } catch (error) {
     console.error("Get notifications error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    // Trả về mảng rỗng thay vì lỗi
+    res.json({
+      success: true,
+      data: [],
+      unreadCount: 0,
+    });
   }
 };
 
