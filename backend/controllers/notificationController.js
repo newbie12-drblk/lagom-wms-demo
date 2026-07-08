@@ -5,7 +5,6 @@ const getMyNotifications = async (req, res) => {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 20;
 
-    // SỬA: Thêm dấu ? đúng cách
     const [rows] = await db.execute(
       `SELECT * FROM notifications 
        WHERE userId = ? 
@@ -22,12 +21,11 @@ const getMyNotifications = async (req, res) => {
 
     res.json({
       success: true,
-      data: rows,
+      data: rows || [],
       unreadCount: unreadResult[0]?.count || 0,
     });
   } catch (error) {
-    console.error("Get notifications error:", error);
-    // Trả về mảng rỗng thay vì lỗi
+    console.error("Get notifications error:", error.message);
     res.json({
       success: true,
       data: [],
