@@ -38,10 +38,7 @@ const createReceipt = async (req, res) => {
     console.log("📥 Tạo phiếu nhập bởi user:", createdBy);
     console.log("📦 Số lượng items:", receiptData.items?.length || 0);
 
-    // Tạo phiếu với status = 'awaiting_confirmation'
     const receiptId = await Receipt.create(receiptData, createdBy);
-
-    // Cập nhật status thành awaiting_confirmation
     await Receipt.updateStatus(receiptId, "awaiting_confirmation", null, null);
 
     const receipt = await Receipt.findById(receiptId);
@@ -55,7 +52,6 @@ const createReceipt = async (req, res) => {
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
     console.log("📦 Số items trong phiếu:", receipt.items?.length || 0);
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Phiếu nhập ${receipt.receiptNo} chờ duyệt`,
       `Admin vừa tạo phiếu nhập mới. Vui lòng kiểm tra và duyệt.`,
@@ -93,7 +89,6 @@ const updateReceiptStatus = async (req, res) => {
 
     console.log(`📋 Cập nhật phiếu ID: ${id}, Status: ${status}`);
 
-    // Lấy phiếu và items
     const receipt = await Receipt.findById(id);
     if (!receipt) {
       return res
@@ -117,9 +112,7 @@ const updateReceiptStatus = async (req, res) => {
       }
 
       let addedCount = 0;
-      let errorItems = [];
 
-      // Lấy STT max hiện tại
       const [maxSttResult] = await db.execute(
         "SELECT MAX(stt) as maxStt FROM inventory",
       );
@@ -131,14 +124,12 @@ const updateReceiptStatus = async (req, res) => {
             `📦 Xử lý sản phẩm: ${item.maHang} - ${item.tenThuongMai}`,
           );
 
-          // Kiểm tra sản phẩm đã tồn tại trong kho chưa
           const [existing] = await db.execute(
             "SELECT * FROM inventory WHERE maHang = ?",
             [item.maHang],
           );
 
           if (existing.length > 0) {
-            // Nếu đã tồn tại -> CẬP NHẬT số lượng
             console.log(
               `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
             );
@@ -148,14 +139,11 @@ const updateReceiptStatus = async (req, res) => {
             );
             addedCount++;
           } else {
-            // Nếu chưa tồn tại -> THÊM MỚI
             console.log(
               `📦 Thêm sản phẩm mới: ${item.maHang} - ${item.tenThuongMai}`,
             );
-
             currentStt++;
 
-            // Thêm vào bảng inventory
             await db.execute(
               `INSERT INTO inventory (
                 stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
@@ -174,10 +162,10 @@ const updateReceiptStatus = async (req, res) => {
                 item.dvt || "",
                 item.phanLoai || "",
                 item.giaNhap || 0,
-                item.giaNhap || 0, // giaXuat = giaNhap
+                item.giaNhap || 0,
                 item.soLuongNhap || 0,
-                0, // soLuongXuat
-                item.soLuongNhap || 0, // tonKho = soLuongNhap
+                0,
+                item.soLuongNhap || 0,
                 item.soLot || "",
                 item.ngayHetHan || null,
                 item.soHopDongNhap || "",
@@ -194,13 +182,11 @@ const updateReceiptStatus = async (req, res) => {
           }
         } catch (err) {
           console.error(`❌ Lỗi khi thêm sản phẩm ${item.maHang}:`, err);
-          errorItems.push(item.maHang);
         }
       }
 
       console.log(`✅ Đã thêm/cập nhật ${addedCount} sản phẩm vào kho`);
 
-      // Gửi thông báo thành công
       await Notification.create(
         receipt.createdBy,
         `✅ Phiếu nhập ${receipt.receiptNo} đã được duyệt`,
@@ -210,7 +196,6 @@ const updateReceiptStatus = async (req, res) => {
       );
     }
 
-    // Cập nhật trạng thái phiếu
     await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
 
     res.json({
