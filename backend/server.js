@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -11,9 +10,7 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 // CORS - GIẢI PHÁP ĐƠN GIẢN NHẤT
 // ============================================
-// THÊM MIDDLEWARE NÀY ĐẦU TIÊN
 app.use((req, res, next) => {
-  // Cho phép tất cả origin
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header(
@@ -22,14 +19,12 @@ app.use((req, res, next) => {
   );
   res.header("Access-Control-Allow-Credentials", "true");
 
-  // Xử lý preflight OPTIONS
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
   next();
 });
 
-// Vẫn giữ cors middleware
 app.use(
   cors({
     origin: "*",
@@ -47,7 +42,6 @@ app.use(express.urlencoded({ extended: true }));
 // Log requests
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.url}`);
-  console.log(`  Origin: ${req.headers.origin || "No origin"}`);
   if (req.body && Object.keys(req.body).length > 0) {
     console.log("📦 Body:", JSON.stringify(req.body, null, 2));
   }
@@ -104,5 +98,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 API URL: http://localhost:${PORT}/api`);
 });
