@@ -78,6 +78,9 @@ const createReceipt = async (req, res) => {
   }
 };
 
+// ============================================================
+// QUAN TRỌNG: HÀM DUYỆT PHIẾU NHẬP - THÊM SẢN PHẨM VÀO KHO
+// ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,6 +100,7 @@ const updateReceiptStatus = async (req, res) => {
       `📦 Phiếu ${receipt.receiptNo} có ${receipt.items?.length || 0} sản phẩm`,
     );
 
+    // Nếu duyệt phiếu -> thêm sản phẩm vào kho
     if (status === "approved") {
       const items = receipt.items || [];
 
