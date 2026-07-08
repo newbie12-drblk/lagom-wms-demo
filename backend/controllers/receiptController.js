@@ -78,10 +78,6 @@ const createReceipt = async (req, res) => {
   }
 };
 
-// ============================================================
-// HÀM DUYỆT PHIẾU NHẬP - THÊM SẢN PHẨM VÀO KHO
-// ĐÃ SỬA: ĐỒNG BỘ VỚI TẤT CẢ TRƯỜNG TRONG inventory
-// ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -101,7 +97,6 @@ const updateReceiptStatus = async (req, res) => {
       `📦 Phiếu ${receipt.receiptNo} có ${receipt.items?.length || 0} sản phẩm`,
     );
 
-    // Nếu duyệt phiếu -> thêm sản phẩm vào kho
     if (status === "approved") {
       const items = receipt.items || [];
 
@@ -132,7 +127,6 @@ const updateReceiptStatus = async (req, res) => {
           );
 
           if (existing.length > 0) {
-            // Nếu đã tồn tại -> CẬP NHẬT số lượng
             console.log(
               `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
             );
@@ -164,7 +158,6 @@ const updateReceiptStatus = async (req, res) => {
             );
             updatedCount++;
           } else {
-            // Nếu chưa tồn tại -> THÊM MỚI VỚI ĐẦY ĐỦ TRƯỜNG
             console.log(
               `📦 Thêm sản phẩm mới: ${item.maHang} - ${item.tenThuongMai}`,
             );
@@ -188,17 +181,17 @@ const updateReceiptStatus = async (req, res) => {
                 item.dvt || "",
                 item.phanLoai || "",
                 item.giaNhap || 0,
-                item.giaNhap || 0, // giaXuat = giaNhap
+                item.giaNhap || 0,
                 item.soLuongNhap || 0,
-                0, // soLuongXuat = 0
-                item.soLuongNhap || 0, // tonKho = soLuongNhap
+                0,
+                item.soLuongNhap || 0,
                 item.soLot || "",
                 item.ngayHetHan || null,
                 item.soHopDongNhap || "",
                 item.soHoaDonNhap || "",
-                "", // soHoaDonXuat = ""
+                "",
                 item.ngayNhapHD || null,
-                null, // ngayXuatHD = NULL
+                null,
                 item.ghiChu || "",
                 receipt.createdBy,
                 approvedBy,
@@ -265,7 +258,6 @@ const getPendingReceipts = async (req, res) => {
           giaNhap, soLuongNhap, thanhTien,
           soLot, ngayHetHan,
           soHopDongNhap, soHoaDonNhap, ngayNhapHD,
-          soLuongXuat, giaXuat, soHopDongXuat, soHoaDonXuat, ngayXuatHD,
           ghiChu
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],

@@ -25,7 +25,7 @@ const Receipt = {
 
     const receipt = receipts[0];
 
-    // LẤY ĐẦY ĐỦ CÁC TRƯỜNG từ receipt_items
+    // CHỈ LẤY CÁC CỘT THỰC SỰ TỒN TẠI TRONG receipt_items
     const [items] = await db.execute(
       `SELECT 
         id, receiptId, 
@@ -53,6 +53,7 @@ const Receipt = {
 
     const result = [];
     for (const row of rows) {
+      // CHỈ LẤY CÁC CỘT THỰC SỰ TỒN TẠI TRONG receipt_items
       const [items] = await db.execute(
         `SELECT 
           id, receiptId, 
@@ -64,6 +65,7 @@ const Receipt = {
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
+      console.log(`  - ${row.receiptNo}: ${items.length} items`);
       result.push({ ...row, items });
     }
 
