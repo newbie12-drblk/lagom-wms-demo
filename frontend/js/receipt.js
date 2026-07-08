@@ -1,7 +1,6 @@
 /**
  * ==================== RECEIPT MODULE ====================
- * Quản lý phiếu nhập hàng - TỰ ĐỘNG DUYỆT
- * ĐÃ CẬP NHẬT: Đồng bộ trường với bảng inventory
+ * Quản lý phiếu nhập hàng - ĐỒNG BỘ VỚI TỒN KHO
  */
 
 (function () {
@@ -121,6 +120,7 @@
         const contractInput = row.querySelector(".contract-input");
         const invoiceInput = row.querySelector(".invoice-input");
         const invoiceDateInput = row.querySelector(".invoice-date-input");
+        const tonKhoSpan = row.querySelector(".ton-kho-value");
 
         if (nameInput) nameInput.value = product.tenThuongMai || "";
         if (packingInput) packingInput.value = product.quyCach || "";
@@ -140,6 +140,7 @@
           invoiceInput.value = product.soHoaDonNhap;
         if (invoiceDateInput && product.ngayNhapHD)
           invoiceDateInput.value = product.ngayNhapHD;
+        if (tonKhoSpan) tonKhoSpan.textContent = product.tonKho || 0;
       }
     } catch (error) {
       console.log("Không tìm thấy sản phẩm với mã:", maHang);
@@ -161,16 +162,21 @@
       <td><input type="text" class="packing" value="${escapeHtml(data?.quyCach || "")}" placeholder="Quy cách"></td>
       <td><input type="text" class="manufacturer" value="${escapeHtml(data?.hangSX || "")}" placeholder="Hãng SX"></td>
       <td><input type="text" class="unit" value="${escapeHtml(data?.dvt || "")}" placeholder="ĐVT"></td>
-      <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại"></td>
+      <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy"></td>
       <td><input type="text" class="price-input" value="${data?.giaNhap ? formatCurrency(data.giaNhap) : "0"}"></td>
       <td><input type="text" class="qty-input" value="${data?.soLuongNhap || "0"}"></td>
-      <td class="row-total" data-total="0">0</td>
-      <td><input type="text" class="lot-input" value="${escapeHtml(data?.soLot || "")}" placeholder="Số lot"></td>
-      <td><input type="date" class="expiry-input" value="${data?.ngayHetHan || ""}"></td>
-      <td><input type="text" class="contract-input" value="${escapeHtml(data?.soHopDongNhap || "")}" placeholder="Số HĐ nhập"></td>
+      <td><input type="text" class="contract-input" value="${escapeHtml(data?.soHopDongNhap || "")}" placeholder="Số HĐ"></td>
       <td><input type="text" class="invoice-input" value="${escapeHtml(data?.soHoaDonNhap || "")}" placeholder="Số HĐơn nhập"></td>
       <td><input type="date" class="invoice-date-input" value="${data?.ngayNhapHD || ""}"></td>
-      <td><input type="text" class="note-input" value="${escapeHtml(data?.ghiChu || "")}" placeholder="Ghi chú"></td>
+      <td><input type="text" class="lot-input" value="${escapeHtml(data?.soLot || "")}" placeholder="Số lot"></td>
+      <td><input type="date" class="expiry-input" value="${data?.ngayHetHan || ""}"></td>
+      <td><input type="text" class="qty-export-input" value="${data?.soLuongXuat || "0"}"></td>
+      <td><input type="text" class="price-export-input" value="${data?.giaXuat ? formatCurrency(data.giaXuat) : "0"}"></td>
+      <td><input type="text" class="contract-export-input" value="${escapeHtml(data?.soHopDongXuat || "")}" placeholder="Số HĐ xuất"></td>
+      <td><input type="text" class="invoice-export-input" value="${escapeHtml(data?.soHoaDonXuat || "")}" placeholder="Số HĐơn xuất"></td>
+      <td><input type="date" class="export-date-input" value="${data?.ngayXuatHD || ""}"></td>
+      <td class="text-right"><strong class="ton-kho-value">${data?.tonKho || 0}</strong></td>
+      <td class="text-center">${escapeHtml(data?.congNo || "—")}</td>
       <td class="text-center">${removeButton}</td>
     `;
 
@@ -253,13 +259,16 @@
       const categoryInput = row.querySelector(".category");
       const priceInput = row.querySelector(".price-input");
       const qtyInput = row.querySelector(".qty-input");
-      const totalSpan = row.querySelector(".row-total");
-      const lotInput = row.querySelector(".lot-input");
-      const expiryInput = row.querySelector(".expiry-input");
       const contractInput = row.querySelector(".contract-input");
       const invoiceInput = row.querySelector(".invoice-input");
       const invoiceDateInput = row.querySelector(".invoice-date-input");
-      const noteInput = row.querySelector(".note-input");
+      const lotInput = row.querySelector(".lot-input");
+      const expiryInput = row.querySelector(".expiry-input");
+      const qtyExportInput = row.querySelector(".qty-export-input");
+      const priceExportInput = row.querySelector(".price-export-input");
+      const contractExportInput = row.querySelector(".contract-export-input");
+      const invoiceExportInput = row.querySelector(".invoice-export-input");
+      const exportDateInput = row.querySelector(".export-date-input");
 
       items.push({
         tenThuongMai: nameInput?.value || "",
@@ -270,13 +279,20 @@
         phanLoai: categoryInput?.value || "",
         giaNhap: parseNumber(priceInput?.value),
         soLuongNhap: parseNumber(qtyInput?.value),
-        thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
-        soLot: lotInput?.value || "",
-        ngayHetHan: expiryInput?.value || "",
         soHopDongNhap: contractInput?.value || "",
         soHoaDonNhap: invoiceInput?.value || "",
         ngayNhapHD: invoiceDateInput?.value || "",
-        ghiChu: noteInput?.value || "",
+        soLot: lotInput?.value || "",
+        ngayHetHan: expiryInput?.value || "",
+        soLuongXuat: parseNumber(qtyExportInput?.value),
+        giaXuat: parseNumber(priceExportInput?.value),
+        soHopDongXuat: contractExportInput?.value || "",
+        soHoaDonXuat: invoiceExportInput?.value || "",
+        ngayXuatHD: exportDateInput?.value || "",
+        thanhTien:
+          parseNumber(priceInput?.value) * parseNumber(qtyInput?.value),
+        tonKho:
+          parseNumber(qtyInput?.value) - parseNumber(qtyExportInput?.value),
       });
     });
 

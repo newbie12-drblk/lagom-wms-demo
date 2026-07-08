@@ -79,8 +79,8 @@ const createReceipt = async (req, res) => {
 };
 
 // ============================================================
-// QUAN TRỌNG: HÀM DUYỆT PHIẾU NHẬP - THÊM SẢN PHẨM VÀO KHO
-// ĐÃ SỬA: THÊM ĐẦY ĐỦ CÁC TRƯỜNG VÀ GÁN GIÁ TRỊ MẶC ĐỊNH
+// HÀM DUYỆT PHIẾU NHẬP - THÊM SẢN PHẨM VÀO KHO
+// ĐÃ SỬA: ĐỒNG BỘ VỚI TẤT CẢ TRƯỜNG TRONG inventory
 // ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
@@ -141,12 +141,24 @@ const updateReceiptStatus = async (req, res) => {
                 tonKho = tonKho + ?,
                 soLuongNhap = soLuongNhap + ?,
                 giaNhap = ?,
+                soHopDongNhap = ?,
+                soHoaDonNhap = ?,
+                ngayNhapHD = ?,
+                soLot = ?,
+                ngayHetHan = ?,
+                ghiChu = ?,
                 updatedAt = NOW()
               WHERE maHang = ?`,
               [
                 item.soLuongNhap || 0,
                 item.soLuongNhap || 0,
                 item.giaNhap || 0,
+                item.soHopDongNhap || "",
+                item.soHoaDonNhap || "",
+                item.ngayNhapHD || null,
+                item.soLot || "",
+                item.ngayHetHan || null,
+                item.ghiChu || "",
                 item.maHang,
               ],
             );
@@ -176,17 +188,17 @@ const updateReceiptStatus = async (req, res) => {
                 item.dvt || "",
                 item.phanLoai || "",
                 item.giaNhap || 0,
-                item.giaNhap || 0, // giaXuat = giaNhap (mặc định)
+                item.giaNhap || 0, // giaXuat = giaNhap
                 item.soLuongNhap || 0,
-                0, // soLuongXuat = 0 (mặc định)
-                item.soLuongNhap || 0, // tonKho = soLuongNhap (mặc định)
+                0, // soLuongXuat = 0
+                item.soLuongNhap || 0, // tonKho = soLuongNhap
                 item.soLot || "",
                 item.ngayHetHan || null,
                 item.soHopDongNhap || "",
                 item.soHoaDonNhap || "",
-                "", // soHoaDonXuat = "" (mặc định)
+                "", // soHoaDonXuat = ""
                 item.ngayNhapHD || null,
-                null, // ngayXuatHD = NULL (mặc định)
+                null, // ngayXuatHD = NULL
                 item.ghiChu || "",
                 receipt.createdBy,
                 approvedBy,
@@ -253,6 +265,7 @@ const getPendingReceipts = async (req, res) => {
           giaNhap, soLuongNhap, thanhTien,
           soLot, ngayHetHan,
           soHopDongNhap, soHoaDonNhap, ngayNhapHD,
+          soLuongXuat, giaXuat, soHopDongXuat, soHoaDonXuat, ngayXuatHD,
           ghiChu
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],
