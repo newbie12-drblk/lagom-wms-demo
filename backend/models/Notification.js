@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Notification = {
-  // Tạo thông báo cho 1 user
   create: async (
     userId,
     title,
@@ -10,15 +9,19 @@ const Notification = {
     relatedId = null,
     relatedType = null,
   ) => {
-    const [result] = await db.execute(
-      `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, title, message, type, relatedId, relatedType],
-    );
-    return result.insertId;
+    try {
+      const [result] = await db.execute(
+        `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, title, message, type, relatedId, relatedType],
+      );
+      return result.insertId;
+    } catch (error) {
+      console.error("❌ Notification.create error:", error);
+      throw error;
+    }
   },
 
-  // 🔥 QUAN TRỌNG: Tạo thông báo cho Quản lý
   createForManagers: async (
     title,
     message,
@@ -26,34 +29,39 @@ const Notification = {
     relatedId = null,
     relatedType = null,
   ) => {
-    // Lấy tất cả user có roleId = 'quan_ly'
-    const [rows] = await db.execute(
-      "SELECT id FROM users WHERE roleId = 'quan_ly' AND isActive = TRUE",
-    );
+    try {
+      // Lấy tất cả user có roleId = 'quan_ly'
+      const [rows] = await db.execute(
+        "SELECT id FROM users WHERE roleId = 'quan_ly' AND isActive = TRUE",
+      );
 
-    console.log("📨 Tìm thấy Quản lý:", rows.length);
+      console.log("📨 Tìm thấy Quản lý:", rows.length);
 
-    if (rows.length === 0) {
-      console.log("⚠️ Không có Quản lý nào để gửi thông báo!");
-      return;
+      if (rows.length === 0) {
+        console.log("⚠️ Không có Quản lý nào để gửi thông báo!");
+        return;
+      }
+
+      const values = rows.map((row) => [
+        row.id,
+        title,
+        message,
+        type,
+        relatedId,
+        relatedType,
+      ]);
+
+      // Sử dụng db.query thay vì db.execute cho insert nhiều rows
+      await db.query(
+        `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType) VALUES ?`,
+        [values],
+      );
+    } catch (error) {
+      console.error("❌ Notification.createForManagers error:", error);
+      throw error;
     }
-
-    const values = rows.map((row) => [
-      row.id,
-      title,
-      message,
-      type,
-      relatedId,
-      relatedType,
-    ]);
-
-    await db.query(
-      `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType) VALUES ?`,
-      [values],
-    );
   },
 
-  // Tạo thông báo cho nhiều user
   createForMultiple: async (
     userIds,
     title,
@@ -64,69 +72,94 @@ const Notification = {
   ) => {
     if (!userIds || userIds.length === 0) return;
 
-    const values = userIds.map((userId) => [
-      userId,
-      title,
-      message,
-      type,
-      relatedId,
-      relatedType,
-    ]);
+    try {
+      const values = userIds.map((userId) => [
+        userId,
+        title,
+        message,
+        type,
+        relatedId,
+        relatedType,
+      ]);
 
-    await db.query(
-      `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType) VALUES ?`,
-      [values],
-    );
+      await db.query(
+        `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType) VALUES ?`,
+        [values],
+      );
+    } catch (error) {
+      console.error("❌ Notification.createForMultiple error:", error);
+      throw error;
+    }
   },
 
-  // Lấy thông báo của user
   getByUser: async (userId, limit = 20) => {
-    const [rows] = await db.execute(
-      `SELECT * FROM notifications 
-       WHERE userId = ? 
-       ORDER BY createdAt DESC 
-       LIMIT ?`,
-      [userId, limit],
-    );
-    return rows;
+    try {
+      const [rows] = await db.execute(
+        `SELECT * FROM notifications 
+         WHERE userId = ? 
+         ORDER BY createdAt DESC 
+         LIMIT ?`,
+        [userId, limit],
+      );
+      return rows;
+    } catch (error) {
+      console.error("❌ Notification.getByUser error:", error);
+      throw error;
+    }
   },
 
-  // Lấy số lượng thông báo chưa đọc
   getUnreadCount: async (userId) => {
-    const [rows] = await db.execute(
-      `SELECT COUNT(*) as count FROM notifications 
-       WHERE userId = ? AND isRead = FALSE`,
-      [userId],
-    );
-    return rows[0].count;
+    try {
+      const [rows] = await db.execute(
+        `SELECT COUNT(*) as count FROM notifications 
+         WHERE userId = ? AND isRead = FALSE`,
+        [userId],
+      );
+      return rows[0]?.count || 0;
+    } catch (error) {
+      console.error("❌ Notification.getUnreadCount error:", error);
+      return 0;
+    }
   },
 
-  // Đánh dấu đã đọc
   markAsRead: async (notificationId, userId) => {
-    await db.execute(
-      `UPDATE notifications SET isRead = TRUE 
-       WHERE id = ? AND userId = ?`,
-      [notificationId, userId],
-    );
-    return true;
+    try {
+      await db.execute(
+        `UPDATE notifications SET isRead = TRUE 
+         WHERE id = ? AND userId = ?`,
+        [notificationId, userId],
+      );
+      return true;
+    } catch (error) {
+      console.error("❌ Notification.markAsRead error:", error);
+      throw error;
+    }
   },
 
-  // Đánh dấu tất cả đã đọc
   markAllAsRead: async (userId) => {
-    await db.execute(
-      `UPDATE notifications SET isRead = TRUE WHERE userId = ?`,
-      [userId],
-    );
-    return true;
+    try {
+      await db.execute(
+        `UPDATE notifications SET isRead = TRUE WHERE userId = ?`,
+        [userId],
+      );
+      return true;
+    } catch (error) {
+      console.error("❌ Notification.markAllAsRead error:", error);
+      throw error;
+    }
   },
 
-  // Xóa thông báo
   delete: async (id, userId) => {
-    const [result] = await db.execute(
-      "DELETE FROM notifications WHERE id = ? AND userId = ?",
-      [id, userId],
-    );
-    return result.affectedRows > 0;
+    try {
+      const [result] = await db.execute(
+        "DELETE FROM notifications WHERE id = ? AND userId = ?",
+        [id, userId],
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("❌ Notification.delete error:", error);
+      throw error;
+    }
   },
 };
 

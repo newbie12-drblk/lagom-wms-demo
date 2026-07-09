@@ -719,6 +719,8 @@
           return;
         }
 
+        console.log("📦 Gửi yêu cầu thêm sản phẩm:", products);
+
         // Gửi yêu cầu thêm sản phẩm qua API approval
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
@@ -728,7 +730,9 @@
           },
           body: JSON.stringify({ products: products }),
         });
+
         const result = await response.json();
+        console.log("📥 Kết quả:", result);
 
         if (result.success) {
           Utils.showToast(
@@ -866,7 +870,7 @@
         }
       }
     } catch (error) {
-      console.error("Submit request error:", error);
+      console.error("❌ Submit request error:", error);
       Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
     } finally {
       Utils.showLoading(false);

@@ -1,3 +1,4 @@
+const db = require("../config/database");
 const ApprovalRequest = require("../models/ApprovalRequest");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
@@ -7,6 +8,11 @@ const createApprovalRequest = async (req, res) => {
   try {
     const { products } = req.body;
     const requesterId = req.user.userId;
+
+    console.log(
+      "📦 Tạo yêu cầu thêm sản phẩm:",
+      JSON.stringify(products, null, 2),
+    );
 
     if (!products || !Array.isArray(products) || products.length === 0) {
       return res
@@ -33,7 +39,9 @@ const createApprovalRequest = async (req, res) => {
       }
     }
 
+    // Tạo yêu cầu
     const requestId = await ApprovalRequest.create(requesterId, { products });
+    console.log("✅ Đã tạo yêu cầu ID:", requestId);
 
     // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
@@ -50,7 +58,7 @@ const createApprovalRequest = async (req, res) => {
       message: "✅ Đã gửi yêu cầu thêm sản phẩm! Chờ Quản lý duyệt.",
     });
   } catch (error) {
-    console.error("Create approval request error:", error);
+    console.error("❌ Create approval request error:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi server: " + error.message,
@@ -84,6 +92,8 @@ const approveRequest = async (req, res) => {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
+    console.log(`✅ Duyệt yêu cầu ID: ${id}`);
+
     const request = await ApprovalRequest.findById(id);
     if (!request) {
       return res
@@ -102,49 +112,58 @@ const approveRequest = async (req, res) => {
     const errors = [];
 
     for (const prod of products) {
-      // Kiểm tra mã hàng đã tồn tại trong kho chưa
-      const existing = await Inventory.findByMaHang(prod.maHang);
-      if (existing) {
-        errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
-        continue;
+      try {
+        // Kiểm tra mã hàng đã tồn tại trong kho chưa
+        const existing = await Inventory.findByMaHang(prod.maHang);
+        if (existing) {
+          errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
+          continue;
+        }
+
+        // Chuẩn bị dữ liệu sản phẩm
+        const productData = {
+          tenThuongMai: prod.tenThuongMai || "",
+          maHang: prod.maHang || "",
+          quyCach: prod.quyCach || "",
+          hangSX: prod.hangSX || "",
+          dvt: prod.dvt || "",
+          phanLoai: prod.phanLoai || "",
+          giaNhap: prod.giaNhap || 0,
+          giaXuat: prod.giaNhap || 0,
+          tonKho: prod.tonKho || 0,
+          soLuongNhap: prod.soLuongNhap || 0,
+          soLuongXuat: 0,
+          soLot: prod.soLot || "",
+          ngayHetHan: prod.ngayHetHan || null,
+          soHopDongNhap: prod.soHopDongNhap || "",
+          soHoaDonNhap: prod.soHoaDonNhap || "",
+          soHopDongXuat: "",
+          soHoaDonXuat: "",
+          ngayNhapHD: prod.ngayNhapHD || null,
+          ngayXuatHD: null,
+          ghiChu: prod.ghiChu || "",
+        };
+
+        console.log(
+          `📦 Thêm sản phẩm: ${productData.maHang} - ${productData.tenThuongMai}`,
+        );
+
+        const productId = await Inventory.create(productData, approvedBy);
+        createdIds.push(productId);
+
+        await EditHistory.log(
+          approvedBy,
+          "inventory",
+          productId,
+          "APPROVE_CREATE",
+          null,
+          null,
+          JSON.stringify(productData),
+        );
+      } catch (err) {
+        console.error(`❌ Lỗi khi thêm sản phẩm ${prod.maHang}:`, err.message);
+        errors.push(`Lỗi khi thêm ${prod.maHang}: ${err.message}`);
       }
-
-      // Chuẩn bị dữ liệu sản phẩm
-      const productData = {
-        tenThuongMai: prod.tenThuongMai || "",
-        maHang: prod.maHang || "",
-        quyCach: prod.quyCach || "",
-        hangSX: prod.hangSX || "",
-        dvt: prod.dvt || "",
-        phanLoai: prod.phanLoai || "",
-        giaNhap: prod.giaNhap || 0,
-        giaXuat: prod.giaNhap || 0,
-        tonKho: prod.tonKho || 0,
-        soLuongNhap: prod.soLuongNhap || 0,
-        soLuongXuat: 0,
-        soLot: prod.soLot || "",
-        ngayHetHan: prod.ngayHetHan || null,
-        soHopDongNhap: prod.soHopDongNhap || "",
-        soHoaDonNhap: prod.soHoaDonNhap || "",
-        soHopDongXuat: "",
-        soHoaDonXuat: "",
-        ngayNhapHD: prod.ngayNhapHD || null,
-        ngayXuatHD: null,
-        ghiChu: prod.ghiChu || "",
-      };
-
-      const productId = await Inventory.create(productData, approvedBy);
-      createdIds.push(productId);
-
-      await EditHistory.log(
-        approvedBy,
-        "inventory",
-        productId,
-        "APPROVE_CREATE",
-        null,
-        null,
-        JSON.stringify(productData),
-      );
     }
 
     await ApprovalRequest.approve(id, approvedBy);
