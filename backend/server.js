@@ -7,12 +7,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS - ĐƠN GIẢN NHẤT
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log requests
 app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.url}`);
   next();
@@ -42,7 +40,7 @@ app.use("/api/receipts", receiptRoutes);
 app.use("/api/exports", exportRoutes);
 app.use("/api/approvals", approvalRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/manager", managerRoutes);
+app.use("/api/manager", managerRoutes); // ✅ ĐẢM BẢO DÒNG NÀY ĐÚNG
 app.use("/api/history", historyRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/edits", editRoutes);
