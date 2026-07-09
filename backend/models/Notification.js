@@ -51,7 +51,6 @@ const Notification = {
         relatedType,
       ]);
 
-      // Sử dụng db.query thay vì db.execute cho insert nhiều rows
       await db.query(
         `INSERT INTO notifications (userId, title, message, type, relatedId, relatedType) VALUES ?`,
         [values],

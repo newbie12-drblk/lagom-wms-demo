@@ -5,6 +5,7 @@ const db = require("../config/database");
 
 const router = express.Router();
 
+// Dashboard stats cho Quản lý
 router.get(
   "/dashboard/stats",
   verifyToken,
@@ -13,18 +14,33 @@ router.get(
     try {
       console.log("📊 Fetching dashboard stats...");
 
+      // Đếm sản phẩm chờ duyệt
       const [productResult] = await db.execute(
         "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
       );
 
+      // Đếm phiếu nhập chờ duyệt
       const [receiptResult] = await db.execute(
         "SELECT COUNT(*) as count FROM receipts WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
+      // Đếm phiếu xuất chờ duyệt
       const [exportResult] = await db.execute(
         "SELECT COUNT(*) as count FROM exports WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
+      // Đếm yêu cầu thêm sản phẩm chờ duyệt
+      let approvalCount = 0;
+      try {
+        const [approvalResult] = await db.execute(
+          "SELECT COUNT(*) as count FROM approval_requests WHERE status = 'pending'",
+        );
+        approvalCount = approvalResult[0]?.count || 0;
+      } catch (err) {
+        console.log("⚠️ Bảng approval_requests chưa tồn tại");
+      }
+
+      // Đếm yêu cầu chỉnh sửa
       let editCount = 0;
       try {
         const [editResult] = await db.execute(
@@ -35,6 +51,7 @@ router.get(
         console.log("⚠️ Bảng edit_requests chưa tồn tại");
       }
 
+      // Đếm yêu cầu xóa
       let deleteCount = 0;
       try {
         const [deleteResult] = await db.execute(
@@ -49,21 +66,22 @@ router.get(
         pendingProducts: parseInt(productResult[0]?.count || 0),
         pendingReceipts: parseInt(receiptResult[0]?.count || 0),
         pendingExports: parseInt(exportResult[0]?.count || 0),
+        pendingApprovals: approvalCount,
         pendingEdits: editCount,
         pendingDeletions: deleteCount,
       };
 
-      console.log("📊 Stats:", data);
+      console.log("📊 Stats:", JSON.stringify(data, null, 2));
 
-      res.json({
+      res.status(200).json({
         success: true,
         data: data,
       });
     } catch (error) {
-      console.error("❌ Error:", error.message);
+      console.error("❌ Dashboard stats error:", error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: error.message || "Lỗi server",
       });
     }
   },

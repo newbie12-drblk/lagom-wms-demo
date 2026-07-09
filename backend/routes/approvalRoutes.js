@@ -12,12 +12,13 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// ✅ Admin tạo yêu cầu thêm sản phẩm
+// Admin tạo yêu cầu thêm sản phẩm
 router.post("/", verifyToken, checkRole("admin"), createApprovalRequest);
 
+// Lấy yêu cầu của tôi
 router.get("/my", verifyToken, getMyRequests);
 
-// Quản lý xem tất cả yêu cầu
+// Quản lý lấy tất cả yêu cầu
 router.get("/", verifyToken, checkRole("quan_ly"), getAllRequests);
 
 // Quản lý duyệt/từ chối
