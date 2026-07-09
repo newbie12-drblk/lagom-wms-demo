@@ -14,61 +14,43 @@ router.get(
     try {
       console.log("📊 Fetching dashboard stats...");
 
-      // Đếm sản phẩm chờ duyệt
-      const [productResult] = await db.execute(
-        "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
+      // 1. Sản phẩm chờ duyệt - Lấy từ bảng approval_requests (yêu cầu thêm sản phẩm)
+      const [approvalResult] = await db.execute(
+        "SELECT COUNT(*) as count FROM approval_requests WHERE status = 'pending'",
       );
 
-      // Đếm phiếu nhập chờ duyệt
+      // 2. Nhập hàng chờ duyệt - Lấy từ bảng receipts
       const [receiptResult] = await db.execute(
         "SELECT COUNT(*) as count FROM receipts WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
-      // Đếm phiếu xuất chờ duyệt
+      // 3. Xuất kho chờ duyệt - Lấy từ bảng exports
       const [exportResult] = await db.execute(
         "SELECT COUNT(*) as count FROM exports WHERE status IN ('pending', 'awaiting_confirmation')",
       );
 
-      // Đếm yêu cầu thêm sản phẩm chờ duyệt
-      let approvalCount = 0;
-      try {
-        const [approvalResult] = await db.execute(
-          "SELECT COUNT(*) as count FROM approval_requests WHERE status = 'pending'",
-        );
-        approvalCount = approvalResult[0]?.count || 0;
-      } catch (err) {
-        console.log("⚠️ Bảng approval_requests chưa tồn tại");
-      }
+      // 4. Chỉnh sửa chờ duyệt - Lấy từ bảng edit_requests
+      const [editResult] = await db.execute(
+        "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'",
+      );
 
-      // Đếm yêu cầu chỉnh sửa
-      let editCount = 0;
-      try {
-        const [editResult] = await db.execute(
-          "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'",
-        );
-        editCount = editResult[0]?.count || 0;
-      } catch (err) {
-        console.log("⚠️ Bảng edit_requests chưa tồn tại");
-      }
+      // 5. Xóa chờ duyệt - Lấy từ bảng deletion_requests
+      const [deleteResult] = await db.execute(
+        "SELECT COUNT(*) as count FROM deletion_requests WHERE status = 'pending'",
+      );
 
-      // Đếm yêu cầu xóa
-      let deleteCount = 0;
-      try {
-        const [deleteResult] = await db.execute(
-          "SELECT COUNT(*) as count FROM deletion_requests WHERE status = 'pending'",
-        );
-        deleteCount = deleteResult[0]?.count || 0;
-      } catch (err) {
-        console.log("⚠️ Bảng deletion_requests chưa tồn tại");
-      }
+      // 6. Yêu cầu thêm sản phẩm (cũ) - Lấy từ bảng inventory
+      const [productResult] = await db.execute(
+        "SELECT COUNT(*) as count FROM inventory WHERE status = 'pending'",
+      );
 
       const data = {
-        pendingProducts: parseInt(productResult[0]?.count || 0),
+        pendingProducts: parseInt(approvalResult[0]?.count || 0), // Sản phẩm chờ duyệt = approval_requests
         pendingReceipts: parseInt(receiptResult[0]?.count || 0),
         pendingExports: parseInt(exportResult[0]?.count || 0),
-        pendingApprovals: approvalCount,
-        pendingEdits: editCount,
-        pendingDeletions: deleteCount,
+        pendingEdits: parseInt(editResult[0]?.count || 0),
+        pendingDeletions: parseInt(deleteResult[0]?.count || 0),
+        pendingInventoryProducts: parseInt(productResult[0]?.count || 0), // Dùng cho inventory cũ
       };
 
       console.log("📊 Stats:", JSON.stringify(data, null, 2));

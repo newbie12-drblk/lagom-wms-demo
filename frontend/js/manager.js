@@ -97,19 +97,34 @@
       });
       const result = await response.json();
 
+      console.log("📊 Dashboard stats response:", result);
+
       if (result.success) {
         const data = result.data;
-        $("statPendingProducts").textContent = data.pendingProducts || 0;
-        $("statPendingReceipts").textContent = data.pendingReceipts || 0;
-        $("statPendingExports").textContent = data.pendingExports || 0;
-        $("statPendingEdits").textContent = data.pendingEdits || 0;
-        $("statPendingDeletions").textContent = data.pendingDeletions || 0;
 
-        $("badgeProducts").textContent = data.pendingProducts || 0;
-        $("badgeReceipts").textContent = data.pendingReceipts || 0;
-        $("badgeExports").textContent = data.pendingExports || 0;
-        $("badgeEdits").textContent = data.pendingEdits || 0;
-        $("badgeDeletions").textContent = data.pendingDeletions || 0;
+        // Cập nhật stat cards
+        document.getElementById("statPendingProducts").textContent =
+          data.pendingProducts || 0;
+        document.getElementById("statPendingReceipts").textContent =
+          data.pendingReceipts || 0;
+        document.getElementById("statPendingExports").textContent =
+          data.pendingExports || 0;
+        document.getElementById("statPendingEdits").textContent =
+          data.pendingEdits || 0;
+        document.getElementById("statPendingDeletions").textContent =
+          data.pendingDeletions || 0;
+
+        // Cập nhật badges trên sidebar
+        document.getElementById("badgeProducts").textContent =
+          data.pendingProducts || 0;
+        document.getElementById("badgeReceipts").textContent =
+          data.pendingReceipts || 0;
+        document.getElementById("badgeExports").textContent =
+          data.pendingExports || 0;
+        document.getElementById("badgeEdits").textContent =
+          data.pendingEdits || 0;
+        document.getElementById("badgeDeletions").textContent =
+          data.pendingDeletions || 0;
       }
     } catch (error) {
       console.error("Load dashboard stats error:", error);
