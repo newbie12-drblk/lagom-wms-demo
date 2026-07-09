@@ -13,6 +13,135 @@
     />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/manager.css" />
+    <style>
+      .user-management-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        min-width: 900px;
+      }
+      .user-management-table th {
+        background: rgba(26, 34, 53, 0.8);
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #6b82a0;
+        border-bottom: 2px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .user-management-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      .user-management-table tr:hover td {
+        background: rgba(59, 130, 246, 0.05);
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .status-dot.active {
+        background: #4ade80;
+        box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+      }
+      .status-dot.inactive {
+        background: #f87171;
+        box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
+      }
+      .role-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .role-badge.admin {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+      }
+      .role-badge.quan_ly {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+      }
+      .role-badge.ke_toan {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+      .role-badge.quan_ly_kho {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+      }
+      .role-badge.nhan_vien {
+        background: rgba(107, 114, 128, 0.2);
+        color: #9ca3af;
+      }
+      .role-badge.nhap_lieu {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+      }
+      .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 4px 8px;
+        font-size: 11px;
+        color: #6b82a0;
+      }
+      .permission-grid .granted {
+        color: #4ade80;
+      }
+      .permission-grid .denied {
+        color: #f87171;
+      }
+      .modal-lg .modal-content {
+        max-width: 900px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .form-row .full {
+        grid-column: 1 / -1;
+      }
+      .perm-group {
+        background: #0f172a;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 6px 12px;
+      }
+      .perm-group label {
+        font-size: 12px;
+        color: #6b82a0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      .perm-group label input[type="checkbox"] {
+        accent-color: #3b82f6;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .perm-group .group-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #e2eaf5;
+        grid-column: 1 / -1;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #1e2d45;
+        padding-bottom: 4px;
+      }
+    </style>
   </head>
   <body>
     <div class="orb orb-1"></div>
@@ -59,6 +188,12 @@
           <div class="nav-icon">🗑️</div>
           Xóa chờ duyệt
           <span class="nav-badge" id="badgeDeletions">0</span>
+        </a>
+
+        <div class="nav-label">Hệ thống</div>
+        <a href="#" class="nav-item" data-view="users">
+          <div class="nav-icon">👥</div>
+          Quản lý người dùng
         </a>
 
         <div class="sidebar-footer">
@@ -178,7 +313,7 @@
             </div>
           </div>
 
-          <!-- VIEW: SẢN PHẨM CHỜ DUYỆT (Yêu cầu thêm sản phẩm) -->
+          <!-- VIEW: SẢN PHẨM CHỜ DUYỆT -->
           <div class="view" id="view-pending-products">
             <div class="scroll-area">
               <div class="page-header">
@@ -258,6 +393,313 @@
               <div id="pendingDeletionsList" class="approval-list"></div>
             </div>
           </div>
+
+          <!-- VIEW: QUẢN LÝ NGƯỜI DÙNG -->
+          <div class="view" id="view-users">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">USER MANAGEMENT</div>
+                  <div class="page-title">Quản lý người dùng</div>
+                  <div class="page-sub">
+                    Quản lý tài khoản, phân quyền cho từng người dùng
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-primary" id="btnAddUser">
+                    <i class="fas fa-user-plus"></i> Thêm người dùng
+                  </button>
+                  <button class="btn btn-outline" id="btnRefreshUsers">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-wrap" style="max-height: 70vh">
+                <table class="user-management-table">
+                  <thead>
+                    <tr>
+                      <th>STT</th>
+                      <th>Tên đăng nhập</th>
+                      <th>Họ tên</th>
+                      <th>Email</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      <th>Quyền</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody">
+                    <tr>
+                      <td colspan="8" style="text-align: center; padding: 40px">
+                        <i
+                          class="fas fa-spinner fa-spin"
+                          style="font-size: 24px"
+                        ></i>
+                        <p style="margin-top: 8px; color: #6b82a0">
+                          Đang tải dữ liệu...
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL THÊM/SỬA USER ========== -->
+    <div id="userModal" class="modal" style="display: none">
+      <div
+        class="modal-content modal-lg"
+        style="max-width: 900px; max-height: 90vh; overflow-y: auto"
+      >
+        <div class="modal-header">
+          <h3 id="userModalTitle">👤 Thêm người dùng</h3>
+          <span
+            class="close-modal"
+            onclick="closeUserModal()"
+            style="font-size: 28px; cursor: pointer; color: #6b82a0"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <form id="userForm">
+            <input type="hidden" id="editUserId" value="" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tên đăng nhập *</label>
+                <input
+                  type="text"
+                  id="userUsername"
+                  placeholder="username"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Họ tên *</label>
+                <input
+                  type="text"
+                  id="userFullName"
+                  placeholder="Nguyễn Văn A"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Mật khẩu</label>
+                <input
+                  type="text"
+                  id="userPassword"
+                  placeholder="Để trống nếu không đổi"
+                />
+                <small>Để trống nếu giữ nguyên mật khẩu cũ</small>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  id="userEmail"
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Vai trò</label>
+                <select id="userRole">
+                  <option value="admin">Admin</option>
+                  <option value="quan_ly">Quản lý</option>
+                  <option value="ke_toan">Kế toán</option>
+                  <option value="quan_ly_kho">Quản lý kho</option>
+                  <option value="nhan_vien">Nhân viên</option>
+                  <option value="nhap_lieu">Nhập liệu</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Trạng thái</label>
+                <select id="userStatus">
+                  <option value="1">Hoạt động</option>
+                  <option value="0">Khóa</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group full">
+              <label style="font-weight: 600; color: #60a5fa; font-size: 14px"
+                >🔐 Phân quyền chi tiết</label
+              >
+              <div class="perm-group">
+                <div class="group-title">📝 Quyền chỉnh sửa trường</div>
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditTenThuongMai"
+                  />
+                  Tên thương mại</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditMaHang"
+                  />
+                  Mã hàng</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditDVT"
+                  />
+                  ĐVT</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditHangSX"
+                  />
+                  Hãng SX</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditPhanLoai"
+                  />
+                  Phân loại</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditGiaNhap"
+                  />
+                  Giá nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHopDongNhap"
+                  />
+                  Số hợp đồng nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHoaDonNhap"
+                  />
+                  Số hóa đơn nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditSoHoaDonXuat"
+                  />
+                  Số hóa đơn xuất</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditNgayNhapHD"
+                  />
+                  Ngày nhập HĐ</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditNgayXuatHD"
+                  />
+                  Ngày xuất HĐ</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditGhiChu"
+                  />
+                  Ghi chú</label
+                >
+              </div>
+
+              <div class="perm-group" style="margin-top: 8px">
+                <div class="group-title">📋 Quyền tạo yêu cầu</div>
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canCreateReceipt"
+                  />
+                  Tạo phiếu nhập</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canCreateExport"
+                  />
+                  Tạo phiếu xuất</label
+                >
+              </div>
+
+              <div class="perm-group" style="margin-top: 8px">
+                <div class="group-title">⚙️ Quyền quản lý sản phẩm</div>
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canAddProduct"
+                  />
+                  Thêm sản phẩm</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canEditProduct"
+                  />
+                  Sửa sản phẩm</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canDeleteProduct"
+                  />
+                  Xóa sản phẩm</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    class="perm-check"
+                    data-field="canViewAll"
+                  />
+                  Xem tất cả dữ liệu</label
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeUserModal()">
+            Hủy
+          </button>
+          <button class="btn btn-success" id="btnSaveUser">
+            <i class="fas fa-save"></i> Lưu
+          </button>
         </div>
       </div>
     </div>
