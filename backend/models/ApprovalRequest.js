@@ -4,7 +4,7 @@ const ApprovalRequest = {
   create: async (requesterId, productData) => {
     const [result] = await db.execute(
       `INSERT INTO approval_requests (requesterId, productData, status)
-             VALUES (?, ?, 'pending')`,
+       VALUES (?, ?, 'pending')`,
       [requesterId, JSON.stringify(productData)],
     );
     return result.insertId;
@@ -13,9 +13,9 @@ const ApprovalRequest = {
   findById: async (id) => {
     const [rows] = await db.execute(
       `SELECT ar.*, u.fullName as requesterName
-             FROM approval_requests ar
-             LEFT JOIN users u ON ar.requesterId = u.id
-             WHERE ar.id = ?`,
+       FROM approval_requests ar
+       LEFT JOIN users u ON ar.requesterId = u.id
+       WHERE ar.id = ?`,
       [id],
     );
     if (rows.length === 0) return null;
@@ -29,11 +29,11 @@ const ApprovalRequest = {
 
   getAllRequests: async (status = null) => {
     let query = `
-            SELECT ar.*, u.fullName as requesterName, a.fullName as approverName
-            FROM approval_requests ar
-            LEFT JOIN users u ON ar.requesterId = u.id
-            LEFT JOIN users a ON ar.approvedBy = a.id
-        `;
+      SELECT ar.*, u.fullName as requesterName, a.fullName as approverName
+      FROM approval_requests ar
+      LEFT JOIN users u ON ar.requesterId = u.id
+      LEFT JOIN users a ON ar.approvedBy = a.id
+    `;
     const params = [];
     if (status) {
       query += ` WHERE ar.status = ?`;
@@ -53,10 +53,10 @@ const ApprovalRequest = {
   getByRequester: async (requesterId) => {
     const [rows] = await db.execute(
       `SELECT ar.*, a.fullName as approverName
-             FROM approval_requests ar
-             LEFT JOIN users a ON ar.approvedBy = a.id
-             WHERE ar.requesterId = ?
-             ORDER BY ar.createdAt DESC`,
+       FROM approval_requests ar
+       LEFT JOIN users a ON ar.approvedBy = a.id
+       WHERE ar.requesterId = ?
+       ORDER BY ar.createdAt DESC`,
       [requesterId],
     );
     return rows.map((row) => ({
@@ -71,8 +71,8 @@ const ApprovalRequest = {
   approve: async (id, approvedBy) => {
     await db.execute(
       `UPDATE approval_requests 
-             SET status = 'approved', approvedBy = ?, approvedAt = NOW()
-             WHERE id = ?`,
+       SET status = 'approved', approvedBy = ?, approvedAt = NOW()
+       WHERE id = ?`,
       [approvedBy, id],
     );
     return true;
@@ -81,8 +81,8 @@ const ApprovalRequest = {
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE approval_requests 
-             SET status = 'rejected', approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
-             WHERE id = ?`,
+       SET status = 'rejected', approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
+       WHERE id = ?`,
       [approvedBy, reason, id],
     );
     return true;

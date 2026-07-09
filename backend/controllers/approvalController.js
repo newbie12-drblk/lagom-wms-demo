@@ -14,6 +14,7 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Phải có ít nhất một sản phẩm" });
     }
 
+    // Kiểm tra mã hàng trùng trong yêu cầu
     const maHangs = products.map((p) => p.maHang);
     if (new Set(maHangs).size !== maHangs.length) {
       return res
@@ -21,16 +22,39 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Mã hàng bị trùng trong yêu cầu" });
     }
 
+    // Kiểm tra mã hàng đã tồn tại trong kho chưa
+    for (const prod of products) {
+      const existing = await Inventory.findByMaHang(prod.maHang);
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: `Mã hàng ${prod.maHang} đã tồn tại trong kho`,
+        });
+      }
+    }
+
     const requestId = await ApprovalRequest.create(requesterId, { products });
+
+    // Gửi thông báo cho Quản lý
+    await Notification.createForManagers(
+      `📦 Yêu cầu thêm ${products.length} sản phẩm mới`,
+      `Admin đã tạo yêu cầu thêm sản phẩm. Vui lòng kiểm tra và duyệt.`,
+      "approval",
+      requestId,
+      "approval_request",
+    );
 
     res.json({
       success: true,
       data: { id: requestId },
-      message: "Đã gửi yêu cầu duyệt",
+      message: "✅ Đã gửi yêu cầu thêm sản phẩm! Chờ Quản lý duyệt.",
     });
   } catch (error) {
     console.error("Create approval request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 
@@ -67,6 +91,12 @@ const approveRequest = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy yêu cầu" });
     }
 
+    if (request.status !== "pending") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Yêu cầu này đã được xử lý" });
+    }
+
     const products = request.productData.products || [];
     const createdIds = [];
     const errors = [];
@@ -79,34 +109,33 @@ const approveRequest = async (req, res) => {
         continue;
       }
 
-      // Chuẩn bị dữ liệu sản phẩm, xử lý null cho ngayHetHan
+      // Chuẩn bị dữ liệu sản phẩm
       const productData = {
-        tenThuongMai: prod.tenThuongMai,
-        maHang: prod.maHang,
+        tenThuongMai: prod.tenThuongMai || "",
+        maHang: prod.maHang || "",
         quyCach: prod.quyCach || "",
         hangSX: prod.hangSX || "",
         dvt: prod.dvt || "",
         phanLoai: prod.phanLoai || "",
         giaNhap: prod.giaNhap || 0,
-        giaXuat: prod.giaXuat || 0,
+        giaXuat: prod.giaNhap || 0,
         tonKho: prod.tonKho || 0,
-        soLuongNhap: prod.soLuongNhap || prod.tonKho || 0,
+        soLuongNhap: prod.soLuongNhap || 0,
         soLuongXuat: 0,
         soLot: prod.soLot || "",
-        ngayHetHan: prod.ngayHetHan || null, // XỬ LÝ NULL
+        ngayHetHan: prod.ngayHetHan || null,
         soHopDongNhap: prod.soHopDongNhap || "",
         soHoaDonNhap: prod.soHoaDonNhap || "",
-        soHopDongXuat: prod.soHopDongXuat || "",
-        soHoaDonXuat: prod.soHoaDonXuat || "",
+        soHopDongXuat: "",
+        soHoaDonXuat: "",
         ngayNhapHD: prod.ngayNhapHD || null,
-        ngayXuatHD: prod.ngayXuatHD || null,
+        ngayXuatHD: null,
         ghiChu: prod.ghiChu || "",
       };
 
       const productId = await Inventory.create(productData, approvedBy);
       createdIds.push(productId);
 
-      // Ghi lịch sử - ĐÃ SỬA có cột action
       await EditHistory.log(
         approvedBy,
         "inventory",
@@ -125,10 +154,11 @@ const approveRequest = async (req, res) => {
 
     await Notification.create(
       request.requesterId,
-      "Yêu cầu thêm sản phẩm đã được duyệt",
+      "✅ Yêu cầu thêm sản phẩm đã được duyệt",
       message,
       "success",
       id,
+      "approval_request",
     );
 
     res.json({
@@ -157,14 +187,25 @@ const rejectRequest = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy yêu cầu" });
     }
 
-    await ApprovalRequest.reject(id, approvedBy, reason);
+    if (request.status !== "pending") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Yêu cầu này đã được xử lý" });
+    }
+
+    await ApprovalRequest.reject(
+      id,
+      approvedBy,
+      reason || "Không được chấp thuận",
+    );
 
     await Notification.create(
       request.requesterId,
-      "Yêu cầu thêm sản phẩm đã bị từ chối",
-      reason || "Admin đã từ chối yêu cầu của bạn",
+      "❌ Yêu cầu thêm sản phẩm đã bị từ chối",
+      reason || "Quản lý đã từ chối yêu cầu của bạn",
       "warning",
       id,
+      "approval_request",
     );
 
     res.json({ success: true, message: "Đã từ chối yêu cầu" });

@@ -2,6 +2,7 @@
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
  * ĐÃ THÊM: Tạo yêu cầu thêm/xóa/sửa sản phẩm
+ * CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
  */
 
 (function () {
@@ -24,6 +25,17 @@
   const prevPageBtn = document.getElementById("prevPage");
   const nextPageBtn = document.getElementById("nextPage");
   const pageInfo = document.getElementById("pageInfo");
+
+  // ==================== KIỂM TRA ROLE (CHỈ 2 ROLE) ====================
+  function isAdmin() {
+    const user = Auth.getCurrentUser();
+    return user && user.roleId === "admin";
+  }
+
+  function isQuanLy() {
+    const user = Auth.getCurrentUser();
+    return user && user.roleId === "quan_ly";
+  }
 
   // Helper functions
   function formatCurrency(num) {
@@ -409,7 +421,6 @@
                 <th>NGÀY NHẬP HĐ</th>
                 <th>SỐ LOT</th>
                 <th>NGÀY HẾT HẠN</th>
-                <th style="width:35px;">Xóa</th>
               </tr>
             </thead>
             <tbody id="addProductBody">
@@ -636,7 +647,6 @@
       <td><input type="date" class="add-ngayNhapHD"></td>
       <td><input type="text" class="add-soLot" placeholder="Số lot"></td>
       <td><input type="date" class="add-ngayHetHan"></td>
-      <td><button class="btn-remove" onclick="window.removeAddRow(this)"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
   };
@@ -899,9 +909,18 @@
         ?.addEventListener("change", applyFilters);
     }
 
-    // Nút Tạo yêu cầu
+    // ✅ CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
+    const createRequestBtn = document.getElementById("btnCreateRequest");
     if (createRequestBtn) {
-      createRequestBtn.addEventListener("click", showRequestModal);
+      if (isAdmin()) {
+        createRequestBtn.style.display = "inline-flex";
+        // Xóa event listener cũ bằng cách clone và thay thế
+        const newBtn = createRequestBtn.cloneNode(true);
+        createRequestBtn.parentNode.replaceChild(newBtn, createRequestBtn);
+        newBtn.addEventListener("click", showRequestModal);
+      } else {
+        createRequestBtn.style.display = "none";
+      }
     }
 
     if (exportBtn) exportBtn.addEventListener("click", exportInventoryToExcel);
@@ -935,4 +954,6 @@
   window.removeAddRow = removeAddRow;
   window.addNewAddRow = addNewAddRow;
   window.inventoryData = inventoryData;
+  window.isAdmin = isAdmin;
+  window.isQuanLy = isQuanLy;
 })();

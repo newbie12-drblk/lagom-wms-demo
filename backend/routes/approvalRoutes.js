@@ -12,27 +12,19 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// Tạo yêu cầu - cho phép admin và nhập liệu
-router.post(
-  "/",
-  verifyToken,
-  checkRole("admin", "nhap_lieu"),
-  createApprovalRequest,
-);
+// ✅ Admin tạo yêu cầu thêm sản phẩm
+router.post("/", verifyToken, checkRole("admin"), createApprovalRequest);
 
-// Lấy yêu cầu của tôi - bất kỳ user nào đã đăng nhập
 router.get("/my", verifyToken, getMyRequests);
 
-// Lấy tất cả yêu cầu - chỉ admin
-router.get("/", verifyToken, checkRole("admin"), getAllRequests);
+// Quản lý xem tất cả yêu cầu
+router.get("/", verifyToken, checkRole("quan_ly"), getAllRequests);
 
-// Duyệt yêu cầu - chỉ admin
-router.put("/:id/approve", verifyToken, checkRole("admin"), approveRequest);
+// Quản lý duyệt/từ chối
+router.put("/:id/approve", verifyToken, checkRole("quan_ly"), approveRequest);
+router.put("/:id/reject", verifyToken, checkRole("quan_ly"), rejectRequest);
 
-// Từ chối yêu cầu - chỉ admin
-router.put("/:id/reject", verifyToken, checkRole("admin"), rejectRequest);
-
-// Xóa yêu cầu - chỉ admin
+// Admin xóa yêu cầu
 router.delete("/:id", verifyToken, checkRole("admin"), deleteRequest);
 
 module.exports = router;
