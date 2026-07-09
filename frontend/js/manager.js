@@ -1240,18 +1240,36 @@
 
   // Mở modal thêm user
   function openAddUserModal() {
+    const modal = document.getElementById("userModal");
+    if (!modal) {
+      Utils.showToast("Lỗi: Không tìm thấy modal", "error");
+      return;
+    }
+
     document.getElementById("userModalTitle").textContent =
       "👤 Thêm người dùng";
     document.getElementById("editUserId").value = "";
     document.getElementById("userForm").reset();
     document.getElementById("userPassword").placeholder = "Nhập mật khẩu mới";
     document.getElementById("userPassword").required = true;
+    document.getElementById("userPassword").value = "";
 
     document
       .querySelectorAll(".perm-check")
       .forEach((cb) => (cb.checked = false));
 
-    showModal(document.getElementById("userModal"));
+    modal.style.display = "flex";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
+    modal.style.position = "fixed";
+    modal.style.zIndex = "99999";
+    modal.style.left = "0";
+    modal.style.top = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.background = "rgba(0, 0, 0, 0.8)";
+    modal.style.backdropFilter = "blur(4px)";
+    document.body.style.overflow = "hidden";
   }
 
   // Mở modal sửa user
@@ -1259,6 +1277,12 @@
     const user = usersData.find((u) => u.id === userId);
     if (!user) {
       Utils.showToast("Không tìm thấy user", "error");
+      return;
+    }
+
+    const modal = document.getElementById("userModal");
+    if (!modal) {
+      Utils.showToast("Lỗi: Không tìm thấy modal", "error");
       return;
     }
 
@@ -1280,13 +1304,26 @@
       cb.checked = user[field] == 1;
     });
 
-    showModal(document.getElementById("userModal"));
+    modal.style.display = "flex";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
+    modal.style.position = "fixed";
+    modal.style.zIndex = "99999";
+    modal.style.left = "0";
+    modal.style.top = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.background = "rgba(0, 0, 0, 0.8)";
+    modal.style.backdropFilter = "blur(4px)";
+    document.body.style.overflow = "hidden";
   }
 
   // Đóng modal user
   function closeUserModal() {
     const modal = document.getElementById("userModal");
-    modal.style.display = "none";
+    if (modal) {
+      modal.style.display = "none";
+    }
     document.body.style.overflow = "";
   }
 
@@ -1402,26 +1439,56 @@
       });
     });
 
-    $("btnRefresh")?.addEventListener("click", () => {
+    document.getElementById("btnRefresh")?.addEventListener("click", () => {
       loadDashboardStats();
       loadNotifications();
       Utils.showToast("Đã làm mới dữ liệu");
     });
 
     // User events
-    document
-      .getElementById("btnAddUser")
-      ?.addEventListener("click", openAddUserModal);
-    document
-      .getElementById("btnRefreshUsers")
-      ?.addEventListener("click", loadUsers);
-    document.getElementById("btnSaveUser")?.addEventListener("click", saveUser);
-
-    document
-      .getElementById("userModal")
-      ?.addEventListener("click", function (e) {
-        if (e.target === this) closeUserModal();
+    const btnAddUser = document.getElementById("btnAddUser");
+    if (btnAddUser) {
+      btnAddUser.addEventListener("click", function (e) {
+        e.preventDefault();
+        console.log("🟢 Nút Thêm người dùng được click");
+        openAddUserModal();
       });
+    }
+
+    const btnRefreshUsers = document.getElementById("btnRefreshUsers");
+    if (btnRefreshUsers) {
+      btnRefreshUsers.addEventListener("click", function (e) {
+        e.preventDefault();
+        loadUsers();
+      });
+    }
+
+    const btnSaveUser = document.getElementById("btnSaveUser");
+    if (btnSaveUser) {
+      btnSaveUser.addEventListener("click", function (e) {
+        e.preventDefault();
+        saveUser();
+      });
+    }
+
+    // Đóng modal khi click ra ngoài
+    const modal = document.getElementById("userModal");
+    if (modal) {
+      modal.addEventListener("click", function (e) {
+        if (e.target === this) {
+          closeUserModal();
+        }
+      });
+    }
+
+    // Đóng modal khi click nút X
+    const closeBtn = document.querySelector(".close-modal");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        closeUserModal();
+      });
+    }
   }
 
   // ============================================================

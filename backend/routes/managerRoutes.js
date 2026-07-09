@@ -59,8 +59,7 @@ router.get("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
           p.canEditPhanLoai, p.canEditGiaNhap, p.canEditSoHopDongNhap, p.canEditSoHoaDonNhap,
           p.canEditSoHoaDonXuat, p.canEditNgayNhapHD, p.canEditNgayXuatHD, p.canEditGhiChu,
           p.canCreateReceipt, p.canCreateExport, p.canViewAll,
-          p.canDeleteProduct, p.canEditProduct, p.canAddProduct,
-          p.createdAt as permCreatedAt, p.updatedAt as permUpdatedAt
+          p.canDeleteProduct, p.canEditProduct, p.canAddProduct
         FROM users u
         LEFT JOIN user_permissions p ON u.id = p.userId
         ORDER BY u.createdAt DESC

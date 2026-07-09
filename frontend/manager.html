@@ -85,21 +85,86 @@
         background: rgba(139, 92, 246, 0.2);
         color: #a78bfa;
       }
-      .permission-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 4px 8px;
-        font-size: 11px;
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.show,
+      .modal[style*="display: flex"] {
+        display: flex !important;
+      }
+      .modal-content {
+        background: #111827;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 700px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+      }
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        background: #0f172a;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-radius: 16px 16px 0 0;
+      }
+      .modal-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #60a5fa;
+        margin: 0;
+      }
+      .modal-header .close-modal {
+        font-size: 28px;
+        cursor: pointer;
         color: #6b82a0;
+        transition: all 0.2s;
+        line-height: 1;
       }
-      .permission-grid .granted {
-        color: #4ade80;
-      }
-      .permission-grid .denied {
+      .modal-header .close-modal:hover {
         color: #f87171;
       }
-      .modal-lg .modal-content {
-        max-width: 900px;
+      .modal-body {
+        padding: 24px;
+        max-height: calc(90vh - 120px);
+        overflow-y: auto;
+      }
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        background: #0f172a;
+        position: sticky;
+        bottom: 0;
+        border-radius: 0 0 16px 16px;
       }
       .form-row {
         display: grid;
@@ -108,6 +173,38 @@
       }
       .form-row .full {
         grid-column: 1 / -1;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b82a0;
+        margin-bottom: 6px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        background: #1a2235;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: #e2eaf5;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+      .form-group small {
+        font-size: 11px;
+        color: #6b82a0;
+        margin-top: 4px;
+        display: block;
       }
       .perm-group {
         background: #0f172a;
@@ -140,6 +237,9 @@
         margin-bottom: 4px;
         border-bottom: 1px solid #1e2d45;
         padding-bottom: 4px;
+      }
+      .modal-lg .modal-content {
+        max-width: 900px;
       }
     </style>
   </head>
@@ -460,7 +560,6 @@
           <h3 id="userModalTitle">👤 Thêm người dùng</h3>
           <span
             class="close-modal"
-            onclick="closeUserModal()"
             style="font-size: 28px; cursor: pointer; color: #6b82a0"
             >&times;</span
           >
