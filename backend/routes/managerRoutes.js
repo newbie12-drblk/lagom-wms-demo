@@ -14,48 +14,35 @@ router.get(
   checkRole("quan_ly"),
   async (req, res) => {
     try {
-      console.log("📊 Fetching dashboard stats...");
-
       const [approvalResult] = await db.execute(
         "SELECT COUNT(*) as count FROM approval_requests WHERE status = 'pending'",
       );
-
       const [receiptResult] = await db.execute(
         "SELECT COUNT(*) as count FROM receipts WHERE status IN ('pending', 'awaiting_confirmation')",
       );
-
       const [exportResult] = await db.execute(
         "SELECT COUNT(*) as count FROM exports WHERE status IN ('pending', 'awaiting_confirmation')",
       );
-
       const [editResult] = await db.execute(
         "SELECT COUNT(*) as count FROM edit_requests WHERE status = 'pending'",
       );
-
       const [deleteResult] = await db.execute(
         "SELECT COUNT(*) as count FROM deletion_requests WHERE status = 'pending'",
       );
 
-      const data = {
-        pendingProducts: parseInt(approvalResult[0]?.count || 0),
-        pendingReceipts: parseInt(receiptResult[0]?.count || 0),
-        pendingExports: parseInt(exportResult[0]?.count || 0),
-        pendingEdits: parseInt(editResult[0]?.count || 0),
-        pendingDeletions: parseInt(deleteResult[0]?.count || 0),
-      };
-
-      console.log("📊 Stats:", JSON.stringify(data, null, 2));
-
-      res.status(200).json({
+      res.json({
         success: true,
-        data: data,
+        data: {
+          pendingProducts: parseInt(approvalResult[0]?.count || 0),
+          pendingReceipts: parseInt(receiptResult[0]?.count || 0),
+          pendingExports: parseInt(exportResult[0]?.count || 0),
+          pendingEdits: parseInt(editResult[0]?.count || 0),
+          pendingDeletions: parseInt(deleteResult[0]?.count || 0),
+        },
       });
     } catch (error) {
       console.error("❌ Dashboard stats error:", error);
-      res.status(500).json({
-        success: false,
-        message: error.message || "Lỗi server",
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   },
 );
@@ -65,28 +52,24 @@ router.get(
 // ============================================================
 router.get("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
   try {
-    const [users] = await db.execute(
-      `SELECT u.id, u.username, u.fullName, u.email, u.roleId, u.isActive, u.createdAt, u.lastLoginAt,
-                p.canEditTenThuongMai, p.canEditMaHang, p.canEditDVT, p.canEditHangSX,
-                p.canEditPhanLoai, p.canEditGiaNhap, p.canEditSoHopDongNhap, p.canEditSoHoaDonNhap,
-                p.canEditSoHoaDonXuat, p.canEditNgayNhapHD, p.canEditNgayXuatHD, p.canEditGhiChu,
-                p.canCreateReceipt, p.canCreateExport, p.canViewAll,
-                p.canDeleteProduct, p.canEditProduct, p.canAddProduct
-         FROM users u
-         LEFT JOIN user_permissions p ON u.id = p.userId
-         ORDER BY u.createdAt DESC`,
-    );
+    const [users] = await db.execute(`
+        SELECT 
+          u.id, u.username, u.fullName, u.email, u.roleId, u.isActive, u.createdAt, u.lastLoginAt,
+          p.canEditTenThuongMai, p.canEditMaHang, p.canEditDVT, p.canEditHangSX,
+          p.canEditPhanLoai, p.canEditGiaNhap, p.canEditSoHopDongNhap, p.canEditSoHoaDonNhap,
+          p.canEditSoHoaDonXuat, p.canEditNgayNhapHD, p.canEditNgayXuatHD, p.canEditGhiChu,
+          p.canCreateReceipt, p.canCreateExport, p.canViewAll,
+          p.canDeleteProduct, p.canEditProduct, p.canAddProduct,
+          p.createdAt as permCreatedAt, p.updatedAt as permUpdatedAt
+        FROM users u
+        LEFT JOIN user_permissions p ON u.id = p.userId
+        ORDER BY u.createdAt DESC
+      `);
 
-    res.status(200).json({
-      success: true,
-      data: users,
-    });
+    res.json({ success: true, data: users });
   } catch (error) {
     console.error("❌ Get users error:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Lỗi server",
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -157,17 +140,14 @@ router.post("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
       );
     }
 
-    res.status(200).json({
+    res.json({
       success: true,
       message: "Tạo user thành công",
       data: { id: userId },
     });
   } catch (error) {
     console.error("❌ Create user error:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Lỗi server",
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -269,16 +249,10 @@ router.put(
         }
       }
 
-      res.status(200).json({
-        success: true,
-        message: "Cập nhật user thành công",
-      });
+      res.json({ success: true, message: "Cập nhật user thành công" });
     } catch (error) {
       console.error("❌ Update user error:", error);
-      res.status(500).json({
-        success: false,
-        message: error.message || "Lỗi server",
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   },
 );
@@ -304,16 +278,10 @@ router.delete(
       await db.execute("DELETE FROM user_permissions WHERE userId = ?", [id]);
       await db.execute("DELETE FROM users WHERE id = ?", [id]);
 
-      res.status(200).json({
-        success: true,
-        message: "Xóa user thành công",
-      });
+      res.json({ success: true, message: "Xóa user thành công" });
     } catch (error) {
       console.error("❌ Delete user error:", error);
-      res.status(500).json({
-        success: false,
-        message: error.message || "Lỗi server",
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   },
 );
