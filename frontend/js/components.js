@@ -135,7 +135,7 @@ const Components = {
       };
       const status = statusMap[receipt.status] || statusMap["pending"];
 
-      // ✅ BẢNG CHI TIẾT - FORMAT ĐẸP
+      // BẢNG CHI TIẾT - GIỮ NGUYÊN TẤT CẢ CỘT
       let itemsTableHtml = "";
       if (receipt.items && receipt.items.length > 0) {
         itemsTableHtml = `
@@ -145,49 +145,60 @@ const Components = {
               <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
                 <thead>
                   <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; white-space: nowrap;">STT</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">STT</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">MÃ HÀNG</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">QUY CÁCH</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG SX</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG/NƯỚC SX</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">ĐVT</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">GIÁ NHẬP</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">SL NHẬP</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">THÀNH TIỀN</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI MÁY</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">GIÁ NHẬP</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">SL NHẬP</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">THÀNH TIỀN</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐƠN NHẬP</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY NHẬP HĐ</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; white-space: nowrap;">NGÀY HẾT HẠN</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${receipt.items
-                    .map(
-                      (item, idx) => `
-                    <tr style="border-bottom: 1px solid #1e2d45; transition: background 0.15s;">
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${Utils.formatDate(item.ngayHetHan)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                    </tr>
-                  `,
-                    )
+                    .map((item, idx) => {
+                      const expiryColor =
+                        item.ngayHetHan &&
+                        new Date(item.ngayHetHan) < new Date()
+                          ? "#f87171"
+                          : "#e2eaf5";
+                      return `
+                        <tr style="border-bottom: 1px solid #1e2d45; transition: background 0.15s;">
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                        </tr>
+                      `;
+                    })
                     .join("")}
                 </tbody>
                 <tfoot>
                   <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
                     <td colspan="9" style="padding: 12px 16px; text-align: right; font-size: 15px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
                     <td style="padding: 12px 16px; text-align: right; font-size: 16px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(receipt.total)}</td>
-                    <td colspan="3" style="padding: 12px 16px;"></td>
+                    <td colspan="6" style="padding: 12px 16px;"></td>
                   </tr>
                 </tfoot>
               </table>
@@ -216,7 +227,11 @@ const Components = {
             <div><strong style="color: #6b82a0;">Ngày tạo:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.createdAt)}</span></div>
             <div><strong style="color: #6b82a0;">Ngày nhập:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.receiptDate)}</span></div>
             <div><strong style="color: #6b82a0;">Nhà cung cấp:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierName || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">Địa chỉ NCC:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierAddress || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">MST NCC:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierTax || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Khách hàng:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerName || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">Địa chỉ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerAddress || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">MST KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerTax || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Số HĐ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerContract || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Tổng tiền:</strong> <span style="color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(receipt.total)}</span></div>
           </div>
@@ -274,7 +289,7 @@ const Components = {
       };
       const status = statusMap[exportItem.status] || statusMap["pending"];
 
-      // ✅ BẢNG CHI TIẾT PHIẾU XUẤT - FORMAT ĐẸP
+      // BẢNG CHI TIẾT - GIỮ NGUYÊN TẤT CẢ CỘT
       let itemsTableHtml = "";
       if (exportItem.items && exportItem.items.length > 0) {
         itemsTableHtml = `
@@ -284,42 +299,47 @@ const Components = {
               <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
                 <thead>
                   <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; white-space: nowrap;">STT</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">STT</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">MÃ HÀNG</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">QUY CÁCH</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG SX</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG/NƯỚC SX</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">ĐVT</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">ĐƠN GIÁ</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">SỐ LƯỢNG</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; white-space: nowrap;">THÀNH TIỀN</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI MÁY</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">ĐƠN GIÁ</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">SỐ LƯỢNG</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">THÀNH TIỀN</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
-                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; white-space: nowrap;">NGÀY HẾT HẠN</th>
+                    <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
                     <th style="padding: 10px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${exportItem.items
-                    .map(
-                      (item, idx) => `
-                    <tr style="border-bottom: 1px solid #1e2d45;">
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${Utils.formatDate(item.ngayHetHan)}</td>
-                      <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                    </tr>
-                  `,
-                    )
+                    .map((item, idx) => {
+                      const expiryColor =
+                        item.ngayHetHan &&
+                        new Date(item.ngayHetHan) < new Date()
+                          ? "#f87171"
+                          : "#e2eaf5";
+                      return `
+                        <tr style="border-bottom: 1px solid #1e2d45;">
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                          <td style="padding: 8px 12px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                        </tr>
+                      `;
+                    })
                     .join("")}
                 </tbody>
                 <tfoot>
@@ -356,6 +376,9 @@ const Components = {
             <div><strong style="color: #6b82a0;">Ngày xuất:</strong> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.exportDate)}</span></div>
             <div><strong style="color: #6b82a0;">Người nhận:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.receiverName || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Khách hàng:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerName || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">Địa chỉ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerAddress || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">MST KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerTax || "—")}</span></div>
+            <div><strong style="color: #6b82a0;">Số HĐ KH:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerContract || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Lý do xuất:</strong> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.exportReason || "—")}</span></div>
             <div><strong style="color: #6b82a0;">Tổng tiền:</strong> <span style="color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(exportItem.total)}</span></div>
           </div>
@@ -378,7 +401,6 @@ const Components = {
 function showModal(modal) {
   if (!modal) return;
 
-  // Reset style
   modal.style.cssText = `
     display: flex !important;
     align-items: center !important;
@@ -393,17 +415,14 @@ function showModal(modal) {
     backdrop-filter: blur(4px) !important;
   `;
 
-  // Chặn scroll body
   document.body.style.overflow = "hidden";
 
-  // Gắn sự kiện click ra ngoài để đóng
   modal.onclick = function (e) {
     if (e.target === modal) {
       closeModal(modal.id);
     }
   };
 
-  // Gắn sự kiện ESC để đóng
   document.onkeydown = function (e) {
     if (e.key === "Escape") {
       closeModal(modal.id);
@@ -416,9 +435,7 @@ function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.style.display = "none";
-    // Reset overflow
     document.body.style.overflow = "";
-    // Xóa sự kiện ESC
     document.onkeydown = null;
   }
 }
