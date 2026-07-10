@@ -13,366 +13,6 @@
     />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/manager.css" />
-    <style>
-      .user-management-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-        min-width: 900px;
-      }
-      .user-management-table th {
-        background: rgba(26, 34, 53, 0.8);
-        padding: 12px 16px;
-        text-align: left;
-        font-weight: 600;
-        color: #6b82a0;
-        border-bottom: 2px solid var(--border);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
-      .user-management-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
-        vertical-align: middle;
-      }
-      .user-management-table tr:hover td {
-        background: rgba(59, 130, 246, 0.05);
-      }
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
-      }
-      .status-dot.active {
-        background: #4ade80;
-        box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
-      }
-      .status-dot.inactive {
-        background: #f87171;
-        box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
-      }
-      .role-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-      }
-      .role-badge.admin {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-      }
-      .role-badge.quan_ly {
-        background: rgba(245, 158, 11, 0.2);
-        color: #fbbf24;
-      }
-      .role-badge.ke_toan {
-        background: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
-      }
-      .role-badge.quan_ly_kho {
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-      }
-      .role-badge.nhan_vien {
-        background: rgba(107, 114, 128, 0.2);
-        color: #9ca3af;
-      }
-      .role-badge.nhap_lieu {
-        background: rgba(139, 92, 246, 0.2);
-        color: #a78bfa;
-      }
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 99999;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
-        align-items: center;
-        justify-content: center;
-      }
-      .modal.show,
-      .modal[style*="display: flex"] {
-        display: flex !important;
-      }
-      .modal-content {
-        background: #111827;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        width: 95%;
-        max-width: 1200px;
-        max-height: 90vh;
-        overflow-y: auto;
-        animation: modalSlideIn 0.3s ease;
-      }
-      @keyframes modalSlideIn {
-        from {
-          opacity: 0;
-          transform: scale(0.95) translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
-      }
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        border-bottom: 1px solid var(--border);
-        background: #0f172a;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        border-radius: 16px 16px 0 0;
-      }
-      .modal-header h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #60a5fa;
-        margin: 0;
-      }
-      .modal-header .close-modal {
-        font-size: 28px;
-        cursor: pointer;
-        color: #6b82a0;
-        transition: all 0.2s;
-        line-height: 1;
-      }
-      .modal-header .close-modal:hover {
-        color: #f87171;
-      }
-      .modal-body {
-        padding: 24px;
-        max-height: calc(90vh - 120px);
-        overflow-y: auto;
-      }
-      .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        padding: 16px 24px;
-        border-top: 1px solid var(--border);
-        background: #0f172a;
-        position: sticky;
-        bottom: 0;
-        border-radius: 0 0 16px 16px;
-      }
-      .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .form-row .full {
-        grid-column: 1 / -1;
-      }
-      .form-group {
-        margin-bottom: 16px;
-      }
-      .form-group label {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        color: #6b82a0;
-        margin-bottom: 6px;
-      }
-      .form-group input,
-      .form-group select {
-        width: 100%;
-        padding: 10px 12px;
-        background: #1a2235;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: #e2eaf5;
-        font-size: 13px;
-        transition: all 0.2s;
-      }
-      .form-group input:focus,
-      .form-group select:focus {
-        outline: none;
-        border-color: #3b82f6;
-      }
-      .form-group small {
-        font-size: 11px;
-        color: #6b82a0;
-        margin-top: 4px;
-        display: block;
-      }
-      .perm-group {
-        background: #0f172a;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-top: 8px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 6px 12px;
-      }
-      .perm-group label {
-        font-size: 12px;
-        color: #6b82a0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-      }
-      .perm-group label input[type="checkbox"] {
-        accent-color: #3b82f6;
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
-      }
-      .perm-group .group-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #e2eaf5;
-        grid-column: 1 / -1;
-        margin-bottom: 4px;
-        border-bottom: 1px solid #1e2d45;
-        padding-bottom: 4px;
-      }
-      .modal-lg .modal-content {
-        max-width: 900px;
-      }
-      .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 8px 20px;
-        background: #0f172a;
-        padding: 16px 20px;
-        border-radius: 8px;
-        border: 1px solid #1e2d45;
-        margin-bottom: 16px;
-      }
-      .detail-grid .item {
-        display: flex;
-        flex-direction: column;
-      }
-      .detail-grid .item .label {
-        font-size: 10px;
-        color: #6b82a0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-      .detail-grid .item .value {
-        font-size: 14px;
-        font-weight: 500;
-        color: #e2eaf5;
-        margin-top: 2px;
-      }
-      .detail-grid .item .value.highlight {
-        color: #60a5fa;
-      }
-      .detail-grid .item .value.money {
-        color: #fbbf24;
-      }
-      .detail-grid .item .value.danger {
-        color: #f87171;
-      }
-      .detail-grid .item .value.success {
-        color: #4ade80;
-      }
-      .table-responsive {
-        overflow-x: auto;
-        margin: 12px 0;
-        border-radius: 8px;
-        border: 1px solid #1e2d45;
-      }
-      .table-responsive table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-        min-width: 800px;
-      }
-      .table-responsive table th {
-        background: #0f172a;
-        padding: 10px 8px;
-        text-align: left;
-        font-weight: 600;
-        color: #60a5fa;
-        border-bottom: 2px solid #3b82f6;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        white-space: nowrap;
-        font-size: 11px;
-      }
-      .table-responsive table td {
-        padding: 8px 8px;
-        border-bottom: 1px solid #1e2d45;
-        color: #e2eaf5;
-        vertical-align: middle;
-      }
-      .table-responsive table tr:hover td {
-        background: rgba(59, 130, 246, 0.05);
-      }
-      .table-responsive table .text-right {
-        text-align: right;
-      }
-      .table-responsive table .text-center {
-        text-align: center;
-      }
-      .table-responsive table .total-row {
-        background: #0f172a;
-        border-top: 2px solid #3b82f6;
-      }
-      .table-responsive table .total-row td {
-        font-weight: 700;
-        padding: 10px 8px;
-        color: #fbbf24;
-        font-size: 14px;
-      }
-      .change-old {
-        color: #f87171;
-        text-decoration: line-through;
-        margin-right: 8px;
-      }
-      .change-new {
-        color: #4ade80;
-        font-weight: 600;
-      }
-      .change-arrow {
-        color: #6b82a0;
-        margin: 0 6px;
-      }
-      @media (max-width: 768px) {
-        .form-row {
-          grid-template-columns: 1fr;
-        }
-        .perm-group {
-          grid-template-columns: 1fr 1fr;
-        }
-        .user-management-table {
-          min-width: 600px;
-        }
-        .detail-grid {
-          grid-template-columns: 1fr 1fr;
-        }
-        .modal-content {
-          width: 98%;
-          max-width: 98%;
-        }
-        .table-responsive table {
-          min-width: 600px;
-          font-size: 11px;
-        }
-      }
-      @media (max-width: 480px) {
-        .perm-group {
-          grid-template-columns: 1fr;
-        }
-        .detail-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
   </head>
   <body>
     <div class="orb orb-1"></div>
@@ -683,16 +323,10 @@
 
     <!-- ========== MODAL THÊM/SỬA USER ========== -->
     <div id="userModal" class="modal" style="display: none">
-      <div
-        class="modal-content modal-lg"
-        style="max-width: 900px; max-height: 90vh; overflow-y: auto"
-      >
+      <div class="modal-content modal-lg">
         <div class="modal-header">
           <h3 id="userModalTitle">👤 Thêm người dùng</h3>
-          <span
-            class="close-modal"
-            onclick="window.closeUserModal()"
-            style="font-size: 28px; cursor: pointer; color: #6b82a0"
+          <span class="close-modal" onclick="window.closeUserModal()"
             >&times;</span
           >
         </div>
@@ -806,7 +440,7 @@
                     class="perm-check"
                     data-field="canEditPhanLoai"
                   />
-                  Phân loại</label
+                  Phân loại máy</label
                 >
                 <label
                   ><input
@@ -822,7 +456,7 @@
                     class="perm-check"
                     data-field="canEditSoHopDongNhap"
                   />
-                  Số hợp đồng nhập</label
+                  Số HĐ</label
                 >
                 <label
                   ><input
@@ -830,7 +464,7 @@
                     class="perm-check"
                     data-field="canEditSoHoaDonNhap"
                   />
-                  Số hóa đơn nhập</label
+                  Số HĐơn nhập</label
                 >
                 <label
                   ><input
@@ -838,7 +472,7 @@
                     class="perm-check"
                     data-field="canEditSoHoaDonXuat"
                   />
-                  Số hóa đơn xuất</label
+                  Số HĐơn xuất</label
                 >
                 <label
                   ><input
@@ -854,7 +488,7 @@
                     class="perm-check"
                     data-field="canEditNgayXuatHD"
                   />
-                  Ngày xuất HĐ</label
+                  Ngày xuất</label
                 >
                 <label
                   ><input

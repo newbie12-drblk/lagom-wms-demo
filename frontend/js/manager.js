@@ -181,7 +181,7 @@
   }
 
   // ============================================================
-  // HIỂN THỊ CHI TIẾT PHIẾU NHẬP ĐẦY ĐỦ
+  // HIỂN THỊ CHI TIẾT PHIẾU NHẬP ĐẦY ĐỦ (NHƯ receipt.html)
   // ============================================================
   function renderReceiptDetail(receipt) {
     const items = receipt.items || [];
@@ -211,7 +211,7 @@
                 <th>QUY CÁCH</th>
                 <th>HÃNG/NƯỚC SX</th>
                 <th>ĐVT</th>
-                <th>PHÂN LOẠI</th>
+                <th>PHÂN LOẠI MÁY</th>
                 <th class="text-right">GIÁ NHẬP</th>
                 <th class="text-right">SL NHẬP</th>
                 <th class="text-right">THÀNH TIỀN</th>
@@ -253,7 +253,7 @@
               <tr class="total-row">
                 <td colspan="9" class="text-right">TỔNG CỘNG:</td>
                 <td class="text-right">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="5"></td>
+                <td colspan="6"></td>
               </tr>
             </tfoot>
           </table>
@@ -327,7 +327,7 @@
   }
 
   // ============================================================
-  // HIỂN THỊ CHI TIẾT PHIẾU XUẤT ĐẦY ĐỦ
+  // HIỂN THỊ CHI TIẾT PHIẾU XUẤT ĐẦY ĐỦ (NHƯ export.html)
   // ============================================================
   function renderExportDetail(exportItem) {
     const items = exportItem.items || [];
@@ -357,7 +357,7 @@
                 <th>QUY CÁCH</th>
                 <th>HÃNG/NƯỚC SX</th>
                 <th>ĐVT</th>
-                <th>PHÂN LOẠI</th>
+                <th>PHÂN LOẠI MÁY</th>
                 <th class="text-right">ĐƠN GIÁ</th>
                 <th class="text-right">SL</th>
                 <th class="text-right">THÀNH TIỀN</th>
@@ -463,9 +463,9 @@
   }
 
   // ============================================================
-  // HIỂN THỊ CHI TIẾT SẢN PHẨM ĐẦY ĐỦ (Cho thêm/xóa/sửa)
+  // HIỂN THỊ CHI TIẾT SẢN PHẨM TỒN KHO (NHƯ inventory)
   // ============================================================
-  function renderProductDetail(product, title = "Thông tin sản phẩm") {
+  function renderInventoryDetail(product, title = "Thông tin sản phẩm") {
     if (!product)
       return `<div style="padding:20px;text-align:center;color:#6b82a0;">Không có dữ liệu</div>`;
 
@@ -492,7 +492,7 @@
           <span class="value">${Utils.escapeHtml(product.dvt || "—")}</span>
         </div>
         <div class="item">
-          <span class="label">Phân loại</span>
+          <span class="label">Phân loại máy</span>
           <span class="value">${Utils.escapeHtml(product.phanLoai || "—")}</span>
         </div>
         <div class="item">
@@ -500,44 +500,20 @@
           <span class="value money">${Utils.formatCurrency(product.giaNhap || 0)}</span>
         </div>
         <div class="item">
-          <span class="label">Giá xuất</span>
-          <span class="value money">${Utils.formatCurrency(product.giaXuat || 0)}</span>
-        </div>
-        <div class="item">
           <span class="label">SL nhập</span>
           <span class="value success">${product.soLuongNhap || 0}</span>
         </div>
         <div class="item">
-          <span class="label">SL xuất</span>
-          <span class="value">${product.soLuongXuat || 0}</span>
-        </div>
-        <div class="item">
-          <span class="label">Tồn kho</span>
-          <span class="value ${(product.tonKho || 0) === 0 ? "danger" : "success"}">${product.tonKho || 0}</span>
-        </div>
-        <div class="item">
-          <span class="label">Số hợp đồng nhập</span>
+          <span class="label">Số HĐ</span>
           <span class="value">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span>
         </div>
         <div class="item">
-          <span class="label">Số hóa đơn nhập</span>
+          <span class="label">Số HĐơn nhập</span>
           <span class="value">${Utils.escapeHtml(product.soHoaDonNhap || "—")}</span>
-        </div>
-        <div class="item">
-          <span class="label">Số hợp đồng xuất</span>
-          <span class="value">${Utils.escapeHtml(product.soHopDongXuat || "—")}</span>
-        </div>
-        <div class="item">
-          <span class="label">Số hóa đơn xuất</span>
-          <span class="value">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span>
         </div>
         <div class="item">
           <span class="label">Ngày nhập HĐ</span>
           <span class="value">${Utils.formatDate(product.ngayNhapHD)}</span>
-        </div>
-        <div class="item">
-          <span class="label">Ngày xuất HĐ</span>
-          <span class="value">${Utils.formatDate(product.ngayXuatHD)}</span>
         </div>
         <div class="item">
           <span class="label">Số lot</span>
@@ -546,6 +522,34 @@
         <div class="item">
           <span class="label">Ngày hết hạn</span>
           <span class="value ${product.ngayHetHan && new Date(product.ngayHetHan) < new Date() ? "danger" : ""}">${Utils.formatDate(product.ngayHetHan)}</span>
+        </div>
+        <div class="item">
+          <span class="label">SL xuất</span>
+          <span class="value">${product.soLuongXuat || 0}</span>
+        </div>
+        <div class="item">
+          <span class="label">Giá xuất</span>
+          <span class="value money">${Utils.formatCurrency(product.giaXuat || 0)}</span>
+        </div>
+        <div class="item">
+          <span class="label">Số HĐ xuất</span>
+          <span class="value">${Utils.escapeHtml(product.soHopDongXuat || "—")}</span>
+        </div>
+        <div class="item">
+          <span class="label">Số HĐơn xuất</span>
+          <span class="value">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span>
+        </div>
+        <div class="item">
+          <span class="label">Ngày xuất</span>
+          <span class="value">${Utils.formatDate(product.ngayXuatHD)}</span>
+        </div>
+        <div class="item">
+          <span class="label">Tồn cuối</span>
+          <span class="value ${(product.tonKho || 0) === 0 ? "danger" : "success"}">${product.tonKho || 0}</span>
+        </div>
+        <div class="item">
+          <span class="label">Công nợ</span>
+          <span class="value">${Utils.escapeHtml(product.congNo || "—")}</span>
         </div>
         <div class="item" style="grid-column:1/-1;">
           <span class="label">Ghi chú</span>
@@ -556,7 +560,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS (Yêu cầu thêm sản phẩm)
+  // LOAD PENDING APPROVALS (Yêu cầu thêm sản phẩm - HIỂN THỊ TỒN KHO)
   // ============================================================
   async function loadPendingApprovals() {
     const container = document.getElementById("pendingApprovalsList");
@@ -605,7 +609,7 @@
                         <th>QUY CÁCH</th>
                         <th>HÃNG/NƯỚC SX</th>
                         <th>ĐVT</th>
-                        <th>PHÂN LOẠI</th>
+                        <th>PHÂN LOẠI MÁY</th>
                         <th class="text-right">GIÁ NHẬP</th>
                         <th class="text-right">SL NHẬP</th>
                         <th>SỐ HĐ</th>
@@ -613,6 +617,13 @@
                         <th>NGÀY NHẬP HĐ</th>
                         <th>SỐ LOT</th>
                         <th>NGÀY HẾT HẠN</th>
+                        <th class="text-right">SL XUẤT</th>
+                        <th class="text-right">GIÁ XUẤT</th>
+                        <th>SỐ HĐ XUẤT</th>
+                        <th>SỐ HĐƠN XUẤT</th>
+                        <th>NGÀY XUẤT</th>
+                        <th class="text-right">TỒN CUỐI</th>
+                        <th>CÔNG NỢ</th>
                         <th>GHI CHÚ</th>
                       </tr>
                     </thead>
@@ -635,6 +646,13 @@
                           <td>${Utils.formatDate(item.ngayNhapHD)}</td>
                           <td>${Utils.escapeHtml(item.soLot || "—")}</td>
                           <td>${Utils.formatDate(item.ngayHetHan)}</td>
+                          <td class="text-right">${item.soLuongXuat || 0}</td>
+                          <td class="text-right" style="color:#93c5fd;">${Utils.formatCurrency(item.giaXuat || 0)}</td>
+                          <td>${Utils.escapeHtml(item.soHopDongXuat || "—")}</td>
+                          <td>${Utils.escapeHtml(item.soHoaDonXuat || "—")}</td>
+                          <td>${Utils.formatDate(item.ngayXuatHD)}</td>
+                          <td class="text-right" style="${(item.tonKho || 0) === 0 ? "color:#f87171;" : "color:#4ade80;font-weight:600;"}">${item.tonKho || 0}</td>
+                          <td>${Utils.escapeHtml(item.congNo || "—")}</td>
                           <td>${Utils.escapeHtml(item.ghiChu || "—")}</td>
                         </tr>
                       `,
@@ -755,7 +773,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING RECEIPTS (HIỂN THỊ ĐẦY ĐỦ)
+  // LOAD PENDING RECEIPTS (HIỂN THỊ ĐẦY ĐỦ PHIẾU NHẬP)
   // ============================================================
   async function loadPendingReceipts() {
     const container = $("pendingReceiptsList");
@@ -886,7 +904,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EXPORTS (HIỂN THỊ ĐẦY ĐỦ)
+  // LOAD PENDING EXPORTS (HIỂN THỊ ĐẦY ĐỦ PHIẾU XUẤT)
   // ============================================================
   async function loadPendingExports() {
     const container = $("pendingExportsList");
@@ -1017,7 +1035,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS (HIỂN THỊ ĐẦY ĐỦ THAY ĐỔI)
+  // LOAD PENDING EDITS (HIỂN THỊ ĐẦY ĐỦ THAY ĐỔI - TỒN KHO)
   // ============================================================
   async function loadPendingEdits() {
     const container = $("pendingEditsList");
@@ -1048,9 +1066,31 @@
             const oldData = r.oldData || {};
             const newData = r.newData || {};
 
-            // Tạo bảng so sánh thay đổi
             let changesHtml = "";
             const allFields = Object.keys({ ...oldData, ...newData });
+            const fieldLabels = {
+              tenThuongMai: "Tên thương mại",
+              maHang: "Mã hàng",
+              quyCach: "Quy cách",
+              hangSX: "Hãng SX",
+              dvt: "ĐVT",
+              phanLoai: "Phân loại máy",
+              giaNhap: "Giá nhập",
+              giaXuat: "Giá xuất",
+              soLuongNhap: "SL nhập",
+              soLuongXuat: "SL xuất",
+              tonKho: "Tồn cuối",
+              soLot: "Số lot",
+              ngayHetHan: "Ngày hết hạn",
+              soHopDongNhap: "Số HĐ",
+              soHoaDonNhap: "Số HĐơn nhập",
+              soHopDongXuat: "Số HĐ xuất",
+              soHoaDonXuat: "Số HĐơn xuất",
+              ngayNhapHD: "Ngày nhập HĐ",
+              ngayXuatHD: "Ngày xuất",
+              ghiChu: "Ghi chú",
+              congNo: "Công nợ",
+            };
             const changedFields = allFields.filter(
               (key) => oldData[key] != newData[key],
             );
@@ -1061,9 +1101,9 @@
                   <table>
                     <thead>
                       <tr>
-                        <th style="min-width:150px;">Trường</th>
-                        <th>Giá trị cũ</th>
-                        <th>Giá trị mới</th>
+                        <th style="min-width:150px;">TRƯỜNG</th>
+                        <th>GIÁ TRỊ CŨ</th>
+                        <th>GIÁ TRỊ MỚI</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1071,7 +1111,7 @@
                         .map(
                           (key) => `
                         <tr>
-                          <td><strong>${Utils.escapeHtml(key)}</strong></td>
+                          <td><strong>${fieldLabels[key] || key}</strong></td>
                           <td style="color:#f87171;">${Utils.escapeHtml(String(oldData[key] || "—"))}</td>
                           <td style="color:#4ade80;font-weight:600;">${Utils.escapeHtml(String(newData[key] || "—"))}</td>
                         </tr>
@@ -1189,7 +1229,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING DELETIONS (HIỂN THỊ ĐẦY ĐỦ)
+  // LOAD PENDING DELETIONS (HIỂN THỊ ĐẦY ĐỦ - TỒN KHO)
   // ============================================================
   async function loadPendingDeletions() {
     const container = $("pendingDeletionsList");
@@ -1245,7 +1285,7 @@
                   </div>
                 </div>
 
-                ${renderProductDetail(productData, "Thông tin sản phẩm sẽ bị xóa")}
+                ${renderInventoryDetail(productData, "Thông tin sản phẩm sẽ bị xóa")}
 
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
                   <button class="btn btn-danger" onclick="window.rejectDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
