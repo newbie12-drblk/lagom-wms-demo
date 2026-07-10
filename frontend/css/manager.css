@@ -44,10 +44,12 @@
   display: inline-block;
   margin-right: 6px;
 }
+
 .status-dot.active {
   background: #4ade80;
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
 }
+
 .status-dot.inactive {
   background: #f87171;
   box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
@@ -63,26 +65,32 @@
   font-size: 11px;
   font-weight: 600;
 }
+
 .role-badge.admin {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
+
 .role-badge.quan_ly {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
 }
+
 .role-badge.ke_toan {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
 }
+
 .role-badge.quan_ly_kho {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
+
 .role-badge.nhan_vien {
   background: rgba(107, 114, 128, 0.2);
   color: #9ca3af;
 }
+
 .role-badge.nhap_lieu {
   background: rgba(139, 92, 246, 0.2);
   color: #a78bfa;
@@ -100,6 +108,7 @@
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 6px 12px;
 }
+
 .perm-group label {
   font-size: 12px;
   color: #6b82a0;
@@ -108,12 +117,14 @@
   gap: 6px;
   cursor: pointer;
 }
+
 .perm-group label input[type="checkbox"] {
   accent-color: #3b82f6;
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
+
 .perm-group .group-title {
   font-size: 12px;
   font-weight: 600;
@@ -137,31 +148,38 @@
   border: 1px solid #1e2d45;
   margin-bottom: 16px;
 }
+
 .detail-grid .item {
   display: flex;
   flex-direction: column;
 }
+
 .detail-grid .item .label {
   font-size: 10px;
   color: #6b82a0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
 .detail-grid .item .value {
   font-size: 14px;
   font-weight: 500;
   color: #e2eaf5;
   margin-top: 2px;
 }
+
 .detail-grid .item .value.highlight {
   color: #60a5fa;
 }
+
 .detail-grid .item .value.money {
   color: #fbbf24;
 }
+
 .detail-grid .item .value.danger {
   color: #f87171;
 }
+
 .detail-grid .item .value.success {
   color: #4ade80;
 }
@@ -175,12 +193,14 @@
   border-radius: 8px;
   border: 1px solid #1e2d45;
 }
+
 .table-responsive table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
   min-width: 800px;
 }
+
 .table-responsive table th {
   background: #0f172a;
   padding: 10px 8px;
@@ -194,25 +214,31 @@
   white-space: nowrap;
   font-size: 11px;
 }
+
 .table-responsive table td {
   padding: 8px 8px;
   border-bottom: 1px solid #1e2d45;
   color: #e2eaf5;
   vertical-align: middle;
 }
+
 .table-responsive table tr:hover td {
   background: rgba(59, 130, 246, 0.05);
 }
+
 .table-responsive table .text-right {
   text-align: right;
 }
+
 .table-responsive table .text-center {
   text-align: center;
 }
+
 .table-responsive table .total-row {
   background: #0f172a;
   border-top: 2px solid #3b82f6;
 }
+
 .table-responsive table .total-row td {
   font-weight: 700;
   padding: 10px 8px;
@@ -229,6 +255,7 @@
   border-radius: 12px;
   padding: 16px 20px;
 }
+
 .approval-card .card-header {
   display: flex;
   justify-content: space-between;
@@ -239,14 +266,17 @@
   padding-bottom: 12px;
   border-bottom: 1px solid #1e2d45;
 }
+
 .approval-card .card-title {
   font-size: 18px;
   font-weight: 700;
 }
+
 .approval-card .card-date {
   font-size: 12px;
   color: #6b82a0;
 }
+
 .approval-card .card-user {
   font-size: 13px;
   color: #e2eaf5;
@@ -260,10 +290,12 @@
   text-decoration: line-through;
   margin-right: 8px;
 }
+
 .change-new {
   color: #4ade80;
   font-weight: 600;
 }
+
 .change-arrow {
   color: #6b82a0;
   margin: 0 6px;
@@ -283,54 +315,121 @@
   .user-management-table {
     min-width: 700px;
   }
+
+  .table-responsive table {
+    min-width: 700px;
+  }
 }
 
 @media (max-width: 768px) {
   .user-management-table {
     min-width: 600px;
   }
+
+  .user-management-table th,
+  .user-management-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
   .detail-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .detail-grid .item .value {
+    font-size: 13px;
+  }
+
   .table-responsive table {
     min-width: 600px;
     font-size: 11px;
   }
+
+  .table-responsive table th,
+  .table-responsive table td {
+    padding: 6px 6px;
+  }
+
   .approval-card .card-header {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .perm-group {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-lg .modal-content {
+    max-width: 95%;
   }
 }
 
 @media (max-width: 480px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-  .perm-group {
-    grid-template-columns: 1fr;
-  }
   .user-management-table {
     min-width: 500px;
     font-size: 11px;
   }
+
   .user-management-table th,
   .user-management-table td {
     padding: 6px 8px;
+    font-size: 11px;
   }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid .item .value {
+    font-size: 12px;
+  }
+
+  .perm-group {
+    grid-template-columns: 1fr;
+  }
+
   .table-responsive table {
     min-width: 500px;
     font-size: 10px;
   }
+
   .table-responsive table th,
   .table-responsive table td {
     padding: 4px 4px;
+    font-size: 10px;
   }
+
   .modal-content {
     max-width: 100%;
     width: 100%;
     border-radius: 0;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+  }
+
+  .approval-card {
+    padding: 12px 14px;
+  }
+
+  .approval-card .card-title {
+    font-size: 16px;
+  }
+
+  .perm-group {
+    padding: 10px 12px;
+  }
+
+  .perm-group label {
+    font-size: 11px;
   }
 }
