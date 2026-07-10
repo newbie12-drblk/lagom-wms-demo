@@ -181,7 +181,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS (Yêu cầu thêm sản phẩm)
+  // LOAD PENDING APPROVALS
   // ============================================================
   async function loadPendingApprovals() {
     const container = document.getElementById("pendingApprovalsList");
@@ -1178,6 +1178,7 @@
     tbody.innerHTML = users
       .map((user, idx) => {
         const isActive = user.isActive == 1;
+        const isManager = user.roleId === "quan_ly";
         const roleColors = {
           admin: "admin",
           quan_ly: "quan_ly",
@@ -1205,6 +1206,7 @@
         const permText = perms.length > 0 ? perms.join(" ") : "—";
 
         const isSelf = currentUser && currentUser.id === user.id;
+        const canDelete = !isSelf && !isManager;
 
         return `
         <tr>
@@ -1224,7 +1226,7 @@
                 <i class="fas fa-edit"></i>
               </button>
               ${
-                !isSelf
+                canDelete
                   ? `<button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})" title="Xóa">
                 <i class="fas fa-trash"></i>
               </button>`
@@ -1277,6 +1279,12 @@
     const user = usersData.find((u) => u.id === userId);
     if (!user) {
       Utils.showToast("Không tìm thấy user", "error");
+      return;
+    }
+
+    // ⛔ KHÔNG CHO SỬA QUẢN LÝ
+    if (user.roleId === "quan_ly") {
+      Utils.showToast("❌ Không thể sửa tài khoản Quản lý.", "error");
       return;
     }
 
@@ -1403,6 +1411,12 @@
   async function deleteUser(userId) {
     const user = usersData.find((u) => u.id === userId);
     if (!user) return;
+
+    // ⛔ KHÔNG CHO XÓA QUẢN LÝ
+    if (user.roleId === "quan_ly") {
+      Utils.showToast("❌ Không thể xóa tài khoản Quản lý.", "error");
+      return;
+    }
 
     if (!confirm(`Bạn có chắc muốn xóa user "${user.username}"?`)) return;
 

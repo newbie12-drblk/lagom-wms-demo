@@ -241,6 +241,23 @@
       .modal-lg .modal-content {
         max-width: 900px;
       }
+      /* Responsive */
+      @media (max-width: 768px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .perm-group {
+          grid-template-columns: 1fr 1fr;
+        }
+        .user-management-table {
+          min-width: 600px;
+        }
+      }
+      @media (max-width: 480px) {
+        .perm-group {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -342,7 +359,7 @@
               <div class="stats-row">
                 <div
                   class="stat-card s-blue"
-                  onclick="switchView('pending-products')"
+                  onclick="window.switchView('pending-products')"
                 >
                   <div class="stat-top">
                     <div class="stat-icon-wrap">📦</div>
@@ -353,7 +370,7 @@
                 </div>
                 <div
                   class="stat-card s-yellow"
-                  onclick="switchView('pending-receipts')"
+                  onclick="window.switchView('pending-receipts')"
                 >
                   <div class="stat-top">
                     <div class="stat-icon-wrap">📥</div>
@@ -364,7 +381,7 @@
                 </div>
                 <div
                   class="stat-card s-green"
-                  onclick="switchView('pending-exports')"
+                  onclick="window.switchView('pending-exports')"
                 >
                   <div class="stat-top">
                     <div class="stat-icon-wrap">📤</div>
@@ -375,7 +392,7 @@
                 </div>
                 <div
                   class="stat-card s-purple"
-                  onclick="switchView('pending-edits')"
+                  onclick="window.switchView('pending-edits')"
                 >
                   <div class="stat-top">
                     <div class="stat-icon-wrap">✏️</div>
@@ -386,7 +403,7 @@
                 </div>
                 <div
                   class="stat-card s-red"
-                  onclick="switchView('pending-deletions')"
+                  onclick="window.switchView('pending-deletions')"
                 >
                   <div class="stat-top">
                     <div class="stat-icon-wrap">🗑️</div>
@@ -614,7 +631,7 @@
                 <label>Vai trò</label>
                 <select id="userRole">
                   <option value="admin">Admin</option>
-                  <option value="quan_ly">Quản lý</option>
+                  <!-- ĐÃ XÓA option "Quản lý" - Chỉ có 1 Quản lý duy nhất -->
                   <option value="ke_toan">Kế toán</option>
                   <option value="quan_ly_kho">Quản lý kho</option>
                   <option value="nhan_vien">Nhân viên</option>
@@ -634,6 +651,7 @@
               <label style="font-weight: 600; color: #60a5fa; font-size: 14px"
                 >🔐 Phân quyền chi tiết</label
               >
+
               <div class="perm-group">
                 <div class="group-title">📝 Quyền chỉnh sửa trường</div>
                 <label
@@ -793,7 +811,7 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-outline" onclick="closeUserModal()">
+          <button class="btn btn-outline" onclick="window.closeUserModal()">
             Hủy
           </button>
           <button class="btn btn-success" id="btnSaveUser">

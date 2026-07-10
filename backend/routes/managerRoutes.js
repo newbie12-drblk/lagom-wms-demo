@@ -87,6 +87,15 @@ router.post("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
       });
     }
 
+    // ⛔ KHÔNG CHO PHÉP TẠO USER VỚI ROLE quan_ly
+    if (roleId === "quan_ly") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "❌ Không thể tạo tài khoản Quản lý. Chỉ có 1 Quản lý duy nhất.",
+      });
+    }
+
     const [existing] = await db.execute(
       "SELECT id FROM users WHERE username = ?",
       [username],
@@ -162,6 +171,28 @@ router.put(
       const { id } = req.params;
       const { fullName, email, roleId, isActive, password, permissions } =
         req.body;
+
+      // ⛔ KHÔNG CHO PHÉP SỬA USER quan_ly
+      const [currentUser] = await db.execute(
+        "SELECT roleId FROM users WHERE id = ?",
+        [id],
+      );
+
+      if (currentUser.length > 0 && currentUser[0].roleId === "quan_ly") {
+        return res.status(400).json({
+          success: false,
+          message: "❌ Không thể sửa tài khoản Quản lý.",
+        });
+      }
+
+      // ⛔ KHÔNG CHO PHÉP CẬP NHẬT USER THÀNH ROLE quan_ly
+      if (roleId === "quan_ly") {
+        return res.status(400).json({
+          success: false,
+          message:
+            "❌ Không thể cập nhật thành Quản lý. Chỉ có 1 Quản lý duy nhất.",
+        });
+      }
 
       const updates = [];
       const values = [];
@@ -267,10 +298,22 @@ router.delete(
     try {
       const { id } = req.params;
 
+      // ⛔ KHÔNG CHO XÓA CHÍNH MÌNH
       if (parseInt(id) === req.user.userId) {
         return res.status(400).json({
           success: false,
           message: "Không thể xóa tài khoản của chính mình",
+        });
+      }
+
+      // ⛔ KHÔNG CHO PHÉP XÓA USER QUAN_LY
+      const [user] = await db.execute("SELECT roleId FROM users WHERE id = ?", [
+        id,
+      ]);
+      if (user.length > 0 && user[0].roleId === "quan_ly") {
+        return res.status(400).json({
+          success: false,
+          message: "❌ Không thể xóa tài khoản Quản lý.",
         });
       }
 
