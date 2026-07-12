@@ -221,7 +221,7 @@
       <td><input type="text" class="lot-input" value="${escapeHtml(data?.soLot || "")}" placeholder="Số lot"></td>
       <td><input type="date" class="expiry-input" value="${data?.ngayHetHan || ""}"></td>
       <td><input type="text" class="note-input" value="${escapeHtml(data?.ghiChu || "")}" placeholder="Ghi chú"></td>
-      <td class="text-center">${removeButton}</td>
+      <td class="text-center col-delete">${removeButton}</td>
     `;
 
     const priceInput = row.querySelector(".price-input");
@@ -443,26 +443,22 @@
     }
   }
 
-  // ========== IN PHIẾU - FIX LỖI ĐƠ ==========
+  // ========== IN PHIẾU ==========
   function printReceipt() {
-    // Lưu trạng thái hiện tại của các input
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
-    // Gọi in
     window.print();
 
-    // Sau khi in xong, khôi phục lại giá trị
     setTimeout(() => {
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];
         }
       });
-      // Tính lại tổng
       calculateTotal();
     }, 500);
   }
@@ -510,7 +506,6 @@
     }
   }
 
-  // Chạy khi DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       init();

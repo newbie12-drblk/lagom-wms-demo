@@ -312,7 +312,6 @@ body {
 
 /* ==================== 9. PRINT STYLES ==================== */
 @media print {
-  /* Reset cho in ấn */
   * {
     box-sizing: border-box;
   }
@@ -338,7 +337,6 @@ body {
     background: white !important;
   }
 
-  /* Ẩn các nút và toolbar khi in */
   .action-buttons,
   .toolbar,
   .no-print,
@@ -348,7 +346,6 @@ body {
     display: none !important;
   }
 
-  /* ===== XÓA HOÀN TOÀN STYLE CỦA INPUT KHI IN ===== */
   input,
   select,
   textarea {
@@ -370,14 +367,12 @@ body {
     line-height: 1.2 !important;
   }
 
-  /* Ẩn placeholder khi in */
   input::placeholder,
   textarea::placeholder {
     color: transparent !important;
     opacity: 0 !important;
   }
 
-  /* Input trong bảng */
   .items-table input {
     border: none !important;
     background: transparent !important;
@@ -394,7 +389,6 @@ body {
     line-height: 1.2 !important;
   }
 
-  /* Input trong info */
   .info-line input {
     border: none !important;
     border-bottom: none !important;
@@ -421,12 +415,11 @@ body {
     display: inline !important;
   }
 
-  /* ===== ẨN CỘT XÓA KHI IN ===== */
+  /* === ẨN CỘT XÓA KHI IN === */
   .col-delete {
     display: none !important;
   }
 
-  /* Bỏ scroll ngang khi in */
   .items-table-wrapper {
     overflow-x: visible !important;
     overflow: visible !important;
@@ -441,7 +434,6 @@ body {
     border-collapse: collapse !important;
   }
 
-  /* Padding cho bảng */
   .items-table th,
   .items-table td {
     padding: 2px 3px !important;
@@ -449,7 +441,6 @@ body {
     border: 1px solid #000 !important;
   }
 
-  /* Font chữ trong bảng */
   .items-table th {
     font-size: 7px !important;
     white-space: normal !important;
@@ -481,14 +472,12 @@ body {
     word-wrap: break-word !important;
   }
 
-  /* STT cell */
   .stt-cell {
     text-align: center !important;
     background: #f8fafc !important;
     font-weight: 600 !important;
   }
 
-  /* Header công ty */
   .company-header {
     margin-bottom: 4px !important;
     padding-bottom: 3px !important;
@@ -506,7 +495,6 @@ body {
     color: #333 !important;
   }
 
-  /* Title */
   .receipt-title h2 {
     font-size: 13px !important;
     margin: 4px 0 !important;
@@ -519,7 +507,6 @@ body {
     color: #333 !important;
   }
 
-  /* Info boxes */
   .info-grid {
     gap: 4px !important;
     margin-bottom: 6px !important;
@@ -551,7 +538,6 @@ body {
     font-weight: 600 !important;
   }
 
-  /* Signature */
   .signature {
     margin-top: 15px !important;
     padding-top: 6px !important;
@@ -569,7 +555,6 @@ body {
     width: 140px !important;
   }
 
-  /* Tổng cộng */
   .total-row td {
     padding: 3px 3px !important;
     font-size: 9px !important;
@@ -584,19 +569,16 @@ body {
     font-weight: 700 !important;
   }
 
-  /* Đảm bảo nội dung vừa khổ giấy */
   @page {
     size: A4;
     margin: 5mm;
   }
 
-  /* Ẩn background không cần thiết */
   body,
   .receipt-paper {
     background: white !important;
   }
 
-  /* Đảm bảo chữ đen khi in */
   .items-table td,
   .items-table th,
   .company-name,
@@ -608,7 +590,6 @@ body {
     color: #000 !important;
   }
 
-  /* Ẩn các icon khi in */
   .fa,
   .fas,
   .far {
