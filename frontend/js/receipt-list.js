@@ -30,7 +30,6 @@
     if (value === undefined || value === null) return 0;
     if (typeof value === "number") return value;
     if (typeof value === "string") {
-      // Xóa dấu chấm, dấu phẩy, khoảng trắng
       const cleaned = value.replace(/[,.\s]/g, "");
       const num = parseFloat(cleaned);
       return isNaN(num) ? 0 : num;
@@ -53,12 +52,11 @@
       const rawData = await window.API.receipt.getAll();
       console.log("📥 Dữ liệu thô:", rawData);
 
-      // ✅ CHUẨN HÓA DỮ LIỆU NGAY KHI LOAD
       allReceipts = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allReceipts);
 
-      // ✅ GỌI RENDER NGAY LẬP TỨC
-      filterAndRender();
+      // ✅ GỌI CLEAR FILTERS SAU KHI LOAD
+      clearFilters();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
       allReceipts = [];
@@ -244,11 +242,7 @@
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        currentPage = 1;
-        if (searchInput) searchInput.value = "";
-        if (filterDate) filterDate.value = "all";
-        if (fromDate) fromDate.value = "";
-        if (toDate) toDate.value = "";
+        // ✅ KHI BẤM LÀM MỚI -> GỌI LOAD LẠI
         loadReceipts();
       });
     }

@@ -55,7 +55,8 @@
       allExports = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allExports);
 
-      filterAndRender();
+      // ✅ GỌI CLEAR FILTERS SAU KHI LOAD
+      clearFilters();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
       allExports = [];
@@ -241,11 +242,7 @@
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        currentPage = 1;
-        if (searchInput) searchInput.value = "";
-        if (filterDate) filterDate.value = "all";
-        if (fromDate) fromDate.value = "";
-        if (toDate) toDate.value = "";
+        // ✅ KHI BẤM LÀM MỚI -> GỌI LOAD LẠI
         loadExports();
       });
     }
