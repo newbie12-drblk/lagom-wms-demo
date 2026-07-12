@@ -28,7 +28,6 @@
   // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
-    // Ép về string, xóa hết dấu . và ,
     const cleaned = String(value).replace(/[.,]/g, "");
     const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
@@ -223,15 +222,23 @@
         currentPage = 1;
         filterAndRender();
       });
-    if (refreshBtn)
-      refreshBtn.addEventListener("click", () => {
+
+    // ✅ SỬA LẠI NÚT LÀM MỚI
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", function () {
+        // Reset về trang 1
         currentPage = 1;
+        // Reset input tìm kiếm
         if (searchInput) searchInput.value = "";
+        // Reset bộ lọc ngày
         if (filterDate) filterDate.value = "all";
         if (fromDate) fromDate.value = "";
         if (toDate) toDate.value = "";
+        // Gọi load lại dữ liệu từ API
         loadExports();
       });
+    }
+
     if (clearBtn) clearBtn.addEventListener("click", clearFilters);
     if (createBtn) createBtn.addEventListener("click", goToCreatePage);
     if (prevPageBtn)
