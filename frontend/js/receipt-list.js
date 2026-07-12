@@ -38,19 +38,24 @@
     return parseFloat(value) || 0;
   }
 
+  // ✅ HÀM CHUYỂN ĐỔI TOÀN BỘ DỮ LIỆU
+  function normalizeReceiptData(receipts) {
+    return receipts.map((r) => ({
+      ...r,
+      total: parseTotalValue(r.total),
+    }));
+  }
+
   // Load receipts
   async function loadReceipts() {
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
-      allReceipts = await window.API.receipt.getAll();
-      console.log("📥 Danh sách phiếu nhập:", allReceipts);
+      const rawData = await window.API.receipt.getAll();
+      console.log("📥 Dữ liệu thô từ API:", rawData);
 
-      // ✅ Log để debug
-      allReceipts.forEach((r, i) => {
-        console.log(
-          `  ${i + 1}. ${r.receiptNo}: total = ${r.total} (type: ${typeof r.total})`,
-        );
-      });
+      // ✅ CHUYỂN ĐỔI DỮ LIỆU
+      allReceipts = normalizeReceiptData(rawData);
+      console.log("📥 Dữ liệu đã chuẩn hóa:", allReceipts);
 
       filterAndRender();
     } catch (error) {
@@ -105,12 +110,10 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
-    // ✅ TÍNH TỔNG ĐÚNG
+    // ✅ total đã là number rồi, không cần parse lại
     let totalValue = 0;
     for (const r of filtered) {
-      const num = parseTotalValue(r.total);
-      console.log(`  Tính tổng: ${r.receiptNo} = ${r.total} -> ${num}`);
-      totalValue += num;
+      totalValue += r.total || 0;
     }
 
     console.log(`✅ Tổng giá trị: ${totalValue}`);
@@ -185,7 +188,7 @@
               </div>
               <div class="receipt-card-total">
                 <div class="label">Tổng tiền</div>
-                <div class="value">${Utils.formatCurrency(parseTotalValue(receipt.total))}</div>
+                <div class="value">${Utils.formatCurrency(receipt.total || 0)}</div>
               </div>
             </div>
             <div class="receipt-card-footer">
@@ -241,7 +244,6 @@
         filterAndRender();
       });
 
-    // ✅ NÚT LÀM MỚI
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
         currentPage = 1;

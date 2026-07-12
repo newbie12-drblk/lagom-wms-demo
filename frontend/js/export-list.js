@@ -37,18 +37,23 @@
     return parseFloat(value) || 0;
   }
 
+  // ✅ HÀM CHUYỂN ĐỔI TOÀN BỘ DỮ LIỆU
+  function normalizeExportData(exports) {
+    return exports.map((r) => ({
+      ...r,
+      total: parseTotalValue(r.total),
+    }));
+  }
+
   // Load exports
   async function loadExports() {
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
-      allExports = await window.API.export.getAll();
-      console.log("📥 Danh sách phiếu xuất:", allExports);
+      const rawData = await window.API.export.getAll();
+      console.log("📥 Dữ liệu thô từ API:", rawData);
 
-      allExports.forEach((r, i) => {
-        console.log(
-          `  ${i + 1}. ${r.exportNo}: total = ${r.total} (type: ${typeof r.total})`,
-        );
-      });
+      allExports = normalizeExportData(rawData);
+      console.log("📥 Dữ liệu đã chuẩn hóa:", allExports);
 
       filterAndRender();
     } catch (error) {
@@ -105,9 +110,7 @@
 
     let totalValue = 0;
     for (const r of filtered) {
-      const num = parseTotalValue(r.total);
-      console.log(`  Tính tổng: ${r.exportNo} = ${r.total} -> ${num}`);
-      totalValue += num;
+      totalValue += r.total || 0;
     }
 
     console.log(`✅ Tổng giá trị xuất: ${totalValue}`);
@@ -182,7 +185,7 @@
               </div>
               <div class="receipt-card-total">
                 <div class="label">Tổng tiền</div>
-                <div class="value">${Utils.formatCurrency(parseTotalValue(exportItem.total))}</div>
+                <div class="value">${Utils.formatCurrency(exportItem.total || 0)}</div>
               </div>
             </div>
             <div class="receipt-card-footer">
