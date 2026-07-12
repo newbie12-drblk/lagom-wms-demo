@@ -361,7 +361,6 @@ body {
   input,
   select,
   textarea {
-    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
@@ -375,6 +374,9 @@ body {
     outline: none !important;
     -webkit-appearance: none !important;
     appearance: none !important;
+    display: inline !important;
+    height: auto !important;
+    line-height: 1.2 !important;
   }
 
   /* Ẩn placeholder khi in */
@@ -386,7 +388,6 @@ body {
 
   /* Input trong bảng */
   .items-table input {
-    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
@@ -398,11 +399,12 @@ body {
     height: auto !important;
     box-shadow: none !important;
     outline: none !important;
+    display: inline !important;
+    line-height: 1.2 !important;
   }
 
   /* Input trong info */
   .info-line input {
-    all: unset !important;
     border: none !important;
     border-bottom: none !important;
     background: transparent !important;
@@ -412,10 +414,10 @@ body {
     padding: 0 !important;
     margin: 0 !important;
     width: auto !important;
+    display: inline !important;
   }
 
   .info-line select {
-    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
@@ -425,6 +427,7 @@ body {
     margin: 0 !important;
     -webkit-appearance: none !important;
     appearance: none !important;
+    display: inline !important;
   }
 
   /* Bỏ scroll ngang khi in */
