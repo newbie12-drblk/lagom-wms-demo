@@ -431,8 +431,7 @@ body {
   }
 
   /* ===== ẨN CỘT XÓA KHI IN ===== */
-  .items-table th:last-child,
-  .items-table td:last-child {
+  .col-delete {
     display: none !important;
   }
 
