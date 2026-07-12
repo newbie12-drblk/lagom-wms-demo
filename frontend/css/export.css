@@ -341,7 +341,7 @@ body {
 
   .export-paper {
     box-shadow: none !important;
-    padding: 8px !important;
+    padding: 6px !important;
     margin: 0 !important;
     width: 100% !important;
     background: white !important;
@@ -357,15 +357,17 @@ body {
     display: none !important;
   }
 
-  /* ===== BIẾN INPUT THÀNH TEXT KHI IN ===== */
+  /* ===== XÓA HOÀN TOÀN STYLE CỦA INPUT KHI IN ===== */
   input,
   select,
   textarea {
+    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
     font-size: 9px !important;
-    padding: 1px 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     width: auto !important;
     min-width: 0 !important;
     max-width: 100% !important;
@@ -379,15 +381,18 @@ body {
   input::placeholder,
   textarea::placeholder {
     color: transparent !important;
+    opacity: 0 !important;
   }
 
   /* Input trong bảng */
   .items-table input {
+    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
     font-size: 8px !important;
-    padding: 1px 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     width: 100% !important;
     min-width: 0 !important;
     height: auto !important;
@@ -397,22 +402,27 @@ body {
 
   /* Input trong info */
   .info-line input {
+    all: unset !important;
     border: none !important;
     border-bottom: none !important;
     background: transparent !important;
     color: #000 !important;
     font-weight: 600 !important;
     font-size: 9px !important;
-    padding: 1px 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
   }
 
   .info-line select {
+    all: unset !important;
     border: none !important;
     background: transparent !important;
     color: #000 !important;
     font-weight: 600 !important;
     font-size: 9px !important;
-    padding: 1px 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
     -webkit-appearance: none !important;
     appearance: none !important;
   }
