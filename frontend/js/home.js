@@ -9,6 +9,12 @@ let homeExportsData = [];
 // LOAD DỮ LIỆU TỪ API - LUÔN MỚI
 // ============================================================
 async function loadHomeData() {
+  // Xóa cache cũ
+  localStorage.removeItem("lagom_inventory");
+  localStorage.removeItem("lagom_receipts");
+  localStorage.removeItem("lagom_exports");
+  localStorage.removeItem("lagom_home_cache");
+
   try {
     const [inventory, receipts, exports] = await Promise.all([
       window.API.inventory.getAll(),
@@ -170,7 +176,7 @@ function loadHomeStats() {
 }
 
 // ============================================================
-// LOAD SUPPLIER DEBT ALERTS - FIX: CHỈ LẤY PHIẾU ĐÃ DUYỆT, TOTAL > 0
+// LOAD SUPPLIER DEBT ALERTS
 // ============================================================
 async function loadSupplierDebtAlerts() {
   const container = document.getElementById("supplierAlertList");
@@ -192,7 +198,7 @@ async function loadSupplierDebtAlerts() {
 
   const alerts = [];
 
-  // ✅ CHỈ LẤY PHIẾU ĐÃ DUYỆT (approved)
+  // CHỈ LẤY PHIẾU ĐÃ DUYỆT (approved)
   const approvedReceipts = homeReceiptsData.filter(
     (r) => r.status === "approved",
   );
@@ -216,7 +222,7 @@ async function loadSupplierDebtAlerts() {
       const receiptNo = receipt.receiptNo || `PN-${receipt.id}`;
       const total = receipt.total || 0;
 
-      // ✅ BỎ QUA PHIẾU CÓ TỔNG TIỀN = 0
+      // BỎ QUA PHIẾU CÓ TỔNG TIỀN = 0
       if (total === 0) return;
 
       alerts.push({
@@ -422,6 +428,44 @@ function loadCategories() {
 }
 
 // ============================================================
+// RESET ALL DATA - LÀM MỚI TOÀN BỘ
+// ============================================================
+async function resetAllData() {
+  Utils.showLoading(true, "Đang làm mới toàn bộ dữ liệu...");
+  try {
+    // Xóa toàn bộ cache
+    localStorage.removeItem("lagom_inventory");
+    localStorage.removeItem("lagom_receipts");
+    localStorage.removeItem("lagom_exports");
+    localStorage.removeItem("lagom_home_cache");
+
+    // Load lại dữ liệu
+    await loadHomeData();
+    loadHomeStats();
+    loadSupplierDebtAlerts();
+    loadCustomerDebtAlerts();
+    loadCategories();
+
+    // Nếu đang ở trang inventory, reload luôn
+    if (
+      typeof initInventory === "function" &&
+      window.inventoryData !== undefined
+    ) {
+      const freshData = await window.API.inventory.getAll();
+      window.inventoryData = freshData;
+      initInventory(freshData);
+    }
+
+    Utils.showToast("✅ Đã làm mới toàn bộ dữ liệu!");
+  } catch (error) {
+    console.error("Reset error:", error);
+    Utils.showToast("❌ Lỗi khi làm mới dữ liệu", "error");
+  } finally {
+    Utils.showLoading(false);
+  }
+}
+
+// ============================================================
 // INIT HOME - GỌI KHI TRANG LOAD
 // ============================================================
 async function initHome() {
@@ -443,24 +487,6 @@ async function initHome() {
   loadCategories();
 
   console.log("✅ Home page loaded successfully!");
-}
-
-// ============================================================
-// RESET HOME DATA - GỌI KHI CẦN LÀM MỚI
-// ============================================================
-function resetHomeData() {
-  console.log("🔄 Resetting home data...");
-
-  // Xóa cache
-  localStorage.removeItem("lagom_inventory");
-  localStorage.removeItem("lagom_receipts");
-  localStorage.removeItem("lagom_exports");
-  localStorage.removeItem("lagom_home_cache");
-
-  // Reload
-  initHome();
-
-  Utils.showToast("✅ Đã làm mới dữ liệu trang chủ");
 }
 
 // ============================================================
@@ -488,7 +514,7 @@ function escapeHtml(str) {
 // EXPORT
 // ============================================================
 window.initHome = initHome;
-window.resetHomeData = resetHomeData;
+window.resetAllData = resetAllData;
 window.loadHomeData = loadHomeData;
 window.loadSupplierDebtAlerts = loadSupplierDebtAlerts;
 window.loadCustomerDebtAlerts = loadCustomerDebtAlerts;

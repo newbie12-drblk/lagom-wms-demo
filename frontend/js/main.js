@@ -49,6 +49,9 @@
   // Load inventory
   async function loadInventory() {
     try {
+      // Xóa cache
+      localStorage.removeItem("lagom_inventory");
+
       inventoryData = await window.API.inventory.getAll();
       window.inventoryData = inventoryData;
       return inventoryData;
@@ -78,10 +81,42 @@
     }
   }
 
+  // ==================== RESET ALL DATA ====================
+  async function resetAllData() {
+    Utils.showLoading(true, "Đang làm mới toàn bộ dữ liệu...");
+    try {
+      // Xóa toàn bộ cache
+      localStorage.removeItem("lagom_inventory");
+      localStorage.removeItem("lagom_receipts");
+      localStorage.removeItem("lagom_exports");
+      localStorage.removeItem("lagom_home_cache");
+
+      // Load lại dữ liệu
+      await loadInventory();
+      if (typeof initHome === "function") {
+        await initHome();
+      }
+      if (typeof initInventory === "function") {
+        const data = await window.API.inventory.getAll();
+        initInventory(data);
+      }
+
+      Utils.showToast("✅ Đã làm mới toàn bộ dữ liệu!");
+    } catch (error) {
+      console.error("Reset error:", error);
+      Utils.showToast("❌ Lỗi khi làm mới dữ liệu", "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
   // Render receipts list
   async function renderReceiptsList() {
     const container = document.getElementById("receiptsList");
     if (!container) return;
+
+    // Xóa cache
+    localStorage.removeItem("lagom_receipts");
 
     const receipts = await loadReceipts();
     const searchTerm =
@@ -122,6 +157,9 @@
   async function renderExportsList() {
     const container = document.getElementById("exportsList");
     if (!container) return;
+
+    // Xóa cache
+    localStorage.removeItem("lagom_exports");
 
     const exports = await loadExports();
     const searchTerm =
@@ -180,6 +218,11 @@
     const breadcrumb = document.getElementById("breadcrumb-title");
     if (breadcrumb && titles[viewName])
       breadcrumb.textContent = titles[viewName];
+
+    // Xóa cache khi chuyển view
+    localStorage.removeItem("lagom_inventory");
+    localStorage.removeItem("lagom_receipts");
+    localStorage.removeItem("lagom_exports");
 
     if (viewName === "inventory" && typeof initInventory === "function") {
       await loadInventory();
@@ -271,6 +314,7 @@
   window.loadInventoryData = loadInventory;
   window.loadReceiptsData = loadReceipts;
   window.loadExportsData = loadExports;
+  window.resetAllData = resetAllData;
 
   init();
 })();

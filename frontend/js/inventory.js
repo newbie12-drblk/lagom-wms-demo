@@ -176,17 +176,20 @@
     }
   }
 
-  // Refresh inventory
+  // ==================== REFRESH INVENTORY DATA ====================
   async function refreshInventoryData() {
     Utils.showLoading(true, "Đang làm mới dữ liệu...");
     try {
+      // Xóa cache
+      localStorage.removeItem("lagom_inventory");
+
       const freshData = await window.API.inventory.getAll();
       inventoryData = freshData;
       window.inventoryData = freshData;
       applyInventoryFilters(freshData);
-      Utils.showToast("Đã làm mới dữ liệu tồn kho");
+      Utils.showToast("✅ Đã làm mới dữ liệu tồn kho");
     } catch (error) {
-      Utils.showToast("Lỗi khi làm mới dữ liệu", "error");
+      Utils.showToast("❌ Lỗi khi làm mới dữ liệu", "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -707,7 +710,6 @@
       const token = API.getToken();
 
       if (requestType === "add") {
-        // Thu thập dữ liệu thêm sản phẩm
         const { products, hasError } = getAddProductsData();
 
         if (hasError || products.length === 0) {
@@ -721,7 +723,6 @@
 
         console.log("📦 Gửi yêu cầu thêm sản phẩm:", products);
 
-        // Gửi yêu cầu thêm sản phẩm qua API approval
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
           headers: {
@@ -746,7 +747,6 @@
           );
         }
       } else if (requestType === "delete") {
-        // Lấy danh sách sản phẩm được chọn xóa
         const checked = document.querySelectorAll(".delete-checkbox:checked");
         if (checked.length === 0) {
           Utils.showToast(
@@ -762,7 +762,6 @@
           productIds.push(parseInt(cb.dataset.id));
         });
 
-        // Gửi yêu cầu xóa qua API deletion
         const response = await fetch(`${API_BASE_URL}/deletions`, {
           method: "POST",
           headers: {
@@ -785,7 +784,6 @@
           );
         }
       } else if (requestType === "edit") {
-        // Lấy sản phẩm được chọn sửa
         const checked = document.querySelectorAll(".edit-checkbox:checked");
         if (checked.length === 0) {
           Utils.showToast("⚠️ Vui lòng chọn một sản phẩm để sửa!", "warning");
@@ -804,7 +802,6 @@
           return;
         }
 
-        // Thu thập dữ liệu mới
         const newData = {
           tenThuongMai:
             document.getElementById("edit-tenThuongMai")?.value ||
@@ -845,7 +842,6 @@
             oldProduct.ngayHetHan,
         };
 
-        // Gửi yêu cầu sửa qua API edit
         const response = await fetch(`${API_BASE_URL}/edits`, {
           method: "POST",
           headers: {
@@ -879,6 +875,9 @@
 
   // ==================== INIT ====================
   async function initInventory(inventoryDataFromMain) {
+    // Xóa cache
+    localStorage.removeItem("lagom_inventory");
+
     const data = inventoryDataFromMain || (await window.API.inventory.getAll());
     inventoryData = data;
     window.inventoryData = data;
@@ -913,12 +912,11 @@
         ?.addEventListener("change", applyFilters);
     }
 
-    // ✅ CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
+    // CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
     const createRequestBtn = document.getElementById("btnCreateRequest");
     if (createRequestBtn) {
       if (isAdmin()) {
         createRequestBtn.style.display = "inline-flex";
-        // Xóa event listener cũ bằng cách clone và thay thế
         const newBtn = createRequestBtn.cloneNode(true);
         createRequestBtn.parentNode.replaceChild(newBtn, createRequestBtn);
         newBtn.addEventListener("click", showRequestModal);
@@ -960,4 +958,5 @@
   window.inventoryData = inventoryData;
   window.isAdmin = isAdmin;
   window.isQuanLy = isQuanLy;
+  window.refreshInventoryData = refreshInventoryData;
 })();
