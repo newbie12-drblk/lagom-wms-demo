@@ -430,6 +430,12 @@ body {
     display: inline !important;
   }
 
+  /* ===== ẨN CỘT XÓA KHI IN ===== */
+  .items-table th:last-child,
+  .items-table td:last-child {
+    display: none !important;
+  }
+
   /* Bỏ scroll ngang khi in */
   .items-table-wrapper {
     overflow-x: visible !important;

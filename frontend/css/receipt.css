@@ -610,3 +610,15 @@ body {
     display: none !important;
   }
 }
+/* ===== ẨN CỘT XÓA KHI IN ===== */
+.items-table th:last-child,
+.items-table td:last-child,
+.items-table .btn-remove,
+.items-table td .btn-remove {
+  display: none !important;
+}
+
+/* Ẩn cột xóa trong header và footer */
+.items-table th:last-child {
+  display: none !important;
+}
