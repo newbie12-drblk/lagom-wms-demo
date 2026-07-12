@@ -28,16 +28,10 @@
   // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
-    // Nếu là string, loại bỏ dấu phẩy, dấu chấm, khoảng trắng
-    if (typeof value === "string") {
-      const cleaned = value.replace(/[,.\s]/g, "");
-      const num = parseFloat(cleaned);
-      return isNaN(num) ? 0 : num;
-    }
-    // Nếu đã là number
-    if (typeof value === "number") return value;
-    // Fallback
-    return parseFloat(value) || 0;
+    // Ép về string, xóa hết dấu . và ,
+    const cleaned = String(value).replace(/[.,]/g, "");
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
   }
 
   // Load exports
@@ -99,11 +93,9 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
-    // ✅ TÍNH TỔNG ĐÚNG - CHUYỂN STRING THÀNH NUMBER
     let totalValue = 0;
     for (const r of filtered) {
-      const num = parseTotalValue(r.total);
-      totalValue += num;
+      totalValue += parseTotalValue(r.total);
     }
 
     if (totalCountSpan) totalCountSpan.textContent = total;
