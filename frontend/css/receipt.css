@@ -372,7 +372,7 @@ body {
     color: transparent !important;
   }
 
-  /* Input trong bảng */
+  /* Input trong bảng - xóa border hoàn toàn */
   .items-table input {
     border: none !important;
     background: transparent !important;
@@ -386,7 +386,7 @@ body {
     outline: none !important;
   }
 
-  /* Input trong info */
+  /* Input trong info - xóa border dưới */
   .info-line input {
     border: none !important;
     border-bottom: none !important;
@@ -395,17 +395,6 @@ body {
     font-weight: 600 !important;
     font-size: 9px !important;
     padding: 1px 0 !important;
-  }
-
-  .info-line select {
-    border: none !important;
-    background: transparent !important;
-    color: #000 !important;
-    font-weight: 600 !important;
-    font-size: 9px !important;
-    padding: 1px 0 !important;
-    -webkit-appearance: none !important;
-    appearance: none !important;
   }
 
   /* Bỏ scroll ngang khi in */
