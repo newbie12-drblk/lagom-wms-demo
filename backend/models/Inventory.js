@@ -5,6 +5,7 @@ const Inventory = {
     const [rows] = await db.execute(
       "SELECT * FROM inventory WHERE status = 'approved' ORDER BY stt ASC",
     );
+    console.log(`📦 Inventory getAll: ${rows.length} rows`);
     return rows;
   },
 

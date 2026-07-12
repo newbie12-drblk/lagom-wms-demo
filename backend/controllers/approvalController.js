@@ -111,11 +111,12 @@ const approveRequest = async (req, res) => {
     const createdIds = [];
     const errors = [];
 
-    // Lấy STT lớn nhất hiện tại
+    // ✅ LẤY STT LỚN NHẤT HIỆN TẠI
     const [maxSttResult] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
     );
     let currentStt = maxSttResult[0]?.maxStt || 0;
+    console.log(`📊 STT hiện tại: ${currentStt}`);
 
     for (const prod of products) {
       try {
@@ -126,9 +127,11 @@ const approveRequest = async (req, res) => {
           continue;
         }
 
+        // ✅ TĂNG STT LÊN 1
         currentStt++;
+        console.log(`📦 Thêm sản phẩm STT: ${currentStt}, Mã: ${prod.maHang}`);
 
-        // Chuẩn bị dữ liệu sản phẩm - ĐẢM BẢO ĐỦ CÁC TRƯỜNG
+        // Chuẩn bị dữ liệu sản phẩm
         const productData = {
           stt: currentStt,
           tenThuongMai: prod.tenThuongMai || "",
@@ -138,8 +141,8 @@ const approveRequest = async (req, res) => {
           dvt: prod.dvt || "",
           phanLoai: prod.phanLoai || "",
           giaNhap: prod.giaNhap || 0,
-          giaXuat: prod.giaNhap || 0,
-          tonKho: prod.tonKho || 0,
+          giaXuat: prod.giaXuat || prod.giaNhap || 0,
+          tonKho: prod.tonKho || prod.soLuongNhap || 0,
           soLuongNhap: prod.soLuongNhap || 0,
           soLuongXuat: 0,
           soLot: prod.soLot || "",
@@ -157,11 +160,7 @@ const approveRequest = async (req, res) => {
           approvedAt: new Date(),
         };
 
-        console.log(
-          `📦 Thêm sản phẩm: ${productData.maHang} - ${productData.tenThuongMai}`,
-        );
-
-        // Sử dụng INSERT trực tiếp để đảm bảo status approved
+        // ✅ INSERT TRỰC TIẾP VỚI STT ĐÃ TĂNG
         const [result] = await db.execute(
           `INSERT INTO inventory (
             stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
@@ -198,6 +197,9 @@ const approveRequest = async (req, res) => {
         );
 
         createdIds.push(result.insertId);
+        console.log(
+          `✅ Đã thêm sản phẩm ID: ${result.insertId}, STT: ${currentStt}`,
+        );
 
         await EditHistory.log(
           approvedBy,
