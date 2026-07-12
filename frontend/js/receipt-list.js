@@ -25,24 +25,24 @@
   const totalCountSpan = document.getElementById("receiptTotalCount");
   const totalValueSpan = document.getElementById("receiptTotalValue");
 
-  // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
+  // ✅ HÀM CHUYỂN STRING THÀNH NUMBER
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
-    // Nếu là string, loại bỏ dấu chấm và dấu phẩy
+    if (typeof value === "number") return value;
     if (typeof value === "string") {
-      const cleaned = value.replace(/[,.]/g, "");
+      // Xóa dấu chấm, dấu phẩy, khoảng trắng
+      const cleaned = value.replace(/[,.\s]/g, "");
       const num = parseFloat(cleaned);
       return isNaN(num) ? 0 : num;
     }
-    if (typeof value === "number") return value;
     return parseFloat(value) || 0;
   }
 
-  // ✅ HÀM CHUYỂN ĐỔI TOÀN BỘ DỮ LIỆU
-  function normalizeReceiptData(receipts) {
-    return receipts.map((r) => ({
-      ...r,
-      total: parseTotalValue(r.total),
+  // ✅ CHUẨN HÓA TOÀN BỘ DỮ LIỆU
+  function normalizeData(data) {
+    return data.map((item) => ({
+      ...item,
+      total: parseTotalValue(item.total),
     }));
   }
 
@@ -51,10 +51,10 @@
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
       const rawData = await window.API.receipt.getAll();
-      console.log("📥 Dữ liệu thô từ API:", rawData);
+      console.log("📥 Dữ liệu thô:", rawData);
 
-      // ✅ CHUYỂN ĐỔI DỮ LIỆU
-      allReceipts = normalizeReceiptData(rawData);
+      // ✅ CHUẨN HÓA DỮ LIỆU NGAY KHI LOAD
+      allReceipts = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allReceipts);
 
       filterAndRender();
@@ -110,13 +110,11 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
-    // ✅ total đã là number rồi, không cần parse lại
+    // ✅ total đã là number
     let totalValue = 0;
     for (const r of filtered) {
       totalValue += r.total || 0;
     }
-
-    console.log(`✅ Tổng giá trị: ${totalValue}`);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
     if (totalValueSpan) {

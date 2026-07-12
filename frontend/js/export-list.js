@@ -25,23 +25,23 @@
   const totalCountSpan = document.getElementById("exportTotalCount");
   const totalValueSpan = document.getElementById("exportTotalValue");
 
-  // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
+  // ✅ HÀM CHUYỂN STRING THÀNH NUMBER
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
+    if (typeof value === "number") return value;
     if (typeof value === "string") {
-      const cleaned = value.replace(/[,.]/g, "");
+      const cleaned = value.replace(/[,.\s]/g, "");
       const num = parseFloat(cleaned);
       return isNaN(num) ? 0 : num;
     }
-    if (typeof value === "number") return value;
     return parseFloat(value) || 0;
   }
 
-  // ✅ HÀM CHUYỂN ĐỔI TOÀN BỘ DỮ LIỆU
-  function normalizeExportData(exports) {
-    return exports.map((r) => ({
-      ...r,
-      total: parseTotalValue(r.total),
+  // ✅ CHUẨN HÓA TOÀN BỘ DỮ LIỆU
+  function normalizeData(data) {
+    return data.map((item) => ({
+      ...item,
+      total: parseTotalValue(item.total),
     }));
   }
 
@@ -50,9 +50,9 @@
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
     try {
       const rawData = await window.API.export.getAll();
-      console.log("📥 Dữ liệu thô từ API:", rawData);
+      console.log("📥 Dữ liệu thô:", rawData);
 
-      allExports = normalizeExportData(rawData);
+      allExports = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allExports);
 
       filterAndRender();
@@ -112,8 +112,6 @@
     for (const r of filtered) {
       totalValue += r.total || 0;
     }
-
-    console.log(`✅ Tổng giá trị xuất: ${totalValue}`);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
     if (totalValueSpan) {
