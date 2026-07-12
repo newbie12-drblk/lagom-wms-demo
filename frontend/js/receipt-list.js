@@ -57,6 +57,7 @@
       allReceipts = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allReceipts);
 
+      // ✅ GỌI RENDER NGAY LẬP TỨC
       filterAndRender();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -110,7 +111,6 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
-    // ✅ total đã là number
     let totalValue = 0;
     for (const r of filtered) {
       totalValue += r.total || 0;
