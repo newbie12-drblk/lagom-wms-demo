@@ -50,7 +50,6 @@ const createReceipt = async (req, res) => {
     }
 
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
-    console.log("📦 Số items trong phiếu:", receipt.items?.length || 0);
 
     await Notification.createForManagers(
       `📥 Phiếu nhập ${receipt.receiptNo} chờ duyệt`,
@@ -97,6 +96,7 @@ const updateReceiptStatus = async (req, res) => {
       `📦 Phiếu ${receipt.receiptNo} có ${receipt.items?.length || 0} sản phẩm`,
     );
 
+    // ✅ NẾU DUYỆT -> THÊM VÀO KHO
     if (status === "approved") {
       const items = receipt.items || [];
 
@@ -110,10 +110,12 @@ const updateReceiptStatus = async (req, res) => {
       let addedCount = 0;
       let updatedCount = 0;
 
+      // ✅ Lấy STT lớn nhất hiện tại
       const [maxSttResult] = await db.execute(
         "SELECT MAX(stt) as maxStt FROM inventory",
       );
       let currentStt = maxSttResult[0]?.maxStt || 0;
+      console.log(`📊 STT hiện tại: ${currentStt}`);
 
       for (const item of items) {
         try {
@@ -121,12 +123,14 @@ const updateReceiptStatus = async (req, res) => {
             `📦 Xử lý sản phẩm: ${item.maHang} - ${item.tenThuongMai}`,
           );
 
+          // ✅ Kiểm tra sản phẩm đã tồn tại trong kho chưa
           const [existing] = await db.execute(
             "SELECT * FROM inventory WHERE maHang = ?",
             [item.maHang],
           );
 
           if (existing.length > 0) {
+            // ✅ Cập nhật sản phẩm hiện có
             console.log(
               `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
             );
@@ -158,15 +162,16 @@ const updateReceiptStatus = async (req, res) => {
             );
             updatedCount++;
           } else {
-            console.log(
-              `📦 Thêm sản phẩm mới: ${item.maHang} - ${item.tenThuongMai}`,
-            );
+            // ✅ Thêm sản phẩm mới
             currentStt++;
+            console.log(
+              `📦 Thêm sản phẩm mới STT: ${currentStt}, Mã: ${item.maHang}`,
+            );
 
             await db.execute(
               `INSERT INTO inventory (
                 stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-                giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho, 
+                giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
                 soLot, ngayHetHan,
                 soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
                 ngayNhapHD, ngayXuatHD, ghiChu,
@@ -211,6 +216,7 @@ const updateReceiptStatus = async (req, res) => {
         `✅ Đã thêm ${addedCount} sản phẩm mới, cập nhật ${updatedCount} sản phẩm vào kho`,
       );
 
+      // ✅ Gửi thông báo cho Admin
       await Notification.create(
         receipt.createdBy,
         `✅ Phiếu nhập ${receipt.receiptNo} đã được duyệt`,
@@ -220,11 +226,15 @@ const updateReceiptStatus = async (req, res) => {
       );
     }
 
+    // ✅ Cập nhật trạng thái phiếu
     await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
 
     res.json({
       success: true,
       message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu`,
+      data: {
+        addedCount: status === "approved" ? items.length : 0,
+      },
     });
   } catch (error) {
     console.error("❌ Update receipt status error:", error);
