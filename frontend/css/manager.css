@@ -908,3 +908,96 @@
     padding: 12px 16px;
   }
 }
+/* ==================== QUẢN LÝ NGƯỜI DÙNG - BẢNG ==================== */
+
+/* Bảng quản lý người dùng */
+.user-management-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 800px;
+}
+
+.user-management-table thead th {
+  background: #0f172a;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 700;
+  color: #60a5fa;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid #3b82f6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.user-management-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.user-management-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Role badges trong bảng user */
+.role-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-badge.role-admin {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.role-badge.role-quan_ly {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.role-badge.role-ke_toan {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.role-badge.role-quan_ly_kho {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.role-badge.role-nhan_vien {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.role-badge.role-nhap_lieu {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+/* Status dot animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Action buttons */
+.action-buttons .btn-outline:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+}
+
+.action-buttons .btn-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+}

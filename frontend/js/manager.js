@@ -1367,77 +1367,116 @@
   }
 
   function renderUsersTable(users) {
-    var tbody = document.getElementById("usersTableBody");
-    if (!tbody) return;
+  var tbody = document.getElementById("usersTableBody");
+  if (!tbody) return;
 
-    if (!users || users.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="8" style="text-align:center;padding:40px;color:#6b82a0;">
-          <i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:12px;"></i>
-          Chưa có người dùng nào
-        </td></tr>
-      `;
-      return;
-    }
-
-    var currentUser = Auth.getCurrentUser();
-
-    tbody.innerHTML = users
-      .map(function (user, idx) {
-        var isActive = user.isActive == 1;
-        var isManager = user.roleId === "quan_ly";
-        var roleColors = {
-          admin: "role-admin",
-          quan_ly: "role-quan_ly",
-        };
-        var roleLabels = {
-          admin: "Quản trị",
-          quan_ly: "Quản lý",
-        };
-
-        var perms = [];
-        if (user.canAddProduct) perms.push("➕Thêm");
-        if (user.canEditProduct) perms.push("✏️Sửa");
-        if (user.canDeleteProduct) perms.push("🗑️Xóa");
-        if (user.canCreateReceipt) perms.push("📥Nhập");
-        if (user.canCreateExport) perms.push("📤Xuất");
-        if (user.canViewAll) perms.push("👁️Xem tất cả");
-        var permText = perms.length > 0 ? perms.join(" ") : "—";
-
-        var isSelf = currentUser && currentUser.id === user.id;
-        var canDelete = !isSelf && !isManager;
-
-        return `
+  if (!users || users.length === 0) {
+    tbody.innerHTML = `
       <tr>
-        <td>${idx + 1}</td>
-        <td><strong style="color:#60a5fa;">${Utils.escapeHtml(user.username)}</strong></td>
-        <td>${Utils.escapeHtml(user.fullName || "—")}</td>
-        <td>${Utils.escapeHtml(user.email || "—")}</td>
-        <td><span class="user-role ${roleColors[user.roleId] || "role-nhan_vien"}" style="padding:2px 10px;border-radius:12px;">${roleLabels[user.roleId] || user.roleId}</span></td>
-        <td>
-          <span class="status-dot ${isActive ? "active" : "inactive"}"></span>
-          ${isActive ? "Hoạt động" : "Đã khóa"}
+        <td colspan="8" style="text-align:center;padding:60px;color:#6b82a0;">
+          <i class="fas fa-users" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
+          Chưa có người dùng nào
         </td>
-        <td style="font-size:11px;max-width:200px;">${permText}</td>
-        <td>
-          <div class="action-buttons" style="gap:4px;">
-            <button class="btn btn-sm btn-outline" onclick="window.editUser(${user.id})" title="Sửa">
+      </tr>
+    `;
+    return;
+  }
+
+  var currentUser = Auth.getCurrentUser();
+
+  tbody.innerHTML = users.map(function(user, idx) {
+    var isActive = user.isActive == 1;
+    var isManager = user.roleId === "quan_ly";
+    
+    var roleColors = {
+      admin: "role-admin",
+      quan_ly: "role-quan_ly",
+    };
+    
+    var roleLabels = {
+      admin: "Quản trị",
+      quan_ly: "Quản lý",
+    };
+
+    // Danh sách quyền - ĐẦY ĐỦ HƠN
+    var perms = [];
+    if (user.canAddProduct) perms.push("➕Thêm");
+    if (user.canEditProduct) perms.push("✏️Sửa");
+    if (user.canDeleteProduct) perms.push("🗑️Xóa");
+    if (user.canCreateReceipt) perms.push("📥Nhập");
+    if (user.canCreateExport) perms.push("📤Xuất");
+    if (user.canViewAll) perms.push("👁️Xem tất cả");
+    
+    // Thêm quyền chỉnh sửa trường
+    var editFields = [];
+    if (user.canEditTenThuongMai) editFields.push("Tên");
+    if (user.canEditMaHang) editFields.push("Mã");
+    if (user.canEditDVT) editFields.push("ĐVT");
+    if (user.canEditHangSX) editFields.push("Hãng SX");
+    if (user.canEditPhanLoai) editFields.push("Phân loại");
+    if (user.canEditGiaNhap) editFields.push("Giá nhập");
+    if (user.canEditGhiChu) editFields.push("Ghi chú");
+    
+    if (editFields.length > 0) {
+      perms.push("✏️" + editFields.join(","));
+    }
+    
+    var permText = perms.length > 0 ? perms.join(" ") : "—";
+
+    var isSelf = currentUser && currentUser.id === user.id;
+    var canDelete = !isSelf && !isManager;
+
+    // Xác định class cho trạng thái
+    var statusClass = isActive ? "status-active" : "status-locked";
+    var statusText = isActive ? "● Hoạt động" : "● Đã khóa";
+
+    return `
+      <tr style="border-bottom: 1px solid #1e2d45; transition: background 0.15s;">
+        <td style="padding: 12px 16px; text-align: center; color: #6b82a0; font-weight: 600;">${idx + 1}</td>
+        <td style="padding: 12px 16px;">
+          <strong style="color: #60a5fa; font-size: 14px;">${Utils.escapeHtml(user.username)}</strong>
+        </td>
+        <td style="padding: 12px 16px; color: #e2eaf5;">${Utils.escapeHtml(user.fullName || "—")}</td>
+        <td style="padding: 12px 16px; color: #6b82a0;">${Utils.escapeHtml(user.email || "—")}</td>
+        <td style="padding: 12px 16px;">
+          <span class="role-badge ${roleColors[user.roleId] || 'role-nhan_vien'}" 
+                style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
+                       ${user.roleId === 'admin' ? 'background:rgba(239,68,68,0.2);color:#f87171;' : 
+                         user.roleId === 'quan_ly' ? 'background:rgba(245,158,11,0.2);color:#fbbf24;' : 
+                         'background:rgba(107,114,128,0.2);color:#9ca3af;'}">
+            ${roleLabels[user.roleId] || user.roleId}
+          </span>
+        </td>
+        <td style="padding: 12px 16px;">
+          <span style="display:inline-flex;align-items:center;gap:6px;color:${isActive ? '#4ade80' : '#f87171'};">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isActive ? '#4ade80' : '#f87171'};${isActive ? '' : 'animation:pulse 1.5s infinite;'}"></span>
+            ${statusText}
+          </span>
+        </td>
+        <td style="padding: 12px 16px; font-size: 12px; color: #6b82a0; max-width: 200px; word-break: break-word;">
+          ${permText}
+        </td>
+        <td style="padding: 12px 16px;">
+          <div class="action-buttons" style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-outline" onclick="window.editUser(${user.id})" 
+                    title="Sửa người dùng" 
+                    style="padding:6px 12px;font-size:12px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:#60a5fa;cursor:pointer;transition:all 0.2s;">
               <i class="fas fa-edit"></i>
             </button>
-            ${
-              canDelete
-                ? `<button class="btn btn-sm btn-danger" onclick="window.deleteUser(${user.id})" title="Xóa">
-              <i class="fas fa-trash"></i>
-            </button>`
-                : ""
-            }
+            ${canDelete ? `
+              <button class="btn btn-sm btn-danger" onclick="window.deleteUser(${user.id})" 
+                      title="Xóa người dùng" 
+                      style="padding:6px 12px;font-size:12px;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;cursor:pointer;transition:all 0.2s;">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
+            ${isSelf ? '<span style="font-size:11px;color:#6b82a0;padding:4px 8px;">Bạn</span>' : ''}
           </div>
         </td>
       </tr>
     `;
-      })
-      .join("");
-  }
+  }).join("");
+}
 
   function openAddUserModal() {
     var modal = document.getElementById("userModal");
