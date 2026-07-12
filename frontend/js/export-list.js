@@ -28,9 +28,13 @@
   // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
-    const cleaned = String(value).replace(/[.,]/g, "");
-    const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : num;
+    if (typeof value === "string") {
+      const cleaned = value.replace(/[,.]/g, "");
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+    if (typeof value === "number") return value;
+    return parseFloat(value) || 0;
   }
 
   // Load exports
@@ -39,6 +43,13 @@
     try {
       allExports = await window.API.export.getAll();
       console.log("📥 Danh sách phiếu xuất:", allExports);
+
+      allExports.forEach((r, i) => {
+        console.log(
+          `  ${i + 1}. ${r.exportNo}: total = ${r.total} (type: ${typeof r.total})`,
+        );
+      });
+
       filterAndRender();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -94,8 +105,12 @@
 
     let totalValue = 0;
     for (const r of filtered) {
-      totalValue += parseTotalValue(r.total);
+      const num = parseTotalValue(r.total);
+      console.log(`  Tính tổng: ${r.exportNo} = ${r.total} -> ${num}`);
+      totalValue += num;
     }
+
+    console.log(`✅ Tổng giá trị xuất: ${totalValue}`);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
     if (totalValueSpan) {
@@ -223,18 +238,13 @@
         filterAndRender();
       });
 
-    // ✅ SỬA LẠI NÚT LÀM MỚI
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        // Reset về trang 1
         currentPage = 1;
-        // Reset input tìm kiếm
         if (searchInput) searchInput.value = "";
-        // Reset bộ lọc ngày
         if (filterDate) filterDate.value = "all";
         if (fromDate) fromDate.value = "";
         if (toDate) toDate.value = "";
-        // Gọi load lại dữ liệu từ API
         loadExports();
       });
     }

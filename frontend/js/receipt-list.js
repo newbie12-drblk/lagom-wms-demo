@@ -28,9 +28,14 @@
   // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
-    const cleaned = String(value).replace(/[.,]/g, "");
-    const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : num;
+    // Nếu là string, loại bỏ dấu chấm và dấu phẩy
+    if (typeof value === "string") {
+      const cleaned = value.replace(/[,.]/g, "");
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+    if (typeof value === "number") return value;
+    return parseFloat(value) || 0;
   }
 
   // Load receipts
@@ -39,6 +44,14 @@
     try {
       allReceipts = await window.API.receipt.getAll();
       console.log("📥 Danh sách phiếu nhập:", allReceipts);
+
+      // ✅ Log để debug
+      allReceipts.forEach((r, i) => {
+        console.log(
+          `  ${i + 1}. ${r.receiptNo}: total = ${r.total} (type: ${typeof r.total})`,
+        );
+      });
+
       filterAndRender();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -92,10 +105,15 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
+    // ✅ TÍNH TỔNG ĐÚNG
     let totalValue = 0;
     for (const r of filtered) {
-      totalValue += parseTotalValue(r.total);
+      const num = parseTotalValue(r.total);
+      console.log(`  Tính tổng: ${r.receiptNo} = ${r.total} -> ${num}`);
+      totalValue += num;
     }
+
+    console.log(`✅ Tổng giá trị: ${totalValue}`);
 
     if (totalCountSpan) totalCountSpan.textContent = total;
     if (totalValueSpan) {
@@ -223,18 +241,14 @@
         filterAndRender();
       });
 
-    // ✅ SỬA LẠI NÚT LÀM MỚI
+    // ✅ NÚT LÀM MỚI
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        // Reset về trang 1
         currentPage = 1;
-        // Reset input tìm kiếm
         if (searchInput) searchInput.value = "";
-        // Reset bộ lọc ngày
         if (filterDate) filterDate.value = "all";
         if (fromDate) fromDate.value = "";
         if (toDate) toDate.value = "";
-        // Gọi load lại dữ liệu từ API
         loadReceipts();
       });
     }
