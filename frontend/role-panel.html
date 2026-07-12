@@ -18,32 +18,27 @@
 
     <div class="app-shell">
       <div class="role-panel">
-        <h1>🧪 LAGOM Pharma</h1>
-        <p class="sub" id="greetingText">Chọn vai trò để tiếp tục</p>
+        <div class="role-header">
+          <div class="role-logo">
+            <div class="role-logo-icon">🧪</div>
+            <h1>LAGOM Pharma</h1>
+          </div>
+          <p class="sub" id="greetingText">Chọn vai trò để tiếp tục</p>
+        </div>
 
         <div class="role-grid" id="roleGrid">
-          <!-- Nhập liệu -->
-          <a href="index.html" class="role-card" data-role="nhap_lieu">
-            <span class="icon">📝</span>
-            <div class="name">Nhập liệu</div>
-            <div class="desc">Tạo phiếu nhập, phiếu xuất, xem kho</div>
-            <span class="badge badge-nhap-lieu">Nhập liệu</span>
-          </a>
-
           <!-- Quản lý -->
           <a href="manager.html" class="role-card" data-role="quan_ly">
-            <span class="icon">📋</span>
-            <div class="name">Quản lý</div>
-            <div class="desc">Duyệt yêu cầu từ Admin</div>
-            <span class="badge badge-quan-ly">Quản lý</span>
+            <div class="role-card-icon">📋</div>
+            <div class="role-card-name">Quản lý</div>
+            <div class="role-card-desc">Duyệt yêu cầu từ Admin</div>
           </a>
 
           <!-- Xem kho (Nhân viên) -->
           <a href="index.html" class="role-card" data-role="nhan_vien">
-            <span class="icon">📊</span>
-            <div class="name">Xem kho</div>
-            <div class="desc">Xem tồn kho, phiếu nhập/xuất</div>
-            <span class="badge badge-nhan-vien">Nhân viên</span>
+            <div class="role-card-icon">📊</div>
+            <div class="role-card-name">Xem kho</div>
+            <div class="role-card-desc">Xem tồn kho, phiếu nhập/xuất</div>
           </a>
         </div>
 
@@ -51,7 +46,7 @@
           <i class="fas fa-sign-out-alt"></i> Đăng xuất
         </button>
 
-        <div class="footer">v2.0.0 · LAGOM WMS</div>
+        <div class="role-footer">v2.0.0 · LAGOM WMS</div>
       </div>
     </div>
 
