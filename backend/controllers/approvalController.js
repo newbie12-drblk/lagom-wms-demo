@@ -111,6 +111,12 @@ const approveRequest = async (req, res) => {
     const createdIds = [];
     const errors = [];
 
+    // Lấy STT lớn nhất hiện tại
+    const [maxSttResult] = await db.execute(
+      "SELECT MAX(stt) as maxStt FROM inventory",
+    );
+    let currentStt = maxSttResult[0]?.maxStt || 0;
+
     for (const prod of products) {
       try {
         // Kiểm tra mã hàng đã tồn tại trong kho chưa
@@ -120,8 +126,11 @@ const approveRequest = async (req, res) => {
           continue;
         }
 
-        // Chuẩn bị dữ liệu sản phẩm
+        currentStt++;
+
+        // Chuẩn bị dữ liệu sản phẩm - ĐẢM BẢO ĐỦ CÁC TRƯỜNG
         const productData = {
+          stt: currentStt,
           tenThuongMai: prod.tenThuongMai || "",
           maHang: prod.maHang || "",
           quyCach: prod.quyCach || "",
@@ -142,19 +151,58 @@ const approveRequest = async (req, res) => {
           ngayNhapHD: prod.ngayNhapHD || null,
           ngayXuatHD: null,
           ghiChu: prod.ghiChu || "",
+          status: "approved",
+          createdBy: request.requesterId,
+          approvedBy: approvedBy,
+          approvedAt: new Date(),
         };
 
         console.log(
           `📦 Thêm sản phẩm: ${productData.maHang} - ${productData.tenThuongMai}`,
         );
 
-        const productId = await Inventory.create(productData, approvedBy);
-        createdIds.push(productId);
+        // Sử dụng INSERT trực tiếp để đảm bảo status approved
+        const [result] = await db.execute(
+          `INSERT INTO inventory (
+            stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+            giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+            soLot, ngayHetHan,
+            soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+            ngayNhapHD, ngayXuatHD, ghiChu,
+            status, createdBy, approvedBy, approvedAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+          [
+            productData.stt,
+            productData.tenThuongMai,
+            productData.maHang,
+            productData.quyCach,
+            productData.hangSX,
+            productData.dvt,
+            productData.phanLoai,
+            productData.giaNhap,
+            productData.giaXuat,
+            productData.soLuongNhap,
+            productData.soLuongXuat,
+            productData.tonKho,
+            productData.soLot,
+            productData.ngayHetHan,
+            productData.soHopDongNhap,
+            productData.soHoaDonNhap,
+            productData.soHoaDonXuat,
+            productData.ngayNhapHD,
+            productData.ngayXuatHD,
+            productData.ghiChu,
+            productData.createdBy,
+            productData.approvedBy,
+          ],
+        );
+
+        createdIds.push(result.insertId);
 
         await EditHistory.log(
           approvedBy,
           "inventory",
-          productId,
+          result.insertId,
           "APPROVE_CREATE",
           null,
           null,
@@ -171,6 +219,7 @@ const approveRequest = async (req, res) => {
     let message = `Đã duyệt yêu cầu, thêm ${createdIds.length} sản phẩm vào kho.`;
     if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
 
+    // Gửi thông báo cho Admin
     await Notification.create(
       request.requesterId,
       "✅ Yêu cầu thêm sản phẩm đã được duyệt",
@@ -184,6 +233,7 @@ const approveRequest = async (req, res) => {
       success: true,
       message: `Đã duyệt và thêm ${createdIds.length} sản phẩm vào kho`,
       errors,
+      data: { createdIds, count: createdIds.length },
     });
   } catch (error) {
     console.error("Approve request error:", error);

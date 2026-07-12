@@ -129,6 +129,7 @@ const Inventory = {
       "ngayNhapHD",
       "ngayXuatHD",
       "ghiChu",
+      "status",
     ];
 
     for (const field of allowedFields) {

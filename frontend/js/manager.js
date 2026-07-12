@@ -12,7 +12,6 @@
   }
 
   const currentUser = Auth.getCurrentUser();
-  // ✅ SỬA: dùng 'quan_ly' thay vì 'manager'
   if (currentUser.roleId !== "quan_ly") {
     alert("❌ Bạn không có quyền truy cập trang này!");
     window.location.href = "role-panel.html";
@@ -213,7 +212,7 @@
   }
 
   // ============================================================
-  // RENDER RECEIPT DETAIL - GIỮ NGUYÊN TẤT CẢ CỘT
+  // RENDER RECEIPT DETAIL
   // ============================================================
   function renderReceiptDetail(receipt) {
     var items = receipt.items || [];
@@ -321,7 +320,7 @@
   }
 
   // ============================================================
-  // RENDER EXPORT DETAIL - GIỮ NGUYÊN TẤT CẢ CỘT
+  // RENDER EXPORT DETAIL
   // ============================================================
   function renderExportDetail(exportItem) {
     var items = exportItem.items || [];
@@ -422,7 +421,7 @@
   }
 
   // ============================================================
-  // RENDER INVENTORY DETAIL - GIỐNG BẢNG TỒN KHO
+  // RENDER INVENTORY DETAIL
   // ============================================================
   function renderInventoryDetail(product) {
     if (!product) {
@@ -463,7 +462,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS - GIỐNG BẢNG TỒN KHO (22 CỘT)
+  // LOAD PENDING APPROVALS
   // ============================================================
   async function loadPendingApprovals() {
     var container = document.getElementById("pendingApprovalsList");
@@ -626,7 +625,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT APPROVAL
+  // APPROVE / REJECT APPROVAL - FIXED
   // ============================================================
   window.approveApproval = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu thêm sản phẩm này?")) return;
@@ -648,8 +647,20 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt yêu cầu! Sản phẩm đã được thêm vào kho.");
-        loadPendingApprovals();
-        loadDashboardStats();
+
+        // ✅ Load lại dữ liệu
+        await loadPendingApprovals();
+        await loadDashboardStats();
+
+        // ✅ Refresh inventory nếu đang mở
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+
+        // ✅ Refresh home nếu đang ở trang chủ
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -682,8 +693,8 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã từ chối yêu cầu!");
-        loadPendingApprovals();
-        loadDashboardStats();
+        await loadPendingApprovals();
+        await loadDashboardStats();
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -695,7 +706,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING RECEIPTS - GIỐNG PHIẾU NHẬP (16 CỘT)
+  // LOAD PENDING RECEIPTS
   // ============================================================
   async function loadPendingReceipts() {
     var container = document.getElementById("pendingReceiptsList");
@@ -766,7 +777,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT RECEIPT
+  // APPROVE / REJECT RECEIPT - FIXED
   // ============================================================
   window.approveReceipt = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
@@ -786,8 +797,16 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt phiếu nhập!");
-        loadPendingReceipts();
-        loadDashboardStats();
+        await loadPendingReceipts();
+        await loadDashboardStats();
+
+        // Refresh inventory
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -817,8 +836,8 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã từ chối phiếu nhập!");
-        loadPendingReceipts();
-        loadDashboardStats();
+        await loadPendingReceipts();
+        await loadDashboardStats();
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -830,7 +849,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EXPORTS - GIỐNG PHIẾU XUẤT (13 CỘT)
+  // LOAD PENDING EXPORTS
   // ============================================================
   async function loadPendingExports() {
     var container = document.getElementById("pendingExportsList");
@@ -901,7 +920,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT EXPORT
+  // APPROVE / REJECT EXPORT - FIXED
   // ============================================================
   window.approveExport = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu xuất này?")) return;
@@ -921,8 +940,16 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt phiếu xuất!");
-        loadPendingExports();
-        loadDashboardStats();
+        await loadPendingExports();
+        await loadDashboardStats();
+
+        // Refresh inventory
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -952,8 +979,8 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã từ chối phiếu xuất!");
-        loadPendingExports();
-        loadDashboardStats();
+        await loadPendingExports();
+        await loadDashboardStats();
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -965,7 +992,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS - GIỐNG BẢNG TỒN KHO
+  // LOAD PENDING EDITS
   // ============================================================
   async function loadPendingEdits() {
     var container = document.getElementById("pendingEditsList");
@@ -1110,7 +1137,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT EDIT
+  // APPROVE / REJECT EDIT - FIXED
   // ============================================================
   window.approveEditRequest = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
@@ -1125,8 +1152,16 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa!");
-        loadPendingEdits();
-        loadDashboardStats();
+        await loadPendingEdits();
+        await loadDashboardStats();
+
+        // Refresh inventory
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1155,8 +1190,8 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã từ chối yêu cầu chỉnh sửa!");
-        loadPendingEdits();
-        loadDashboardStats();
+        await loadPendingEdits();
+        await loadDashboardStats();
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1168,7 +1203,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING DELETIONS - GIỐNG BẢNG TỒN KHO
+  // LOAD PENDING DELETIONS
   // ============================================================
   async function loadPendingDeletions() {
     var container = document.getElementById("pendingDeletionsList");
@@ -1254,7 +1289,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT DELETION
+  // APPROVE / REJECT DELETION - FIXED
   // ============================================================
   window.approveDeletionRequest = async function (id) {
     if (
@@ -1277,8 +1312,16 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt xóa sản phẩm!");
-        loadPendingDeletions();
-        loadDashboardStats();
+        await loadPendingDeletions();
+        await loadDashboardStats();
+
+        // Refresh inventory
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1310,8 +1353,8 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã từ chối yêu cầu xóa!");
-        loadPendingDeletions();
-        loadDashboardStats();
+        await loadPendingDeletions();
+        await loadDashboardStats();
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1367,116 +1410,111 @@
   }
 
   function renderUsersTable(users) {
-  var tbody = document.getElementById("usersTableBody");
-  if (!tbody) return;
+    var tbody = document.getElementById("usersTableBody");
+    if (!tbody) return;
 
-  if (!users || users.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8" style="text-align:center;padding:60px;color:#6b82a0;">
-          <i class="fas fa-users" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
-          Chưa có người dùng nào
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  var currentUser = Auth.getCurrentUser();
-
-  tbody.innerHTML = users.map(function(user, idx) {
-    var isActive = user.isActive == 1;
-    var isManager = user.roleId === "quan_ly";
-    
-    var roleColors = {
-      admin: "role-admin",
-      quan_ly: "role-quan_ly",
-    };
-    
-    var roleLabels = {
-      admin: "Quản trị",
-      quan_ly: "Quản lý",
-    };
-
-    // Danh sách quyền - ĐẦY ĐỦ HƠN
-    var perms = [];
-    if (user.canAddProduct) perms.push("➕Thêm");
-    if (user.canEditProduct) perms.push("✏️Sửa");
-    if (user.canDeleteProduct) perms.push("🗑️Xóa");
-    if (user.canCreateReceipt) perms.push("📥Nhập");
-    if (user.canCreateExport) perms.push("📤Xuất");
-    if (user.canViewAll) perms.push("👁️Xem tất cả");
-    
-    // Thêm quyền chỉnh sửa trường
-    var editFields = [];
-    if (user.canEditTenThuongMai) editFields.push("Tên");
-    if (user.canEditMaHang) editFields.push("Mã");
-    if (user.canEditDVT) editFields.push("ĐVT");
-    if (user.canEditHangSX) editFields.push("Hãng SX");
-    if (user.canEditPhanLoai) editFields.push("Phân loại");
-    if (user.canEditGiaNhap) editFields.push("Giá nhập");
-    if (user.canEditGhiChu) editFields.push("Ghi chú");
-    
-    if (editFields.length > 0) {
-      perms.push("✏️" + editFields.join(","));
+    if (!users || users.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center;padding:60px;color:#6b82a0;">
+            <i class="fas fa-users" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
+            Chưa có người dùng nào
+          </td>
+        </tr>
+      `;
+      return;
     }
-    
-    var permText = perms.length > 0 ? perms.join(" ") : "—";
 
-    var isSelf = currentUser && currentUser.id === user.id;
-    var canDelete = !isSelf && !isManager;
+    var currentUser = Auth.getCurrentUser();
 
-    // Xác định class cho trạng thái
-    var statusClass = isActive ? "status-active" : "status-locked";
-    var statusText = isActive ? "● Hoạt động" : "● Đã khóa";
+    tbody.innerHTML = users
+      .map(function (user, idx) {
+        var isActive = user.isActive == 1;
+        var isManager = user.roleId === "quan_ly";
 
-    return `
-      <tr style="border-bottom: 1px solid #1e2d45; transition: background 0.15s;">
-        <td style="padding: 12px 16px; text-align: center; color: #6b82a0; font-weight: 600;">${idx + 1}</td>
-        <td style="padding: 12px 16px;">
-          <strong style="color: #60a5fa; font-size: 14px;">${Utils.escapeHtml(user.username)}</strong>
-        </td>
-        <td style="padding: 12px 16px; color: #e2eaf5;">${Utils.escapeHtml(user.fullName || "—")}</td>
-        <td style="padding: 12px 16px; color: #6b82a0;">${Utils.escapeHtml(user.email || "—")}</td>
-        <td style="padding: 12px 16px;">
-          <span class="role-badge ${roleColors[user.roleId] || 'role-nhan_vien'}" 
-                style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
-                       ${user.roleId === 'admin' ? 'background:rgba(239,68,68,0.2);color:#f87171;' : 
-                         user.roleId === 'quan_ly' ? 'background:rgba(245,158,11,0.2);color:#fbbf24;' : 
-                         'background:rgba(107,114,128,0.2);color:#9ca3af;'}">
-            ${roleLabels[user.roleId] || user.roleId}
-          </span>
-        </td>
-        <td style="padding: 12px 16px;">
-          <span style="display:inline-flex;align-items:center;gap:6px;color:${isActive ? '#4ade80' : '#f87171'};">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isActive ? '#4ade80' : '#f87171'};${isActive ? '' : 'animation:pulse 1.5s infinite;'}"></span>
-            ${statusText}
-          </span>
-        </td>
-        <td style="padding: 12px 16px; font-size: 12px; color: #6b82a0; max-width: 200px; word-break: break-word;">
-          ${permText}
-        </td>
-        <td style="padding: 12px 16px;">
-          <div class="action-buttons" style="display:flex;gap:6px;">
-            <button class="btn btn-sm btn-outline" onclick="window.editUser(${user.id})" 
-                    title="Sửa người dùng" 
-                    style="padding:6px 12px;font-size:12px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:#60a5fa;cursor:pointer;transition:all 0.2s;">
-              <i class="fas fa-edit"></i>
-            </button>
-            ${canDelete ? `
-              <button class="btn btn-sm btn-danger" onclick="window.deleteUser(${user.id})" 
-                      title="Xóa người dùng" 
-                      style="padding:6px 12px;font-size:12px;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;cursor:pointer;transition:all 0.2s;">
-                <i class="fas fa-trash"></i>
+        var roleColors = {
+          admin: "role-admin",
+          quan_ly: "role-quan_ly",
+        };
+
+        var roleLabels = {
+          admin: "Quản trị",
+          quan_ly: "Quản lý",
+        };
+
+        // Danh sách quyền
+        var perms = [];
+        if (user.canAddProduct) perms.push("➕Thêm");
+        if (user.canEditProduct) perms.push("✏️Sửa");
+        if (user.canDeleteProduct) perms.push("🗑️Xóa");
+        if (user.canCreateReceipt) perms.push("📥Nhập");
+        if (user.canCreateExport) perms.push("📤Xuất");
+        if (user.canViewAll) perms.push("👁️Xem tất cả");
+
+        var permText = perms.length > 0 ? perms.join(" ") : "—";
+
+        var isSelf = currentUser && currentUser.id === user.id;
+        var canDelete = !isSelf && !isManager;
+
+        var statusClass = isActive ? "status-active" : "status-locked";
+        var statusText = isActive ? "● Hoạt động" : "● Đã khóa";
+
+        return `
+        <tr style="border-bottom: 1px solid #1e2d45; transition: background 0.15s;">
+          <td style="padding: 12px 16px; text-align: center; color: #6b82a0; font-weight: 600;">${idx + 1}</td>
+          <td style="padding: 12px 16px;">
+            <strong style="color: #60a5fa; font-size: 14px;">${Utils.escapeHtml(user.username)}</strong>
+          </td>
+          <td style="padding: 12px 16px; color: #e2eaf5;">${Utils.escapeHtml(user.fullName || "—")}</td>
+          <td style="padding: 12px 16px; color: #6b82a0;">${Utils.escapeHtml(user.email || "—")}</td>
+          <td style="padding: 12px 16px;">
+            <span class="role-badge ${roleColors[user.roleId] || "role-nhan_vien"}" 
+                  style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
+                         ${
+                           user.roleId === "admin"
+                             ? "background:rgba(239,68,68,0.2);color:#f87171;"
+                             : user.roleId === "quan_ly"
+                               ? "background:rgba(245,158,11,0.2);color:#fbbf24;"
+                               : "background:rgba(107,114,128,0.2);color:#9ca3af;"
+                         }">
+              ${roleLabels[user.roleId] || user.roleId}
+            </span>
+          </td>
+          <td style="padding: 12px 16px;">
+            <span style="display:inline-flex;align-items:center;gap:6px;color:${isActive ? "#4ade80" : "#f87171"};">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isActive ? "#4ade80" : "#f87171"};${isActive ? "" : "animation:pulse 1.5s infinite;"}"></span>
+              ${statusText}
+            </span>
+          </td>
+          <td style="padding: 12px 16px; font-size: 12px; color: #6b82a0; max-width: 200px; word-break: break-word;">
+            ${permText}
+          </td>
+          <td style="padding: 12px 16px;">
+            <div class="action-buttons" style="display:flex;gap:6px;">
+              <button class="btn btn-sm btn-outline" onclick="window.editUser(${user.id})" 
+                      title="Sửa người dùng" 
+                      style="padding:6px 12px;font-size:12px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:#60a5fa;cursor:pointer;transition:all 0.2s;">
+                <i class="fas fa-edit"></i>
               </button>
-            ` : ''}
-            ${isSelf ? '<span style="font-size:11px;color:#6b82a0;padding:4px 8px;">Bạn</span>' : ''}
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
+              ${
+                canDelete
+                  ? `
+                <button class="btn btn-sm btn-danger" onclick="window.deleteUser(${user.id})" 
+                        title="Xóa người dùng" 
+                        style="padding:6px 12px;font-size:12px;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;cursor:pointer;transition:all 0.2s;">
+                  <i class="fas fa-trash"></i>
+                </button>
+              `
+                  : ""
+              }
+              ${isSelf ? '<span style="font-size:11px;color:#6b82a0;padding:4px 8px;">Bạn</span>' : ""}
+            </div>
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+  }
 
   function openAddUserModal() {
     var modal = document.getElementById("userModal");

@@ -960,3 +960,34 @@
   window.isQuanLy = isQuanLy;
   window.refreshInventoryData = refreshInventoryData;
 })();
+// Thêm vào cuối file inventory.js, trước phần export
+
+// ==================== REFRESH INVENTORY DATA ====================
+async function refreshInventoryData() {
+  Utils.showLoading(true, "Đang làm mới dữ liệu tồn kho...");
+  try {
+    // Xóa cache
+    localStorage.removeItem("lagom_inventory");
+
+    const freshData = await window.API.inventory.getAll();
+    inventoryData = freshData;
+    window.inventoryData = freshData;
+
+    // Cập nhật filter và render
+    await populateCategoryFilter();
+    applyInventoryFilters(freshData);
+
+    // Cập nhật stats
+    await updateInventoryStats(freshData);
+
+    Utils.showToast("✅ Đã làm mới dữ liệu tồn kho");
+  } catch (error) {
+    console.error("Refresh inventory error:", error);
+    Utils.showToast("❌ Lỗi khi làm mới dữ liệu", "error");
+  } finally {
+    Utils.showLoading(false);
+  }
+}
+
+// Export hàm refresh
+window.refreshInventoryData = refreshInventoryData;
