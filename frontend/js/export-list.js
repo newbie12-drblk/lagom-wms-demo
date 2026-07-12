@@ -30,7 +30,6 @@
     if (value === undefined || value === null) return 0;
     // Nếu là string, loại bỏ dấu phẩy, dấu chấm, khoảng trắng
     if (typeof value === "string") {
-      // Loại bỏ tất cả dấu phẩy, dấu chấm (phân cách hàng nghìn), khoảng trắng
       const cleaned = value.replace(/[,.\s]/g, "");
       const num = parseFloat(cleaned);
       return isNaN(num) ? 0 : num;
@@ -142,6 +141,10 @@
       .map((exportItem) => {
         const statusMap = {
           pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+          awaiting_confirmation: {
+            class: "status-awaiting",
+            text: "🔄 Chờ xác nhận",
+          },
           approved: { class: "status-approved", text: "✅ Đã xác nhận" },
           rejected: { class: "status-rejected", text: "❌ Từ chối" },
         };
