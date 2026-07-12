@@ -22,7 +22,6 @@
 
   // ========== DOM Elements ==========
   const DOM = {
-    btnExportExcel: document.getElementById("btnExportExcel"),
     day: document.getElementById("day"),
     month: document.getElementById("month"),
     year: document.getElementById("year"),
@@ -106,6 +105,8 @@
     const maHang = maHangInput.value.trim();
     if (!maHang) return;
 
+    maHangInput.style.borderColor = "#fbbf24";
+
     try {
       const product = await window.API.inventory.getByMaHang(maHang);
       if (product) {
@@ -118,23 +119,66 @@
         const lotInput = row.querySelector(".lot-input");
         const expiryInput = row.querySelector(".expiry-input");
 
-        if (nameInput) nameInput.value = product.tenThuongMai || "";
-        if (packingInput) packingInput.value = product.quyCach || "";
-        if (manufacturerInput) manufacturerInput.value = product.hangSX || "";
-        if (unitInput) unitInput.value = product.dvt || "";
-        if (categoryInput) categoryInput.value = product.phanLoai || "";
+        if (nameInput) {
+          nameInput.value = product.tenThuongMai || "";
+          nameInput.style.borderColor = "#4ade80";
+        }
+        if (packingInput) {
+          packingInput.value = product.quyCach || "";
+          packingInput.style.borderColor = "#4ade80";
+        }
+        if (manufacturerInput) {
+          manufacturerInput.value = product.hangSX || "";
+          manufacturerInput.style.borderColor = "#4ade80";
+        }
+        if (unitInput) {
+          unitInput.value = product.dvt || "";
+          unitInput.style.borderColor = "#4ade80";
+        }
+        if (categoryInput) {
+          categoryInput.value = product.phanLoai || "";
+          categoryInput.style.borderColor = "#4ade80";
+        }
         if (priceInput) {
           priceInput.value = formatCurrency(
             product.giaXuat || product.giaNhap || 0,
           );
           updateRowTotal(row);
+          priceInput.style.borderColor = "#4ade80";
         }
-        if (lotInput && product.soLot) lotInput.value = product.soLot;
-        if (expiryInput && product.ngayHetHan)
+        if (lotInput && product.soLot) {
+          lotInput.value = product.soLot;
+          lotInput.style.borderColor = "#4ade80";
+        }
+        if (expiryInput && product.ngayHetHan) {
           expiryInput.value = product.ngayHetHan;
+          expiryInput.style.borderColor = "#4ade80";
+        }
+
+        setTimeout(() => {
+          maHangInput.style.borderColor = "";
+          row.querySelectorAll("input").forEach((inp) => {
+            inp.style.borderColor = "";
+          });
+        }, 3000);
+
+        Utils.showToast("✅ Đã tìm thấy sản phẩm và tự động điền thông tin!");
+      } else {
+        maHangInput.style.borderColor = "#ef4444";
+        Utils.showToast(
+          "❌ Không tìm thấy sản phẩm với mã: " + maHang,
+          "error",
+        );
+        setTimeout(() => {
+          maHangInput.style.borderColor = "";
+        }, 3000);
       }
     } catch (error) {
       console.log("Không tìm thấy sản phẩm với mã:", maHang);
+      maHangInput.style.borderColor = "#ef4444";
+      setTimeout(() => {
+        maHangInput.style.borderColor = "";
+      }, 3000);
     }
   }
 
@@ -294,7 +338,7 @@
     return data;
   }
 
-  // ========== Reset form (không confirm - dùng sau khi lưu) ==========
+  // ========== Reset form ==========
   function resetFormData() {
     if (DOM.customerName) DOM.customerName.value = "";
     if (DOM.customerAddress) DOM.customerAddress.value = "";
@@ -310,14 +354,13 @@
     calculateTotal();
   }
 
-  // ========== Làm mới form (có confirm - dùng cho nút Làm mới) ==========
   function clearForm() {
     if (confirm("Bạn có chắc muốn làm mới toàn bộ phiếu xuất?")) {
       resetFormData();
     }
   }
 
-  // ========== LƯU PHIẾU XUẤT ==========
+  // ========== LƯU PHIẾU XUẤT (TRÌNH DUYỆT) ==========
   async function saveExport() {
     const data = getExportData();
 
@@ -336,7 +379,7 @@
       return;
     }
 
-    Utils.showLoading(true, "Đang lưu phiếu...");
+    Utils.showLoading(true, "Đang trình duyệt phiếu...");
     try {
       const result = await window.API.export.create(data);
       console.log("📥 Kết quả từ server:", result);
@@ -349,12 +392,16 @@
           errorMsg += result.details.join("\n");
           alert(errorMsg);
           Utils.showToast("⚠️ Phiếu đã lưu nhưng cần kiểm tra lại", "warning");
+        } else if (
+          result.data &&
+          result.data.status === "awaiting_confirmation"
+        ) {
+          Utils.showToast("🔄 " + result.message + " - Chờ xác nhận", "info");
         } else if (result.data && result.data.status === "pending") {
-          Utils.showToast("⚠️ " + result.message, "warning");
+          Utils.showToast("⏳ " + result.message + " - Chờ duyệt", "info");
         } else {
           Utils.showToast("✅ " + result.message);
         }
-        // 👇 GỌI resetFormData() KHÔNG CONFIRM
         resetFormData();
       } else {
         Utils.showToast(
@@ -373,8 +420,28 @@
     }
   }
 
+  // ========== IN PHIẾU - FIX LỖI ĐƠ ==========
   function printExport() {
+    // Lưu trạng thái hiện tại của các input
+    const inputs = document.querySelectorAll("input, select");
+    const inputValues = {};
+    inputs.forEach((input, index) => {
+      inputValues[index] = input.value;
+    });
+
+    // Gọi in
     window.print();
+
+    // Sau khi in xong, khôi phục lại giá trị
+    setTimeout(() => {
+      inputs.forEach((input, index) => {
+        if (inputValues[index] !== undefined) {
+          input.value = inputValues[index];
+        }
+      });
+      // Tính lại tổng
+      calculateTotal();
+    }, 500);
   }
 
   function goBack() {
@@ -386,128 +453,6 @@
     if (DOM.day) DOM.day.textContent = today.getDate();
     if (DOM.month) DOM.month.textContent = today.getMonth() + 1;
     if (DOM.year) DOM.year.textContent = today.getFullYear();
-  }
-
-  // ========== EXPORT TO EXCEL ==========
-  function exportToExcel() {
-    const data = getExportData();
-
-    if (data.items.length === 0) {
-      alert("Không có dữ liệu để xuất!");
-      return;
-    }
-
-    let itemsHTML = data.items
-      .map(
-        (item, idx) => `
-      <tr>
-        <td class="excel-text-center">${idx + 1}</td>
-        <td class="excel-text-left">${escapeHtml(item.tenThuongMai)}</td>
-        <td class="excel-text-left">${escapeHtml(item.maHang)}</td>
-        <td class="excel-text-left">${escapeHtml(item.quyCach)}</td>
-        <td class="excel-text-left">${escapeHtml(item.hangSX)}</td>
-        <td class="excel-text-center">${escapeHtml(item.dvt)}</td>
-        <td class="excel-text-left">${escapeHtml(item.phanLoai)}</td>
-        <td class="excel-text-right">${formatCurrency(item.donGia)}</td>
-        <td class="excel-text-right">${item.soLuong}</td>
-        <td class="excel-text-right">${formatCurrency(item.thanhTien)}</td>
-        <td class="excel-text-center">${escapeHtml(item.soLot)}</td>
-        <td class="excel-text-center">${escapeHtml(item.ngayHetHan)}</td>
-        <td class="excel-text-left">${escapeHtml(item.ghiChu)}</td>
-      </tr>
-    `,
-      )
-      .join("");
-
-    const totalHTML = `
-    <tr class="excel-total-row">
-      <td colspan="9" class="excel-text-right"><strong>TỔNG CỘNG:</strong></td>
-      <td class="excel-text-right excel-total-amount"><strong>${formatCurrency(data.total)}</strong></td>
-      <td colspan="3"></td>
-    </tr>
-  `;
-
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-
-    const htmlContent = `
-    <div class="excel-company-header">
-      <div class="excel-company-name">CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM</div>
-      <div class="excel-company-address">Địa chỉ: Số 1073/63B đường Cách Mạng Tháng Tám, Phường Tân Sơn Nhất, TP. Hồ Chí Minh</div>
-      <div class="excel-company-tax">MST: 0316156162</div>
-    </div>
-    
-    <div class="excel-title">
-      <h2>PHIẾU XUẤT KHO</h2>
-      <div class="excel-sub-title">(Biên bản bàn giao hàng hóa)</div>
-    </div>
-    
-    <div class="excel-date-row">
-      Ngày ${day} tháng ${month} năm ${year}
-    </div>
-    
-    <div class="excel-info-box">
-      <strong>📋 Thông tin khách hàng</strong>
-      <div class="excel-info-line"><label>Đơn vị:</label> <span class="excel-value">${escapeHtml(data.customerName)}</span></div>
-      <div class="excel-info-line"><label>Địa chỉ:</label> <span class="excel-value">${escapeHtml(data.customerAddress)}</span></div>
-      <div class="excel-info-line"><label>MST:</label> <span class="excel-value">${escapeHtml(data.customerTax)}</span></div>
-      <div class="excel-info-line"><label>Số HĐ:</label> <span class="excel-value">${escapeHtml(data.customerContract)}</span></div>
-    </div>
-    
-    <div class="excel-info-box">
-      <strong>🚚 Thông tin xuất kho</strong>
-      <div class="excel-info-line"><label>Số phiếu xuất:</label> <span class="excel-value">${escapeHtml(data.exportNo)}</span></div>
-      <div class="excel-info-line"><label>Người nhận:</label> <span class="excel-value">${escapeHtml(data.receiverName)}</span></div>
-      <div class="excel-info-line"><label>Lý do xuất:</label> <span class="excel-value">${escapeHtml(data.exportReason)}</span></div>
-    </div>
-    
-    <table class="excel-table">
-      <thead>
-        <tr>
-          <th style="width:30px;">TT</th>
-          <th style="width:130px;">Tên thương mại</th>
-          <th style="width:75px;">Mã hàng</th>
-          <th style="width:95px;">Quy cách</th>
-          <th style="width:110px;">Hãng SX</th>
-          <th style="width:35px;">ĐVT</th>
-          <th style="width:110px;">Phân loại</th>
-          <th style="width:100px;">Đơn giá</th>
-          <th style="width:55px;">Số lượng</th>
-          <th style="width:120px;">Thành tiền</th>
-          <th style="width:75px;">Số lot</th>
-          <th style="width:85px;">HSD</th>
-          <th style="width:95px;">Ghi chú</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHTML}
-        ${totalHTML}
-      </tbody>
-    </table>
-    
-    <div style="height: 45px;"></div>
-    
-    <table style="width: 100%; border: none; margin-top: 20px;">
-      <tr>
-        <td style="width: 50%; text-align: left; border: none; padding: 0 20px 0 0;">
-          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 80%;">
-            <strong>ĐẠI DIỆN BÊN GIAO</strong><br>
-            <span style="font-size: 11px; color: #718096;">(Ký, họ tên, đóng dấu)</span>
-          </div>
-        </td>
-        <td style="width: 50%; text-align: right; border: none; padding: 0 0 0 20px;">
-          <div style="border-top: 1px solid #1a202c; padding-top: 8px; width: 80%; margin-left: auto;">
-            <strong>ĐẠI DIỆN BÊN NHẬN</strong><br>
-            <span style="font-size: 11px; color: #718096;">(Ký, họ tên)</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-  `;
-
-    Utils.exportToExcel(htmlContent, "phieu_xuat_kho");
   }
 
   // ========== INIT ==========
@@ -539,10 +484,6 @@
 
     if (DOM.btnSave) {
       DOM.btnSave.addEventListener("click", saveExport);
-    }
-
-    if (DOM.btnExportExcel) {
-      DOM.btnExportExcel.addEventListener("click", exportToExcel);
     }
   }
 

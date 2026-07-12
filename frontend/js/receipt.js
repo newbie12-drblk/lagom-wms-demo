@@ -106,6 +106,8 @@
     const maHang = maHangInput.value.trim();
     if (!maHang) return;
 
+    maHangInput.style.borderColor = "#fbbf24";
+
     try {
       const product = await window.API.inventory.getByMaHang(maHang);
       if (product) {
@@ -121,27 +123,76 @@
         const invoiceInput = row.querySelector(".invoice-input");
         const invoiceDateInput = row.querySelector(".invoice-date-input");
 
-        if (nameInput) nameInput.value = product.tenThuongMai || "";
-        if (packingInput) packingInput.value = product.quyCach || "";
-        if (manufacturerInput) manufacturerInput.value = product.hangSX || "";
-        if (unitInput) unitInput.value = product.dvt || "";
-        if (categoryInput) categoryInput.value = product.phanLoai || "";
+        if (nameInput) {
+          nameInput.value = product.tenThuongMai || "";
+          nameInput.style.borderColor = "#4ade80";
+        }
+        if (packingInput) {
+          packingInput.value = product.quyCach || "";
+          packingInput.style.borderColor = "#4ade80";
+        }
+        if (manufacturerInput) {
+          manufacturerInput.value = product.hangSX || "";
+          manufacturerInput.style.borderColor = "#4ade80";
+        }
+        if (unitInput) {
+          unitInput.value = product.dvt || "";
+          unitInput.style.borderColor = "#4ade80";
+        }
+        if (categoryInput) {
+          categoryInput.value = product.phanLoai || "";
+          categoryInput.style.borderColor = "#4ade80";
+        }
         if (priceInput) {
           priceInput.value = formatCurrency(product.giaNhap || 0);
           updateRowTotal(row);
+          priceInput.style.borderColor = "#4ade80";
         }
-        if (lotInput && product.soLot) lotInput.value = product.soLot;
-        if (expiryInput && product.ngayHetHan)
+        if (lotInput && product.soLot) {
+          lotInput.value = product.soLot;
+          lotInput.style.borderColor = "#4ade80";
+        }
+        if (expiryInput && product.ngayHetHan) {
           expiryInput.value = product.ngayHetHan;
-        if (contractInput && product.soHopDongNhap)
+          expiryInput.style.borderColor = "#4ade80";
+        }
+        if (contractInput && product.soHopDongNhap) {
           contractInput.value = product.soHopDongNhap;
-        if (invoiceInput && product.soHoaDonNhap)
+          contractInput.style.borderColor = "#4ade80";
+        }
+        if (invoiceInput && product.soHoaDonNhap) {
           invoiceInput.value = product.soHoaDonNhap;
-        if (invoiceDateInput && product.ngayNhapHD)
+          invoiceInput.style.borderColor = "#4ade80";
+        }
+        if (invoiceDateInput && product.ngayNhapHD) {
           invoiceDateInput.value = product.ngayNhapHD;
+          invoiceDateInput.style.borderColor = "#4ade80";
+        }
+
+        setTimeout(() => {
+          maHangInput.style.borderColor = "";
+          row.querySelectorAll("input").forEach((inp) => {
+            inp.style.borderColor = "";
+          });
+        }, 3000);
+
+        Utils.showToast("✅ Đã tìm thấy sản phẩm và tự động điền thông tin!");
+      } else {
+        maHangInput.style.borderColor = "#ef4444";
+        Utils.showToast(
+          "❌ Không tìm thấy sản phẩm với mã: " + maHang,
+          "error",
+        );
+        setTimeout(() => {
+          maHangInput.style.borderColor = "";
+        }, 3000);
       }
     } catch (error) {
       console.log("Không tìm thấy sản phẩm với mã:", maHang);
+      maHangInput.style.borderColor = "#ef4444";
+      setTimeout(() => {
+        maHangInput.style.borderColor = "";
+      }, 3000);
     }
   }
 
@@ -351,7 +402,7 @@
       return;
     }
 
-    Utils.showLoading(true, "Đang lưu phiếu...");
+    Utils.showLoading(true, "Đang trình duyệt phiếu...");
     try {
       const result = await window.API.receipt.create(data);
       console.log("📥 Kết quả từ server:", result);
@@ -364,8 +415,13 @@
           errorMsg += result.details.join("\n");
           alert(errorMsg);
           Utils.showToast("⚠️ Phiếu đã lưu nhưng cần kiểm tra lại", "warning");
+        } else if (
+          result.data &&
+          result.data.status === "awaiting_confirmation"
+        ) {
+          Utils.showToast("🔄 " + result.message + " - Chờ xác nhận", "info");
         } else if (result.data && result.data.status === "pending") {
-          Utils.showToast("⚠️ " + result.message, "warning");
+          Utils.showToast("⏳ " + result.message + " - Chờ duyệt", "info");
         } else {
           Utils.showToast("✅ " + result.message);
         }
@@ -387,8 +443,28 @@
     }
   }
 
+  // ========== IN PHIẾU - FIX LỖI ĐƠ ==========
   function printReceipt() {
+    // Lưu trạng thái hiện tại của các input
+    const inputs = document.querySelectorAll("input, select");
+    const inputValues = {};
+    inputs.forEach((input, index) => {
+      inputValues[index] = input.value;
+    });
+
+    // Gọi in
     window.print();
+
+    // Sau khi in xong, khôi phục lại giá trị
+    setTimeout(() => {
+      inputs.forEach((input, index) => {
+        if (inputValues[index] !== undefined) {
+          input.value = inputValues[index];
+        }
+      });
+      // Tính lại tổng
+      calculateTotal();
+    }, 500);
   }
 
   function goBack() {

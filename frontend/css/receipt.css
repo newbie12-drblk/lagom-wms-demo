@@ -350,22 +350,26 @@ body {
   /* Ẩn input và hiển thị text khi in */
   .items-table input {
     border: none !important;
-    padding: 0 !important;
+    padding: 2px 4px !important;
     background: transparent !important;
     font-size: 8px !important;
     width: auto !important;
     min-width: 0 !important;
+    color: #000 !important;
   }
 
   .info-line input {
     border-bottom: none !important;
+    background: transparent !important;
+    color: #000 !important;
+    font-weight: 500;
   }
 
   /* Quan trọng: Bỏ scroll ngang khi in */
   .items-table-wrapper {
     overflow-x: visible !important;
     overflow: visible !important;
-    margin: 6px 0 !important;
+    margin: 4px 0 !important;
   }
 
   .items-table {
@@ -373,13 +377,15 @@ body {
     min-width: 0 !important;
     table-layout: auto !important;
     font-size: 8px !important;
+    border-collapse: collapse !important;
   }
 
   /* Thu nhỏ padding để vừa giấy */
   .items-table th,
   .items-table td {
-    padding: 2px 2px !important;
+    padding: 2px 3px !important;
     word-break: break-word !important;
+    border: 1px solid #000 !important;
   }
 
   /* Thu nhỏ font chữ trong bảng */
@@ -387,10 +393,14 @@ body {
     font-size: 7px !important;
     white-space: normal !important;
     padding: 3px 2px !important;
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
   }
 
   .items-table td {
     font-size: 8px !important;
+    color: #000 !important;
   }
 
   /* Co giãn cột tự động */
@@ -402,54 +412,65 @@ body {
 
   /* Header công ty */
   .company-header {
-    margin-bottom: 6px !important;
-    padding-bottom: 4px !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 3px !important;
+    border-bottom: 2px solid #1e3a5f !important;
   }
 
   .company-name {
     font-size: 13px !important;
+    color: #1e3a5f !important;
   }
 
   .company-address,
   .company-tax {
     font-size: 8px !important;
+    color: #333 !important;
   }
 
   /* Title */
   .receipt-title h2 {
     font-size: 13px !important;
-    margin: 6px 0 !important;
+    margin: 4px 0 !important;
+    color: #1e3a5f !important;
   }
 
   .date-row {
     font-size: 9px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 4px !important;
+    color: #333 !important;
   }
 
   /* Info boxes */
   .info-grid {
-    gap: 6px !important;
-    margin-bottom: 8px !important;
+    gap: 4px !important;
+    margin-bottom: 6px !important;
   }
 
   .info-box {
-    padding: 4px 6px !important;
+    padding: 3px 6px !important;
     border-radius: 2px !important;
+    border: 1px solid #ccc !important;
+    background: #fafafa !important;
   }
 
   .info-box strong {
     font-size: 9px !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 2px !important;
+    color: #1e3a5f !important;
   }
 
   .info-line {
     font-size: 8px !important;
-    margin: 2px 0 !important;
+    margin: 1px 0 !important;
+    color: #000 !important;
   }
 
   .info-line label {
-    width: 50px !important;
+    width: 60px !important;
     font-size: 8px !important;
+    color: #555 !important;
+    font-weight: 600 !important;
   }
 
   /* Signature */
@@ -462,6 +483,8 @@ body {
     margin-top: 15px !important;
     font-size: 8px !important;
     padding-top: 4px !important;
+    border-top: 1px solid #000 !important;
+    color: #333 !important;
   }
 
   .sign-item {
@@ -470,23 +493,51 @@ body {
 
   /* Tổng cộng */
   .total-row td {
-    padding: 4px 2px !important;
+    padding: 3px 3px !important;
     font-size: 9px !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    background: #f5f5f5 !important;
   }
 
   #totalAmount {
     font-size: 10px !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+  }
+
+  .text-right {
+    text-align: right !important;
   }
 
   /* Đảm bảo nội dung vừa khổ giấy */
   @page {
     size: A4;
-    margin: 6mm;
+    margin: 5mm;
   }
 
   /* Ẩn background không cần thiết */
   body,
   .receipt-paper {
     background: white !important;
+  }
+
+  /* Đảm bảo chữ đen khi in */
+  .items-table td,
+  .items-table th,
+  .company-name,
+  .receipt-title h2,
+  .info-line,
+  .info-box strong,
+  .sign-line,
+  #totalAmount {
+    color: #000 !important;
+  }
+
+  /* Ẩn các icon khi in */
+  .fa,
+  .fas,
+  .far {
+    display: none !important;
   }
 }
