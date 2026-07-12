@@ -25,6 +25,22 @@
   const totalCountSpan = document.getElementById("exportTotalCount");
   const totalValueSpan = document.getElementById("exportTotalValue");
 
+  // ✅ HÀM PARSE NUMBER - CHUYỂN STRING THÀNH SỐ
+  function parseTotalValue(value) {
+    if (value === undefined || value === null) return 0;
+    // Nếu là string, loại bỏ dấu phẩy, dấu chấm, khoảng trắng
+    if (typeof value === "string") {
+      // Loại bỏ tất cả dấu phẩy, dấu chấm (phân cách hàng nghìn), khoảng trắng
+      const cleaned = value.replace(/[,.\s]/g, "");
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+    // Nếu đã là number
+    if (typeof value === "number") return value;
+    // Fallback
+    return parseFloat(value) || 0;
+  }
+
   // Load exports
   async function loadExports() {
     Utils.showLoading(true, "Đang tải danh sách phiếu...");
@@ -84,10 +100,11 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
+    // ✅ TÍNH TỔNG ĐÚNG - CHUYỂN STRING THÀNH NUMBER
     let totalValue = 0;
     for (const r of filtered) {
-      const cleanTotal = String(r.total || "0").replace(/[.,]/g, "");
-      totalValue += parseFloat(cleanTotal) || 0;
+      const num = parseTotalValue(r.total);
+      totalValue += num;
     }
 
     if (totalCountSpan) totalCountSpan.textContent = total;
@@ -156,7 +173,7 @@
               </div>
               <div class="receipt-card-total">
                 <div class="label">Tổng tiền</div>
-                <div class="value">${Utils.formatCurrency(exportItem.total || 0)}</div>
+                <div class="value">${Utils.formatCurrency(parseTotalValue(exportItem.total))}</div>
               </div>
             </div>
             <div class="receipt-card-footer">
