@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const bcrypt = require("bcryptjs");
 
 const User = {
   findByUsername: async (username) => {
@@ -28,12 +29,15 @@ const User = {
   },
 
   create: async (userData) => {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+
     const [result] = await db.execute(
       `INSERT INTO users (username, password, fullName, email, roleId, isActive, customPermissions) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userData.username,
-        userData.password,
+        hashedPassword,
         userData.fullName,
         userData.email,
         userData.roleId,
@@ -68,9 +72,11 @@ const User = {
       updates.push("customPermissions = ?");
       values.push(JSON.stringify(userData.customPermissions));
     }
-    if (userData.password) {
+    if (userData.password && userData.password.trim() !== "") {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
       updates.push("password = ?");
-      values.push(userData.password);
+      values.push(hashedPassword);
     }
 
     if (updates.length === 0) return false;
@@ -89,7 +95,7 @@ const User = {
   },
 
   verifyPassword: async (plainPassword, hashedPassword) => {
-    return plainPassword === hashedPassword;
+    return await bcrypt.compare(plainPassword, hashedPassword);
   },
 };
 

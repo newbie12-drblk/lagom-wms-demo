@@ -56,19 +56,13 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
 
-    // 🔥 QUAN TRỌNG: Redirect theo role
     let defaultRedirectUrl = "role-panel.html";
 
-    // Admin → thẳng index.html (trang tồn kho)
     if (user.roleId === "admin") {
       defaultRedirectUrl = "index.html";
-    }
-    // Quản lý → role-panel.html
-    else if (user.roleId === "quan_ly") {
+    } else if (user.roleId === "quan_ly") {
       defaultRedirectUrl = "role-panel.html";
-    }
-    // Nhân viên/Nhập liệu → role-panel.html
-    else {
+    } else {
       defaultRedirectUrl = "role-panel.html";
     }
 

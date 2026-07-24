@@ -2,6 +2,7 @@ const express = require("express");
 const { verifyToken } = require("../middleware/auth");
 const { checkRole } = require("../middleware/roleCheck");
 const db = require("../config/database");
+const bcrypt = require("bcryptjs");
 
 const router = express.Router();
 
@@ -87,7 +88,6 @@ router.post("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
       });
     }
 
-    // ⛔ KHÔNG CHO PHÉP TẠO USER VỚI ROLE quan_ly
     if (roleId === "quan_ly") {
       return res.status(400).json({
         success: false,
@@ -107,10 +107,20 @@ router.post("/users", verifyToken, checkRole("quan_ly"), async (req, res) => {
       });
     }
 
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     const [result] = await db.execute(
       `INSERT INTO users (username, password, fullName, email, roleId, isActive)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      [username, password, fullName, email || null, roleId || "nhan_vien", 1],
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        username,
+        hashedPassword,
+        fullName,
+        email || null,
+        roleId || "nhan_vien",
+        1,
+      ],
     );
 
     const userId = result.insertId;
@@ -172,7 +182,6 @@ router.put(
       const { fullName, email, roleId, isActive, password, permissions } =
         req.body;
 
-      // ⛔ KHÔNG CHO PHÉP SỬA USER quan_ly
       const [currentUser] = await db.execute(
         "SELECT roleId FROM users WHERE id = ?",
         [id],
@@ -185,7 +194,6 @@ router.put(
         });
       }
 
-      // ⛔ KHÔNG CHO PHÉP CẬP NHẬT USER THÀNH ROLE quan_ly
       if (roleId === "quan_ly") {
         return res.status(400).json({
           success: false,
@@ -214,8 +222,10 @@ router.put(
         values.push(isActive ? 1 : 0);
       }
       if (password && password.trim() !== "") {
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
         updates.push("password = ?");
-        values.push(password);
+        values.push(hashedPassword);
       }
 
       if (updates.length > 0) {
@@ -256,24 +266,24 @@ router.put(
         if (existing.length > 0) {
           await db.execute(
             `UPDATE user_permissions SET
-              canEditTenThuongMai = ?, canEditMaHang = ?, canEditDVT = ?, canEditHangSX = ?,
-              canEditPhanLoai = ?, canEditGiaNhap = ?, canEditSoHopDongNhap = ?,
-              canEditSoHoaDonNhap = ?, canEditSoHoaDonXuat = ?, canEditNgayNhapHD = ?,
-              canEditNgayXuatHD = ?, canEditGhiChu = ?,
-              canCreateReceipt = ?, canCreateExport = ?, canViewAll = ?,
-              canDeleteProduct = ?, canEditProduct = ?, canAddProduct = ?
-            WHERE userId = ?`,
+            canEditTenThuongMai = ?, canEditMaHang = ?, canEditDVT = ?, canEditHangSX = ?,
+            canEditPhanLoai = ?, canEditGiaNhap = ?, canEditSoHopDongNhap = ?,
+            canEditSoHoaDonNhap = ?, canEditSoHoaDonXuat = ?, canEditNgayNhapHD = ?,
+            canEditNgayXuatHD = ?, canEditGhiChu = ?,
+            canCreateReceipt = ?, canCreateExport = ?, canViewAll = ?,
+            canDeleteProduct = ?, canEditProduct = ?, canAddProduct = ?
+          WHERE userId = ?`,
             [...permValues, id],
           );
         } else {
           await db.execute(
             `INSERT INTO user_permissions (
-              userId, canEditTenThuongMai, canEditMaHang, canEditDVT, canEditHangSX,
-              canEditPhanLoai, canEditGiaNhap, canEditSoHopDongNhap, canEditSoHoaDonNhap,
-              canEditSoHoaDonXuat, canEditNgayNhapHD, canEditNgayXuatHD, canEditGhiChu,
-              canCreateReceipt, canCreateExport, canViewAll,
-              canDeleteProduct, canEditProduct, canAddProduct
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            userId, canEditTenThuongMai, canEditMaHang, canEditDVT, canEditHangSX,
+            canEditPhanLoai, canEditGiaNhap, canEditSoHopDongNhap, canEditSoHoaDonNhap,
+            canEditSoHoaDonXuat, canEditNgayNhapHD, canEditNgayXuatHD, canEditGhiChu,
+            canCreateReceipt, canCreateExport, canViewAll,
+            canDeleteProduct, canEditProduct, canAddProduct
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [id, ...permValues],
           );
         }
@@ -298,7 +308,6 @@ router.delete(
     try {
       const { id } = req.params;
 
-      // ⛔ KHÔNG CHO XÓA CHÍNH MÌNH
       if (parseInt(id) === req.user.userId) {
         return res.status(400).json({
           success: false,
@@ -306,7 +315,6 @@ router.delete(
         });
       }
 
-      // ⛔ KHÔNG CHO PHÉP XÓA USER QUAN_LY
       const [user] = await db.execute("SELECT roleId FROM users WHERE id = ?", [
         id,
       ]);
