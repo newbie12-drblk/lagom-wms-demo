@@ -381,8 +381,8 @@ CREATE TABLE user_permissions (
 
 -- User mẫu (password plain text)
 INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
-('admin', '$2b$10$C191ZPzwRkLrnejP8fFNF.TqC7fE1i04a6VC2aG1OpqsDyagPbj9q', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
-('quanly', '$2b$10$0XYtlO0R8T3Ow6Yjd3dkFuHz8sd6yy3DFoDjbUfovUuLCkXlzb09m', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
+('admin', '$2b$10$2g4cl763dUCrtM/buaa6s.VWp.k.K9EpV5EJp5DN1vhUwN0XcMXiu', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
+('quanly', '$2b$10$TwJSxMoVGJUd/JVs33XYYOXFkWKoG4/KGNDXKguplrU9El5i5ttve', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
 
 -- Sản phẩm mẫu (đã được duyệt)
 INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai, giaNhap, giaXuat, tonKho, status, createdBy, approvedBy, approvedAt) VALUES

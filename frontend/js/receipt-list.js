@@ -25,19 +25,19 @@
   const totalCountSpan = document.getElementById("receiptTotalCount");
   const totalValueSpan = document.getElementById("receiptTotalValue");
 
-  // ✅ HÀM CHUYỂN STRING THÀNH NUMBER
+  // HÀM CHUYỂN STRING THÀNH NUMBER
   function parseTotalValue(value) {
     if (value === undefined || value === null) return 0;
     if (typeof value === "number") return value;
     if (typeof value === "string") {
-      const cleaned = value.replace(/[,.\s]/g, "");
+      const cleaned = value.replace(/[,.\s₫]/g, "");
       const num = parseFloat(cleaned);
       return isNaN(num) ? 0 : num;
     }
     return parseFloat(value) || 0;
   }
 
-  // ✅ CHUẨN HÓA TOÀN BỘ DỮ LIỆU
+  // CHUẨN HÓA TOÀN BỘ DỮ LIỆU
   function normalizeData(data) {
     return data.map((item) => ({
       ...item,
@@ -55,7 +55,6 @@
       allReceipts = normalizeData(rawData);
       console.log("📥 Dữ liệu đã chuẩn hóa:", allReceipts);
 
-      // ✅ GỌI CLEAR FILTERS SAU KHI LOAD
       clearFilters();
     } catch (error) {
       Utils.showToast("Lỗi khi tải danh sách phiếu", "error");
@@ -102,6 +101,7 @@
 
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    // ✅ TÍNH TỔNG ĐÚNG
     updateStats(filtered);
     renderReceipts(filtered);
   }
@@ -109,9 +109,11 @@
   function updateStats(filtered) {
     const total = filtered.length;
 
+    // ✅ TÍNH TỔNG GIÁ TRỊ ĐÚNG
     let totalValue = 0;
     for (const r of filtered) {
-      totalValue += r.total || 0;
+      const val = parseTotalValue(r.total);
+      totalValue += val;
     }
 
     if (totalCountSpan) totalCountSpan.textContent = total;
@@ -242,7 +244,6 @@
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        // ✅ KHI BẤM LÀM MỚI -> GỌI LOAD LẠI
         loadReceipts();
       });
     }

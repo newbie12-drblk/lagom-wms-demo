@@ -49,9 +49,7 @@
   // Load inventory
   async function loadInventory() {
     try {
-      // Xóa cache
       localStorage.removeItem("lagom_inventory");
-
       inventoryData = await window.API.inventory.getAll();
       window.inventoryData = inventoryData;
       return inventoryData;
@@ -85,13 +83,11 @@
   async function resetAllData() {
     Utils.showLoading(true, "Đang làm mới toàn bộ dữ liệu...");
     try {
-      // Xóa toàn bộ cache
       localStorage.removeItem("lagom_inventory");
       localStorage.removeItem("lagom_receipts");
       localStorage.removeItem("lagom_exports");
       localStorage.removeItem("lagom_home_cache");
 
-      // Load lại dữ liệu
       await loadInventory();
       if (typeof initHome === "function") {
         await initHome();
@@ -115,7 +111,6 @@
     const container = document.getElementById("receiptsList");
     if (!container) return;
 
-    // Xóa cache
     localStorage.removeItem("lagom_receipts");
 
     const receipts = await loadReceipts();
@@ -139,9 +134,16 @@
     }
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    document.getElementById("receiptTotalCount").textContent = filtered.length;
+    // ✅ TÍNH TỔNG ĐÚNG
+    const total = filtered.length;
+    let totalValue = 0;
+    for (const r of filtered) {
+      totalValue += parseFloat(r.total) || 0;
+    }
+
+    document.getElementById("receiptTotalCount").textContent = total;
     document.getElementById("receiptTotalValue").textContent =
-      Utils.formatCurrency(filtered.reduce((s, r) => s + (r.total || 0), 0));
+      Utils.formatCurrency(totalValue);
 
     if (filtered.length === 0) {
       container.innerHTML = `<div class="empty-receipts"><i class="fas fa-inbox"></i><p>Chưa có phiếu nhập nào</p><small>Nhấn "Tạo phiếu nhập mới" để thêm phiếu</small></div>`;
@@ -158,7 +160,6 @@
     const container = document.getElementById("exportsList");
     if (!container) return;
 
-    // Xóa cache
     localStorage.removeItem("lagom_exports");
 
     const exports = await loadExports();
@@ -182,9 +183,16 @@
     }
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    document.getElementById("exportTotalCount").textContent = filtered.length;
+    // ✅ TÍNH TỔNG ĐÚNG
+    const total = filtered.length;
+    let totalValue = 0;
+    for (const r of filtered) {
+      totalValue += parseFloat(r.total) || 0;
+    }
+
+    document.getElementById("exportTotalCount").textContent = total;
     document.getElementById("exportTotalValue").textContent =
-      Utils.formatCurrency(filtered.reduce((s, r) => s + (r.total || 0), 0));
+      Utils.formatCurrency(totalValue);
 
     if (filtered.length === 0) {
       container.innerHTML = `<div class="empty-receipts"><i class="fas fa-inbox"></i><p>Chưa có phiếu xuất nào</p><small>Nhấn "Tạo phiếu xuất mới" để thêm phiếu</small></div>`;
@@ -219,7 +227,6 @@
     if (breadcrumb && titles[viewName])
       breadcrumb.textContent = titles[viewName];
 
-    // Xóa cache khi chuyển view
     localStorage.removeItem("lagom_inventory");
     localStorage.removeItem("lagom_receipts");
     localStorage.removeItem("lagom_exports");
@@ -270,7 +277,6 @@
     document.getElementById("currentDate").textContent =
       new Date().toLocaleDateString("vi-VN");
 
-    // Navigation
     document.querySelectorAll(".nav-item").forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -278,7 +284,6 @@
       });
     });
 
-    // Quick tiles
     document.querySelectorAll(".quick-tile").forEach((tile) => {
       tile.addEventListener("click", (e) => {
         e.preventDefault();
@@ -286,7 +291,6 @@
       });
     });
 
-    // Create buttons
     document
       .getElementById("btnCreateNewReceipt")
       ?.addEventListener("click", () => window.open("receipt.html", "_blank"));
@@ -294,7 +298,6 @@
       .getElementById("btnCreateNewExport")
       ?.addEventListener("click", () => window.open("export.html", "_blank"));
 
-    // Tiles
     document.getElementById("receiptTile")?.addEventListener("click", (e) => {
       e.preventDefault();
       switchView("receipts");
@@ -304,13 +307,11 @@
       switchView("exports");
     });
 
-    // Initialize
     await loadInventory();
     if (typeof initHome === "function") initHome();
     switchView("home");
   }
 
-  // Export for other modules
   window.loadInventoryData = loadInventory;
   window.loadReceiptsData = loadReceipts;
   window.loadExportsData = loadExports;

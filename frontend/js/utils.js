@@ -3,12 +3,14 @@
  * Các hàm dùng chung cho toàn bộ frontend
  */
 
-// Format số thành tiền
+// Format số thành tiền - ĐÃ SỬA LỖI
 function formatCurrency(amount) {
   if (amount === undefined || amount === null || isNaN(amount)) amount = 0;
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 
@@ -23,6 +25,14 @@ function parseNumber(str) {
   if (!str) return 0;
   const cleaned = String(str).replace(/[^0-9]/g, "");
   return parseInt(cleaned, 10) || 0;
+}
+
+// Parse số từ string có dấu phân cách
+function parseCurrency(str) {
+  if (!str) return 0;
+  if (typeof str === "number") return str;
+  const cleaned = String(str).replace(/[^\d]/g, "");
+  return parseFloat(cleaned) || 0;
 }
 
 // Format ngày tháng
@@ -155,7 +165,6 @@ function downloadFile(blob, filename) {
 }
 
 // ==================== EXPORT TO EXCEL ====================
-// CHỈ GỌI CSS TỪ window.EXCEL_CSS, KHÔNG CÓ CSS TRONG NÀY
 function exportToExcel(htmlContent, filename) {
   const html = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" 
@@ -168,20 +177,6 @@ function exportToExcel(htmlContent, filename) {
           * { font-family: 'Times New Roman', Arial, sans-serif; }
           ${window.EXCEL_CSS || ""}
         </style>
-        <!--[if gte mso 9]>
-        <xml>
-          <x:ExcelWorkbook>
-            <x:ExcelWorksheets>
-              <x:ExcelWorksheet>
-                <x:Name>Sheet1</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-            </x:ExcelWorksheets>
-          </x:ExcelWorkbook>
-        </xml>
-        <![endif]-->
       </head>
       <body>
         ${htmlContent}
@@ -207,6 +202,7 @@ window.Utils = {
   formatCurrency,
   formatNumber,
   parseNumber,
+  parseCurrency,
   formatDate,
   escapeHtml,
   debounce,
