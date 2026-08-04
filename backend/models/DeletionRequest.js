@@ -1,7 +1,7 @@
 const db = require("../config/database");
 
 const DeletionRequest = {
-  // ==================== TẠO YÊU CẦU XÓA (NHIỀU SẢN PHẨM) ====================
+  // ==================== TẠO YÊU CẦU XÓA (1 SẢN PHẨM) ====================
   create: async (requesterId, productId, productData) => {
     const [result] = await db.execute(
       `INSERT INTO deletion_requests (requesterId, productId, productData, status)
