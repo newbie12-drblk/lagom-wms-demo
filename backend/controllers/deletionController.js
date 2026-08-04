@@ -3,67 +3,113 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Tạo yêu cầu xóa sản phẩm (Admin)
+// ==================== TẠO YÊU CẦU XÓA (NHIỀU SẢN PHẨM) ====================
 const createDeletionRequest = async (req, res) => {
   try {
-    const { productId } = req.body;
+    const { productIds } = req.body;
     const requesterId = req.user.userId;
 
-    if (!productId) {
+    console.log("📦 Nhận yêu cầu xóa từ Admin:", productIds);
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng chọn sản phẩm cần xóa",
+        message: "Vui lòng chọn ít nhất một sản phẩm cần xóa",
       });
     }
 
     // Kiểm tra sản phẩm có tồn tại không
-    const product = await Inventory.findById(productId);
-    if (!product) {
+    const products = [];
+    for (const productId of productIds) {
+      const product = await Inventory.findById(productId);
+      if (!product) {
+        console.log(`⚠️ Sản phẩm ID ${productId} không tồn tại, bỏ qua`);
+        continue;
+      }
+      products.push(product);
+    }
+
+    if (products.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Sản phẩm không tồn tại",
+        message: "Không tìm thấy sản phẩm nào hợp lệ để xóa",
       });
     }
 
-    // Kiểm tra xem đã có yêu cầu xóa cho sản phẩm này chưa (pending)
+    console.log(`📦 Tìm thấy ${products.length} sản phẩm hợp lệ`);
+
+    // Kiểm tra sản phẩm nào đã có yêu cầu xóa đang chờ
     const existingRequests = await DeletionRequest.getAllRequests("pending");
-    const alreadyRequested = existingRequests.some(
-      (req) => req.productId == productId,
-    );
-    if (alreadyRequested) {
+    const existingProductIds = existingRequests.map((req) => req.productId);
+
+    const validProducts = [];
+    const skippedProducts = [];
+
+    for (const product of products) {
+      if (existingProductIds.includes(product.id)) {
+        skippedProducts.push(`${product.tenThuongMai} (${product.maHang})`);
+      } else {
+        validProducts.push(product);
+      }
+    }
+
+    if (validProducts.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Sản phẩm này đã có yêu cầu xóa đang chờ duyệt",
+        message: `Tất cả sản phẩm đã có yêu cầu xóa đang chờ duyệt: ${skippedProducts.join(", ")}`,
       });
     }
 
-    const requestId = await DeletionRequest.create(
-      requesterId,
-      productId,
-      product,
-    );
+    // Tạo yêu cầu xóa cho từng sản phẩm
+    const createdIds = [];
+    for (const product of validProducts) {
+      const requestId = await DeletionRequest.create(
+        requesterId,
+        product.id,
+        product,
+      );
+      createdIds.push({ id: requestId, productName: product.tenThuongMai });
+    }
+
+    console.log(`✅ Đã tạo ${createdIds.length} yêu cầu xóa`);
 
     // Gửi thông báo cho Quản lý
+    const productNames = validProducts
+      .map((p) => `"${p.tenThuongMai}"`)
+      .join(", ");
     await Notification.createForManagers(
-      "🗑️ Yêu cầu xóa sản phẩm",
-      `Admin yêu cầu xóa sản phẩm "${product.tenThuongMai}" (${product.maHang})`,
+      `🗑️ Yêu cầu xóa ${validProducts.length} sản phẩm`,
+      `Admin yêu cầu xóa các sản phẩm: ${productNames}`,
       "approval",
-      requestId,
+      createdIds[0]?.id || null,
       "deletion_request",
     );
 
+    let message = `✅ Đã gửi yêu cầu xóa ${validProducts.length} sản phẩm, chờ Quản lý duyệt.`;
+    if (skippedProducts.length > 0) {
+      message += `\n⚠️ Bỏ qua: ${skippedProducts.join(", ")} (đã có yêu cầu chờ duyệt)`;
+    }
+
     res.json({
       success: true,
-      data: { id: requestId },
-      message: "✅ Đã gửi yêu cầu xóa sản phẩm, chờ Quản lý duyệt",
+      data: {
+        ids: createdIds,
+        total: createdIds.length,
+        skipped: skippedProducts,
+      },
+      message: message,
     });
   } catch (error) {
-    console.error("Create deletion request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("❌ Create deletion request error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 
-// Lấy tất cả yêu cầu xóa (Quản lý)
+// ==================== LẤY TẤT CẢ YÊU CẦU XÓA ====================
 const getAllDeletionRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -75,7 +121,7 @@ const getAllDeletionRequests = async (req, res) => {
   }
 };
 
-// Lấy yêu cầu xóa của tôi (Admin)
+// ==================== LẤY YÊU CẦU XÓA CỦA TÔI ====================
 const getMyDeletionRequests = async (req, res) => {
   try {
     const requests = await DeletionRequest.getByRequester(req.user.userId);
@@ -86,7 +132,7 @@ const getMyDeletionRequests = async (req, res) => {
   }
 };
 
-// Duyệt yêu cầu xóa (Quản lý)
+// ==================== DUYỆT YÊU CẦU XÓA ====================
 const approveDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,6 +143,13 @@ const approveDeletionRequest = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy yêu cầu",
+      });
+    }
+
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Yêu cầu này đã được xử lý",
       });
     }
 
@@ -137,7 +190,7 @@ const approveDeletionRequest = async (req, res) => {
   }
 };
 
-// Từ chối yêu cầu xóa (Quản lý)
+// ==================== TỪ CHỐI YÊU CẦU XÓA ====================
 const rejectDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;

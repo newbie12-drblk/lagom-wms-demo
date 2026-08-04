@@ -11,7 +11,7 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// Admin tạo yêu cầu xóa
+// ✅ Admin tạo yêu cầu xóa (gửi array productIds)
 router.post("/", verifyToken, checkRole("admin"), createDeletionRequest);
 
 // Admin lấy yêu cầu của mình

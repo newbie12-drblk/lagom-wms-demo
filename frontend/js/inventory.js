@@ -1,8 +1,7 @@
 /**
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
- * ĐÃ THÊM: Tạo yêu cầu thêm/xóa/sửa sản phẩm
- * CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
+ * CHỈ MỞ 7 TRƯỜNG CHO ADMIN TẠO YÊU CẦU
  */
 
 (function () {
@@ -26,7 +25,7 @@
   const nextPageBtn = document.getElementById("nextPage");
   const pageInfo = document.getElementById("pageInfo");
 
-  // ==================== KIỂM TRA ROLE (CHỈ 2 ROLE) ====================
+  // ==================== KIỂM TRA ROLE ====================
   function isAdmin() {
     const user = Auth.getCurrentUser();
     return user && user.roleId === "admin";
@@ -180,18 +179,14 @@
   async function refreshInventoryData() {
     Utils.showLoading(true, "Đang làm mới dữ liệu tồn kho...");
     try {
-      // Xóa cache
       localStorage.removeItem("lagom_inventory");
 
       const freshData = await window.API.inventory.getAll();
       inventoryData = freshData;
       window.inventoryData = freshData;
 
-      // Cập nhật filter và render
       await populateCategoryFilter();
       applyInventoryFilters(freshData);
-
-      // Cập nhật stats
       await updateInventoryStats(freshData);
 
       Utils.showToast("✅ Đã làm mới dữ liệu tồn kho");
@@ -334,7 +329,6 @@
 
   // ==================== TẠO MODAL YÊU CẦU ====================
   function showRequestModal() {
-    // Tạo modal overlay
     const overlay = document.createElement("div");
     overlay.className = "request-modal-overlay";
     overlay.id = "requestModal";
@@ -372,7 +366,6 @@
     document.body.appendChild(overlay);
     document.body.style.overflow = "hidden";
 
-    // Mặc định hiển thị "Thêm sản phẩm"
     setRequestType("add");
   }
 
@@ -387,7 +380,6 @@
   window.setRequestType = function (type) {
     requestType = type;
 
-    // Cập nhật active button
     document.querySelectorAll(".request-options .btn").forEach((btn) => {
       btn.classList.remove("active");
       if (btn.dataset.type === type) {
@@ -395,7 +387,6 @@
       }
     });
 
-    // Cập nhật title
     const titles = {
       add: "📝 Thêm sản phẩm mới",
       delete: "🗑️ Xóa sản phẩm",
@@ -412,44 +403,36 @@
     if (!container) return;
 
     if (type === "add") {
+      // ========== CHỈ 7 TRƯỜNG CHO THÊM SẢN PHẨM ==========
       container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">Điền thông tin sản phẩm mới:</p>
+        <p style="color: #6b82a0; margin-bottom: 12px;">
+          <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
+        </p>
         <div class="request-table-wrap">
           <table class="request-table">
             <thead>
               <tr>
                 <th style="width:30px;">STT</th>
-                <th>TÊN THƯƠNG MẠI</th>
-                <th>MÃ HÀNG</th>
-                <th>QUY CÁCH</th>
-                <th>HÃNG/NƯỚC SX</th>
+                <th>TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
+                <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
                 <th>ĐVT</th>
+                <th>HÃNG/NƯỚC SX</th>
                 <th>PHÂN LOẠI MÁY</th>
                 <th>GIÁ NHẬP</th>
-                <th>SL NHẬP</th>
                 <th>SỐ HĐ</th>
-                <th>SỐ HĐƠN NHẬP</th>
-                <th>NGÀY NHẬP HĐ</th>
-                <th>SỐ LOT</th>
-                <th>NGÀY HẾT HẠN</th>
+                <th style="width:35px;">XÓA</th>
               </tr>
             </thead>
             <tbody id="addProductBody">
               <tr>
                 <td>1</td>
-                <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại"></td>
-                <td><input type="text" class="add-maHang" placeholder="Mã hàng"></td>
-                <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
-                <td><input type="text" class="add-hangSX" placeholder="Hãng SX"></td>
+                <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
+                <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
                 <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
-                <td><input type="text" class="add-phanLoai" placeholder="Phân loại"></td>
+                <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
+                <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
                 <td><input type="text" class="add-giaNhap" placeholder="Giá nhập"></td>
-                <td><input type="text" class="add-soLuongNhap" placeholder="SL"></td>
                 <td><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ"></td>
-                <td><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn"></td>
-                <td><input type="date" class="add-ngayNhapHD"></td>
-                <td><input type="text" class="add-soLot" placeholder="Số lot"></td>
-                <td><input type="date" class="add-ngayHetHan"></td>
                 <td><button class="btn-remove" onclick="window.removeAddRow(this)"><i class="fas fa-trash"></i></button></td>
               </tr>
             </tbody>
@@ -458,9 +441,15 @@
         <button class="btn-add-sm" style="margin-top:10px;" onclick="window.addNewAddRow()">
           <i class="fas fa-plus"></i> Thêm dòng
         </button>
+        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
+          <p style="font-size: 12px; color: #6b82a0;">
+            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+            <strong>Lưu ý:</strong> Chỉ cần nhập 7 trường cơ bản. Các trường khác sẽ được tự động điền khi tạo đề nghị nhập hàng.
+          </p>
+        </div>
       `;
     } else if (type === "delete") {
-      // Hiển thị danh sách sản phẩm để chọn xóa
+      // ========== XÓA SẢN PHẨM - FIX LỖI ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -475,7 +464,7 @@
         .map(
           (item, idx) => `
         <tr>
-          <td class="checkbox-cell"><input type="checkbox" class="delete-checkbox" data-id="${item.id}"></td>
+          <td class="checkbox-cell"><input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}"></td>
           <td>${idx + 1}</td>
           <td>${escapeHtml(item.tenThuongMai || "")}</td>
           <td>${escapeHtml(item.maHang || "")}</td>
@@ -485,18 +474,19 @@
           <td>${escapeHtml(item.phanLoai || "")}</td>
           <td>${formatCurrency(item.giaNhap || 0)}</td>
           <td>${item.soLuongNhap || 0}</td>
-          <td>${escapeHtml(item.soHopDongNhap || "")}</td>
-          <td>${escapeHtml(item.soHoaDonNhap || "")}</td>
-          <td>${formatDate(item.ngayNhapHD)}</td>
           <td>${escapeHtml(item.soLot || "")}</td>
           <td>${formatDate(item.ngayHetHan)}</td>
+          <td>${item.tonKho || 0}</td>
         </tr>
       `,
         )
         .join("");
 
       container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">Chọn sản phẩm cần xóa:</p>
+        <p style="color: #f87171; margin-bottom: 12px;">
+          <i class="fas fa-exclamation-triangle"></i> 
+          <strong>Chọn sản phẩm cần xóa:</strong> Hành động này KHÔNG thể hoàn tác!
+        </p>
         <div class="request-table-wrap">
           <table class="request-table">
             <thead>
@@ -511,11 +501,9 @@
                 <th>PHÂN LOẠI MÁY</th>
                 <th>GIÁ NHẬP</th>
                 <th>SL NHẬP</th>
-                <th>SỐ HĐ</th>
-                <th>SỐ HĐƠN NHẬP</th>
-                <th>NGÀY NHẬP HĐ</th>
                 <th>SỐ LOT</th>
                 <th>NGÀY HẾT HẠN</th>
+                <th>TỒN KHO</th>
               </tr>
             </thead>
             <tbody>
@@ -523,9 +511,15 @@
             </tbody>
           </table>
         </div>
+        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
+          <p style="font-size: 12px; color: #6b82a0;">
+            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+            <strong>Lưu ý:</strong> Yêu cầu xóa sẽ được gửi đến Quản lý để duyệt.
+          </p>
+        </div>
       `;
     } else if (type === "edit") {
-      // Hiển thị danh sách sản phẩm để chọn sửa
+      // ========== SỬA SẢN PHẨM - CHỈ 7 TRƯỜNG ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -550,9 +544,6 @@
           <td>${escapeHtml(item.phanLoai || "")}</td>
           <td>${formatCurrency(item.giaNhap || 0)}</td>
           <td>${item.soLuongNhap || 0}</td>
-          <td>${escapeHtml(item.soHopDongNhap || "")}</td>
-          <td>${escapeHtml(item.soHoaDonNhap || "")}</td>
-          <td>${formatDate(item.ngayNhapHD)}</td>
           <td>${escapeHtml(item.soLot || "")}</td>
           <td>${formatDate(item.ngayHetHan)}</td>
         </tr>
@@ -561,7 +552,10 @@
         .join("");
 
       container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">Chọn sản phẩm cần sửa và điền thông tin mới:</p>
+        <p style="color: #6b82a0; margin-bottom: 12px;">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Chọn sản phẩm cần sửa</strong> (chỉ sửa được 7 trường cơ bản):
+        </p>
         <div class="request-table-wrap">
           <table class="request-table">
             <thead>
@@ -576,9 +570,6 @@
                 <th>PHÂN LOẠI MÁY</th>
                 <th>GIÁ NHẬP</th>
                 <th>SL NHẬP</th>
-                <th>SỐ HĐ</th>
-                <th>SỐ HĐƠN NHẬP</th>
-                <th>NGÀY NHẬP HĐ</th>
                 <th>SỐ LOT</th>
                 <th>NGÀY HẾT HẠN</th>
               </tr>
@@ -589,22 +580,22 @@
           </table>
         </div>
         <div id="editFormContainer" style="margin-top:16px; display:none;">
-          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn:</p>
+          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (7 trường):</p>
           <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px;">
             <div><label style="color:#6b82a0;font-size:11px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Hãng SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">ĐVT</label><input type="text" id="edit-dvt" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Phân loại</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">SL nhập</label><input type="text" id="edit-soLuongNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Số HĐ</label><input type="text" id="edit-soHopDongNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Số HĐơn nhập</label><input type="text" id="edit-soHoaDonNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Ngày nhập HĐ</label><input type="date" id="edit-ngayNhapHD" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Số lot</label><input type="text" id="edit-soLot" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Ngày hết hạn</label><input type="date" id="edit-ngayHetHan" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
           </div>
+        </div>
+        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
+          <p style="font-size: 12px; color: #6b82a0;">
+            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+            <strong>Lưu ý:</strong> Chỉ sửa được 7 trường cơ bản. Các trường khác sẽ được cập nhật qua đề nghị nhập/xuất.
+          </p>
         </div>
       `;
     }
@@ -622,7 +613,6 @@
     if (container) {
       container.style.display = checkbox.checked ? "block" : "none";
     }
-    // Nếu có nhiều checkbox, chỉ cho phép chọn 1
     document.querySelectorAll(".edit-checkbox").forEach((cb) => {
       if (cb !== checkbox) cb.checked = false;
     });
@@ -645,19 +635,14 @@
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${rowCount}</td>
-      <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại"></td>
-      <td><input type="text" class="add-maHang" placeholder="Mã hàng"></td>
-      <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
-      <td><input type="text" class="add-hangSX" placeholder="Hãng SX"></td>
+      <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
+      <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
       <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
-      <td><input type="text" class="add-phanLoai" placeholder="Phân loại"></td>
+      <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
+      <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
       <td><input type="text" class="add-giaNhap" placeholder="Giá nhập"></td>
-      <td><input type="text" class="add-soLuongNhap" placeholder="SL"></td>
       <td><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ"></td>
-      <td><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn"></td>
-      <td><input type="date" class="add-ngayNhapHD"></td>
-      <td><input type="text" class="add-soLot" placeholder="Số lot"></td>
-      <td><input type="date" class="add-ngayHetHan"></td>
+      <td><button class="btn-remove" onclick="window.removeAddRow(this)"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
   };
@@ -670,7 +655,7 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU TỪ FORM THÊM ====================
+  // ==================== LẤY DỮ LIỆU TỪ FORM THÊM (7 TRƯỜNG) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -688,29 +673,20 @@
       products.push({
         tenThuongMai: tenThuongMai,
         maHang: maHang,
-        quyCach: row.querySelector(".add-quyCach")?.value || "",
-        hangSX: row.querySelector(".add-hangSX")?.value || "",
         dvt: row.querySelector(".add-dvt")?.value || "",
+        hangSX: row.querySelector(".add-hangSX")?.value || "",
         phanLoai: row.querySelector(".add-phanLoai")?.value || "",
         giaNhap: parseFloat(
           row.querySelector(".add-giaNhap")?.value?.replace(/[^0-9]/g, "") || 0,
         ),
-        soLuongNhap: parseInt(
-          row.querySelector(".add-soLuongNhap")?.value || 0,
-        ),
         soHopDongNhap: row.querySelector(".add-soHopDongNhap")?.value || "",
-        soHoaDonNhap: row.querySelector(".add-soHoaDonNhap")?.value || "",
-        ngayNhapHD: row.querySelector(".add-ngayNhapHD")?.value || null,
-        soLot: row.querySelector(".add-soLot")?.value || "",
-        ngayHetHan: row.querySelector(".add-ngayHetHan")?.value || null,
-        tonKho: parseInt(row.querySelector(".add-soLuongNhap")?.value || 0),
       });
     });
 
     return { products, hasError };
   }
 
-  // ==================== GỬI YÊU CẦU ====================
+  // ==================== GỬI YÊU CẦU - FIX XÓA ====================
   window.submitRequest = async function () {
     Utils.showLoading(true, "Đang gửi yêu cầu...");
 
@@ -729,7 +705,7 @@
           return;
         }
 
-        console.log("📦 Gửi yêu cầu thêm sản phẩm:", products);
+        console.log("📦 Gửi yêu cầu thêm sản phẩm (7 trường):", products);
 
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
@@ -755,7 +731,10 @@
           );
         }
       } else if (requestType === "delete") {
+        // ========== FIX: LẤY ĐÚNG ID SẢN PHẨM ==========
         const checked = document.querySelectorAll(".delete-checkbox:checked");
+        console.log("🔍 Số checkbox được chọn:", checked.length);
+
         if (checked.length === 0) {
           Utils.showToast(
             "⚠️ Vui lòng chọn ít nhất một sản phẩm để xóa!",
@@ -765,11 +744,28 @@
           return;
         }
 
+        // Lấy danh sách productId
         const productIds = [];
+        const productDetails = [];
         checked.forEach((cb) => {
-          productIds.push(parseInt(cb.dataset.id));
+          const id = parseInt(cb.dataset.id);
+          const maHang = cb.dataset.maHang || "";
+          console.log(`  - ID: ${id}, Mã: ${maHang}`);
+          if (!isNaN(id) && id > 0) {
+            productIds.push(id);
+            productDetails.push({ id, maHang });
+          }
         });
 
+        if (productIds.length === 0) {
+          Utils.showToast("❌ Không tìm thấy ID sản phẩm hợp lệ!", "error");
+          Utils.showLoading(false);
+          return;
+        }
+
+        console.log("📦 Gửi yêu cầu xóa sản phẩm (IDs):", productIds);
+
+        // ✅ GỬI ĐÚNG ĐỊNH DẠNG { productIds: [...] }
         const response = await fetch(`${API_BASE_URL}/deletions`, {
           method: "POST",
           headers: {
@@ -780,18 +776,21 @@
             productIds: productIds,
           }),
         });
+
         const result = await response.json();
+        console.log("📥 Kết quả xóa:", result);
 
         if (result.success) {
           Utils.showToast("✅ Đã gửi yêu cầu xóa sản phẩm! Chờ Quản lý duyệt.");
           closeRequestModal();
         } else {
           Utils.showToast(
-            "❌ " + (result.message || "Lỗi gửi yêu cầu"),
+            "❌ " + (result.message || "Lỗi gửi yêu cầu xóa"),
             "error",
           );
         }
       } else if (requestType === "edit") {
+        // ========== SỬA SẢN PHẨM - CHỈ 7 TRƯỜNG ==========
         const checked = document.querySelectorAll(".edit-checkbox:checked");
         if (checked.length === 0) {
           Utils.showToast("⚠️ Vui lòng chọn một sản phẩm để sửa!", "warning");
@@ -810,18 +809,16 @@
           return;
         }
 
+        // Chỉ lấy 7 trường
         const newData = {
           tenThuongMai:
             document.getElementById("edit-tenThuongMai")?.value ||
             oldProduct.tenThuongMai,
           maHang:
             document.getElementById("edit-maHang")?.value || oldProduct.maHang,
-          quyCach:
-            document.getElementById("edit-quyCach")?.value ||
-            oldProduct.quyCach,
+          dvt: document.getElementById("edit-dvt")?.value || oldProduct.dvt,
           hangSX:
             document.getElementById("edit-hangSX")?.value || oldProduct.hangSX,
-          dvt: document.getElementById("edit-dvt")?.value || oldProduct.dvt,
           phanLoai:
             document.getElementById("edit-phanLoai")?.value ||
             oldProduct.phanLoai,
@@ -830,24 +827,9 @@
               .getElementById("edit-giaNhap")
               ?.value?.replace(/[^0-9]/g, "") || oldProduct.giaNhap,
           ),
-          soLuongNhap: parseInt(
-            document.getElementById("edit-soLuongNhap")?.value ||
-              oldProduct.soLuongNhap,
-          ),
           soHopDongNhap:
             document.getElementById("edit-soHopDongNhap")?.value ||
             oldProduct.soHopDongNhap,
-          soHoaDonNhap:
-            document.getElementById("edit-soHoaDonNhap")?.value ||
-            oldProduct.soHoaDonNhap,
-          ngayNhapHD:
-            document.getElementById("edit-ngayNhapHD")?.value ||
-            oldProduct.ngayNhapHD,
-          soLot:
-            document.getElementById("edit-soLot")?.value || oldProduct.soLot,
-          ngayHetHan:
-            document.getElementById("edit-ngayHetHan")?.value ||
-            oldProduct.ngayHetHan,
         };
 
         const response = await fetch(`${API_BASE_URL}/edits`, {
@@ -883,7 +865,6 @@
 
   // ==================== INIT ====================
   async function initInventory(inventoryDataFromMain) {
-    // Xóa cache
     localStorage.removeItem("lagom_inventory");
 
     const data = inventoryDataFromMain || (await window.API.inventory.getAll());
@@ -893,7 +874,6 @@
     await populateCategoryFilter();
     applyInventoryFilters(data);
 
-    // Bind events
     const applyFilters = () => applyInventoryFilters(data);
 
     if (searchInput) {
@@ -953,7 +933,7 @@
       });
   }
 
-  // Expose functions to window
+  // Expose functions
   window.initInventory = initInventory;
   window.showRequestModal = showRequestModal;
   window.closeRequestModal = closeRequestModal;
