@@ -171,7 +171,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm ==========
+  // ========== Tạo dòng sản phẩm - KHÔNG CÓ CỘT XÓA CHỮ ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -190,7 +190,7 @@
       <td><input type="text" class="contract-input" value="${escapeHtml(data?.soHopDongNhap || "")}" placeholder="Số HĐ"></td>
       <td><input type="text" class="qty-input" value="${data?.soLuongNhap || "0"}"></td>
       <td class="row-total" data-total="0">0</td>
-      <td class="text-center col-delete">${removeButton}</td>
+      <td class="text-center">${removeButton}</td>
     `;
 
     const priceInput = row.querySelector(".price-input");
@@ -400,52 +400,17 @@
     }
   }
 
-  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
+  // ========== IN PHIẾU ==========
   function printReceipt() {
-    // Lấy tất cả input và select để lưu giá trị
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
-    // ✅ THÊM CLASS ĐỂ ẨN CỘT XÓA KHI IN
-    document.querySelectorAll(".col-delete").forEach((el) => {
-      el.classList.add("printing-hide");
-    });
-
-    // Thêm style tạm thời để ẩn cột xóa
-    const style = document.createElement("style");
-    style.id = "print-hide-delete";
-    style.textContent = `
-      .printing-hide {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-      }
-      .col-delete {
-        display: none !important;
-        visibility: hidden !important;
-        width: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-      }
-    `;
-    document.head.appendChild(style);
-
     window.print();
 
-    // ❌ XÓA STYLE TẠM SAU KHI IN
     setTimeout(() => {
-      const tempStyle = document.getElementById("print-hide-delete");
-      if (tempStyle) tempStyle.remove();
-
-      document.querySelectorAll(".printing-hide").forEach((el) => {
-        el.classList.remove("printing-hide");
-      });
-
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];

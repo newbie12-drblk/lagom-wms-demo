@@ -176,7 +176,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - 7 TRƯỜNG TỰ ĐỘNG + 5 TRƯỜNG NHẬP TAY = 12 TRƯỜNG ==========
+  // ========== Tạo dòng sản phẩm - KHÔNG CÓ CỘT XÓA CHỮ ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -199,7 +199,7 @@
       <td><input type="date" class="expiry-input"></td>
       <td><input type="text" class="soHopDongXuat-input" placeholder="Số HĐ xuất *"></td>
       <td class="row-total" data-total="0">0</td>
-      <td class="text-center col-delete">${removeButton}</td>
+      <td class="text-center">${removeButton}</td>
     `;
 
     const priceInput = row.querySelector(".price-input");
@@ -417,54 +417,17 @@
     }
   }
 
-  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
+  // ========== IN PHIẾU ==========
   function printExport() {
-    // Lưu giá trị của tất cả input và select
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
-    // Thêm class để ẩn cột xóa
-    document.querySelectorAll(".col-delete").forEach((el) => {
-      el.style.display = "none !important";
-      el.style.visibility = "hidden !important";
-      el.style.width = "0 !important";
-      el.style.padding = "0 !important";
-      el.style.border = "none !important";
-    });
-
-    // Ẩn toàn bộ cột xóa trong thead và tbody
-    document.querySelectorAll(".items-table .col-delete").forEach((el) => {
-      el.style.display = "none !important";
-      el.style.visibility = "hidden !important";
-      el.style.width = "0 !important";
-      el.style.padding = "0 !important";
-      el.style.border = "none !important";
-    });
-
-    // Ẩn nút xóa
-    document.querySelectorAll(".btn-remove").forEach((el) => {
-      el.style.display = "none !important";
-    });
-
     window.print();
 
-    // Khôi phục lại sau khi in
     setTimeout(() => {
-      document.querySelectorAll(".col-delete").forEach((el) => {
-        el.style.display = "";
-        el.style.visibility = "";
-        el.style.width = "";
-        el.style.padding = "";
-        el.style.border = "";
-      });
-
-      document.querySelectorAll(".btn-remove").forEach((el) => {
-        el.style.display = "";
-      });
-
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];
