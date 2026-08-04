@@ -1,7 +1,7 @@
 const db = require("../config/database");
 
 const DeletionRequest = {
-  // Tạo yêu cầu xóa
+  // ==================== TẠO YÊU CẦU XÓA (NHIỀU SẢN PHẨM) ====================
   create: async (requesterId, productId, productData) => {
     const [result] = await db.execute(
       `INSERT INTO deletion_requests (requesterId, productId, productData, status)
@@ -11,7 +11,21 @@ const DeletionRequest = {
     return result.insertId;
   },
 
-  // Lấy yêu cầu theo ID
+  // ==================== TẠO NHIỀU YÊU CẦU XÓA CÙNG LÚC ====================
+  createMultiple: async (requesterId, products) => {
+    const results = [];
+    for (const product of products) {
+      const [result] = await db.execute(
+        `INSERT INTO deletion_requests (requesterId, productId, productData, status)
+         VALUES (?, ?, ?, 'pending')`,
+        [requesterId, product.id, JSON.stringify(product)],
+      );
+      results.push(result.insertId);
+    }
+    return results;
+  },
+
+  // ==================== LẤY YÊU CẦU THEO ID ====================
   findById: async (id) => {
     const [rows] = await db.execute(
       `SELECT dr.*, u.fullName as requesterName, a.fullName as approverName,
@@ -32,7 +46,7 @@ const DeletionRequest = {
     return row;
   },
 
-  // Lấy tất cả yêu cầu (Quản lý)
+  // ==================== LẤY TẤT CẢ YÊU CẦU ====================
   getAllRequests: async (status = null) => {
     let query = `
       SELECT dr.*, u.fullName as requesterName, a.fullName as approverName,
@@ -58,7 +72,7 @@ const DeletionRequest = {
     }));
   },
 
-  // Lấy yêu cầu của tôi (Admin)
+  // ==================== LẤY YÊU CẦU CỦA NGƯỜI DÙNG ====================
   getByRequester: async (requesterId) => {
     const [rows] = await db.execute(
       `SELECT dr.*, a.fullName as approverName,
@@ -73,7 +87,7 @@ const DeletionRequest = {
     return rows;
   },
 
-  // Duyệt yêu cầu xóa
+  // ==================== DUYỆT YÊU CẦU XÓA ====================
   approve: async (id, approvedBy) => {
     await db.execute(
       `UPDATE deletion_requests 
@@ -84,7 +98,7 @@ const DeletionRequest = {
     return true;
   },
 
-  // Từ chối yêu cầu xóa
+  // ==================== TỪ CHỐI YÊU CẦU XÓA ====================
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE deletion_requests 
@@ -95,7 +109,7 @@ const DeletionRequest = {
     return true;
   },
 
-  // Xóa yêu cầu
+  // ==================== XÓA YÊU CẦU ====================
   delete: async (id) => {
     const [result] = await db.execute(
       "DELETE FROM deletion_requests WHERE id = ?",

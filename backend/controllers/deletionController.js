@@ -9,7 +9,7 @@ const createDeletionRequest = async (req, res) => {
     const { productIds } = req.body;
     const requesterId = req.user.userId;
 
-    console.log("📦 Nhận yêu cầu xóa từ Admin:", productIds);
+    console.log("📦 Nhận yêu cầu xóa từ Admin:", JSON.stringify(productIds));
 
     // Kiểm tra dữ liệu đầu vào
     if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
@@ -21,10 +21,13 @@ const createDeletionRequest = async (req, res) => {
 
     // Kiểm tra sản phẩm có tồn tại không
     const products = [];
+    const notFoundIds = [];
+
     for (const productId of productIds) {
       const product = await Inventory.findById(productId);
       if (!product) {
         console.log(`⚠️ Sản phẩm ID ${productId} không tồn tại, bỏ qua`);
+        notFoundIds.push(productId);
         continue;
       }
       products.push(product);
@@ -33,7 +36,7 @@ const createDeletionRequest = async (req, res) => {
     if (products.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy sản phẩm nào hợp lệ để xóa",
+        message: `Không tìm thấy sản phẩm nào hợp lệ để xóa. IDs không tồn tại: ${notFoundIds.join(", ")}`,
       });
     }
 
@@ -61,18 +64,12 @@ const createDeletionRequest = async (req, res) => {
       });
     }
 
-    // Tạo yêu cầu xóa cho từng sản phẩm
-    const createdIds = [];
-    for (const product of validProducts) {
-      const requestId = await DeletionRequest.create(
-        requesterId,
-        product.id,
-        product,
-      );
-      createdIds.push({ id: requestId, productName: product.tenThuongMai });
-    }
-
-    console.log(`✅ Đã tạo ${createdIds.length} yêu cầu xóa`);
+    // ✅ SỬ DỤNG createMultiple ĐỂ TẠO NHIỀU YÊU CẦU
+    const createdIds = await DeletionRequest.createMultiple(
+      requesterId,
+      validProducts,
+    );
+    console.log(`✅ Đã tạo ${createdIds.length} yêu cầu xóa, IDs:`, createdIds);
 
     // Gửi thông báo cho Quản lý
     const productNames = validProducts
@@ -82,13 +79,16 @@ const createDeletionRequest = async (req, res) => {
       `🗑️ Yêu cầu xóa ${validProducts.length} sản phẩm`,
       `Admin yêu cầu xóa các sản phẩm: ${productNames}`,
       "approval",
-      createdIds[0]?.id || null,
+      createdIds[0] || null,
       "deletion_request",
     );
 
     let message = `✅ Đã gửi yêu cầu xóa ${validProducts.length} sản phẩm, chờ Quản lý duyệt.`;
     if (skippedProducts.length > 0) {
       message += `\n⚠️ Bỏ qua: ${skippedProducts.join(", ")} (đã có yêu cầu chờ duyệt)`;
+    }
+    if (notFoundIds.length > 0) {
+      message += `\n⚠️ Không tìm thấy sản phẩm: ${notFoundIds.join(", ")}`;
     }
 
     res.json({
@@ -97,6 +97,7 @@ const createDeletionRequest = async (req, res) => {
         ids: createdIds,
         total: createdIds.length,
         skipped: skippedProducts,
+        notFound: notFoundIds,
       },
       message: message,
     });
