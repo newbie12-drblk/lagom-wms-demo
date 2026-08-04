@@ -2,7 +2,7 @@
    FILE: export.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu xuất kho (export.html)
-   NGÀY: 2026 - FIXED PRINT
+   NGÀY: 2026 - FIXED PRINT TABLE SPACING
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -169,7 +169,7 @@ body {
 
 .items-table td {
   border: 1px solid #cbd5e0;
-  padding: 3px 2px;
+  padding: 4px 3px;
   vertical-align: middle;
 }
 
@@ -339,7 +339,7 @@ body {
 
   .export-paper {
     box-shadow: none !important;
-    padding: 6px !important;
+    padding: 10px !important;
     margin: 0 !important;
     width: 100% !important;
     background: white !important;
@@ -354,20 +354,85 @@ body {
     display: none !important;
   }
 
-  /* ✅ ẨN CỘT XÓA KHI IN - QUAN TRỌNG */
+  /* ✅ ẨN CỘT XÓA KHI IN */
   .col-delete {
     display: none !important;
   }
 
-  /* ✅ ẨN CỘT XÓA TRONG THEAD VÀ TBODY */
   .items-table th.col-delete,
   .items-table td.col-delete {
     display: none !important;
   }
 
-  /* ✅ ẨN NÚT XÓA TRONG CÁC DÒNG */
   .items-table .btn-remove {
     display: none !important;
+  }
+
+  /* ✅ TĂNG KHOẢNG CÁCH BẢNG KHI IN */
+  .items-table-wrapper {
+    overflow-x: visible !important;
+    overflow: visible !important;
+    margin: 10px 0 !important;
+  }
+
+  .items-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    font-size: 10px !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+  }
+
+  /* ✅ TĂNG PADDING CHO CELL KHI IN */
+  .items-table th,
+  .items-table td {
+    padding: 6px 6px !important;
+    word-break: break-word !important;
+    border: 1px solid #000 !important;
+  }
+
+  /* ✅ TĂNG PADDING CHO TH */
+  .items-table th {
+    font-size: 8px !important;
+    white-space: normal !important;
+    padding: 6px 4px !important;
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+  }
+
+  /* ✅ TĂNG PADDING CHO TD */
+  .items-table td {
+    font-size: 9px !important;
+    color: #000 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    padding: 5px 6px !important;
+  }
+
+  .items-table td.text-right {
+    text-align: right !important;
+  }
+
+  .items-table td.text-center {
+    text-align: center !important;
+  }
+
+  .stt-cell {
+    text-align: center !important;
+    background: #f8fafc !important;
+    font-weight: 600 !important;
+  }
+
+  /* ✅ GIÃN CÁCH GIỮA CÁC DÒNG */
+  .items-table tr {
+    page-break-inside: avoid !important;
+  }
+
+  .items-table tbody tr {
+    border-bottom: 1px solid #000 !important;
   }
 
   input,
@@ -439,153 +504,101 @@ body {
     display: inline !important;
   }
 
-  .items-table-wrapper {
-    overflow-x: visible !important;
-    overflow: visible !important;
-    margin: 2px 0 !important;
-  }
-
-  .items-table {
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: auto !important;
-    font-size: 7px !important;
-    border-collapse: collapse !important;
-  }
-
-  .items-table th,
-  .items-table td {
-    padding: 2px 3px !important;
-    word-break: break-word !important;
-    border: 1px solid #000 !important;
-  }
-
-  .items-table th {
-    font-size: 6px !important;
-    white-space: normal !important;
-    padding: 2px 2px !important;
-    background: #f0f0f0 !important;
-    color: #000 !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-  }
-
-  .items-table td {
-    font-size: 7px !important;
-    color: #000 !important;
-    text-align: left !important;
-    vertical-align: middle !important;
-  }
-
-  .items-table td.text-right {
-    text-align: right !important;
-  }
-
-  .items-table td.text-center {
-    text-align: center !important;
-  }
-
-  .stt-cell {
-    text-align: center !important;
-    background: #f8fafc !important;
-    font-weight: 600 !important;
-  }
-
   .company-header {
-    margin-bottom: 2px !important;
-    padding-bottom: 2px !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
     border-bottom: 2px solid #1e3a5f !important;
   }
 
   .company-name {
-    font-size: 12px !important;
+    font-size: 14px !important;
     color: #1e3a5f !important;
   }
 
   .company-address,
   .company-tax {
-    font-size: 7px !important;
+    font-size: 9px !important;
     color: #333 !important;
   }
 
   .export-title h2 {
-    font-size: 12px !important;
-    margin: 2px 0 !important;
+    font-size: 14px !important;
+    margin: 4px 0 !important;
     color: #1e3a5f !important;
   }
 
   .export-title p {
-    font-size: 8px !important;
+    font-size: 9px !important;
     color: #555 !important;
   }
 
   .date-row {
-    font-size: 8px !important;
-    margin-bottom: 2px !important;
+    font-size: 10px !important;
+    margin-bottom: 8px !important;
     color: #333 !important;
   }
 
   .info-box {
-    padding: 2px 4px !important;
+    padding: 4px 8px !important;
     border-radius: 2px !important;
     border: 1px solid #ccc !important;
     background: #fafafa !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 4px !important;
   }
 
   .info-box strong {
-    font-size: 8px !important;
-    margin-bottom: 1px !important;
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
     color: #1e3a5f !important;
   }
 
   .info-line {
-    font-size: 7px !important;
-    margin: 1px 0 !important;
+    font-size: 8px !important;
+    margin: 2px 0 !important;
     color: #000 !important;
   }
 
   .info-line label {
-    width: 60px !important;
-    font-size: 7px !important;
+    width: 70px !important;
+    font-size: 8px !important;
     color: #555 !important;
     font-weight: 600 !important;
   }
 
   .signature {
-    margin-top: 10px !important;
-    padding-top: 4px !important;
+    margin-top: 20px !important;
+    padding-top: 8px !important;
   }
 
   .sign-line {
-    margin-top: 10px !important;
-    font-size: 7px !important;
-    padding-top: 3px !important;
+    margin-top: 15px !important;
+    font-size: 8px !important;
+    padding-top: 4px !important;
     border-top: 1px solid #000 !important;
     color: #333 !important;
   }
 
   .sign-item {
-    width: 120px !important;
+    width: 140px !important;
   }
 
   .total-row td {
-    padding: 2px 3px !important;
-    font-size: 8px !important;
+    padding: 6px 6px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
     color: #000 !important;
     background: #f5f5f5 !important;
   }
 
   #totalAmount {
-    font-size: 9px !important;
+    font-size: 11px !important;
     color: #000 !important;
     font-weight: 700 !important;
   }
 
   @page {
     size: A4;
-    margin: 5mm;
+    margin: 8mm;
   }
 
   body,
