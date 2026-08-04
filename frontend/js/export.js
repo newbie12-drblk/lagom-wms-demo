@@ -143,7 +143,6 @@
           contractInput.style.borderColor = "#4ade80";
         }
 
-        // Gợi ý giá nhập để tham khảo
         if (priceInput) {
           priceInput.placeholder = `Gợi ý: ${formatCurrency(product.giaNhap || 0)}`;
           priceInput.style.borderColor = "#4ade80";
@@ -176,7 +175,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - KHÔNG CÓ CỘT XÓA CHỮ ==========
+  // ========== Tạo dòng sản phẩm - VẪN GIỮ NÚT XÓA ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;

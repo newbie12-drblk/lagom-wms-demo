@@ -171,7 +171,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - KHÔNG CÓ CỘT XÓA CHỮ ==========
+  // ========== Tạo dòng sản phẩm - VẪN GIỮ NÚT XÓA ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
