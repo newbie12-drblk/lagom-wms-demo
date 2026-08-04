@@ -339,7 +339,7 @@ body {
 
   .export-paper {
     box-shadow: none !important;
-    padding: 10px !important;
+    padding: 12px !important;
     margin: 0 !important;
     width: 100% !important;
     background: white !important;
@@ -349,30 +349,45 @@ body {
   .toolbar,
   .no-print,
   .btn,
-  .btn-add,
-  .btn-remove {
+  .btn-add {
     display: none !important;
   }
 
-  /* ✅ ẨN CỘT XÓA KHI IN */
-  .col-delete {
-    display: none !important;
-  }
-
+  /* ============================================================ */
+  /* ✅ ẨN HOÀN TOÀN CỘT XÓA KHI IN - QUAN TRỌNG */
+  /* ============================================================ */
+  .col-delete,
+  th.col-delete,
+  td.col-delete,
+  .items-table .col-delete,
   .items-table th.col-delete,
   .items-table td.col-delete {
     display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
   }
 
-  .items-table .btn-remove {
+  /* ✅ ẨN NÚT XÓA */
+  .items-table .btn-remove,
+  .btn-remove {
     display: none !important;
+    visibility: hidden !important;
   }
 
   /* ✅ TĂNG KHOẢNG CÁCH BẢNG KHI IN */
   .items-table-wrapper {
     overflow-x: visible !important;
     overflow: visible !important;
-    margin: 10px 0 !important;
+    margin: 12px 0 !important;
   }
 
   .items-table {
@@ -384,32 +399,29 @@ body {
     border-spacing: 0 !important;
   }
 
-  /* ✅ TĂNG PADDING CHO CELL KHI IN */
   .items-table th,
   .items-table td {
-    padding: 6px 6px !important;
+    padding: 6px 8px !important;
     word-break: break-word !important;
     border: 1px solid #000 !important;
   }
 
-  /* ✅ TĂNG PADDING CHO TH */
   .items-table th {
     font-size: 8px !important;
     white-space: normal !important;
-    padding: 6px 4px !important;
+    padding: 6px 6px !important;
     background: #f0f0f0 !important;
     color: #000 !important;
     font-weight: 700 !important;
     text-align: center !important;
   }
 
-  /* ✅ TĂNG PADDING CHO TD */
   .items-table td {
     font-size: 9px !important;
     color: #000 !important;
     text-align: left !important;
     vertical-align: middle !important;
-    padding: 5px 6px !important;
+    padding: 5px 8px !important;
   }
 
   .items-table td.text-right {
@@ -426,7 +438,6 @@ body {
     font-weight: 600 !important;
   }
 
-  /* ✅ GIÃN CÁCH GIỮA CÁC DÒNG */
   .items-table tr {
     page-break-inside: avoid !important;
   }
@@ -466,7 +477,7 @@ body {
     border: none !important;
     background: transparent !important;
     color: #000 !important;
-    font-size: 7px !important;
+    font-size: 8px !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -566,7 +577,7 @@ body {
   }
 
   .signature {
-    margin-top: 20px !important;
+    margin-top: 24px !important;
     padding-top: 8px !important;
   }
 
@@ -583,7 +594,7 @@ body {
   }
 
   .total-row td {
-    padding: 6px 6px !important;
+    padding: 6px 8px !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     color: #000 !important;
