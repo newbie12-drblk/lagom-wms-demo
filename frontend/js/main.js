@@ -7,6 +7,7 @@
   "use strict";
 
   let inventoryData = [];
+  let isInitialized = false;
 
   // Check auth
   if (!Auth.isLoggedIn()) {
@@ -235,8 +236,12 @@
       await loadInventory();
       initInventory(inventoryData);
     } else if (viewName === "home" && typeof initHome === "function") {
-      await loadInventory();
-      initHome();
+      // ✅ CHỈ GỌI initHome NẾU CHƯA ĐƯỢC INIT
+      if (!isInitialized) {
+        await loadInventory();
+        await initHome();
+        isInitialized = true;
+      }
     } else if (viewName === "receipts") {
       await renderReceiptsList();
       document
@@ -308,7 +313,10 @@
     });
 
     await loadInventory();
-    if (typeof initHome === "function") initHome();
+    if (typeof initHome === "function") {
+      await initHome();
+      isInitialized = true;
+    }
     switchView("home");
   }
 
