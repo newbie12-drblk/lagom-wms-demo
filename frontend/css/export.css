@@ -2,7 +2,7 @@
    FILE: export.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu xuất kho (export.html)
-   NGÀY: 2026 - FIXED PRINT TABLE SPACING
+   NGÀY: 2026 - FIXED PRINT
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -318,7 +318,7 @@ body {
   background: #b91c1c;
 }
 
-/* ==================== 9. PRINT STYLES ==================== */
+/* ==================== 9. PRINT STYLES - FIX ==================== */
 @media print {
   * {
     box-sizing: border-box;
@@ -339,7 +339,7 @@ body {
 
   .export-paper {
     box-shadow: none !important;
-    padding: 12px !important;
+    padding: 10px !important;
     margin: 0 !important;
     width: 100% !important;
     background: white !important;
@@ -354,14 +354,9 @@ body {
   }
 
   /* ============================================================ */
-  /* ✅ ẨN HOÀN TOÀN CỘT XÓA KHI IN - QUAN TRỌNG */
+  /* ✅ ẨN HOÀN TOÀN CỘT XÓA KHI IN */
   /* ============================================================ */
-  .col-delete,
-  th.col-delete,
-  td.col-delete,
-  .items-table .col-delete,
-  .items-table th.col-delete,
-  .items-table td.col-delete {
+  .col-delete {
     display: none !important;
     visibility: hidden !important;
     width: 0 !important;
@@ -371,45 +366,84 @@ body {
     margin: 0 !important;
     border: none !important;
     overflow: hidden !important;
-    position: absolute !important;
-    left: -9999px !important;
-    top: -9999px !important;
   }
 
-  /* ✅ ẨN NÚT XÓA */
-  .items-table .btn-remove,
   .btn-remove {
     display: none !important;
     visibility: hidden !important;
   }
 
-  /* ✅ TĂNG KHOẢNG CÁCH BẢNG KHI IN */
+  /* ✅ FIX BẢNG - KHÔNG TRÀN */
   .items-table-wrapper {
     overflow-x: visible !important;
     overflow: visible !important;
-    margin: 12px 0 !important;
+    margin: 8px 0 !important;
   }
 
   .items-table {
     width: 100% !important;
     min-width: 0 !important;
-    table-layout: auto !important;
-    font-size: 10px !important;
+    table-layout: fixed !important;
+    font-size: 9px !important;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
   }
 
+  /* ✅ ĐẶT CHIỀU RỘNG CỐ ĐỊNH CHO TỪNG CỘT */
+  .items-table th:nth-child(1) {
+    width: 5% !important;
+  } /* STT */
+  .items-table th:nth-child(2) {
+    width: 9% !important;
+  } /* Mã hàng */
+  .items-table th:nth-child(3) {
+    width: 14% !important;
+  } /* Tên thương mại */
+  .items-table th:nth-child(4) {
+    width: 6% !important;
+  } /* ĐVT */
+  .items-table th:nth-child(5) {
+    width: 10% !important;
+  } /* Hãng SX */
+  .items-table th:nth-child(6) {
+    width: 10% !important;
+  } /* Phân loại */
+  .items-table th:nth-child(7) {
+    width: 8% !important;
+  } /* Giá nhập */
+  .items-table th:nth-child(8) {
+    width: 8% !important;
+  } /* Số HĐ nhập */
+  .items-table th:nth-child(9) {
+    width: 8% !important;
+  } /* Đơn giá xuất */
+  .items-table th:nth-child(10) {
+    width: 6% !important;
+  } /* Số lượng */
+  .items-table th:nth-child(11) {
+    width: 8% !important;
+  } /* Số lot */
+  .items-table th:nth-child(12) {
+    width: 8% !important;
+  } /* HSD */
+  .items-table th:nth-child(13) {
+    width: 8% !important;
+  } /* Số HĐ xuất */
+  .items-table th:nth-child(14) {
+    width: 8% !important;
+  } /* Thành tiền */
+
   .items-table th,
   .items-table td {
-    padding: 6px 8px !important;
+    padding: 3px 3px !important;
     word-break: break-word !important;
     border: 1px solid #000 !important;
   }
 
   .items-table th {
-    font-size: 8px !important;
+    font-size: 6px !important;
     white-space: normal !important;
-    padding: 6px 6px !important;
+    padding: 3px 2px !important;
     background: #f0f0f0 !important;
     color: #000 !important;
     font-weight: 700 !important;
@@ -417,11 +451,11 @@ body {
   }
 
   .items-table td {
-    font-size: 9px !important;
+    font-size: 7px !important;
     color: #000 !important;
     text-align: left !important;
     vertical-align: middle !important;
-    padding: 5px 8px !important;
+    padding: 3px 3px !important;
   }
 
   .items-table td.text-right {
@@ -452,10 +486,10 @@ body {
     border: none !important;
     background: transparent !important;
     color: #000 !important;
-    font-size: 8px !important;
+    font-size: 7px !important;
     padding: 0 !important;
     margin: 0 !important;
-    width: auto !important;
+    width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-shadow: none !important;
@@ -471,22 +505,6 @@ body {
   textarea::placeholder {
     color: transparent !important;
     opacity: 0 !important;
-  }
-
-  .items-table input {
-    border: none !important;
-    background: transparent !important;
-    color: #000 !important;
-    font-size: 8px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: auto !important;
-    box-shadow: none !important;
-    outline: none !important;
-    display: inline !important;
-    line-height: 1.2 !important;
   }
 
   .info-line input {
@@ -516,100 +534,100 @@ body {
   }
 
   .company-header {
-    margin-bottom: 8px !important;
-    padding-bottom: 6px !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
     border-bottom: 2px solid #1e3a5f !important;
   }
 
   .company-name {
-    font-size: 14px !important;
+    font-size: 13px !important;
     color: #1e3a5f !important;
   }
 
   .company-address,
   .company-tax {
-    font-size: 9px !important;
+    font-size: 8px !important;
     color: #333 !important;
   }
 
   .export-title h2 {
-    font-size: 14px !important;
-    margin: 4px 0 !important;
+    font-size: 13px !important;
+    margin: 3px 0 !important;
     color: #1e3a5f !important;
   }
 
   .export-title p {
-    font-size: 9px !important;
+    font-size: 8px !important;
     color: #555 !important;
   }
 
   .date-row {
-    font-size: 10px !important;
-    margin-bottom: 8px !important;
+    font-size: 9px !important;
+    margin-bottom: 6px !important;
     color: #333 !important;
   }
 
   .info-box {
-    padding: 4px 8px !important;
+    padding: 3px 6px !important;
     border-radius: 2px !important;
     border: 1px solid #ccc !important;
     background: #fafafa !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
   }
 
   .info-box strong {
-    font-size: 9px !important;
+    font-size: 8px !important;
     margin-bottom: 2px !important;
     color: #1e3a5f !important;
   }
 
   .info-line {
-    font-size: 8px !important;
-    margin: 2px 0 !important;
+    font-size: 7px !important;
+    margin: 1px 0 !important;
     color: #000 !important;
   }
 
   .info-line label {
-    width: 70px !important;
-    font-size: 8px !important;
+    width: 60px !important;
+    font-size: 7px !important;
     color: #555 !important;
     font-weight: 600 !important;
   }
 
   .signature {
-    margin-top: 24px !important;
-    padding-top: 8px !important;
+    margin-top: 15px !important;
+    padding-top: 6px !important;
   }
 
   .sign-line {
-    margin-top: 15px !important;
-    font-size: 8px !important;
-    padding-top: 4px !important;
+    margin-top: 12px !important;
+    font-size: 7px !important;
+    padding-top: 3px !important;
     border-top: 1px solid #000 !important;
     color: #333 !important;
   }
 
   .sign-item {
-    width: 140px !important;
+    width: 120px !important;
   }
 
   .total-row td {
-    padding: 6px 8px !important;
-    font-size: 10px !important;
+    padding: 4px 4px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     color: #000 !important;
     background: #f5f5f5 !important;
   }
 
   #totalAmount {
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: #000 !important;
     font-weight: 700 !important;
   }
 
   @page {
     size: A4;
-    margin: 8mm;
+    margin: 5mm;
   }
 
   body,
