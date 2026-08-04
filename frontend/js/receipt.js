@@ -171,7 +171,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - 7 TRƯỜNG + SL NHẬP ==========
+  // ========== Tạo dòng sản phẩm ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -400,17 +400,52 @@
     }
   }
 
-  // ========== IN PHIẾU ==========
+  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
   function printReceipt() {
+    // Lấy tất cả input và select để lưu giá trị
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
+    // ✅ THÊM CLASS ĐỂ ẨN CỘT XÓA KHI IN
+    document.querySelectorAll(".col-delete").forEach((el) => {
+      el.classList.add("printing-hide");
+    });
+
+    // Thêm style tạm thời để ẩn cột xóa
+    const style = document.createElement("style");
+    style.id = "print-hide-delete";
+    style.textContent = `
+      .printing-hide {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+      .col-delete {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
     window.print();
 
+    // ❌ XÓA STYLE TẠM SAU KHI IN
     setTimeout(() => {
+      const tempStyle = document.getElementById("print-hide-delete");
+      if (tempStyle) tempStyle.remove();
+
+      document.querySelectorAll(".printing-hide").forEach((el) => {
+        el.classList.remove("printing-hide");
+      });
+
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];

@@ -417,17 +417,54 @@
     }
   }
 
-  // ========== IN PHIẾU ==========
+  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
   function printExport() {
+    // Lưu giá trị của tất cả input và select
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
+    // Thêm class để ẩn cột xóa
+    document.querySelectorAll(".col-delete").forEach((el) => {
+      el.style.display = "none !important";
+      el.style.visibility = "hidden !important";
+      el.style.width = "0 !important";
+      el.style.padding = "0 !important";
+      el.style.border = "none !important";
+    });
+
+    // Ẩn toàn bộ cột xóa trong thead và tbody
+    document.querySelectorAll(".items-table .col-delete").forEach((el) => {
+      el.style.display = "none !important";
+      el.style.visibility = "hidden !important";
+      el.style.width = "0 !important";
+      el.style.padding = "0 !important";
+      el.style.border = "none !important";
+    });
+
+    // Ẩn nút xóa
+    document.querySelectorAll(".btn-remove").forEach((el) => {
+      el.style.display = "none !important";
+    });
+
     window.print();
 
+    // Khôi phục lại sau khi in
     setTimeout(() => {
+      document.querySelectorAll(".col-delete").forEach((el) => {
+        el.style.display = "";
+        el.style.visibility = "";
+        el.style.width = "";
+        el.style.padding = "";
+        el.style.border = "";
+      });
+
+      document.querySelectorAll(".btn-remove").forEach((el) => {
+        el.style.display = "";
+      });
+
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];
