@@ -400,17 +400,45 @@
     }
   }
 
-  // ========== IN PHIẾU ==========
+  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
   function printReceipt() {
+    // Lưu giá trị của tất cả input và select
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
+    // ✅ ẨN CỘT XÓA KHI IN
+    document.querySelectorAll(".col-delete").forEach((el) => {
+      el.style.display = "none !important";
+      el.style.visibility = "hidden !important";
+      el.style.width = "0 !important";
+      el.style.padding = "0 !important";
+      el.style.border = "none !important";
+    });
+
+    // ẨN NÚT XÓA
+    document.querySelectorAll(".btn-remove").forEach((el) => {
+      el.style.display = "none !important";
+    });
+
     window.print();
 
+    // Khôi phục lại sau khi in
     setTimeout(() => {
+      document.querySelectorAll(".col-delete").forEach((el) => {
+        el.style.display = "";
+        el.style.visibility = "";
+        el.style.width = "";
+        el.style.padding = "";
+        el.style.border = "";
+      });
+
+      document.querySelectorAll(".btn-remove").forEach((el) => {
+        el.style.display = "";
+      });
+
       inputs.forEach((input, index) => {
         if (inputValues[index] !== undefined) {
           input.value = inputValues[index];
