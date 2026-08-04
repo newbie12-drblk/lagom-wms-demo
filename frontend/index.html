@@ -248,7 +248,6 @@
                   <option value="sap-het-han">Sắp đến hạn (≤30 ngày)</option>
                   <option value="het-han">Quá hạn</option>
                 </select>
-                <!-- ĐÃ SỬA: Nút "Đặt lại" thành "Tạo yêu cầu" -->
                 <button class="btn btn-primary" id="btnCreateRequest">
                   <i class="fas fa-plus-circle"></i> Tạo yêu cầu
                 </button>
@@ -341,7 +340,7 @@
                 </div>
               </div>
 
-              <!-- FILTER BAR MỚI -->
+              <!-- FILTER BAR -->
               <div
                 class="filter-bar"
                 style="
@@ -470,7 +469,7 @@
                 </div>
               </div>
 
-              <!-- FILTER BAR MỚI -->
+              <!-- FILTER BAR -->
               <div
                 class="filter-bar"
                 style="
@@ -598,7 +597,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - LỚN HƠN, DỄ ĐÓNG             -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - ĐÃ XÓA NÚT IN                -->
     <!-- ============================================================ -->
     <div id="receiptDetailModal" class="modal" style="display: none">
       <div
@@ -635,20 +634,12 @@
           >
             Đóng
           </button>
-          <button
-            class="btn btn-primary"
-            id="btnPrintReceiptDetail"
-            onclick="window.print()"
-            style="padding: 10px 24px; font-size: 14px"
-          >
-            <i class="fas fa-print"></i> In phiếu
-          </button>
         </div>
       </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - LỚN HƠN, DỄ ĐÓNG             -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - ĐÃ XÓA NÚT IN                -->
     <!-- ============================================================ -->
     <div id="exportDetailModal" class="modal" style="display: none">
       <div
@@ -684,14 +675,6 @@
             style="padding: 10px 24px; font-size: 14px"
           >
             Đóng
-          </button>
-          <button
-            class="btn btn-primary"
-            id="btnPrintExportDetail"
-            onclick="window.print()"
-            style="padding: 10px 24px; font-size: 14px"
-          >
-            <i class="fas fa-print"></i> In phiếu
           </button>
         </div>
       </div>
