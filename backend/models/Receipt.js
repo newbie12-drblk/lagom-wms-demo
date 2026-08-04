@@ -25,15 +25,15 @@ const Receipt = {
 
     const receipt = receipts[0];
 
-    // CHỈ LẤY CÁC CỘT CÓ TRONG receipt_items
+    // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
     const [items] = await db.execute(
       `SELECT 
         id, receiptId, 
         tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
         giaNhap, soLuongNhap, thanhTien,
         soLot, ngayHetHan,
-        soHopDongNhap, soHoaDonNhap, ngayNhapHD,
-        ghiChu
+        soHopDongNhap, soHoaDonNhap,
+        ngayNhapHD, ghiChu
        FROM receipt_items WHERE receiptId = ?`,
       [id],
     );
@@ -53,15 +53,15 @@ const Receipt = {
 
     const result = [];
     for (const row of rows) {
-      // CHỈ LẤY CÁC CỘT CÓ TRONG receipt_items
+      // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
       const [items] = await db.execute(
         `SELECT 
           id, receiptId, 
           tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
           giaNhap, soLuongNhap, thanhTien,
           soLot, ngayHetHan,
-          soHopDongNhap, soHoaDonNhap, ngayNhapHD,
-          ghiChu
+          soHopDongNhap, soHoaDonNhap,
+          ngayNhapHD, ghiChu
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
@@ -114,6 +114,7 @@ const Receipt = {
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         console.log(`  - ${item.maHang}: ${item.tenThuongMai}`);
+        // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
         await db.execute(
           `INSERT INTO receipt_items 
             (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 

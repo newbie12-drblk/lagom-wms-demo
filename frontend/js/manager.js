@@ -356,6 +356,7 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">THÀNH TIỀN</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ XUẤT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
               </tr>
             </thead>
@@ -380,6 +381,7 @@
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongXuat || "—")}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
                 </tr>
               `;
@@ -390,7 +392,7 @@
               <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
                 <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
                 <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="3" style="padding: 8px 12px;"></td>
+                <td colspan="4" style="padding: 8px 12px;"></td>
               </tr>
             </tfoot>
           </table>
@@ -510,61 +512,26 @@
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">STT</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">MÃ HÀNG</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">QUY CÁCH</th>
+                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">ĐVT</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG/NƯỚC SX</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">ĐVT</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI MÁY</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">GIÁ NHẬP</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">SL NHẬP</th>
                       <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐƠN NHẬP</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY NHẬP HĐ</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">SL XUẤT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">GIÁ XUẤT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ XUẤT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐƠN XUẤT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY XUẤT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">TỒN CUỐI</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">CÔNG NỢ</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${products
                       .map(function (item, idx) {
-                        var expiryColor =
-                          item.ngayHetHan &&
-                          new Date(item.ngayHetHan) < new Date()
-                            ? "#f87171"
-                            : "#e2eaf5";
-                        var stockColor =
-                          (item.tonKho || 0) === 0 ? "#f87171" : "#4ade80";
                         return `
                       <tr style="border-bottom: 1px solid #1e2d45;">
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
                         <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #e2eaf5;">${item.soLuongXuat || 0}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaXuat || 0)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongXuat || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonXuat || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayXuatHD)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: ${stockColor}; font-weight: 700;">${item.tonKho || 0}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.congNo || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
                       </tr>
                     `;
                       })
@@ -625,7 +592,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT APPROVAL - FIXED
+  // APPROVE / REJECT APPROVAL
   // ============================================================
   window.approveApproval = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu thêm sản phẩm này?")) return;
@@ -647,17 +614,11 @@
 
       if (result.success) {
         Utils.showToast("✅ Đã duyệt yêu cầu! Sản phẩm đã được thêm vào kho.");
-
-        // ✅ Load lại dữ liệu
         await loadPendingApprovals();
         await loadDashboardStats();
-
-        // ✅ Refresh inventory nếu đang mở
         if (typeof window.refreshInventoryData === "function") {
           await window.refreshInventoryData();
         }
-
-        // ✅ Refresh home nếu đang ở trang chủ
         if (typeof window.initHome === "function") {
           await window.initHome();
         }
@@ -777,7 +738,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT RECEIPT - FIXED
+  // APPROVE / REJECT RECEIPT
   // ============================================================
   window.approveReceipt = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
@@ -799,8 +760,6 @@
         Utils.showToast("✅ Đã duyệt phiếu nhập!");
         await loadPendingReceipts();
         await loadDashboardStats();
-
-        // Refresh inventory
         if (typeof window.refreshInventoryData === "function") {
           await window.refreshInventoryData();
         }
@@ -920,7 +879,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT EXPORT - FIXED
+  // APPROVE / REJECT EXPORT
   // ============================================================
   window.approveExport = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu xuất này?")) return;
@@ -942,8 +901,6 @@
         Utils.showToast("✅ Đã duyệt phiếu xuất!");
         await loadPendingExports();
         await loadDashboardStats();
-
-        // Refresh inventory
         if (typeof window.refreshInventoryData === "function") {
           await window.refreshInventoryData();
         }
@@ -992,7 +949,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS
+  // LOAD PENDING EDITS - SỬA GIAO DIỆN (BỎ CÁC TRƯỜNG DƯ)
   // ============================================================
   async function loadPendingEdits() {
     var container = document.getElementById("pendingEditsList");
@@ -1026,55 +983,61 @@
             var oldData = r.oldData || {};
             var newData = r.newData || {};
 
+            // ==========================================================
+            // CHỈ HIỂN THỊ 7 TRƯỜNG CƠ BẢN CHO CHỈNH SỬA
+            // ==========================================================
             var fieldLabels = {
               tenThuongMai: "Tên thương mại",
               maHang: "Mã hàng",
-              quyCach: "Quy cách",
-              hangSX: "Hãng SX",
               dvt: "ĐVT",
+              hangSX: "Hãng/Nước SX",
               phanLoai: "Phân loại máy",
               giaNhap: "Giá nhập",
-              giaXuat: "Giá xuất",
-              soLuongNhap: "SL nhập",
-              soLuongXuat: "SL xuất",
-              tonKho: "Tồn cuối",
-              soLot: "Số lot",
-              ngayHetHan: "Ngày hết hạn",
               soHopDongNhap: "Số HĐ",
-              soHoaDonNhap: "Số HĐơn nhập",
-              soHopDongXuat: "Số HĐ xuất",
-              soHoaDonXuat: "Số HĐơn xuất",
-              ngayNhapHD: "Ngày nhập HĐ",
-              ngayXuatHD: "Ngày xuất",
-              ghiChu: "Ghi chú",
-              congNo: "Công nợ",
             };
 
-            var allFields = Object.keys(oldData).concat(Object.keys(newData));
-            var changedFields = allFields.filter(function (key) {
-              return oldData[key] != newData[key];
+            // CHỈ LẤY 7 TRƯỜNG CƠ BẢN
+            var allowedFields = Object.keys(fieldLabels);
+            var changedFields = allowedFields.filter(function (key) {
+              return (oldData[key] || "") != (newData[key] || "");
             });
+
+            // NẾU KHÔNG CÓ THAY ĐỔI NÀO, HIỂN THỊ TẤT CẢ 7 TRƯỜNG
+            if (changedFields.length === 0) {
+              changedFields = allowedFields;
+            }
 
             var changesHtml = "";
             if (changedFields.length > 0) {
               changesHtml = `
               <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-                <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
+                <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
                   <thead>
                     <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                      <th style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TRƯỜNG</th>
-                      <th style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: left; color: #f87171; font-weight: 600;">GIÁ TRỊ CŨ</th>
-                      <th style="padding: 8px 12px; border: 1px solid #1e2d45; text-align: left; color: #4ade80; font-weight: 600;">GIÁ TRỊ MỚI</th>
+                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TRƯỜNG</th>
+                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #f87171; font-weight: 600; min-width: 150px;">GIÁ TRỊ CŨ</th>
+                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #4ade80; font-weight: 600; min-width: 150px;">GIÁ TRỊ MỚI</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${changedFields
                       .map(function (key) {
+                        var oldVal = oldData[key] || "—";
+                        var newVal = newData[key] || "—";
+                        // Format số nếu là giá nhập
+                        if (key === "giaNhap") {
+                          oldVal = Utils.formatCurrency(
+                            parseFloat(oldVal) || 0,
+                          );
+                          newVal = Utils.formatCurrency(
+                            parseFloat(newVal) || 0,
+                          );
+                        }
                         return `
                       <tr style="border-bottom: 1px solid #1e2d45;">
-                        <td style="padding: 6px 12px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
-                        <td style="padding: 6px 12px; border: 1px solid #1e2d45; color: #f87171;">${Utils.escapeHtml(String(oldData[key] || "—"))}</td>
-                        <td style="padding: 6px 12px; border: 1px solid #1e2d45; color: #4ade80; font-weight: 600;">${Utils.escapeHtml(String(newData[key] || "—"))}</td>
+                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
+                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #f87171;">${Utils.escapeHtml(String(oldVal))}</td>
+                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #4ade80; font-weight: 600;">${Utils.escapeHtml(String(newVal))}</td>
                       </tr>
                     `;
                       })
@@ -1085,13 +1048,13 @@
             `;
             } else {
               changesHtml =
-                '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có thay đổi nào</div>';
+                '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có thay đổi nào trong 7 trường cơ bản</div>';
             }
 
             return `
             <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
-                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">✏️ Yêu cầu chỉnh sửa</div>
+                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">✏️ Yêu cầu chỉnh sửa #${r.id}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
@@ -1137,7 +1100,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT EDIT - FIXED
+  // APPROVE / REJECT EDIT - FIX DUYỆT
   // ============================================================
   window.approveEditRequest = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
@@ -1154,8 +1117,6 @@
         Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa!");
         await loadPendingEdits();
         await loadDashboardStats();
-
-        // Refresh inventory
         if (typeof window.refreshInventoryData === "function") {
           await window.refreshInventoryData();
         }
@@ -1239,7 +1200,7 @@
             return `
             <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #ef4444;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
-                <div style="font-size: 18px; font-weight: 700; color: #f87171;">🗑️ Yêu cầu xóa sản phẩm</div>
+                <div style="font-size: 18px; font-weight: 700; color: #f87171;">🗑️ Yêu cầu xóa sản phẩm #${r.id}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
@@ -1289,7 +1250,7 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT DELETION - FIXED
+  // APPROVE / REJECT DELETION
   // ============================================================
   window.approveDeletionRequest = async function (id) {
     if (
@@ -1314,8 +1275,6 @@
         Utils.showToast("✅ Đã duyệt xóa sản phẩm!");
         await loadPendingDeletions();
         await loadDashboardStats();
-
-        // Refresh inventory
         if (typeof window.refreshInventoryData === "function") {
           await window.refreshInventoryData();
         }
@@ -1442,7 +1401,6 @@
           quan_ly: "Quản lý",
         };
 
-        // Danh sách quyền
         var perms = [];
         if (user.canAddProduct) perms.push("➕Thêm");
         if (user.canEditProduct) perms.push("✏️Sửa");

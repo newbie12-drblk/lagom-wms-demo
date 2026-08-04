@@ -60,7 +60,6 @@ const createExport = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu vừa tạo" });
     }
 
-    // Luôn để awaiting_confirmation
     await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
     await Notification.createForManagers(
@@ -88,6 +87,9 @@ const createExport = async (req, res) => {
   }
 };
 
+// ============================================================
+// CẬP NHẬT TRẠNG THÁI PHIẾU XUẤT - FIX SL XUẤT VÀ SỐ HĐ XUẤT
+// ============================================================
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -101,12 +103,44 @@ const updateExportStatus = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiếu" });
     }
 
-    // Nếu duyệt -> trừ tồn kho
+    // Nếu duyệt -> trừ tồn kho và cập nhật số lượng xuất, số HĐ xuất
     if (status === "approved") {
       const items = exportItem.items || [];
+
       for (const item of items) {
+        // ✅ TRỪ TỒN KHO
         await Inventory.updateStock(item.maHang, item.soLuong, "export");
+
+        // ✅ CẬP NHẬT SỐ LƯỢNG XUẤT VÀ SỐ HĐ XUẤT TRONG INVENTORY
+        const product = await Inventory.findByMaHang(item.maHang);
+        if (product) {
+          const currentSoLuongXuat = product.soLuongXuat || 0;
+          const newSoLuongXuat = currentSoLuongXuat + (item.soLuong || 0);
+
+          await db.execute(
+            `UPDATE inventory SET 
+              soLuongXuat = ?,
+              giaXuat = ?,
+              soHopDongXuat = ?,
+              soHoaDonXuat = ?,
+              ngayXuatHD = ?,
+              updatedAt = NOW()
+            WHERE maHang = ?`,
+            [
+              newSoLuongXuat,
+              item.donGia || product.giaXuat || 0,
+              item.soHopDongXuat || product.soHopDongXuat || "",
+              item.soHoaDonXuat || product.soHoaDonXuat || "",
+              item.ngayXuatHD || exportItem.exportDate || null,
+              item.maHang,
+            ],
+          );
+          console.log(
+            `✅ Cập nhật SL xuất cho ${item.maHang}: ${newSoLuongXuat}`,
+          );
+        }
       }
+
       await Notification.create(
         exportItem.createdBy,
         `✅ Phiếu xuất ${exportItem.exportNo} đã được duyệt`,
@@ -121,15 +155,15 @@ const updateExportStatus = async (req, res) => {
     const statusText =
       status === "approved" ? "đã được duyệt" : "đã bị từ chối";
 
-    await Notification.create(
-      exportItem.createdBy,
-      `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
-      status === "rejected"
-        ? `Lý do: ${rejectedReason}`
-        : `Phiếu xuất của bạn đã được Quản lý duyệt`,
-      status === "approved" ? "success" : "warning",
-      id,
-    );
+    if (status === "rejected") {
+      await Notification.create(
+        exportItem.createdBy,
+        `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
+        `Lý do: ${rejectedReason}`,
+        "warning",
+        id,
+      );
+    }
 
     res.json({
       success: true,

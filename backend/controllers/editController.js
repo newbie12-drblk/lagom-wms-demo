@@ -86,11 +86,15 @@ const getMyEditRequests = async (req, res) => {
   }
 };
 
-// Duyệt yêu cầu chỉnh sửa (Quản lý)
+// ============================================================
+// DUYỆT YÊU CẦU CHỈNH SỬA - FIX
+// ============================================================
 const approveEditRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
+
+    console.log(`✅ Duyệt yêu cầu chỉnh sửa ID: ${id}`);
 
     const request = await EditRequest.findById(id);
     if (!request) {
@@ -100,24 +104,63 @@ const approveEditRequest = async (req, res) => {
       });
     }
 
-    // Cập nhật sản phẩm trong inventory
-    await Inventory.update(request.productId, request.newData);
+    if (request.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Yêu cầu này đã được xử lý",
+      });
+    }
 
-    // Cập nhật trạng thái yêu cầu
+    // ✅ LẤY DỮ LIỆU CŨ TRƯỚC KHI CẬP NHẬT
+    const oldProduct = await Inventory.findById(request.productId);
+    if (!oldProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm trong kho",
+      });
+    }
+
+    // ✅ CHỈ CẬP NHẬT 7 TRƯỜNG CƠ BẢN
+    const newData = request.newData || {};
+    const updateFields = {};
+
+    // Chỉ cập nhật các trường được phép (7 trường)
+    const allowedFields = [
+      "tenThuongMai",
+      "maHang",
+      "dvt",
+      "hangSX",
+      "phanLoai",
+      "giaNhap",
+      "soHopDongNhap",
+    ];
+
+    for (const field of allowedFields) {
+      if (newData[field] !== undefined) {
+        updateFields[field] = newData[field];
+      }
+    }
+
+    console.log("📦 Cập nhật các trường:", updateFields);
+
+    // ✅ CẬP NHẬT SẢN PHẨM TRONG INVENTORY
+    await Inventory.update(request.productId, updateFields);
+
+    // ✅ CẬP NHẬT TRẠNG THÁI YÊU CẦU
     await EditRequest.approve(id, approvedBy);
 
-    // Ghi lịch sử
+    // ✅ GHI LỊCH SỬ
     await EditHistory.log(
       approvedBy,
       "inventory",
       request.productId,
       "EDIT_BY_APPROVAL",
       null,
-      JSON.stringify(request.oldData),
-      JSON.stringify(request.newData),
+      JSON.stringify(oldProduct),
+      JSON.stringify({ ...oldProduct, ...updateFields }),
     );
 
-    // Gửi thông báo cho Admin
+    // ✅ GỬI THÔNG BÁO CHO ADMIN
     await Notification.create(
       request.requesterId,
       "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
@@ -133,7 +176,9 @@ const approveEditRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve edit request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 

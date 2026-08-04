@@ -77,6 +77,9 @@ const createReceipt = async (req, res) => {
   }
 };
 
+// ============================================================
+// CẬP NHẬT TRẠNG THÁI PHIẾU NHẬP - FIX
+// ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -267,8 +270,8 @@ const getPendingReceipts = async (req, res) => {
           tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
           giaNhap, soLuongNhap, thanhTien,
           soLot, ngayHetHan,
-          soHopDongNhap, soHoaDonNhap, ngayNhapHD,
-          ghiChu
+          soHopDongNhap, soHoaDonNhap,
+          ngayNhapHD, ghiChu
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
