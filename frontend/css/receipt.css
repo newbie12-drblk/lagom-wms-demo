@@ -2,8 +2,7 @@
    FILE: receipt.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu nhập hàng (receipt.html)
-   BAO GỒM: Form phiếu nhập, bảng sản phẩm, signature, buttons
-   NGÀY: 2026
+   NGÀY: 2026 - FIXED TABLE
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -134,7 +133,7 @@ body {
   border-bottom-color: #1e3a5f;
 }
 
-/* ==================== 5. BẢNG SẢN PHẨM ==================== */
+/* ==================== 5. BẢNG SẢN PHẨM - THU GỌN ==================== */
 .items-table-wrapper {
   overflow-x: auto;
   margin: 20px 0;
@@ -144,34 +143,34 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
-  min-width: 1400px;
+  min-width: 0;
 }
 
 .items-table th {
   background: #1e3a5f;
   color: white;
-  padding: 10px 6px;
+  padding: 8px 4px;
   text-align: center;
   font-weight: 600;
   border: 1px solid #2d4a6e;
+  font-size: 9px;
   white-space: nowrap;
-  font-size: 10px;
 }
 
 .items-table td {
   border: 1px solid #cbd5e0;
-  padding: 4px 4px;
+  padding: 3px 2px;
   vertical-align: middle;
 }
 
 .items-table input {
   width: 100%;
   border: 1px solid #e2e8f0;
-  padding: 5px 3px;
+  padding: 4px 2px;
   font-size: 10px;
   font-family: inherit;
-  border-radius: 4px;
-  min-width: 40px;
+  border-radius: 3px;
+  min-width: 30px;
 }
 
 .items-table input:focus {
@@ -192,7 +191,7 @@ body {
 
 .total-row td {
   font-weight: 700;
-  padding: 10px 6px;
+  padding: 8px 4px;
 }
 
 .text-right {
@@ -300,8 +299,8 @@ body {
   background: #dc2626;
   color: white;
   border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 10px;
   transition: all 0.2s;
@@ -352,7 +351,7 @@ body {
     border: none !important;
     background: transparent !important;
     color: #000 !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
     padding: 0 !important;
     margin: 0 !important;
     width: auto !important;
@@ -377,7 +376,7 @@ body {
     border: none !important;
     background: transparent !important;
     color: #000 !important;
-    font-size: 8px !important;
+    font-size: 7px !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -395,27 +394,13 @@ body {
     background: transparent !important;
     color: #000 !important;
     font-weight: 600 !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
     padding: 0 !important;
     margin: 0 !important;
     width: auto !important;
     display: inline !important;
   }
 
-  .info-line select {
-    border: none !important;
-    background: transparent !important;
-    color: #000 !important;
-    font-weight: 600 !important;
-    font-size: 9px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    display: inline !important;
-  }
-
-  /* === ẨN CỘT XÓA KHI IN === */
   .col-delete {
     display: none !important;
   }
@@ -423,14 +408,14 @@ body {
   .items-table-wrapper {
     overflow-x: visible !important;
     overflow: visible !important;
-    margin: 4px 0 !important;
+    margin: 2px 0 !important;
   }
 
   .items-table {
     width: 100% !important;
     min-width: 0 !important;
     table-layout: auto !important;
-    font-size: 8px !important;
+    font-size: 7px !important;
     border-collapse: collapse !important;
   }
 
@@ -442,9 +427,9 @@ body {
   }
 
   .items-table th {
-    font-size: 7px !important;
+    font-size: 6px !important;
     white-space: normal !important;
-    padding: 3px 2px !important;
+    padding: 2px 2px !important;
     background: #f0f0f0 !important;
     color: #000 !important;
     font-weight: 700 !important;
@@ -452,7 +437,7 @@ body {
   }
 
   .items-table td {
-    font-size: 8px !important;
+    font-size: 7px !important;
     color: #000 !important;
     text-align: left !important;
     vertical-align: middle !important;
@@ -466,12 +451,6 @@ body {
     text-align: center !important;
   }
 
-  .items-table th,
-  .items-table td {
-    white-space: normal !important;
-    word-wrap: break-word !important;
-  }
-
   .stt-cell {
     text-align: center !important;
     background: #f8fafc !important;
@@ -479,92 +458,92 @@ body {
   }
 
   .company-header {
-    margin-bottom: 4px !important;
-    padding-bottom: 3px !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 2px !important;
     border-bottom: 2px solid #1e3a5f !important;
   }
 
   .company-name {
-    font-size: 13px !important;
+    font-size: 12px !important;
     color: #1e3a5f !important;
   }
 
   .company-address,
   .company-tax {
-    font-size: 8px !important;
+    font-size: 7px !important;
     color: #333 !important;
   }
 
   .receipt-title h2 {
-    font-size: 13px !important;
-    margin: 4px 0 !important;
+    font-size: 12px !important;
+    margin: 2px 0 !important;
     color: #1e3a5f !important;
   }
 
   .date-row {
-    font-size: 9px !important;
-    margin-bottom: 4px !important;
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
     color: #333 !important;
   }
 
   .info-grid {
-    gap: 4px !important;
-    margin-bottom: 6px !important;
+    gap: 2px !important;
+    margin-bottom: 4px !important;
   }
 
   .info-box {
-    padding: 3px 6px !important;
+    padding: 2px 4px !important;
     border-radius: 2px !important;
     border: 1px solid #ccc !important;
     background: #fafafa !important;
   }
 
   .info-box strong {
-    font-size: 9px !important;
-    margin-bottom: 2px !important;
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
     color: #1e3a5f !important;
   }
 
   .info-line {
-    font-size: 8px !important;
+    font-size: 7px !important;
     margin: 1px 0 !important;
     color: #000 !important;
   }
 
   .info-line label {
-    width: 60px !important;
-    font-size: 8px !important;
+    width: 50px !important;
+    font-size: 7px !important;
     color: #555 !important;
     font-weight: 600 !important;
   }
 
   .signature {
-    margin-top: 15px !important;
-    padding-top: 6px !important;
+    margin-top: 10px !important;
+    padding-top: 4px !important;
   }
 
   .sign-line {
-    margin-top: 15px !important;
-    font-size: 8px !important;
-    padding-top: 4px !important;
+    margin-top: 10px !important;
+    font-size: 7px !important;
+    padding-top: 3px !important;
     border-top: 1px solid #000 !important;
     color: #333 !important;
   }
 
   .sign-item {
-    width: 140px !important;
+    width: 120px !important;
   }
 
   .total-row td {
-    padding: 3px 3px !important;
-    font-size: 9px !important;
+    padding: 2px 3px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
     color: #000 !important;
     background: #f5f5f5 !important;
   }
 
   #totalAmount {
-    font-size: 10px !important;
+    font-size: 9px !important;
     color: #000 !important;
     font-weight: 700 !important;
   }

@@ -171,7 +171,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - CHỈ 8 TRƯỜNG ==========
+  // ========== Tạo dòng sản phẩm - 7 TRƯỜNG + SL NHẬP ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
