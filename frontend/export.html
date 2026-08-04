@@ -13,7 +13,7 @@
   <body>
     <div class="export-container">
       <div class="export-paper" id="exportPaper">
-        <!-- Header -->
+        <!-- Header công ty -->
         <div class="company-header">
           <div class="company-name">
             CÔNG TY TNHH DƯỢC - TRANG THIẾT BỊ LAGOM
@@ -39,70 +39,71 @@
           <span id="year">...</span>
         </div>
 
-        <!-- Thông tin khách hàng -->
-        <div class="info-box">
-          <strong>📋 Thông tin khách hàng</strong>
-          <div class="info-line">
-            <label>Đơn vị:</label>
-            <input
-              type="text"
-              id="customerName"
-              placeholder="Tên khách hàng"
-              value="Trung Tâm y tế Tân Cảng"
-            />
+        <!-- Thông tin - 2 cột ngang hàng -->
+        <div class="info-grid">
+          <div class="info-box">
+            <strong>📋 Thông tin khách hàng</strong>
+            <div class="info-line">
+              <label>Đơn vị:</label>
+              <input
+                type="text"
+                id="customerName"
+                placeholder="Tên khách hàng"
+                value="Trung Tâm y tế Tân Cảng"
+              />
+            </div>
+            <div class="info-line">
+              <label>Địa chỉ:</label>
+              <input
+                type="text"
+                id="customerAddress"
+                placeholder="Địa chỉ"
+                value="1259B Nguyễn Thị Định, phường Cát Lái, TP. Hồ Chí Minh"
+              />
+            </div>
+            <div class="info-line">
+              <label>MST:</label>
+              <input type="text" id="customerTax" placeholder="Mã số thuế" />
+            </div>
+            <div class="info-line">
+              <label>Số HĐ:</label>
+              <input
+                type="text"
+                id="customerContract"
+                placeholder="Số hợp đồng"
+                value="Tạm ứng hàng hóa"
+              />
+            </div>
           </div>
-          <div class="info-line">
-            <label>Địa chỉ:</label>
-            <input
-              type="text"
-              id="customerAddress"
-              placeholder="Địa chỉ"
-              value="1259B Nguyễn Thị Định, phường Cát Lái, TP. Hồ Chí Minh"
-            />
-          </div>
-          <div class="info-line">
-            <label>MST:</label>
-            <input type="text" id="customerTax" placeholder="Mã số thuế" />
-          </div>
-          <div class="info-line">
-            <label>Số HĐ:</label>
-            <input
-              type="text"
-              id="customerContract"
-              placeholder="Số hợp đồng"
-              value="Tạm ứng hàng hóa"
-            />
-          </div>
-        </div>
 
-        <!-- Thông tin đơn hàng -->
-        <div class="info-box">
-          <strong>🚚 Thông tin xuất kho</strong>
-          <div class="info-line">
-            <label>Số phiếu xuất:</label>
-            <input
-              type="text"
-              id="exportNo"
-              placeholder="PX-2026-001"
-              value="PX-2026-001"
-            />
-          </div>
-          <div class="info-line">
-            <label>Người nhận:</label>
-            <input
-              type="text"
-              id="receiverName"
-              placeholder="Họ tên người nhận"
-            />
-          </div>
-          <div class="info-line">
-            <label>Lý do xuất:</label>
-            <select id="exportReason">
-              <option value="Sử dụng nội bộ">Sử dụng nội bộ</option>
-              <option value="Chuyển khoa/phòng">Chuyển khoa/phòng</option>
-              <option value="Trả hàng">Trả hàng</option>
-              <option value="Hủy">Hủy</option>
-            </select>
+          <div class="info-box">
+            <strong>🚚 Thông tin xuất kho</strong>
+            <div class="info-line">
+              <label>Số phiếu xuất:</label>
+              <input
+                type="text"
+                id="exportNo"
+                placeholder="PX-2026-001"
+                value="PX-2026-001"
+              />
+            </div>
+            <div class="info-line">
+              <label>Người nhận:</label>
+              <input
+                type="text"
+                id="receiverName"
+                placeholder="Họ tên người nhận"
+              />
+            </div>
+            <div class="info-line">
+              <label>Lý do xuất:</label>
+              <select id="exportReason">
+                <option value="Sử dụng nội bộ">Sử dụng nội bộ</option>
+                <option value="Chuyển khoa/phòng">Chuyển khoa/phòng</option>
+                <option value="Trả hàng">Trả hàng</option>
+                <option value="Hủy">Hủy</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -112,32 +113,31 @@
             <thead>
               <tr>
                 <th style="width: 30px">STT</th>
-                <th style="width: 100px">
+                <th style="width: 90px">
                   MÃ HÀNG <span style="color: red">*</span>
                 </th>
-                <th style="width: 150px">TÊN THƯƠNG MẠI</th>
-                <th style="width: 60px">ĐVT</th>
-                <th style="width: 120px">HÃNG/NƯỚC SX</th>
-                <th style="width: 120px">PHÂN LOẠI MÁY</th>
-                <th style="width: 100px">GIÁ NHẬP</th>
-                <th style="width: 100px">SỐ HĐ NHẬP</th>
-                <th style="width: 100px">
+                <th style="width: 140px">TÊN THƯƠNG MẠI</th>
+                <th style="width: 55px">ĐVT</th>
+                <th style="width: 110px">HÃNG/NƯỚC SX</th>
+                <th style="width: 110px">PHÂN LOẠI MÁY</th>
+                <th style="width: 90px">GIÁ NHẬP</th>
+                <th style="width: 90px">SỐ HĐ NHẬP</th>
+                <th style="width: 90px">
                   ĐƠN GIÁ XUẤT <span style="color: red">*</span>
                 </th>
-                <th style="width: 70px">
+                <th style="width: 65px">
                   SỐ LƯỢNG <span style="color: red">*</span>
                 </th>
-                <th style="width: 100px">
+                <th style="width: 90px">
                   SỐ LOT <span style="color: red">*</span>
                 </th>
-                <th style="width: 100px">
+                <th style="width: 90px">
                   HSD <span style="color: red">*</span>
                 </th>
-                <th style="width: 100px">
+                <th style="width: 90px">
                   SỐ HĐ XUẤT <span style="color: red">*</span>
                 </th>
-                <th style="width: 130px">THÀNH TIỀN</th>
-                <!-- ❌ KHÔNG CÓ CỘT XÓA -->
+                <th style="width: 120px">THÀNH TIỀN</th>
               </tr>
             </thead>
             <tbody id="itemsBody"></tbody>
