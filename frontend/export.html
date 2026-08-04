@@ -106,35 +106,46 @@
           </div>
         </div>
 
-        <!-- Bảng sản phẩm -->
+        <!-- Bảng sản phẩm - 7 TRƯỜNG TỰ ĐỘNG + 5 TRƯỜNG NHẬP TAY -->
         <div class="items-table-wrapper">
           <table class="items-table" id="itemsTable">
             <thead>
               <tr>
-                <th style="width: 40px">TT</th>
-                <th style="width: 180px">Tên thương mại</th>
-                <th style="width: 100px">Mã hàng</th>
-                <th style="width: 120px">Quy cách</th>
-                <th style="width: 160px">Hãng SX</th>
+                <th style="width: 30px">STT</th>
+                <th style="width: 100px">
+                  MÃ HÀNG <span style="color: red">*</span>
+                </th>
+                <th style="width: 150px">TÊN THƯƠNG MẠI</th>
                 <th style="width: 60px">ĐVT</th>
-                <th style="width: 180px">Phân loại</th>
-                <th style="width: 100px">Đơn giá</th>
-                <th style="width: 70px">Số lượng</th>
-                <th style="width: 120px">Thành tiền</th>
-                <th style="width: 100px">Số lot</th>
-                <th style="width: 100px">HSD</th>
-                <th style="width: 80px">Ghi chú</th>
+                <th style="width: 120px">HÃNG/NƯỚC SX</th>
+                <th style="width: 120px">PHÂN LOẠI MÁY</th>
+                <th style="width: 100px">
+                  ĐƠN GIÁ XUẤT <span style="color: red">*</span>
+                </th>
+                <th style="width: 70px">
+                  SỐ LƯỢNG <span style="color: red">*</span>
+                </th>
+                <th style="width: 100px">
+                  SỐ LOT <span style="color: red">*</span>
+                </th>
+                <th style="width: 100px">
+                  HSD <span style="color: red">*</span>
+                </th>
+                <th style="width: 100px">
+                  SỐ HĐ XUẤT <span style="color: red">*</span>
+                </th>
+                <th style="width: 120px">THÀNH TIỀN</th>
                 <th style="width: 35px" class="col-delete">XÓA</th>
               </tr>
             </thead>
             <tbody id="itemsBody"></tbody>
             <tfoot>
               <tr class="total-row">
-                <td colspan="8" class="text-right">
+                <td colspan="11" class="text-right">
                   <strong>TỔNG CỘNG:</strong>
                 </td>
                 <td class="text-right"><strong id="totalAmount">0</strong></td>
-                <td colspan="4"></td>
+                <td></td>
               </tr>
             </tfoot>
           </table>

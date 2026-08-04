@@ -1,7 +1,7 @@
 /**
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
- * CHỈ MỞ 7 TRƯỜNG CHO ADMIN TẠO YÊU CẦU
+ * CHỈ 3 TAB: Thêm, Sửa, Xóa
  */
 
 (function () {
@@ -11,7 +11,7 @@
   const rowsPerPage = 20;
   let filteredInventoryData = [];
   let inventoryData = [];
-  let requestType = "add"; // 'add', 'receipt', 'export', 'edit', 'delete'
+  let requestType = "add"; // 'add', 'edit', 'delete'
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -327,7 +327,7 @@
     Utils.showToast("Đã xuất file CSV thành công");
   }
 
-  // ==================== TẠO MODAL YÊU CẦU ====================
+  // ==================== TẠO MODAL YÊU CẦU - CHỈ 3 TAB ====================
   function showRequestModal() {
     const overlay = document.createElement("div");
     overlay.className = "request-modal-overlay";
@@ -342,12 +342,6 @@
         <div class="request-options">
           <button class="btn btn-primary active" data-type="add" onclick="window.setRequestType('add')">
             <i class="fas fa-plus"></i> Thêm sản phẩm
-          </button>
-          <button class="btn btn-outline" data-type="receipt" onclick="window.setRequestType('receipt')">
-            <i class="fas fa-arrow-down"></i> Đề nghị nhập
-          </button>
-          <button class="btn btn-outline" data-type="export" onclick="window.setRequestType('export')">
-            <i class="fas fa-arrow-up"></i> Đề nghị xuất
           </button>
           <button class="btn btn-outline" data-type="edit" onclick="window.setRequestType('edit')">
             <i class="fas fa-edit"></i> Sửa sản phẩm
@@ -395,8 +389,6 @@
 
     const titles = {
       add: "📝 Thêm sản phẩm mới",
-      receipt: "📥 Đề nghị nhập hàng",
-      export: "📤 Đề nghị xuất kho",
       edit: "✏️ Sửa sản phẩm",
       delete: "🗑️ Xóa sản phẩm",
     };
@@ -406,7 +398,7 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG THEO LOẠI ====================
+  // ==================== RENDER NỘI DUNG ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
@@ -457,140 +449,6 @@
           </p>
         </div>
       `;
-    } else if (type === "receipt") {
-      // ========== ĐỀ NGHỊ NHẬP HÀNG ==========
-      container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">
-          <i class="fas fa-info-circle"></i> 
-          <strong>Đề nghị nhập hàng:</strong> Nhập mã hàng để tự động lấy thông tin sản phẩm, sau đó nhập số lượng.
-        </p>
-        <div class="request-table-wrap">
-          <table class="request-table">
-            <thead>
-              <tr>
-                <th style="width:30px;">STT</th>
-                <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
-                <th>TÊN THƯƠNG MẠI</th>
-                <th>ĐVT</th>
-                <th>HÃNG/NƯỚC SX</th>
-                <th>PHÂN LOẠI MÁY</th>
-                <th>GIÁ NHẬP</th>
-                <th>SỐ HĐ</th>
-                <th>SỐ LƯỢNG NHẬP <span style="color:#ef4444;">*</span></th>
-                <th style="width:35px;">XÓA</th>
-              </tr>
-            </thead>
-            <tbody id="receiptRequestBody">
-              <tr>
-                <td>1</td>
-                <td><input type="text" class="receipt-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="receipt-tenThuongMai" placeholder="Tên thương mại" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-dvt" placeholder="ĐVT" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-hangSX" placeholder="Hãng/Nước SX" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-phanLoai" placeholder="Phân loại máy" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-giaNhap" placeholder="Giá nhập" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-soHopDongNhap" placeholder="Số HĐ" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="receipt-soLuongNhap" placeholder="Số lượng nhập *" style="border-color: #3b82f6;"></td>
-                <td><button class="btn-remove" onclick="window.removeReceiptRequestRow(this)"><i class="fas fa-trash"></i></button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button class="btn-add-sm" style="margin-top:10px;" onclick="window.addReceiptRequestRow()">
-          <i class="fas fa-plus"></i> Thêm dòng
-        </button>
-        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
-          <p style="font-size: 12px; color: #6b82a0;">
-            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Nhập mã hàng, hệ thống sẽ tự động điền thông tin sản phẩm từ kho. Sau khi Quản lý duyệt, số lượng tồn kho sẽ được cập nhật.
-          </p>
-        </div>
-      `;
-
-      // Bind sự kiện auto-fill cho mã hàng
-      document.querySelectorAll(".receipt-maHang").forEach((input) => {
-        input.addEventListener("blur", function () {
-          autoFillReceiptProduct(this);
-        });
-        input.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            autoFillReceiptProduct(this);
-          }
-        });
-      });
-    } else if (type === "export") {
-      // ========== ĐỀ NGHỊ XUẤT KHO ==========
-      container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">
-          <i class="fas fa-info-circle"></i> 
-          <strong>Đề nghị xuất kho:</strong> Nhập mã hàng để tự động lấy thông tin sản phẩm và tồn kho, sau đó nhập thêm 5 trường.
-        </p>
-        <div class="request-table-wrap">
-          <table class="request-table">
-            <thead>
-              <tr>
-                <th style="width:30px;">STT</th>
-                <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
-                <th>TÊN THƯƠNG MẠI</th>
-                <th>ĐVT</th>
-                <th>HÃNG/NƯỚC SX</th>
-                <th>PHÂN LOẠI MÁY</th>
-                <th>GIÁ NHẬP</th>
-                <th>SỐ HĐ</th>
-                <th>TỒN KHO</th>
-                <th>ĐƠN GIÁ XUẤT <span style="color:#ef4444;">*</span></th>
-                <th>SỐ LƯỢNG <span style="color:#ef4444;">*</span></th>
-                <th>SỐ LOT <span style="color:#ef4444;">*</span></th>
-                <th>HSD <span style="color:#ef4444;">*</span></th>
-                <th>SỐ HĐ XUẤT <span style="color:#ef4444;">*</span></th>
-                <th style="width:35px;">XÓA</th>
-              </tr>
-            </thead>
-            <tbody id="exportRequestBody">
-              <tr>
-                <td>1</td>
-                <td><input type="text" class="export-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="export-tenThuongMai" placeholder="Tên thương mại" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-dvt" placeholder="ĐVT" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-hangSX" placeholder="Hãng/Nước SX" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-phanLoai" placeholder="Phân loại máy" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-giaNhap" placeholder="Giá nhập" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-soHopDongNhap" placeholder="Số HĐ" readonly style="background:#1a2235;color:#6b82a0;"></td>
-                <td><input type="text" class="export-tonKho" placeholder="Tồn kho" readonly style="background:#1a2235;color:#86efac;font-weight:600;"></td>
-                <td><input type="text" class="export-donGiaXuat" placeholder="Đơn giá xuất *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="export-soLuong" placeholder="Số lượng *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="export-soLot" placeholder="Số lot *" style="border-color: #3b82f6;"></td>
-                <td><input type="date" class="export-ngayHetHan" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="export-soHopDongXuat" placeholder="Số HĐ xuất *" style="border-color: #3b82f6;"></td>
-                <td><button class="btn-remove" onclick="window.removeExportRequestRow(this)"><i class="fas fa-trash"></i></button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button class="btn-add-sm" style="margin-top:10px;" onclick="window.addExportRequestRow()">
-          <i class="fas fa-plus"></i> Thêm dòng
-        </button>
-        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
-          <p style="font-size: 12px; color: #6b82a0;">
-            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Nhập mã hàng, hệ thống sẽ tự động điền thông tin sản phẩm và tồn kho hiện tại. Sau khi Quản lý duyệt, số lượng tồn kho sẽ được trừ đi.
-          </p>
-        </div>
-      `;
-
-      // Bind sự kiện auto-fill cho mã hàng
-      document.querySelectorAll(".export-maHang").forEach((input) => {
-        input.addEventListener("blur", function () {
-          autoFillExportProduct(this);
-        });
-        input.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            autoFillExportProduct(this);
-          }
-        });
-      });
     } else if (type === "edit") {
       // ========== SỬA SẢN PHẨM - 7 TRƯỜNG ==========
       const data =
@@ -738,82 +596,23 @@
     }
   }
 
-  // ==================== AUTO-FILL CHO ĐỀ NGHỊ NHẬP ====================
-  async function autoFillReceiptProduct(input) {
-    const row = input.closest("tr");
-    const maHang = input.value.trim();
-    if (!maHang) return;
+  // ==================== HÀM HỖ TRỢ ====================
+  window.toggleAllDelete = function (checkbox) {
+    document.querySelectorAll(".delete-checkbox").forEach((cb) => {
+      cb.checked = checkbox.checked;
+    });
+  };
 
-    try {
-      const product = await window.API.inventory.getByMaHang(maHang);
-      if (product) {
-        row.querySelector(".receipt-tenThuongMai").value =
-          product.tenThuongMai || "";
-        row.querySelector(".receipt-dvt").value = product.dvt || "";
-        row.querySelector(".receipt-hangSX").value = product.hangSX || "";
-        row.querySelector(".receipt-phanLoai").value = product.phanLoai || "";
-        row.querySelector(".receipt-giaNhap").value = formatCurrency(
-          product.giaNhap || 0,
-        );
-        row.querySelector(".receipt-soHopDongNhap").value =
-          product.soHopDongNhap || "";
-        input.style.borderColor = "#4ade80";
-        Utils.showToast("✅ Đã tìm thấy sản phẩm!");
-      } else {
-        input.style.borderColor = "#ef4444";
-        Utils.showToast(
-          "❌ Không tìm thấy sản phẩm với mã: " + maHang,
-          "error",
-        );
-      }
-    } catch (error) {
-      input.style.borderColor = "#ef4444";
+  window.onEditSelect = function (checkbox) {
+    const container = document.getElementById("editFormContainer");
+    if (container) {
+      container.style.display = checkbox.checked ? "block" : "none";
     }
-    setTimeout(() => {
-      input.style.borderColor = "";
-    }, 3000);
-  }
+    document.querySelectorAll(".edit-checkbox").forEach((cb) => {
+      if (cb !== checkbox) cb.checked = false;
+    });
+  };
 
-  // ==================== AUTO-FILL CHO ĐỀ NGHỊ XUẤT ====================
-  async function autoFillExportProduct(input) {
-    const row = input.closest("tr");
-    const maHang = input.value.trim();
-    if (!maHang) return;
-
-    try {
-      const product = await window.API.inventory.getByMaHang(maHang);
-      if (product) {
-        row.querySelector(".export-tenThuongMai").value =
-          product.tenThuongMai || "";
-        row.querySelector(".export-dvt").value = product.dvt || "";
-        row.querySelector(".export-hangSX").value = product.hangSX || "";
-        row.querySelector(".export-phanLoai").value = product.phanLoai || "";
-        row.querySelector(".export-giaNhap").value = formatCurrency(
-          product.giaNhap || 0,
-        );
-        row.querySelector(".export-soHopDongNhap").value =
-          product.soHopDongNhap || "";
-        row.querySelector(".export-tonKho").value = product.tonKho || 0;
-        input.style.borderColor = "#4ade80";
-        Utils.showToast(
-          "✅ Đã tìm thấy sản phẩm! Tồn kho: " + (product.tonKho || 0),
-        );
-      } else {
-        input.style.borderColor = "#ef4444";
-        Utils.showToast(
-          "❌ Không tìm thấy sản phẩm với mã: " + maHang,
-          "error",
-        );
-      }
-    } catch (error) {
-      input.style.borderColor = "#ef4444";
-    }
-    setTimeout(() => {
-      input.style.borderColor = "";
-    }, 3000);
-  }
-
-  // ==================== HÀM THÊM/XÓA DÒNG ====================
   window.removeAddRow = function (btn) {
     const row = btn.closest("tr");
     if (document.querySelectorAll("#addProductBody tr").length <= 1) {
@@ -821,7 +620,7 @@
       return;
     }
     row.remove();
-    renumberRows("#addProductBody");
+    renumberAddRows();
   };
 
   window.addNewAddRow = function () {
@@ -843,97 +642,8 @@
     tbody.appendChild(tr);
   };
 
-  window.removeReceiptRequestRow = function (btn) {
-    const row = btn.closest("tr");
-    if (document.querySelectorAll("#receiptRequestBody tr").length <= 1) {
-      alert("⚠️ Phải có ít nhất một dòng!");
-      return;
-    }
-    row.remove();
-    renumberRows("#receiptRequestBody");
-  };
-
-  window.addReceiptRequestRow = function () {
-    const tbody = document.getElementById("receiptRequestBody");
-    if (!tbody) return;
-    const rowCount = tbody.querySelectorAll("tr").length + 1;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${rowCount}</td>
-      <td><input type="text" class="receipt-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="receipt-tenThuongMai" placeholder="Tên thương mại" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-dvt" placeholder="ĐVT" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-hangSX" placeholder="Hãng/Nước SX" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-phanLoai" placeholder="Phân loại máy" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-giaNhap" placeholder="Giá nhập" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-soHopDongNhap" placeholder="Số HĐ" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="receipt-soLuongNhap" placeholder="Số lượng nhập *" style="border-color: #3b82f6;"></td>
-      <td><button class="btn-remove" onclick="window.removeReceiptRequestRow(this)"><i class="fas fa-trash"></i></button></td>
-    `;
-    tbody.appendChild(tr);
-
-    // Bind auto-fill cho dòng mới
-    const maHangInput = tr.querySelector(".receipt-maHang");
-    maHangInput.addEventListener("blur", function () {
-      autoFillReceiptProduct(this);
-    });
-    maHangInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        autoFillReceiptProduct(this);
-      }
-    });
-  };
-
-  window.removeExportRequestRow = function (btn) {
-    const row = btn.closest("tr");
-    if (document.querySelectorAll("#exportRequestBody tr").length <= 1) {
-      alert("⚠️ Phải có ít nhất một dòng!");
-      return;
-    }
-    row.remove();
-    renumberRows("#exportRequestBody");
-  };
-
-  window.addExportRequestRow = function () {
-    const tbody = document.getElementById("exportRequestBody");
-    if (!tbody) return;
-    const rowCount = tbody.querySelectorAll("tr").length + 1;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${rowCount}</td>
-      <td><input type="text" class="export-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="export-tenThuongMai" placeholder="Tên thương mại" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-dvt" placeholder="ĐVT" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-hangSX" placeholder="Hãng/Nước SX" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-phanLoai" placeholder="Phân loại máy" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-giaNhap" placeholder="Giá nhập" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-soHopDongNhap" placeholder="Số HĐ" readonly style="background:#1a2235;color:#6b82a0;"></td>
-      <td><input type="text" class="export-tonKho" placeholder="Tồn kho" readonly style="background:#1a2235;color:#86efac;font-weight:600;"></td>
-      <td><input type="text" class="export-donGiaXuat" placeholder="Đơn giá xuất *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="export-soLuong" placeholder="Số lượng *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="export-soLot" placeholder="Số lot *" style="border-color: #3b82f6;"></td>
-      <td><input type="date" class="export-ngayHetHan" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="export-soHopDongXuat" placeholder="Số HĐ xuất *" style="border-color: #3b82f6;"></td>
-      <td><button class="btn-remove" onclick="window.removeExportRequestRow(this)"><i class="fas fa-trash"></i></button></td>
-    `;
-    tbody.appendChild(tr);
-
-    // Bind auto-fill cho dòng mới
-    const maHangInput = tr.querySelector(".export-maHang");
-    maHangInput.addEventListener("blur", function () {
-      autoFillExportProduct(this);
-    });
-    maHangInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        autoFillExportProduct(this);
-      }
-    });
-  };
-
-  function renumberRows(tbodyId) {
-    const rows = document.querySelectorAll(`${tbodyId} tr`);
+  function renumberAddRows() {
+    const rows = document.querySelectorAll("#addProductBody tr");
     rows.forEach((row, idx) => {
       const firstTd = row.querySelector("td:first-child");
       if (firstTd) firstTd.textContent = idx + 1;
@@ -971,140 +681,28 @@
     return { products, hasError };
   }
 
-  // ==================== LẤY DỮ LIỆU ĐỀ NGHỊ NHẬP ====================
-  function getReceiptRequestData() {
-    const rows = document.querySelectorAll("#receiptRequestBody tr");
-    const items = [];
-    let hasError = false;
-
-    for (const row of rows) {
-      const maHang = row.querySelector(".receipt-maHang")?.value.trim();
-      const soLuongNhap = parseInt(
-        row.querySelector(".receipt-soLuongNhap")?.value || "0",
-      );
-
-      if (!maHang) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập mã hàng!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (soLuongNhap <= 0) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập số lượng nhập hợp lệ!", "warning");
-        return { items: [], hasError: true };
-      }
-
-      items.push({
-        maHang: maHang,
-        tenThuongMai: row.querySelector(".receipt-tenThuongMai")?.value || "",
-        dvt: row.querySelector(".receipt-dvt")?.value || "",
-        hangSX: row.querySelector(".receipt-hangSX")?.value || "",
-        phanLoai: row.querySelector(".receipt-phanLoai")?.value || "",
-        giaNhap: parseFloat(
-          row
-            .querySelector(".receipt-giaNhap")
-            ?.value?.replace(/[^0-9]/g, "") || 0,
-        ),
-        soHopDongNhap: row.querySelector(".receipt-soHopDongNhap")?.value || "",
-        soLuongNhap: soLuongNhap,
-      });
-    }
-
-    return { items, hasError };
-  }
-
-  // ==================== LẤY DỮ LIỆU ĐỀ NGHỊ XUẤT ====================
-  function getExportRequestData() {
-    const rows = document.querySelectorAll("#exportRequestBody tr");
-    const items = [];
-    let hasError = false;
-
-    for (const row of rows) {
-      const maHang = row.querySelector(".export-maHang")?.value.trim();
-      const donGiaXuat = parseFloat(
-        row
-          .querySelector(".export-donGiaXuat")
-          ?.value?.replace(/[^0-9]/g, "") || 0,
-      );
-      const soLuong = parseInt(
-        row.querySelector(".export-soLuong")?.value || "0",
-      );
-      const soLot = row.querySelector(".export-soLot")?.value.trim();
-      const ngayHetHan = row.querySelector(".export-ngayHetHan")?.value;
-      const soHopDongXuat = row
-        .querySelector(".export-soHopDongXuat")
-        ?.value.trim();
-
-      if (!maHang) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập mã hàng!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (!donGiaXuat || donGiaXuat <= 0) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập đơn giá xuất hợp lệ!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (!soLuong || soLuong <= 0) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập số lượng hợp lệ!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (!soLot) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập số lot!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (!ngayHetHan) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng chọn HSD!", "warning");
-        return { items: [], hasError: true };
-      }
-      if (!soHopDongXuat) {
-        hasError = true;
-        Utils.showToast("⚠️ Vui lòng nhập số hợp đồng xuất!", "warning");
-        return { items: [], hasError: true };
-      }
-
-      items.push({
-        maHang: maHang,
-        tenThuongMai: row.querySelector(".export-tenThuongMai")?.value || "",
-        dvt: row.querySelector(".export-dvt")?.value || "",
-        hangSX: row.querySelector(".export-hangSX")?.value || "",
-        phanLoai: row.querySelector(".export-phanLoai")?.value || "",
-        giaNhap: parseFloat(
-          row.querySelector(".export-giaNhap")?.value?.replace(/[^0-9]/g, "") ||
-            0,
-        ),
-        soHopDongNhap: row.querySelector(".export-soHopDongNhap")?.value || "",
-        donGiaXuat: donGiaXuat,
-        soLuong: soLuong,
-        soLot: soLot,
-        ngayHetHan: ngayHetHan,
-        soHopDongXuat: soHopDongXuat,
-      });
-    }
-
-    return { items, hasError };
-  }
-
   // ==================== GỬI YÊU CẦU ====================
   window.submitRequest = async function () {
-    if (requestType === "add") {
-      // ========== THÊM SẢN PHẨM ==========
-      const { products, hasError } = getAddProductsData();
+    Utils.showLoading(true, "Đang gửi yêu cầu...");
 
-      if (hasError || products.length === 0) {
-        Utils.showToast(
-          "⚠️ Vui lòng điền đầy đủ Tên thương mại và Mã hàng!",
-          "warning",
-        );
-        return;
-      }
+    try {
+      const token = API.getToken();
 
-      Utils.showLoading(true, "Đang gửi yêu cầu thêm sản phẩm...");
-      try {
-        const token = API.getToken();
+      if (requestType === "add") {
+        // ========== THÊM SẢN PHẨM ==========
+        const { products, hasError } = getAddProductsData();
+
+        if (hasError || products.length === 0) {
+          Utils.showToast(
+            "⚠️ Vui lòng điền đầy đủ Tên thương mại và Mã hàng!",
+            "warning",
+          );
+          Utils.showLoading(false);
+          return;
+        }
+
+        console.log("📦 Gửi yêu cầu thêm sản phẩm (7 trường):", products);
+
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
           headers: {
@@ -1121,112 +719,48 @@
         } else {
           Utils.showToast("❌ " + result.message, "error");
         }
-      } catch (error) {
-        Utils.showToast("❌ " + error.message, "error");
-      } finally {
-        Utils.showLoading(false);
-      }
-    } else if (requestType === "receipt") {
-      // ========== ĐỀ NGHỊ NHẬP HÀNG ==========
-      const { items, hasError } = getReceiptRequestData();
-      if (hasError || items.length === 0) return;
-
-      Utils.showLoading(true, "Đang gửi đề nghị nhập hàng...");
-      try {
-        const token = API.getToken();
-        const response = await fetch(`${API_BASE_URL}/receipt-requests`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(items.length === 1 ? items[0] : items),
-        });
-        const result = await response.json();
-
-        if (result.success) {
-          Utils.showToast("✅ " + result.message);
-          closeRequestModal();
-        } else {
-          Utils.showToast("❌ " + result.message, "error");
+      } else if (requestType === "edit") {
+        // ========== SỬA SẢN PHẨM ==========
+        const checked = document.querySelectorAll(".edit-checkbox:checked");
+        if (checked.length === 0) {
+          Utils.showToast("⚠️ Vui lòng chọn một sản phẩm để sửa!", "warning");
+          Utils.showLoading(false);
+          return;
         }
-      } catch (error) {
-        Utils.showToast("❌ " + error.message, "error");
-      } finally {
-        Utils.showLoading(false);
-      }
-    } else if (requestType === "export") {
-      // ========== ĐỀ NGHỊ XUẤT KHO ==========
-      const { items, hasError } = getExportRequestData();
-      if (hasError || items.length === 0) return;
 
-      Utils.showLoading(true, "Đang gửi đề nghị xuất kho...");
-      try {
-        const token = API.getToken();
-        const response = await fetch(`${API_BASE_URL}/export-requests`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(items.length === 1 ? items[0] : items),
-        });
-        const result = await response.json();
+        const id = parseInt(checked[0].dataset.id);
+        const oldProduct =
+          filteredInventoryData.find((p) => p.id === id) ||
+          inventoryData.find((p) => p.id === id);
 
-        if (result.success) {
-          Utils.showToast("✅ " + result.message);
-          closeRequestModal();
-        } else {
-          Utils.showToast("❌ " + result.message, "error");
+        if (!oldProduct) {
+          Utils.showToast("❌ Không tìm thấy sản phẩm!", "error");
+          Utils.showLoading(false);
+          return;
         }
-      } catch (error) {
-        Utils.showToast("❌ " + error.message, "error");
-      } finally {
-        Utils.showLoading(false);
-      }
-    } else if (requestType === "edit") {
-      // ========== SỬA SẢN PHẨM ==========
-      const checked = document.querySelectorAll(".edit-checkbox:checked");
-      if (checked.length === 0) {
-        Utils.showToast("⚠️ Vui lòng chọn một sản phẩm để sửa!", "warning");
-        return;
-      }
 
-      const id = parseInt(checked[0].dataset.id);
-      const oldProduct =
-        filteredInventoryData.find((p) => p.id === id) ||
-        inventoryData.find((p) => p.id === id);
+        const newData = {
+          tenThuongMai:
+            document.getElementById("edit-tenThuongMai")?.value ||
+            oldProduct.tenThuongMai,
+          maHang:
+            document.getElementById("edit-maHang")?.value || oldProduct.maHang,
+          dvt: document.getElementById("edit-dvt")?.value || oldProduct.dvt,
+          hangSX:
+            document.getElementById("edit-hangSX")?.value || oldProduct.hangSX,
+          phanLoai:
+            document.getElementById("edit-phanLoai")?.value ||
+            oldProduct.phanLoai,
+          giaNhap: parseFloat(
+            document
+              .getElementById("edit-giaNhap")
+              ?.value?.replace(/[^0-9]/g, "") || oldProduct.giaNhap,
+          ),
+          soHopDongNhap:
+            document.getElementById("edit-soHopDongNhap")?.value ||
+            oldProduct.soHopDongNhap,
+        };
 
-      if (!oldProduct) {
-        Utils.showToast("❌ Không tìm thấy sản phẩm!", "error");
-        return;
-      }
-
-      const newData = {
-        tenThuongMai:
-          document.getElementById("edit-tenThuongMai")?.value ||
-          oldProduct.tenThuongMai,
-        maHang:
-          document.getElementById("edit-maHang")?.value || oldProduct.maHang,
-        dvt: document.getElementById("edit-dvt")?.value || oldProduct.dvt,
-        hangSX:
-          document.getElementById("edit-hangSX")?.value || oldProduct.hangSX,
-        phanLoai:
-          document.getElementById("edit-phanLoai")?.value ||
-          oldProduct.phanLoai,
-        giaNhap: parseFloat(
-          document
-            .getElementById("edit-giaNhap")
-            ?.value?.replace(/[^0-9]/g, "") || oldProduct.giaNhap,
-        ),
-        soHopDongNhap:
-          document.getElementById("edit-soHopDongNhap")?.value ||
-          oldProduct.soHopDongNhap,
-      };
-
-      Utils.showLoading(true, "Đang gửi yêu cầu chỉnh sửa...");
-      try {
-        const token = API.getToken();
         const response = await fetch(`${API_BASE_URL}/edits`, {
           method: "POST",
           headers: {
@@ -1243,37 +777,33 @@
         } else {
           Utils.showToast("❌ " + result.message, "error");
         }
-      } catch (error) {
-        Utils.showToast("❌ " + error.message, "error");
-      } finally {
-        Utils.showLoading(false);
-      }
-    } else if (requestType === "delete") {
-      // ========== XÓA SẢN PHẨM ==========
-      const checked = document.querySelectorAll(".delete-checkbox:checked");
+      } else if (requestType === "delete") {
+        // ========== XÓA SẢN PHẨM ==========
+        const checked = document.querySelectorAll(".delete-checkbox:checked");
 
-      if (checked.length === 0) {
-        Utils.showToast(
-          "⚠️ Vui lòng chọn ít nhất một sản phẩm để xóa!",
-          "warning",
-        );
-        return;
-      }
+        if (checked.length === 0) {
+          Utils.showToast(
+            "⚠️ Vui lòng chọn ít nhất một sản phẩm để xóa!",
+            "warning",
+          );
+          Utils.showLoading(false);
+          return;
+        }
 
-      const productIds = [];
-      checked.forEach((cb) => {
-        const id = parseInt(cb.dataset.id);
-        if (!isNaN(id) && id > 0) productIds.push(id);
-      });
+        const productIds = [];
+        checked.forEach((cb) => {
+          const id = parseInt(cb.dataset.id);
+          if (!isNaN(id) && id > 0) productIds.push(id);
+        });
 
-      if (productIds.length === 0) {
-        Utils.showToast("❌ Không tìm thấy ID sản phẩm hợp lệ!", "error");
-        return;
-      }
+        if (productIds.length === 0) {
+          Utils.showToast("❌ Không tìm thấy ID sản phẩm hợp lệ!", "error");
+          Utils.showLoading(false);
+          return;
+        }
 
-      Utils.showLoading(true, "Đang gửi yêu cầu xóa...");
-      try {
-        const token = API.getToken();
+        console.log("📦 Gửi yêu cầu xóa sản phẩm (IDs):", productIds);
+
         const response = await fetch(`${API_BASE_URL}/deletions`, {
           method: "POST",
           headers: {
@@ -1293,29 +823,13 @@
         } else {
           Utils.showToast("❌ " + result.message, "error");
         }
-      } catch (error) {
-        Utils.showToast("❌ " + error.message, "error");
-      } finally {
-        Utils.showLoading(false);
       }
+    } catch (error) {
+      console.error("❌ Submit request error:", error);
+      Utils.showToast("❌ " + (error.message || "Có lỗi xảy ra"), "error");
+    } finally {
+      Utils.showLoading(false);
     }
-  };
-
-  // ==================== HÀM HỖ TRỢ KHÁC ====================
-  window.toggleAllDelete = function (checkbox) {
-    document.querySelectorAll(".delete-checkbox").forEach((cb) => {
-      cb.checked = checkbox.checked;
-    });
-  };
-
-  window.onEditSelect = function (checkbox) {
-    const container = document.getElementById("editFormContainer");
-    if (container) {
-      container.style.display = checkbox.checked ? "block" : "none";
-    }
-    document.querySelectorAll(".edit-checkbox").forEach((cb) => {
-      if (cb !== checkbox) cb.checked = false;
-    });
   };
 
   // ==================== INIT ====================
@@ -1398,10 +912,6 @@
   window.onEditSelect = onEditSelect;
   window.removeAddRow = removeAddRow;
   window.addNewAddRow = addNewAddRow;
-  window.removeReceiptRequestRow = removeReceiptRequestRow;
-  window.addReceiptRequestRow = addReceiptRequestRow;
-  window.removeExportRequestRow = removeExportRequestRow;
-  window.addExportRequestRow = addExportRequestRow;
   window.inventoryData = inventoryData;
   window.isAdmin = isAdmin;
   window.isQuanLy = isQuanLy;

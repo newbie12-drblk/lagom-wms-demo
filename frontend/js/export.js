@@ -1,7 +1,6 @@
 /**
  * ==================== EXPORT MODULE ====================
- * Quản lý phiếu xuất kho - TỰ ĐỘNG DUYỆT
- * TỰ ĐỘNG ĐIỀN THÔNG TIN KHI NHẬP MÃ HÀNG HOẶC TÊN SẢN PHẨM
+ * Quản lý phiếu xuất kho - 7 TRƯỜNG TỰ ĐỘNG + 5 TRƯỜNG NHẬP TAY
  */
 
 (function () {
@@ -100,141 +99,48 @@
     );
   }
 
-  // ========== TỰ ĐỘNG ĐIỀN THEO MÃ HÀNG HOẶC TÊN ==========
-  async function autoFillProduct(row, inputField) {
-    if (!row || !inputField) return;
-    const searchValue = inputField.value.trim();
-    if (!searchValue) return;
+  // ========== TỰ ĐỘNG ĐIỀN THEO MÃ HÀNG ==========
+  async function autoFillByMaHang(row, maHangInput) {
+    if (!row || !maHangInput) return;
+    const maHang = maHangInput.value.trim();
+    if (!maHang) return;
 
-    // Xác định loại tìm kiếm (mã hàng hoặc tên)
-    const isCode = inputField.classList.contains("product-code");
-    const isName = inputField.classList.contains("product-name");
-
-    inputField.style.borderColor = "#fbbf24";
+    maHangInput.style.borderColor = "#fbbf24";
 
     try {
-      let product = null;
-
-      // Nếu là mã hàng, tìm theo mã
-      if (isCode) {
-        product = await window.API.inventory.getByMaHang(searchValue);
-        if (!product) {
-          // Nếu không tìm thấy theo mã, thử tìm theo tên
-          const allProducts = await window.API.inventory.getAll();
-          const matched = allProducts.filter(
-            (p) =>
-              p.maHang &&
-              p.maHang.toLowerCase().includes(searchValue.toLowerCase()),
-          );
-          if (matched.length === 1) {
-            product = matched[0];
-          } else if (matched.length > 1) {
-            const names = matched
-              .map((p, i) => `${i + 1}. ${p.maHang} - ${p.tenThuongMai}`)
-              .join("\n");
-            const choice = prompt(
-              `Tìm thấy ${matched.length} sản phẩm. Vui lòng chọn số:\n${names}`,
-            );
-            if (choice) {
-              const idx = parseInt(choice) - 1;
-              if (idx >= 0 && idx < matched.length) {
-                product = matched[idx];
-              }
-            }
-          }
-        }
-      }
-      // Nếu là tên, tìm tất cả sản phẩm và lọc theo tên
-      else if (isName) {
-        const allProducts = await window.API.inventory.getAll();
-        const matched = allProducts.filter(
-          (p) =>
-            p.tenThuongMai &&
-            p.tenThuongMai.toLowerCase().includes(searchValue.toLowerCase()),
-        );
-        if (matched.length === 1) {
-          product = matched[0];
-        } else if (matched.length > 1) {
-          const names = matched
-            .map((p, i) => `${i + 1}. ${p.maHang} - ${p.tenThuongMai}`)
-            .join("\n");
-          const choice = prompt(
-            `Tìm thấy ${matched.length} sản phẩm. Vui lòng chọn số:\n${names}`,
-          );
-          if (choice) {
-            const idx = parseInt(choice) - 1;
-            if (idx >= 0 && idx < matched.length) {
-              product = matched[idx];
-            }
-          }
-        } else {
-          // Thử tìm theo mã hàng chứa từ khóa
-          const matchedByCode = allProducts.filter(
-            (p) =>
-              p.maHang &&
-              p.maHang.toLowerCase().includes(searchValue.toLowerCase()),
-          );
-          if (matchedByCode.length === 1) {
-            product = matchedByCode[0];
-          }
-        }
-      }
-
+      const product = await window.API.inventory.getByMaHang(maHang);
       if (product) {
-        // Điền thông tin vào các trường
         const nameInput = row.querySelector(".product-name");
-        const codeInput = row.querySelector(".product-code");
-        const packingInput = row.querySelector(".packing");
-        const manufacturerInput = row.querySelector(".manufacturer");
         const unitInput = row.querySelector(".unit");
+        const manufacturerInput = row.querySelector(".manufacturer");
         const categoryInput = row.querySelector(".category");
         const priceInput = row.querySelector(".price-input");
-        const lotInput = row.querySelector(".lot-input");
-        const expiryInput = row.querySelector(".expiry-input");
 
         if (nameInput) {
           nameInput.value = product.tenThuongMai || "";
           nameInput.style.borderColor = "#4ade80";
         }
-        if (codeInput) {
-          codeInput.value = product.maHang || "";
-          codeInput.style.borderColor = "#4ade80";
-        }
-        if (packingInput) {
-          packingInput.value = product.quyCach || "";
-          packingInput.style.borderColor = "#4ade80";
+        if (unitInput) {
+          unitInput.value = product.dvt || "";
+          unitInput.style.borderColor = "#4ade80";
         }
         if (manufacturerInput) {
           manufacturerInput.value = product.hangSX || "";
           manufacturerInput.style.borderColor = "#4ade80";
         }
-        if (unitInput) {
-          unitInput.value = product.dvt || "";
-          unitInput.style.borderColor = "#4ade80";
-        }
         if (categoryInput) {
           categoryInput.value = product.phanLoai || "";
           categoryInput.style.borderColor = "#4ade80";
         }
+
+        // Gợi ý giá nhập để tham khảo
         if (priceInput) {
-          priceInput.value = formatCurrency(
-            product.giaXuat || product.giaNhap || 0,
-          );
-          updateRowTotal(row);
+          priceInput.placeholder = `Gợi ý: ${formatCurrency(product.giaNhap || 0)}`;
           priceInput.style.borderColor = "#4ade80";
         }
-        if (lotInput && product.soLot) {
-          lotInput.value = product.soLot;
-          lotInput.style.borderColor = "#4ade80";
-        }
-        if (expiryInput && product.ngayHetHan) {
-          expiryInput.value = product.ngayHetHan;
-          expiryInput.style.borderColor = "#4ade80";
-        }
 
-        // Reset border color sau 3 giây
         setTimeout(() => {
-          inputField.style.borderColor = "";
+          maHangInput.style.borderColor = "";
           row.querySelectorAll("input").forEach((inp) => {
             inp.style.borderColor = "";
           });
@@ -242,22 +148,25 @@
 
         Utils.showToast("✅ Đã tìm thấy sản phẩm và tự động điền thông tin!");
       } else {
-        inputField.style.borderColor = "#ef4444";
-        Utils.showToast("❌ Không tìm thấy sản phẩm: " + searchValue, "error");
+        maHangInput.style.borderColor = "#ef4444";
+        Utils.showToast(
+          "❌ Không tìm thấy sản phẩm với mã: " + maHang,
+          "error",
+        );
         setTimeout(() => {
-          inputField.style.borderColor = "";
+          maHangInput.style.borderColor = "";
         }, 3000);
       }
     } catch (error) {
-      console.error("❌ Lỗi tìm sản phẩm:", error);
-      inputField.style.borderColor = "#ef4444";
+      console.log("Không tìm thấy sản phẩm với mã:", maHang);
+      maHangInput.style.borderColor = "#ef4444";
       setTimeout(() => {
-        inputField.style.borderColor = "";
+        maHangInput.style.borderColor = "";
       }, 3000);
     }
   }
 
-  // ========== Tạo dòng sản phẩm ==========
+  // ========== Tạo dòng sản phẩm - 7 TRƯỜNG TỰ ĐỘNG + 5 TRƯỜNG NHẬP TAY ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -267,52 +176,24 @@
 
     row.innerHTML = `
       <td class="stt-cell">${stt}</td>
-      <td><input type="text" class="product-name" value="${escapeHtml(data?.tenThuongMai || "")}" placeholder="Tên sản phẩm"></td>
-      <td><input type="text" class="product-code" value="${escapeHtml(data?.maHang || "")}" placeholder="Mã hàng"></td>
-      <td><input type="text" class="packing" value="${escapeHtml(data?.quyCach || "")}" placeholder="Quy cách"></td>
-      <td><input type="text" class="manufacturer" value="${escapeHtml(data?.hangSX || "")}" placeholder="Hãng SX"></td>
-      <td><input type="text" class="unit" value="${escapeHtml(data?.dvt || "")}" placeholder="ĐVT"></td>
-      <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại"></td>
-      <td><input type="text" class="price-input" value="${data?.donGia ? formatCurrency(data.donGia) : "0"}"></td>
-      <td><input type="text" class="qty-input" value="${data?.soLuong || "0"}"></td>
+      <td><input type="text" class="product-code" value="${escapeHtml(data?.maHang || "")}" placeholder="Mã hàng *"></td>
+      <td><input type="text" class="product-name" value="${escapeHtml(data?.tenThuongMai || "")}" placeholder="Tên thương mại" readonly style="background:#f0f0f0;color:#333;"></td>
+      <td><input type="text" class="unit" value="${escapeHtml(data?.dvt || "")}" placeholder="ĐVT" readonly style="background:#f0f0f0;color:#333;"></td>
+      <td><input type="text" class="manufacturer" value="${escapeHtml(data?.hangSX || "")}" placeholder="Hãng/Nước SX" readonly style="background:#f0f0f0;color:#333;"></td>
+      <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy" readonly style="background:#f0f0f0;color:#333;"></td>
+      <td><input type="text" class="price-input" placeholder="Đơn giá xuất *"></td>
+      <td><input type="text" class="qty-input" placeholder="Số lượng *"></td>
+      <td><input type="text" class="lot-input" placeholder="Số lot *"></td>
+      <td><input type="date" class="expiry-input"></td>
+      <td><input type="text" class="contract-input" placeholder="Số HĐ xuất *"></td>
       <td class="row-total" data-total="0">0</td>
-      <td><input type="text" class="lot-input" placeholder="Số lot" value="${escapeHtml(data?.soLot || "")}"></td>
-      <td><input type="date" class="expiry-input" value="${data?.ngayHetHan || ""}"></td>
-      <td><input type="text" class="note-input" placeholder="Ghi chú" value="${escapeHtml(data?.ghiChu || "")}"></td>
       <td class="text-center col-delete">${removeButton}</td>
     `;
 
     const priceInput = row.querySelector(".price-input");
     const qtyInput = row.querySelector(".qty-input");
     const maHangInput = row.querySelector(".product-code");
-    const tenInput = row.querySelector(".product-name");
     const removeBtn = row.querySelector(".btn-remove");
-
-    // ===== SỰ KIỆN CHO MÃ HÀNG =====
-    if (maHangInput) {
-      maHangInput.addEventListener("blur", function () {
-        autoFillProduct(row, this);
-      });
-      maHangInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          autoFillProduct(row, this);
-        }
-      });
-    }
-
-    // ===== SỰ KIỆN CHO TÊN SẢN PHẨM =====
-    if (tenInput) {
-      tenInput.addEventListener("blur", function () {
-        autoFillProduct(row, this);
-      });
-      tenInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          autoFillProduct(row, this);
-        }
-      });
-    }
 
     if (priceInput) {
       priceInput.addEventListener("input", function () {
@@ -325,6 +206,18 @@
       qtyInput.addEventListener("input", function () {
         formatNumberInput(this);
         updateRowTotal(row);
+      });
+    }
+
+    if (maHangInput) {
+      maHangInput.addEventListener("blur", function () {
+        autoFillByMaHang(row, this);
+      });
+      maHangInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          autoFillByMaHang(row, this);
+        }
       });
     }
 
@@ -368,32 +261,30 @@
     const rows = DOM.itemsBody.querySelectorAll("tr");
 
     rows.forEach((row) => {
-      const nameInput = row.querySelector(".product-name");
       const codeInput = row.querySelector(".product-code");
-      const packingInput = row.querySelector(".packing");
-      const manufacturerInput = row.querySelector(".manufacturer");
+      const nameInput = row.querySelector(".product-name");
       const unitInput = row.querySelector(".unit");
+      const manufacturerInput = row.querySelector(".manufacturer");
       const categoryInput = row.querySelector(".category");
       const priceInput = row.querySelector(".price-input");
       const qtyInput = row.querySelector(".qty-input");
-      const totalSpan = row.querySelector(".row-total");
       const lotInput = row.querySelector(".lot-input");
       const expiryInput = row.querySelector(".expiry-input");
-      const noteInput = row.querySelector(".note-input");
+      const contractInput = row.querySelector(".contract-input");
+      const totalSpan = row.querySelector(".row-total");
 
       items.push({
-        tenThuongMai: nameInput?.value || "",
         maHang: codeInput?.value || "",
-        quyCach: packingInput?.value || "",
-        hangSX: manufacturerInput?.value || "",
+        tenThuongMai: nameInput?.value || "",
         dvt: unitInput?.value || "",
+        hangSX: manufacturerInput?.value || "",
         phanLoai: categoryInput?.value || "",
         donGia: parseNumber(priceInput?.value),
         soLuong: parseNumber(qtyInput?.value),
-        thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
         soLot: lotInput?.value || "",
         ngayHetHan: expiryInput?.value || "",
-        ghiChu: noteInput?.value || "",
+        soHopDongXuat: contractInput?.value || "",
+        thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
       });
     });
 
