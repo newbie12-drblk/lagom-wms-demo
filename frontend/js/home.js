@@ -30,14 +30,6 @@ async function loadHomeData() {
       `✅ Loaded: ${homeInventoryData.length} products, ${homeReceiptsData.length} receipts, ${homeExportsData.length} exports`,
     );
 
-    // Log chi tiết phiếu nhập để debug công nợ
-    console.log("📋 Chi tiết phiếu nhập:");
-    homeReceiptsData.forEach((r) => {
-      console.log(
-        `  - ${r.receiptNo}: status=${r.status}, total=${r.total}, ngayNhapHD=${r.ngayNhapHD}, receiptDate=${r.receiptDate}`,
-      );
-    });
-
     return true;
   } catch (error) {
     console.error("❌ Load home data error:", error);
@@ -61,14 +53,12 @@ function getRemainingDaysForDebt(invoiceDate, type = "customer") {
   today.setHours(0, 0, 0, 0);
   dueDate.setHours(0, 0, 0, 0);
 
-  // Đối với nhà cung cấp: tính từ ngày nhập HĐ + 90 ngày
   if (type === "supplier") {
     const expiryDate = new Date(dueDate);
     expiryDate.setDate(expiryDate.getDate() + 90);
     return Math.ceil((expiryDate - today) / 86400000);
   }
 
-  // Đối với khách hàng: tính từ ngày xuất HĐ
   return Math.ceil((dueDate - today) / 86400000);
 }
 
@@ -88,16 +78,6 @@ function getRemainingDays(item) {
     }
   }
   return null;
-}
-
-function getSupplierDebtRemaining(receipt) {
-  const invoiceDate = receipt.ngayNhapHD || receipt.receiptDate;
-  return getRemainingDaysForDebt(invoiceDate, "supplier");
-}
-
-function getCustomerDebtRemaining(exportItem) {
-  const invoiceDate = exportItem.ngayXuatHD || exportItem.exportDate;
-  return getRemainingDaysForDebt(invoiceDate, "customer");
 }
 
 function getDebtStatus(remaining) {
@@ -136,13 +116,8 @@ function getDebtStatus(remaining) {
   return { status: "safe", label: `Còn ${remaining} ngày`, badgeClass: "safe" };
 }
 
-function getDebtBadge(remainingDays) {
-  const status = getDebtStatus(remainingDays);
-  return `<span class="debt-badge ${status.badgeClass}">${status.label}</span>`;
-}
-
 // ============================================================
-// LOAD HOME STATS
+// LOAD HOME STATS - TÍNH TOÁN CHÍNH XÁC
 // ============================================================
 function loadHomeStats() {
   if (!homeInventoryData || homeInventoryData.length === 0) {
@@ -153,22 +128,31 @@ function loadHomeStats() {
     return;
   }
 
+  // ✅ Tổng số mặt hàng (unique)
   const totalItems = homeInventoryData.length;
-  const totalImported = homeInventoryData.reduce(
-    (s, i) => s + (i.soLuongNhap || 0),
-    0,
-  );
-  let critical = 0,
-    expired = 0;
 
-  homeInventoryData.forEach((item) => {
+  // ✅ Tổng số lượng nhập
+  let totalImported = 0;
+  for (const item of homeInventoryData) {
+    totalImported += item.soLuongNhap || 0;
+  }
+
+  // ✅ Đếm khẩn cấp và quá hạn
+  let critical = 0;
+  let expired = 0;
+
+  for (const item of homeInventoryData) {
     const remaining = getRemainingDays(item);
     if (remaining !== null) {
-      if (remaining < 0) expired++;
-      else if (remaining <= 7) critical++;
+      if (remaining < 0) {
+        expired++;
+      } else if (remaining <= 7) {
+        critical++;
+      }
     }
-  });
+  }
 
+  // ✅ Cập nhật DOM
   document.getElementById("homeTotalItems").textContent = totalItems;
   document.getElementById("homeTotalStock").textContent = totalImported;
   document.getElementById("homeExpiringSoon").textContent = critical;
@@ -182,52 +166,38 @@ async function loadSupplierDebtAlerts() {
   const container = document.getElementById("supplierAlertList");
   if (!container) return;
 
-  // Luôn reload dữ liệu mới từ API
   await loadHomeData();
 
   if (!homeReceiptsData || homeReceiptsData.length === 0) {
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center; color: #6b82a0;">
-        <i class="fas fa-inbox" style="font-size: 28px; display: block; margin-bottom: 12px; opacity: 0.4;"></i>
+      <div style="padding: 30px; text-align: center; color: #6b82a0; font-size: 13px;">
+        <i class="fas fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
         Chưa có dữ liệu phiếu nhập
       </div>
     `;
-    document.getElementById("supplierAlertCount").textContent = "0 cảnh báo";
+    document.getElementById("supplierAlertCount").textContent = "0";
     return;
   }
 
   const alerts = [];
-
-  // CHỈ LẤY PHIẾU ĐÃ DUYỆT (approved)
   const approvedReceipts = homeReceiptsData.filter(
     (r) => r.status === "approved",
   );
 
-  console.log(
-    `📋 Đang xử lý ${approvedReceipts.length} phiếu nhập đã duyệt để tính công nợ`,
-  );
-
-  approvedReceipts.forEach((receipt) => {
-    // Lấy ngày nhập HĐ - ưu tiên ngayNhapHD, nếu không có thì dùng receiptDate
+  for (const receipt of approvedReceipts) {
     let invoiceDate =
       receipt.ngayNhapHD || receipt.receiptDate || receipt.createdAt;
-    if (!invoiceDate) return;
+    if (!invoiceDate) continue;
 
-    // Tính số ngày còn lại đến hạn (mặc định 90 ngày từ ngày nhập)
     const remaining = getRemainingDaysForDebt(invoiceDate, "supplier");
 
-    // Chỉ hiển thị cảnh báo nếu còn <= 30 ngày hoặc đã quá hạn
     if (remaining !== null && remaining <= 30) {
-      const supplierName = receipt.supplierName || "Nhà cung cấp";
-      const receiptNo = receipt.receiptNo || `PN-${receipt.id}`;
       const total = receipt.total || 0;
-
-      // BỎ QUA PHIẾU CÓ TỔNG TIỀN = 0
-      if (total === 0) return;
+      if (total === 0) continue;
 
       alerts.push({
-        name: supplierName,
-        receiptNo: receiptNo,
+        name: receipt.supplierName || "Nhà cung cấp",
+        receiptNo: receipt.receiptNo || `PN-${receipt.id}`,
         remaining: remaining,
         invoiceDate: invoiceDate,
         label:
@@ -240,52 +210,47 @@ async function loadSupplierDebtAlerts() {
         status: remaining < 0 ? "expired" : "warning",
       });
     }
-  });
+  }
 
-  // Sắp xếp: quá hạn lên đầu, sau đó đến sắp đến hạn
   alerts.sort((a, b) => a.remaining - b.remaining);
 
-  // Cập nhật số lượng cảnh báo
-  const alertCount = alerts.length;
-  document.getElementById("supplierAlertCount").textContent =
-    `${alertCount} cảnh báo`;
+  document.getElementById("supplierAlertCount").textContent = alerts.length;
 
-  if (alertCount === 0) {
+  if (alerts.length === 0) {
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center; color: #4ade80;">
-        <i class="fas fa-check-circle" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
-        Không có công nợ nào với nhà cung cấp sắp đến hạn
+      <div style="padding: 30px; text-align: center; color: #4ade80; font-size: 13px;">
+        <i class="fas fa-check-circle" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+        Không có công nợ nào sắp đến hạn
       </div>
     `;
     return;
   }
 
-  // Hiển thị tối đa 10 cảnh báo
   const displayAlerts = alerts.slice(0, 10);
 
   container.innerHTML = displayAlerts
     .map((a) => {
       const isExpired = a.remaining < 0;
       return `
-      <div class="alert-row" style="padding: 12px 16px; border-bottom: 1px solid #1e2d45; display: flex; gap: 12px; align-items: flex-start; transition: background 0.15s; cursor: default;">
+      <div class="alert-row" style="padding: 8px 12px; border-bottom: 1px solid #1e2d45; display: flex; gap: 10px; align-items: flex-start;">
         <div class="alert-indicator ${isExpired ? "ind-red" : "ind-yellow"}" 
-             style="width: 3px; min-height: 40px; border-radius: 2px; flex-shrink: 0; background: ${isExpired ? "#ef4444" : "#f59e0b"};"></div>
+             style="width: 3px; min-height: 32px; border-radius: 2px; flex-shrink: 0; background: ${isExpired ? "#ef4444" : "#f59e0b"};"></div>
         <div class="alert-body" style="flex: 1;">
-          <div class="alert-name" style="font-size: 13px; font-weight: 600; color: #e2eaf5;">
+          <div class="alert-name" style="font-size: 12px; font-weight: 600; color: #e2eaf5;">
             <strong>${escapeHtml(a.name)}</strong> 
             <span style="color: #60a5fa; font-weight: 400;">- ${escapeHtml(a.receiptNo)}</span>
           </div>
-          <div class="alert-meta" style="font-size: 11px; color: #6b82a0; margin-top: 4px;">
+          <div class="alert-meta" style="font-size: 10px; color: #6b82a0; margin-top: 2px;">
             <span>Ngày nhập HĐ: ${formatDate(a.invoiceDate)}</span>
-            <span style="margin: 0 8px;">|</span>
+            <span style="margin: 0 6px;">|</span>
             <strong style="color: ${isExpired ? "#f87171" : "#fbbf24"};">${a.label}</strong>
           </div>
-          <div class="alert-meta" style="font-size: 12px; color: #fbbf24; font-weight: 600; margin-top: 4px;">
+          <div class="alert-meta" style="font-size: 11px; color: #fbbf24; font-weight: 600; margin-top: 2px;">
             Giá trị: ${formatCurrency(a.total)}
           </div>
         </div>
         <div class="alert-tag ${isExpired ? "tag-red" : "tag-yellow"}" 
-             style="font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 4px; align-self: center; flex-shrink: 0; 
+             style="font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 4px; align-self: center; flex-shrink: 0; 
                     background: ${isExpired ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}; 
                     color: ${isExpired ? "#f87171" : "#fbbf24"}; 
                     border: 1px solid ${isExpired ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)"};">
@@ -296,10 +261,9 @@ async function loadSupplierDebtAlerts() {
     })
     .join("");
 
-  // Nếu có nhiều hơn 10, thêm thông báo xem thêm
   if (alerts.length > 10) {
     container.innerHTML += `
-      <div style="padding: 12px 16px; text-align: center; color: #6b82a0; font-size: 12px; border-top: 1px solid #1e2d45;">
+      <div style="padding: 8px 12px; text-align: center; color: #6b82a0; font-size: 11px; border-top: 1px solid #1e2d45;">
         <i class="fas fa-ellipsis-h"></i> Còn ${alerts.length - 10} cảnh báo khác
       </div>
     `;
@@ -314,25 +278,28 @@ async function loadCustomerDebtAlerts() {
   if (!container) return;
 
   if (!homeExportsData || homeExportsData.length === 0) {
-    container.innerHTML =
-      '<div style="padding:40px;text-align:center;color:#6b82a0;">Chưa có dữ liệu phiếu xuất</div>';
-    document.getElementById("customerAlertCount").textContent = "0 cảnh báo";
+    container.innerHTML = `
+      <div style="padding: 30px; text-align: center; color: #6b82a0; font-size: 13px;">
+        <i class="fas fa-inbox" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
+        Chưa có dữ liệu phiếu xuất
+      </div>
+    `;
+    document.getElementById("customerAlertCount").textContent = "0";
     return;
   }
 
   const alerts = [];
-  homeExportsData.forEach((exportItem) => {
+  for (const exportItem of homeExportsData) {
     let invoiceDate = exportItem.ngayXuatHD || exportItem.exportDate;
-    if (!invoiceDate) return;
+    if (!invoiceDate) continue;
 
-    const remaining = getCustomerDebtRemaining(exportItem);
+    const remaining = getRemainingDaysForDebt(invoiceDate, "customer");
 
     if (remaining !== null && remaining <= 30) {
       const total = exportItem.total || 0;
-      if (total === 0) return;
+      if (total === 0) continue;
 
       alerts.push({
-        type: "customer",
         name: exportItem.receiverName || "Khách hàng",
         exportNo: exportItem.exportNo || `PX-${exportItem.id}`,
         remaining: remaining,
@@ -340,19 +307,22 @@ async function loadCustomerDebtAlerts() {
         label:
           remaining < 0
             ? `Quá hạn ${Math.abs(remaining)} ngày`
-            : `Còn ${remaining} ngày đến hạn xuất HĐ`,
+            : `Còn ${remaining} ngày`,
         total: total,
       });
     }
-  });
+  }
 
   alerts.sort((a, b) => a.remaining - b.remaining);
-  document.getElementById("customerAlertCount").textContent =
-    `${alerts.length} cảnh báo`;
+  document.getElementById("customerAlertCount").textContent = alerts.length;
 
   if (alerts.length === 0) {
-    container.innerHTML =
-      '<div style="padding:40px;text-align:center;color:#4ade80;">Không có công nợ nào với khách hàng sắp đến hạn</div>';
+    container.innerHTML = `
+      <div style="padding: 30px; text-align: center; color: #4ade80; font-size: 13px;">
+        <i class="fas fa-check-circle" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+        Không có công nợ nào sắp đến hạn
+      </div>
+    `;
     return;
   }
 
@@ -361,18 +331,42 @@ async function loadCustomerDebtAlerts() {
     .map((a) => {
       const isExpired = a.remaining < 0;
       return `
-        <div class="alert-row">
-          <div class="alert-indicator ${isExpired ? "ind-red" : "ind-yellow"}"></div>
-          <div class="alert-body">
-            <div class="alert-name"><strong>${escapeHtml(a.name)}</strong> - ${escapeHtml(a.exportNo)}</div>
-            <div class="alert-meta">Ngày xuất HĐ: ${formatDate(a.invoiceDate)} | <strong>${a.label}</strong></div>
-            <div class="alert-meta">Giá trị: ${formatCurrency(a.total)}</div>
+        <div class="alert-row" style="padding: 8px 12px; border-bottom: 1px solid #1e2d45; display: flex; gap: 10px; align-items: flex-start;">
+          <div class="alert-indicator ${isExpired ? "ind-red" : "ind-yellow"}" 
+               style="width: 3px; min-height: 32px; border-radius: 2px; flex-shrink: 0; background: ${isExpired ? "#ef4444" : "#f59e0b"};"></div>
+          <div class="alert-body" style="flex: 1;">
+            <div class="alert-name" style="font-size: 12px; font-weight: 600; color: #e2eaf5;">
+              <strong>${escapeHtml(a.name)}</strong> 
+              <span style="color: #60a5fa; font-weight: 400;">- ${escapeHtml(a.exportNo)}</span>
+            </div>
+            <div class="alert-meta" style="font-size: 10px; color: #6b82a0; margin-top: 2px;">
+              <span>Ngày xuất HĐ: ${formatDate(a.invoiceDate)}</span>
+              <span style="margin: 0 6px;">|</span>
+              <strong style="color: ${isExpired ? "#f87171" : "#fbbf24"};">${a.label}</strong>
+            </div>
+            <div class="alert-meta" style="font-size: 11px; color: #fbbf24; font-weight: 600; margin-top: 2px;">
+              Giá trị: ${formatCurrency(a.total)}
+            </div>
           </div>
-          <div class="alert-tag ${isExpired ? "tag-red" : "tag-yellow"}">${isExpired ? "QUÁ HẠN" : "CẢNH BÁO"}</div>
+          <div class="alert-tag ${isExpired ? "tag-red" : "tag-yellow"}" 
+               style="font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 4px; align-self: center; flex-shrink: 0; 
+                      background: ${isExpired ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}; 
+                      color: ${isExpired ? "#f87171" : "#fbbf24"}; 
+                      border: 1px solid ${isExpired ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)"};">
+            ${isExpired ? "QUÁ HẠN" : "CẢNH BÁO"}
+          </div>
         </div>
       `;
     })
     .join("");
+
+  if (alerts.length > 10) {
+    container.innerHTML += `
+      <div style="padding: 8px 12px; text-align: center; color: #6b82a0; font-size: 11px; border-top: 1px solid #1e2d45;">
+        <i class="fas fa-ellipsis-h"></i> Còn ${alerts.length - 10} cảnh báo khác
+      </div>
+    `;
+  }
 }
 
 // ============================================================
@@ -389,10 +383,10 @@ function loadCategories() {
   }
 
   const catMap = new Map();
-  homeInventoryData.forEach((i) => {
-    const cat = i.phanLoai || "Chưa phân loại";
+  for (const item of homeInventoryData) {
+    const cat = item.phanLoai || "Chưa phân loại";
     catMap.set(cat, (catMap.get(cat) || 0) + 1);
-  });
+  }
 
   const categories = Array.from(catMap.entries())
     .map(([n, c]) => ({ n, c }))
@@ -428,25 +422,43 @@ function loadCategories() {
 }
 
 // ============================================================
-// RESET ALL DATA - LÀM MỚI TOÀN BỘ
+// UTILITY FUNCTIONS
+// ============================================================
+function formatCurrency(num) {
+  return new Intl.NumberFormat("vi-VN").format(num || 0) + " ₫";
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("vi-VN");
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(
+    /[&<>]/g,
+    (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[m],
+  );
+}
+
+// ============================================================
+// RESET ALL DATA
 // ============================================================
 async function resetAllData() {
   Utils.showLoading(true, "Đang làm mới toàn bộ dữ liệu...");
   try {
-    // Xóa toàn bộ cache
     localStorage.removeItem("lagom_inventory");
     localStorage.removeItem("lagom_receipts");
     localStorage.removeItem("lagom_exports");
     localStorage.removeItem("lagom_home_cache");
 
-    // Load lại dữ liệu
     await loadHomeData();
     loadHomeStats();
     loadSupplierDebtAlerts();
     loadCustomerDebtAlerts();
     loadCategories();
 
-    // Nếu đang ở trang inventory, reload luôn
     if (
       typeof initInventory === "function" &&
       window.inventoryData !== undefined
@@ -466,48 +478,23 @@ async function resetAllData() {
 }
 
 // ============================================================
-// INIT HOME - GỌI KHI TRANG LOAD
+// INIT HOME
 // ============================================================
 async function initHome() {
   console.log("🟢 initHome started - Loading fresh data...");
 
-  // Xóa cache cũ trong localStorage
   localStorage.removeItem("lagom_inventory");
   localStorage.removeItem("lagom_receipts");
   localStorage.removeItem("lagom_exports");
   localStorage.removeItem("lagom_home_cache");
 
-  // Load dữ liệu mới từ API
   await loadHomeData();
-
-  // Render các component
   loadHomeStats();
   loadSupplierDebtAlerts();
   loadCustomerDebtAlerts();
   loadCategories();
 
   console.log("✅ Home page loaded successfully!");
-}
-
-// ============================================================
-// UTILITY FUNCTIONS
-// ============================================================
-function formatCurrency(num) {
-  return new Intl.NumberFormat("vi-VN").format(num || 0) + " ₫";
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("vi-VN");
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(
-    /[&<>]/g,
-    (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[m],
-  );
 }
 
 // ============================================================
