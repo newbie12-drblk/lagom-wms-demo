@@ -745,3 +745,51 @@
     gap: 8px;
   }
 }
+/* ==================== REQUEST MODAL TABS - FIX ACTIVE ==================== */
+.request-options {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.request-options .btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+
+.request-options .btn-outline {
+  background: #1a2235;
+  color: #6b82a0;
+  border: 1px solid #1e2d45;
+}
+
+.request-options .btn-outline:hover {
+  background: #243450;
+  color: #e2eaf5;
+  border-color: #3b82f6;
+}
+
+.request-options .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4) !important;
+  color: white !important;
+  border: 1px solid #3b82f6 !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.request-options .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.45);
+}
+
+.request-options .btn.active {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4) !important;
+  color: white !important;
+  border: 1px solid #3b82f6 !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}

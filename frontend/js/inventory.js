@@ -380,9 +380,18 @@
   window.setRequestType = function (type) {
     requestType = type;
 
+    // ✅ RESET TẤT CẢ BUTTON
     document.querySelectorAll(".request-options .btn").forEach((btn) => {
       btn.classList.remove("active");
+      btn.classList.remove("btn-primary");
+      btn.classList.add("btn-outline");
+    });
+
+    // ✅ ACTIVE BUTTON ĐƯỢC CHỌN
+    document.querySelectorAll(".request-options .btn").forEach((btn) => {
       if (btn.dataset.type === type) {
+        btn.classList.remove("btn-outline");
+        btn.classList.add("btn-primary");
         btn.classList.add("active");
       }
     });
