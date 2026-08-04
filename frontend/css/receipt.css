@@ -2,7 +2,7 @@
    FILE: receipt.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu nhập hàng (receipt.html)
-   NGÀY: 2026 - FIXED TABLE
+   NGÀY: 2026 - FIXED PRINT
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -133,7 +133,7 @@ body {
   border-bottom-color: #1e3a5f;
 }
 
-/* ==================== 5. BẢNG SẢN PHẨM - THU GỌN ==================== */
+/* ==================== 5. BẢNG SẢN PHẨM ==================== */
 .items-table-wrapper {
   overflow-x: auto;
   margin: 20px 0;
@@ -345,6 +345,22 @@ body {
     display: none !important;
   }
 
+  /* ✅ ẨN CỘT XÓA KHI IN - QUAN TRỌNG */
+  .col-delete {
+    display: none !important;
+  }
+
+  /* ✅ ẨN CỘT XÓA TRONG THEAD VÀ TBODY */
+  .items-table th.col-delete,
+  .items-table td.col-delete {
+    display: none !important;
+  }
+
+  /* ✅ ẨN NÚT XÓA TRONG CÁC DÒNG */
+  .items-table .btn-remove {
+    display: none !important;
+  }
+
   input,
   select,
   textarea {
@@ -399,10 +415,6 @@ body {
     margin: 0 !important;
     width: auto !important;
     display: inline !important;
-  }
-
-  .col-delete {
-    display: none !important;
   }
 
   .items-table-wrapper {
