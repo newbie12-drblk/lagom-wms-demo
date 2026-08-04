@@ -198,7 +198,7 @@
       <td><input type="date" class="expiry-input"></td>
       <td><input type="text" class="soHopDongXuat-input" placeholder="Số HĐ xuất *"></td>
       <td class="row-total" data-total="0">0</td>
-      <td class="text-center">${removeButton}</td>
+      <td class="text-center" style="width:35px;">${removeButton}</td>
     `;
 
     const priceInput = row.querySelector(".price-input");
@@ -416,39 +416,28 @@
     }
   }
 
-  // ========== IN PHIẾU - LOẠI BỎ CỘT XÓA ==========
+  // ========== IN PHIẾU ==========
   function printExport() {
-    // Lưu giá trị của tất cả input và select
     const inputs = document.querySelectorAll("input, select");
     const inputValues = {};
     inputs.forEach((input, index) => {
       inputValues[index] = input.value;
     });
 
-    // ✅ ẨN CỘT XÓA KHI IN
+    // Ẩn cột xóa khi in bằng style
     document.querySelectorAll(".col-delete").forEach((el) => {
       el.style.display = "none !important";
-      el.style.visibility = "hidden !important";
-      el.style.width = "0 !important";
-      el.style.padding = "0 !important";
-      el.style.border = "none !important";
     });
 
-    // ẨN NÚT XÓA
     document.querySelectorAll(".btn-remove").forEach((el) => {
       el.style.display = "none !important";
     });
 
     window.print();
 
-    // Khôi phục lại sau khi in
     setTimeout(() => {
       document.querySelectorAll(".col-delete").forEach((el) => {
         el.style.display = "";
-        el.style.visibility = "";
-        el.style.width = "";
-        el.style.padding = "";
-        el.style.border = "";
       });
 
       document.querySelectorAll(".btn-remove").forEach((el) => {

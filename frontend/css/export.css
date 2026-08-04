@@ -2,7 +2,7 @@
    FILE: export.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu xuất kho (export.html)
-   NGÀY: 2026 - FIXED PRINT
+   NGÀY: 2026
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -153,7 +153,6 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
-  min-width: 0;
 }
 
 .items-table th {
@@ -318,7 +317,7 @@ body {
   background: #b91c1c;
 }
 
-/* ==================== 9. PRINT STYLES - FIX ==================== */
+/* ==================== 9. PRINT STYLES ==================== */
 @media print {
   * {
     box-sizing: border-box;
@@ -349,101 +348,42 @@ body {
   .toolbar,
   .no-print,
   .btn,
-  .btn-add {
+  .btn-add,
+  .btn-remove {
     display: none !important;
   }
 
-  /* ============================================================ */
-  /* ✅ ẨN HOÀN TOÀN CỘT XÓA KHI IN */
-  /* ============================================================ */
+  /* Ẩn cột xóa khi in - KHÔNG CÓ CỘT XÓA TRONG HEADER NÊN K CẦN */
   .col-delete {
     display: none !important;
-    visibility: hidden !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    overflow: hidden !important;
   }
 
   .btn-remove {
     display: none !important;
-    visibility: hidden !important;
   }
 
-  /* ✅ FIX BẢNG - KHÔNG TRÀN */
   .items-table-wrapper {
     overflow-x: visible !important;
-    overflow: visible !important;
     margin: 8px 0 !important;
   }
 
   .items-table {
     width: 100% !important;
-    min-width: 0 !important;
     table-layout: fixed !important;
     font-size: 9px !important;
     border-collapse: collapse !important;
-    border-spacing: 0 !important;
   }
-
-  /* ✅ ĐẶT CHIỀU RỘNG CỐ ĐỊNH CHO TỪNG CỘT */
-  .items-table th:nth-child(1) {
-    width: 5% !important;
-  } /* STT */
-  .items-table th:nth-child(2) {
-    width: 9% !important;
-  } /* Mã hàng */
-  .items-table th:nth-child(3) {
-    width: 14% !important;
-  } /* Tên thương mại */
-  .items-table th:nth-child(4) {
-    width: 6% !important;
-  } /* ĐVT */
-  .items-table th:nth-child(5) {
-    width: 10% !important;
-  } /* Hãng SX */
-  .items-table th:nth-child(6) {
-    width: 10% !important;
-  } /* Phân loại */
-  .items-table th:nth-child(7) {
-    width: 8% !important;
-  } /* Giá nhập */
-  .items-table th:nth-child(8) {
-    width: 8% !important;
-  } /* Số HĐ nhập */
-  .items-table th:nth-child(9) {
-    width: 8% !important;
-  } /* Đơn giá xuất */
-  .items-table th:nth-child(10) {
-    width: 6% !important;
-  } /* Số lượng */
-  .items-table th:nth-child(11) {
-    width: 8% !important;
-  } /* Số lot */
-  .items-table th:nth-child(12) {
-    width: 8% !important;
-  } /* HSD */
-  .items-table th:nth-child(13) {
-    width: 8% !important;
-  } /* Số HĐ xuất */
-  .items-table th:nth-child(14) {
-    width: 8% !important;
-  } /* Thành tiền */
 
   .items-table th,
   .items-table td {
-    padding: 3px 3px !important;
-    word-break: break-word !important;
+    padding: 3px 4px !important;
     border: 1px solid #000 !important;
+    word-break: break-word !important;
   }
 
   .items-table th {
-    font-size: 6px !important;
-    white-space: normal !important;
-    padding: 3px 2px !important;
+    font-size: 7px !important;
+    padding: 3px 3px !important;
     background: #f0f0f0 !important;
     color: #000 !important;
     font-weight: 700 !important;
@@ -451,11 +391,10 @@ body {
   }
 
   .items-table td {
-    font-size: 7px !important;
+    font-size: 8px !important;
     color: #000 !important;
     text-align: left !important;
-    vertical-align: middle !important;
-    padding: 3px 3px !important;
+    padding: 3px 4px !important;
   }
 
   .items-table td.text-right {
@@ -472,12 +411,9 @@ body {
     font-weight: 600 !important;
   }
 
-  .items-table tr {
-    page-break-inside: avoid !important;
-  }
-
-  .items-table tbody tr {
-    border-bottom: 1px solid #000 !important;
+  .total-row td {
+    font-weight: 700 !important;
+    background: #f5f5f5 !important;
   }
 
   input,
@@ -609,14 +545,6 @@ body {
 
   .sign-item {
     width: 120px !important;
-  }
-
-  .total-row td {
-    padding: 4px 4px !important;
-    font-size: 9px !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-    background: #f5f5f5 !important;
   }
 
   #totalAmount {
