@@ -21,7 +21,7 @@
 
     <div class="app-shell">
       <!-- SIDEBAR -->
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">
             <div class="logo-icon">🧪</div>
@@ -76,6 +76,14 @@
       <div class="content-area">
         <div class="topbar">
           <div class="topbar-left">
+            <!-- NÚT HAMBURGER CHO MOBILE -->
+            <button
+              class="btn-hamburger"
+              id="btnHamburger"
+              onclick="window.toggleSidebar()"
+            >
+              <i class="fas fa-bars"></i>
+            </button>
             <div class="breadcrumb">
               LAGOM <span>/</span>
               <strong id="breadcrumb-title">Tổng quan</strong>
@@ -89,6 +97,13 @@
             <div class="top-date" id="currentDate"></div>
           </div>
         </div>
+
+        <!-- OVERLAY ĐỂ ĐÓNG SIDEBAR KHI BẤM RA NGOÀI -->
+        <div
+          class="sidebar-overlay"
+          id="sidebarOverlay"
+          onclick="window.closeSidebar()"
+        ></div>
 
         <div class="view-container">
           <!-- VIEW: DASHBOARD -->

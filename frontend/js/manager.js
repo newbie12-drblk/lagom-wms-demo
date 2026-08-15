@@ -523,7 +523,6 @@
           return r.status === "pending";
         });
 
-        // LƯU VÀO BIẾN GLOBAL
         window._pendingApprovals = pendingRequests;
 
         if (pendingRequests.length === 0) {
@@ -577,7 +576,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL - Dùng dữ liệu từ _pendingApprovals
+  // VIEW APPROVAL DETAIL
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -759,7 +758,6 @@
       if (result.success) {
         var receipts = result.data || [];
 
-        // LƯU VÀO BIẾN GLOBAL
         window._pendingReceipts = receipts;
 
         if (receipts.length === 0) {
@@ -811,7 +809,7 @@
   }
 
   // ============================================================
-  // VIEW RECEIPT DETAIL - Dùng dữ liệu từ _pendingReceipts
+  // VIEW RECEIPT DETAIL
   // ============================================================
   window.viewReceiptDetail = function (id) {
     var container = document.getElementById("pendingReceiptsList");
@@ -943,7 +941,6 @@
       if (result.success) {
         var exports = result.data || [];
 
-        // LƯU VÀO BIẾN GLOBAL
         window._pendingExports = exports;
 
         if (exports.length === 0) {
@@ -995,7 +992,7 @@
   }
 
   // ============================================================
-  // VIEW EXPORT DETAIL - Dùng dữ liệu từ _pendingExports
+  // VIEW EXPORT DETAIL
   // ============================================================
   window.viewExportDetail = function (id) {
     var container = document.getElementById("pendingExportsList");
@@ -1130,7 +1127,6 @@
           return e.status === "pending";
         });
 
-        // LƯU VÀO BIẾN GLOBAL
         window._pendingEdits = pendingEdits;
 
         if (pendingEdits.length === 0) {
@@ -1223,7 +1219,7 @@
   }
 
   // ============================================================
-  // VIEW EDIT DETAIL - Dùng dữ liệu từ _pendingEdits
+  // VIEW EDIT DETAIL
   // ============================================================
   window.viewEditDetail = function (id) {
     var container = document.getElementById("pendingEditsList");
@@ -1413,7 +1409,6 @@
           return d.status === "pending";
         });
 
-        // LƯU VÀO BIẾN GLOBAL
         window._pendingDeletions = pendingDeletions;
 
         if (pendingDeletions.length === 0) {
@@ -1460,7 +1455,7 @@
   }
 
   // ============================================================
-  // VIEW DELETION DETAIL - Dùng dữ liệu từ _pendingDeletions
+  // VIEW DELETION DETAIL
   // ============================================================
   window.viewDeletionDetail = function (id) {
     var container = document.getElementById("pendingDeletionsList");
@@ -1652,14 +1647,13 @@
         var isActive = user.isActive == 1;
         var isManager = user.roleId === "quan_ly";
 
-        var roleColors = {
-          admin: "role-admin",
-          quan_ly: "role-quan_ly",
-        };
-
         var roleLabels = {
           admin: "Quản trị",
           quan_ly: "Quản lý",
+          ke_toan: "Kế toán",
+          quan_ly_kho: "Quản lý kho",
+          nhan_vien: "Nhân viên",
+          nhap_lieu: "Nhập liệu",
         };
 
         var perms = [];
@@ -1675,7 +1669,6 @@
         var isSelf = currentUser && currentUser.id === user.id;
         var canDelete = !isSelf && !isManager;
 
-        var statusClass = isActive ? "status-active" : "status-locked";
         var statusText = isActive ? "● Hoạt động" : "● Đã khóa";
 
         return `
@@ -1687,15 +1680,20 @@
           <td style="padding: 12px 16px; color: #e2eaf5;">${Utils.escapeHtml(user.fullName || "—")}</td>
           <td style="padding: 12px 16px; color: #6b82a0;">${Utils.escapeHtml(user.email || "—")}</td>
           <td style="padding: 12px 16px;">
-            <span class="role-badge ${roleColors[user.roleId] || "role-nhan_vien"}" 
-                  style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
-                         ${
-                           user.roleId === "admin"
-                             ? "background:rgba(239,68,68,0.2);color:#f87171;"
-                             : user.roleId === "quan_ly"
-                               ? "background:rgba(245,158,11,0.2);color:#fbbf24;"
+            <span class="role-badge" style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
+                   ${
+                     user.roleId === "admin"
+                       ? "background:rgba(239,68,68,0.2);color:#f87171;"
+                       : user.roleId === "quan_ly"
+                         ? "background:rgba(245,158,11,0.2);color:#fbbf24;"
+                         : user.roleId === "ke_toan"
+                           ? "background:rgba(59,130,246,0.2);color:#60a5fa;"
+                           : user.roleId === "quan_ly_kho"
+                             ? "background:rgba(16,185,129,0.2);color:#34d399;"
+                             : user.roleId === "nhap_lieu"
+                               ? "background:rgba(139,92,246,0.2);color:#a78bfa;"
                                : "background:rgba(107,114,128,0.2);color:#9ca3af;"
-                         }">
+                   }">
               ${roleLabels[user.roleId] || user.roleId}
             </span>
           </td>
@@ -1965,6 +1963,10 @@
       item.addEventListener("click", function (e) {
         e.preventDefault();
         switchView(item.dataset.view);
+        // Đóng sidebar trên mobile sau khi chọn
+        if (window.innerWidth <= 768) {
+          window.closeSidebar();
+        }
       });
     });
 
@@ -2019,6 +2021,33 @@
       });
     }
   }
+
+  // ============================================================
+  // HAMBURGER MENU - MỞ/ĐÓNG SIDEBAR TRÊN MOBILE
+  // ============================================================
+  window.toggleSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+
+    if (sidebar) {
+      sidebar.classList.toggle("open");
+    }
+    if (overlay) {
+      overlay.classList.toggle("active");
+    }
+  };
+
+  window.closeSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+
+    if (sidebar) {
+      sidebar.classList.remove("open");
+    }
+    if (overlay) {
+      overlay.classList.remove("active");
+    }
+  };
 
   // ============================================================
   // RESIZE HANDLER - CẬP NHẬT NÚT BACK KHI XOAY MÀN HÌNH
