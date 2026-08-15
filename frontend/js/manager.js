@@ -1,6 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
+ * FIXED: Nút hamburger hoạt động trên Mobile
  */
 
 (function () {
@@ -28,6 +29,33 @@
   window._pendingExports = [];
   window._pendingEdits = [];
   window._pendingDeletions = [];
+
+  // ============================================================
+  // HAMBURGER MENU - MỞ/ĐÓNG SIDEBAR TRÊN MOBILE
+  // ============================================================
+  window.toggleSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+
+    if (sidebar) {
+      sidebar.classList.toggle("open");
+    }
+    if (overlay) {
+      overlay.classList.toggle("active");
+    }
+  };
+
+  window.closeSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+
+    if (sidebar) {
+      sidebar.classList.remove("open");
+    }
+    if (overlay) {
+      overlay.classList.remove("active");
+    }
+  };
 
   // ============================================================
   // UPDATE TOPBAR
@@ -97,6 +125,11 @@
 
     var breadcrumb = document.getElementById("breadcrumb-title");
     if (breadcrumb) breadcrumb.textContent = titles[viewName] || viewName;
+
+    // Đóng sidebar trên mobile sau khi chuyển trang
+    if (window.innerWidth <= 768) {
+      window.closeSidebar();
+    }
 
     // HIỂN THỊ NÚT BACK TRÊN MOBILE CHO CÁC TRANG PENDING
     var isMobile = window.innerWidth <= 768;
@@ -393,7 +426,6 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">THÀNH TIỀN</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ XUẤT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
               </tr>
             </thead>
@@ -418,7 +450,6 @@
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongXuat || "—")}</td>
                   <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
                 </tr>
               `;
@@ -429,7 +460,7 @@
               <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
                 <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
                 <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="4" style="padding: 8px 12px;"></td>
+                <td colspan="3" style="padding: 8px 12px;"></td>
               </tr>
             </tfoot>
           </table>
@@ -1970,6 +2001,15 @@
       });
     });
 
+    // ✅ SỬA LỖI TẠI ĐÂY: Đảm bảo sự kiện click cho nút hamburger được gán
+    const btnHamburger = document.getElementById("btnHamburger");
+    if (btnHamburger) {
+      btnHamburger.addEventListener("click", function (e) {
+        e.preventDefault();
+        window.toggleSidebar();
+      });
+    }
+
     var refreshBtn = document.getElementById("btnRefresh");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
@@ -2021,33 +2061,6 @@
       });
     }
   }
-
-  // ============================================================
-  // HAMBURGER MENU - MỞ/ĐÓNG SIDEBAR TRÊN MOBILE
-  // ============================================================
-  window.toggleSidebar = function () {
-    var sidebar = document.getElementById("sidebar");
-    var overlay = document.getElementById("sidebarOverlay");
-
-    if (sidebar) {
-      sidebar.classList.toggle("open");
-    }
-    if (overlay) {
-      overlay.classList.toggle("active");
-    }
-  };
-
-  window.closeSidebar = function () {
-    var sidebar = document.getElementById("sidebar");
-    var overlay = document.getElementById("sidebarOverlay");
-
-    if (sidebar) {
-      sidebar.classList.remove("open");
-    }
-    if (overlay) {
-      overlay.classList.remove("active");
-    }
-  };
 
   // ============================================================
   // RESIZE HANDLER - CẬP NHẬT NÚT BACK KHI XOAY MÀN HÌNH
