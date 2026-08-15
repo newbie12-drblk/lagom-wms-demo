@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * FIXED: Nút hamburger hoạt động trên Mobile
+ * FIXED: Full logic + Nút hamburger hoạt động trên Mobile
  */
 
 (function () {
