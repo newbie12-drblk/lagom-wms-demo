@@ -1061,7 +1061,7 @@
   color: #60a5fa !important;
 }
 
-/* Sidebar overlay */
+/* Sidebar overlay - nằm dưới sidebar */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -1069,9 +1069,10 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 999;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998; /* Thấp hơn sidebar */
   backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
@@ -1092,16 +1093,19 @@
     gap: 4px !important;
   }
 
-  /* Sidebar trượt từ trái sang */
+  /* Sidebar trượt từ trái sang - NẰM TRÊN OVERLAY */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
     left: -280px !important;
     width: 280px !important;
     height: 100vh !important;
-    z-index: 1000 !important;
+    z-index: 999 !important; /* CAO HƠN OVERLAY */
     transition: left 0.3s ease !important;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5) !important;
+    border-right: 1px solid var(--border) !important;
+    background: #0b1220 !important;
+    overflow-y: auto !important;
   }
 
   .sidebar.open {
