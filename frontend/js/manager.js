@@ -58,7 +58,7 @@
   }
 
   // ============================================================
-  // SWITCH VIEW
+  // SWITCH VIEW - CÓ XỬ LÝ NÚT BACK
   // ============================================================
   function switchView(viewName) {
     document.querySelectorAll(".view").forEach(function (v) {
@@ -89,6 +89,27 @@
     var breadcrumb = document.getElementById("breadcrumb-title");
     if (breadcrumb) breadcrumb.textContent = titles[viewName] || viewName;
 
+    // ✅ HIỂN THỊ NÚT BACK TRÊN MOBILE CHO CÁC TRANG PENDING
+    var isMobile = window.innerWidth <= 768;
+    var backButtons = document.querySelectorAll(".btn-mobile-back");
+    var isPendingPage = [
+      "pending-products",
+      "pending-receipts",
+      "pending-exports",
+      "pending-edits",
+      "pending-deletions",
+    ].includes(viewName);
+
+    backButtons.forEach(function (btn) {
+      if (isMobile && isPendingPage) {
+        btn.style.display = "inline-flex";
+        btn.style.alignItems = "center";
+        btn.style.gap = "8px";
+      } else {
+        btn.style.display = "none";
+      }
+    });
+
     if (viewName === "dashboard") {
       loadDashboardStats();
       loadNotifications();
@@ -106,6 +127,13 @@
       loadUsers();
     }
   }
+
+  // ============================================================
+  // HÀM QUAY LẠI TỪ CÁC TRANG PENDING
+  // ============================================================
+  window.goBackFromPending = function () {
+    switchView("dashboard");
+  };
 
   // ============================================================
   // LOAD DASHBOARD STATS
@@ -497,80 +525,26 @@
           return;
         }
 
+        // Hiển thị card rút gọn
         container.innerHTML = pendingRequests
           .map(function (r) {
             var products = r.productData?.products || [];
             var totalProducts = products.length;
 
-            var itemsHtml = "";
-            if (totalProducts > 0) {
-              itemsHtml = `
-              <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-                <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
-                  <thead>
-                    <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">STT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">MÃ HÀNG</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">ĐVT</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG/NƯỚC SX</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI MÁY</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">GIÁ NHẬP</th>
-                      <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${products
-                      .map(function (item, idx) {
-                        return `
-                      <tr style="border-bottom: 1px solid #1e2d45;">
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                        <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
-                      </tr>
-                    `;
-                      })
-                      .join("")}
-                  </tbody>
-                </table>
-              </div>
-            `;
-            }
-
             return `
-            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
+                 onclick="window.viewApprovalDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📦 Yêu cầu thêm sản phẩm #${r.id}</div>
-                <div style="font-size: 12px; color: #6b82a0;"><i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}</div>
-                <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
+                <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
-
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Số sản phẩm</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #86efac;">${totalProducts}</div>
-                </div>
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Người yêu cầu</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</div>
-                </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Số sản phẩm</span><br><span style="color: #86efac; font-weight: 600;">${totalProducts}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Người yêu cầu</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
               </div>
-
-              ${itemsHtml}
-
-              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="window.rejectApproval(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button class="btn btn-success" onclick="window.approveApproval(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-check"></i> Duyệt
-                </button>
+              <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
+                <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
               </div>
             </div>
           `;
@@ -590,6 +564,102 @@
       Utils.showLoading(false);
     }
   }
+
+  // ============================================================
+  // VIEW APPROVAL DETAIL (Modal inline)
+  // ============================================================
+  window.viewApprovalDetail = async function (id) {
+    var container = document.getElementById("pendingApprovalsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải chi tiết...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/approvals/" + id, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var r = result.data;
+        var products = r.productData?.products || [];
+
+        var itemsHtml = "";
+        if (products.length > 0) {
+          itemsHtml = `
+            <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
+              <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
+                <thead>
+                  <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">ĐVT</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG SX</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI</th>
+                    <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">GIÁ NHẬP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${products
+                    .map(function (item, idx) {
+                      return `
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                    </tr>
+                  `;
+                    })
+                    .join("")}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        var html = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+            <div><span style="color: #6b82a0;">Số sản phẩm:</span> <span style="color: #86efac; font-weight: 600;">${products.length}</span></div>
+            <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+            <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(r.createdAt)}</span></div>
+            <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge status-pending">⏳ Chờ duyệt</span></div>
+          </div>
+          ${itemsHtml}
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-danger" onclick="window.rejectApproval(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveApproval(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt
+            </button>
+          </div>
+        `;
+
+        // Thay thế nội dung container bằng chi tiết
+        container.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <button class="btn btn-outline" onclick="window.loadPendingApprovals()" style="margin-bottom: 16px;">
+              <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </button>
+            <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
+              ${html}
+            </div>
+          </div>
+        `;
+      } else {
+        Utils.showToast("Lỗi tải chi tiết: " + result.message, "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi: " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
 
   // ============================================================
   // APPROVE / REJECT APPROVAL
@@ -700,23 +770,20 @@
         container.innerHTML = receipts
           .map(function (r) {
             return `
-            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b; background: #111827; border-radius: 12px; padding: 16px 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
+                 onclick="window.viewReceiptDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">📥 ${Utils.escapeHtml(r.receiptNo || "PN-" + r.id)}</div>
-                <div style="font-size: 12px; color: #6b82a0;"><i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}</div>
-                <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+                <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
-
-              ${renderReceiptDetail(r)}
-
-              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="window.rejectReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button class="btn btn-success" onclick="window.approveReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-check"></i> Duyệt
-                </button>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Nhà cung cấp</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.supplierName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Số sản phẩm</span><br><span style="color: #86efac; font-weight: 600;">${r.items?.length || 0}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Tổng tiền</span><br><span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(r.total || 0)}</span></div>
+              </div>
+              <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
+                <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
               </div>
             </div>
           `;
@@ -736,6 +803,55 @@
       Utils.showLoading(false);
     }
   }
+
+  // ============================================================
+  // VIEW RECEIPT DETAIL
+  // ============================================================
+  window.viewReceiptDetail = async function (id) {
+    var container = document.getElementById("pendingReceiptsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải chi tiết...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/receipts/" + id, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var r = result.data;
+        var html = renderReceiptDetail(r);
+        html += `
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-danger" onclick="window.rejectReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveReceipt(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt
+            </button>
+          </div>
+        `;
+
+        container.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <button class="btn btn-outline" onclick="window.loadPendingReceipts()" style="margin-bottom: 16px;">
+              <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </button>
+            <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #f59e0b;">
+              ${html}
+            </div>
+          </div>
+        `;
+      } else {
+        Utils.showToast("Lỗi tải chi tiết: " + result.message, "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi: " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
 
   // ============================================================
   // APPROVE / REJECT RECEIPT
@@ -841,23 +957,20 @@
         container.innerHTML = exports
           .map(function (r) {
             return `
-            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #3b82f6; background: #111827; border-radius: 12px; padding: 16px 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #3b82f6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
+                 onclick="window.viewExportDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">📤 ${Utils.escapeHtml(r.exportNo || "PX-" + r.id)}</div>
-                <div style="font-size: 12px; color: #6b82a0;"><i class="far fa-calendar-alt"></i> ${Utils.formatDate(r.createdAt)}</div>
-                <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.creatorName || "Admin")}</div>
+                <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
-
-              ${renderExportDetail(r)}
-
-              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="window.rejectExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button class="btn btn-success" onclick="window.approveExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-check"></i> Duyệt
-                </button>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Người nhận</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.receiverName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Số sản phẩm</span><br><span style="color: #86efac; font-weight: 600;">${r.items?.length || 0}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Tổng tiền</span><br><span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(r.total || 0)}</span></div>
+              </div>
+              <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
+                <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
               </div>
             </div>
           `;
@@ -877,6 +990,55 @@
       Utils.showLoading(false);
     }
   }
+
+  // ============================================================
+  // VIEW EXPORT DETAIL
+  // ============================================================
+  window.viewExportDetail = async function (id) {
+    var container = document.getElementById("pendingExportsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải chi tiết...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/exports/" + id, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var r = result.data;
+        var html = renderExportDetail(r);
+        html += `
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-danger" onclick="window.rejectExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveExport(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt
+            </button>
+          </div>
+        `;
+
+        container.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <button class="btn btn-outline" onclick="window.loadPendingExports()" style="margin-bottom: 16px;">
+              <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </button>
+            <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #3b82f6;">
+              ${html}
+            </div>
+          </div>
+        `;
+      } else {
+        Utils.showToast("Lỗi tải chi tiết: " + result.message, "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi: " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
 
   // ============================================================
   // APPROVE / REJECT EXPORT
@@ -949,7 +1111,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS - SỬA GIAO DIỆN (BỎ CÁC TRƯỜNG DƯ)
+  // LOAD PENDING EDITS
   // ============================================================
   async function loadPendingEdits() {
     var container = document.getElementById("pendingEditsList");
@@ -983,9 +1145,6 @@
             var oldData = r.oldData || {};
             var newData = r.newData || {};
 
-            // ==========================================================
-            // CHỈ HIỂN THỊ 7 TRƯỜNG CƠ BẢN CHO CHỈNH SỬA
-            // ==========================================================
             var fieldLabels = {
               tenThuongMai: "Tên thương mại",
               maHang: "Mã hàng",
@@ -996,90 +1155,54 @@
               soHopDongNhap: "Số HĐ",
             };
 
-            // CHỈ LẤY 7 TRƯỜNG CƠ BẢN
             var allowedFields = Object.keys(fieldLabels);
             var changedFields = allowedFields.filter(function (key) {
               return (oldData[key] || "") != (newData[key] || "");
             });
 
-            // NẾU KHÔNG CÓ THAY ĐỔI NÀO, HIỂN THỊ TẤT CẢ 7 TRƯỜNG
             if (changedFields.length === 0) {
               changedFields = allowedFields;
             }
 
-            var changesHtml = "";
-            if (changedFields.length > 0) {
-              changesHtml = `
-              <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-                <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
-                  <thead>
-                    <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TRƯỜNG</th>
-                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #f87171; font-weight: 600; min-width: 150px;">GIÁ TRỊ CŨ</th>
-                      <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #4ade80; font-weight: 600; min-width: 150px;">GIÁ TRỊ MỚI</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${changedFields
-                      .map(function (key) {
-                        var oldVal = oldData[key] || "—";
-                        var newVal = newData[key] || "—";
-                        // Format số nếu là giá nhập
-                        if (key === "giaNhap") {
-                          oldVal = Utils.formatCurrency(
-                            parseFloat(oldVal) || 0,
-                          );
-                          newVal = Utils.formatCurrency(
-                            parseFloat(newVal) || 0,
-                          );
-                        }
-                        return `
-                      <tr style="border-bottom: 1px solid #1e2d45;">
-                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
-                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #f87171;">${Utils.escapeHtml(String(oldVal))}</td>
-                        <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #4ade80; font-weight: 600;">${Utils.escapeHtml(String(newVal))}</td>
-                      </tr>
-                    `;
-                      })
-                      .join("")}
-                  </tbody>
-                </table>
-              </div>
-            `;
-            } else {
-              changesHtml =
-                '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có thay đổi nào trong 7 trường cơ bản</div>';
-            }
+            var previewFields = changedFields.slice(0, 2);
+            var previewHtml = previewFields
+              .map(function (key) {
+                var oldVal = oldData[key] || "—";
+                var newVal = newData[key] || "—";
+                if (key === "giaNhap") {
+                  oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
+                  newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+                }
+                return (
+                  '<span style="color: #6b82a0;">' +
+                  fieldLabels[key] +
+                  ':</span> <span style="color: #f87171;">' +
+                  Utils.escapeHtml(String(oldVal)) +
+                  '</span> → <span style="color: #4ade80;">' +
+                  Utils.escapeHtml(String(newVal)) +
+                  "</span>"
+                );
+              })
+              .join(" &nbsp;|&nbsp; ");
 
             return `
-            <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6; cursor: pointer;" 
+                 onclick="window.viewEditDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">✏️ Yêu cầu chỉnh sửa #${r.id}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
-                <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
-
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Sản phẩm</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #60a5fa;">${Utils.escapeHtml(r.productName || "—")}</div>
-                </div>
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Mã hàng</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #93c5fd;">${Utils.escapeHtml(r.productCode || "—")}</div>
-                </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Sản phẩm</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Mã hàng</span><br><span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Người tạo</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
               </div>
-
-              ${changesHtml}
-
-              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="window.rejectEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button class="btn btn-success" onclick="window.approveEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-check"></i> Duyệt
-                </button>
+              <div style="font-size: 12px; color: #e2eaf5; padding: 6px 0;">
+                ${previewHtml}
+              </div>
+              <div style="margin-top: 6px; font-size: 11px; color: #6b82a0; text-align: right;">
+                <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
               </div>
             </div>
           `;
@@ -1100,7 +1223,117 @@
   }
 
   // ============================================================
-  // APPROVE / REJECT EDIT - FIX DUYỆT
+  // VIEW EDIT DETAIL
+  // ============================================================
+  window.viewEditDetail = async function (id) {
+    var container = document.getElementById("pendingEditsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải chi tiết...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/edits/" + id, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var r = result.data;
+        var oldData = r.oldData || {};
+        var newData = r.newData || {};
+
+        var fieldLabels = {
+          tenThuongMai: "Tên thương mại",
+          maHang: "Mã hàng",
+          dvt: "ĐVT",
+          hangSX: "Hãng/Nước SX",
+          phanLoai: "Phân loại máy",
+          giaNhap: "Giá nhập",
+          soHopDongNhap: "Số HĐ",
+        };
+
+        var allowedFields = Object.keys(fieldLabels);
+        var changedFields = allowedFields.filter(function (key) {
+          return (oldData[key] || "") != (newData[key] || "");
+        });
+
+        if (changedFields.length === 0) {
+          changedFields = allowedFields;
+        }
+
+        var changesHtml = `
+          <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
+            <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
+              <thead>
+                <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                  <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TRƯỜNG</th>
+                  <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #f87171; font-weight: 600; min-width: 150px;">GIÁ TRỊ CŨ</th>
+                  <th style="padding: 10px 14px; border: 1px solid #1e2d45; text-align: left; color: #4ade80; font-weight: 600; min-width: 150px;">GIÁ TRỊ MỚI</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${changedFields
+                  .map(function (key) {
+                    var oldVal = oldData[key] || "—";
+                    var newVal = newData[key] || "—";
+                    if (key === "giaNhap") {
+                      oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
+                      newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+                    }
+                    return `
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
+                      <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #f87171;">${Utils.escapeHtml(String(oldVal))}</td>
+                      <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #4ade80; font-weight: 600;">${Utils.escapeHtml(String(newVal))}</td>
+                    </tr>
+                  `;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        var html = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+            <div><span style="color: #6b82a0;">Sản phẩm:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+            <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(r.createdAt)}</span></div>
+          </div>
+          ${changesHtml}
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-danger" onclick="window.rejectEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveEditRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt
+            </button>
+          </div>
+        `;
+
+        container.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <button class="btn btn-outline" onclick="window.loadPendingEdits()" style="margin-bottom: 16px;">
+              <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </button>
+            <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
+              ${html}
+            </div>
+          </div>
+        `;
+      } else {
+        Utils.showToast("Lỗi tải chi tiết: " + result.message, "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi: " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ============================================================
+  // APPROVE / REJECT EDIT
   // ============================================================
   window.approveEditRequest = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
@@ -1195,41 +1428,21 @@
 
         container.innerHTML = pendingDeletions
           .map(function (r) {
-            var productData = r.productData || {};
-
             return `
-            <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #ef4444;">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1e2d45;">
+            <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #ef4444; cursor: pointer;" 
+                 onclick="window.viewDeletionDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div style="font-size: 18px; font-weight: 700; color: #f87171;">🗑️ Yêu cầu xóa sản phẩm #${r.id}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
-                <div style="font-size: 13px; color: #e2eaf5;">👤 ${Utils.escapeHtml(r.requesterName || "Admin")}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
-
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Sản phẩm</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #60a5fa;">${Utils.escapeHtml(r.productName || "—")}</div>
-                </div>
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Mã hàng</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #93c5fd;">${Utils.escapeHtml(r.productCode || "—")}</div>
-                </div>
-                <div>
-                  <div style="font-size: 10px; color: #6b82a0; text-transform: uppercase;">Trạng thái</div>
-                  <div style="font-size: 14px; font-weight: 600; color: #f87171;">⚠️ Sẽ bị xóa vĩnh viễn</div>
-                </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Sản phẩm</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Mã hàng</span><br><span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Người yêu cầu</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
               </div>
-
-              ${renderInventoryDetail(productData)}
-
-              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="window.rejectDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button class="btn btn-success" onclick="window.approveDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
-                  <i class="fas fa-check"></i> Duyệt xóa
-                </button>
+              <div style="margin-top: 6px; font-size: 11px; color: #f87171; text-align: right;">
+                ⚠️ Sẽ bị xóa vĩnh viễn
               </div>
             </div>
           `;
@@ -1248,6 +1461,63 @@
       Utils.showLoading(false);
     }
   }
+
+  // ============================================================
+  // VIEW DELETION DETAIL
+  // ============================================================
+  window.viewDeletionDetail = async function (id) {
+    var container = document.getElementById("pendingDeletionsList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải chi tiết...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/deletions/" + id, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var r = result.data;
+        var productData = r.productData || {};
+
+        var html = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+            <div><span style="color: #6b82a0;">Sản phẩm:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
+            <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+            <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(r.createdAt)}</span></div>
+          </div>
+          ${renderInventoryDetail(productData)}
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-danger" onclick="window.rejectDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-times"></i> Từ chối
+            </button>
+            <button class="btn btn-success" onclick="window.approveDeletionRequest(${r.id})" style="padding: 8px 20px; font-size: 13px;">
+              <i class="fas fa-check"></i> Duyệt xóa
+            </button>
+          </div>
+        `;
+
+        container.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <button class="btn btn-outline" onclick="window.loadPendingDeletions()" style="margin-bottom: 16px;">
+              <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </button>
+            <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #ef4444;">
+              ${html}
+            </div>
+          </div>
+        `;
+      } else {
+        Utils.showToast("Lỗi tải chi tiết: " + result.message, "error");
+      }
+    } catch (error) {
+      Utils.showToast("Lỗi: " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
 
   // ============================================================
   // APPROVE / REJECT DELETION
@@ -1760,6 +2030,35 @@
   }
 
   // ============================================================
+  // RESIZE HANDLER - CẬP NHẬT NÚT BACK KHI XOAY MÀN HÌNH
+  // ============================================================
+  window.addEventListener("resize", function () {
+    var activeView = document.querySelector(".view.active");
+    if (activeView) {
+      var viewId = activeView.id.replace("view-", "");
+      var isMobile = window.innerWidth <= 768;
+      var backButtons = document.querySelectorAll(".btn-mobile-back");
+      var isPendingPage = [
+        "pending-products",
+        "pending-receipts",
+        "pending-exports",
+        "pending-edits",
+        "pending-deletions",
+      ].includes(viewId);
+
+      backButtons.forEach(function (btn) {
+        if (isMobile && isPendingPage) {
+          btn.style.display = "inline-flex";
+          btn.style.alignItems = "center";
+          btn.style.gap = "8px";
+        } else {
+          btn.style.display = "none";
+        }
+      });
+    }
+  });
+
+  // ============================================================
   // INIT
   // ============================================================
   function init() {
@@ -1784,6 +2083,7 @@
   // EXPOSE TO WINDOW
   // ============================================================
   window.switchView = switchView;
+  window.goBackFromPending = goBackFromPending;
   window.approveReceipt = approveReceipt;
   window.rejectReceipt = rejectReceipt;
   window.approveExport = approveExport;
@@ -1800,6 +2100,11 @@
   window.closeUserModal = closeUserModal;
   window.openAddUserModal = openAddUserModal;
   window.saveUser = saveUser;
+  window.loadPendingApprovals = loadPendingApprovals;
+  window.loadPendingReceipts = loadPendingReceipts;
+  window.loadPendingExports = loadPendingExports;
+  window.loadPendingEdits = loadPendingEdits;
+  window.loadPendingDeletions = loadPendingDeletions;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
