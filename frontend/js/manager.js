@@ -2209,4 +2209,78 @@
   } else {
     init();
   }
+
+    // ============================================================
+  // FIX: RE-BIND NAVBAR EVENTS (GIỮ NGUYÊN CHỨC NĂNG CŨ)
+  // ============================================================
+  function fixNavbarEvents() {
+    console.log("🔧 Fixing navbar events...");
+    
+    var navItems = document.querySelectorAll(".nav-item");
+    console.log("📋 Found", navItems.length, "nav items");
+    
+    navItems.forEach(function(item) {
+      // Kiểm tra xem item đã có sự kiện click chưa
+      var hasListener = false;
+      // Clone và thay thế để reset sự kiện
+      var newItem = item.cloneNode(true);
+      item.parentNode.replaceChild(newItem, item);
+      
+      // Gán sự kiện mới
+      newItem.addEventListener("click", function(e) {
+        e.preventDefault();
+        var viewName = this.getAttribute("data-view");
+        console.log("🖱️ Nav clicked:", viewName);
+        if (viewName && typeof switchView === "function") {
+          switchView(viewName);
+        }
+        // Đóng sidebar trên mobile
+        if (window.innerWidth <= 768 && typeof window.closeSidebar === "function") {
+          window.closeSidebar();
+        }
+      });
+    });
+    
+    console.log("✅ Navbar events fixed!");
+  }
+
+  // Fix hamburger menu
+  function fixHamburger() {
+    var btn = document.getElementById("btnHamburger");
+    if (btn) {
+      var newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        console.log("🍔 Hamburger clicked!");
+        if (typeof window.toggleSidebar === "function") {
+          window.toggleSidebar();
+        }
+      });
+      console.log("✅ Hamburger fixed!");
+    }
+  }
+
+  // Gọi fix sau khi trang load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function() {
+      setTimeout(function() {
+        fixNavbarEvents();
+        fixHamburger();
+      }, 100);
+    });
+  } else {
+    setTimeout(function() {
+      fixNavbarEvents();
+      fixHamburger();
+    }, 100);
+  }
+  
+  // Gọi lại khi trang load xong
+  window.addEventListener("load", function() {
+    setTimeout(function() {
+      fixNavbarEvents();
+      fixHamburger();
+    }, 200);
+  });
 })();
