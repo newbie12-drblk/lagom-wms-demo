@@ -125,7 +125,7 @@
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
             <!-- CỘT 1: STT - CỐ ĐỊNH -->
-            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px;">${globalIdx}</td>
+            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; text-align: center;">${globalIdx}</td>
             
             <!-- CỘT 2: TÊN THƯƠNG MẠI - CỐ ĐỊNH -->
             <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px;">
@@ -329,7 +329,7 @@
     applyInventoryFilters(inventoryData);
   }
 
-  // ==================== EXPORT TO EXCEL - THÊM CỘT quyCachDongGoi ====================
+  // ==================== EXPORT TO EXCEL ====================
   function exportInventoryToExcel() {
     if (!filteredInventoryData || filteredInventoryData.length === 0) {
       Utils.showToast("Không có dữ liệu để xuất!", "error");
@@ -466,7 +466,7 @@
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG ==========
+      // ========== THÊM SẢN PHẨM ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
@@ -779,7 +779,7 @@
           return;
         }
 
-        console.log("📦 Gửi yêu cầu thêm sản phẩm (9 trường):", products);
+        console.log("📦 Gửi yêu cầu thêm sản phẩm:", products);
 
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
