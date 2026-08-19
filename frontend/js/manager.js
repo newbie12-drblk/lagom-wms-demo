@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * FIXED: Full logic + Nút hamburger hoạt động trên Mobile
+ * FIXED: Full logic + Nút hamburger hoạt động trên Mobile + Fix items is not defined
  */
 
 (function () {
@@ -282,9 +282,20 @@
   }
 
   // ============================================================
-  // RENDER RECEIPT DETAIL
+  // RENDER RECEIPT DETAIL - FIX LỖI items is not defined
   // ============================================================
   function renderReceiptDetail(receipt) {
+    // ✅ KIỂM TRA receipt có tồn tại không
+    if (!receipt) {
+      return `
+        <div style="padding: 20px; text-align: center; color: #f87171;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Không có dữ liệu phiếu nhập</p>
+        </div>
+      `;
+    }
+
+    // ✅ ĐẢM BẢO items luôn là mảng
     var items = receipt.items || [];
     var totalValue = receipt.total || 0;
 
@@ -299,8 +310,9 @@
     };
     var status = statusMap[receipt.status] || statusMap["pending"];
 
+    // ✅ TẠO BẢNG CHI TIẾT - KIỂM TRA items.length
     var itemsHtml = "";
-    if (items.length > 0) {
+    if (items && items.length > 0) {
       itemsHtml = `
         <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
           <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
@@ -327,30 +339,32 @@
             <tbody>
               ${items
                 .map(function (item, idx) {
+                  // ✅ KIỂM TRA item có tồn tại
+                  if (!item) return "";
                   var expiryColor =
                     item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
                       ? "#f87171"
                       : "#e2eaf5";
                   return `
-                <tr style="border-bottom: 1px solid #1e2d45;">
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                </tr>
-              `;
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                    </tr>
+                  `;
                 })
                 .join("")}
             </tbody>
@@ -365,8 +379,12 @@
         </div>
       `;
     } else {
-      itemsHtml =
-        '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có sản phẩm trong phiếu này</div>';
+      itemsHtml = `
+        <div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;">
+          <i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>
+          Không có sản phẩm trong phiếu này
+        </div>
+      `;
     }
 
     return `
@@ -390,9 +408,20 @@
   }
 
   // ============================================================
-  // RENDER EXPORT DETAIL
+  // RENDER EXPORT DETAIL - FIX LỖI items is not defined
   // ============================================================
   function renderExportDetail(exportItem) {
+    // ✅ KIỂM TRA exportItem có tồn tại không
+    if (!exportItem) {
+      return `
+        <div style="padding: 20px; text-align: center; color: #f87171;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Không có dữ liệu phiếu xuất</p>
+        </div>
+      `;
+    }
+
+    // ✅ ĐẢM BẢO items luôn là mảng
     var items = exportItem.items || [];
     var totalValue = exportItem.total || 0;
 
@@ -407,8 +436,9 @@
     };
     var status = statusMap[exportItem.status] || statusMap["pending"];
 
+    // ✅ TẠO BẢNG CHI TIẾT - KIỂM TRA items.length
     var itemsHtml = "";
-    if (items.length > 0) {
+    if (items && items.length > 0) {
       itemsHtml = `
         <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
           <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
@@ -432,27 +462,29 @@
             <tbody>
               ${items
                 .map(function (item, idx) {
+                  // ✅ KIỂM TRA item có tồn tại
+                  if (!item) return "";
                   var expiryColor =
                     item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
                       ? "#f87171"
                       : "#e2eaf5";
                   return `
-                <tr style="border-bottom: 1px solid #1e2d45;">
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia || 0)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                  <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                </tr>
-              `;
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia || 0)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                      <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                    </tr>
+                  `;
                 })
                 .join("")}
             </tbody>
@@ -467,8 +499,12 @@
         </div>
       `;
     } else {
-      itemsHtml =
-        '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có sản phẩm trong phiếu này</div>';
+      itemsHtml = `
+        <div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;">
+          <i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>
+          Không có sản phẩm trong phiếu này
+        </div>
+      `;
     }
 
     return `
@@ -789,6 +825,14 @@
       if (result.success) {
         var receipts = result.data || [];
 
+        // ✅ ĐẢM BẢO MỖI RECEIPT ĐỀU CÓ items LÀ MẢNG
+        receipts = receipts.map(function (r) {
+          if (!r.items) {
+            r.items = [];
+          }
+          return r;
+        });
+
         window._pendingReceipts = receipts;
 
         if (receipts.length === 0) {
@@ -840,7 +884,7 @@
   }
 
   // ============================================================
-  // VIEW RECEIPT DETAIL
+  // VIEW RECEIPT DETAIL - FIX LỖI items is not defined
   // ============================================================
   window.viewReceiptDetail = function (id) {
     var container = document.getElementById("pendingReceiptsList");
@@ -856,6 +900,11 @@
         "error",
       );
       return;
+    }
+
+    // ✅ ĐẢM BẢO receipt.items là mảng
+    if (!receipt.items) {
+      receipt.items = [];
     }
 
     var html = renderReceiptDetail(receipt);
@@ -972,6 +1021,14 @@
       if (result.success) {
         var exports = result.data || [];
 
+        // ✅ ĐẢM BẢO MỖI EXPORT ĐỀU CÓ items LÀ MẢNG
+        exports = exports.map(function (r) {
+          if (!r.items) {
+            r.items = [];
+          }
+          return r;
+        });
+
         window._pendingExports = exports;
 
         if (exports.length === 0) {
@@ -1023,7 +1080,7 @@
   }
 
   // ============================================================
-  // VIEW EXPORT DETAIL
+  // VIEW EXPORT DETAIL - FIX LỖI items is not defined
   // ============================================================
   window.viewExportDetail = function (id) {
     var container = document.getElementById("pendingExportsList");
@@ -1039,6 +1096,11 @@
         "error",
       );
       return;
+    }
+
+    // ✅ ĐẢM BẢO exportItem.items là mảng
+    if (!exportItem.items) {
+      exportItem.items = [];
     }
 
     var html = renderExportDetail(exportItem);
