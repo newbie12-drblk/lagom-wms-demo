@@ -4,6 +4,9 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
+// ============================================================
+// LẤY TẤT CẢ PHIẾU NHẬP
+// ============================================================
 const getAllReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getAll();
@@ -14,6 +17,9 @@ const getAllReceipts = async (req, res) => {
   }
 };
 
+// ============================================================
+// LẤY PHIẾU NHẬP THEO ID
+// ============================================================
 const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -30,6 +36,9 @@ const getReceiptById = async (req, res) => {
   }
 };
 
+// ============================================================
+// TẠO PHIẾU NHẬP MỚI (ADMIN)
+// ============================================================
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
@@ -51,6 +60,7 @@ const createReceipt = async (req, res) => {
 
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
 
+    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Phiếu nhập ${receipt.receiptNo} chờ duyệt`,
       `Admin vừa tạo phiếu nhập mới. Vui lòng kiểm tra và duyệt.`,
@@ -78,7 +88,8 @@ const createReceipt = async (req, res) => {
 };
 
 // ============================================================
-// CẬP NHẬT TRẠNG THÁI PHIẾU NHẬP - FIX
+// CẬP NHẬT TRẠNG THÁI PHIẾU NHẬP - CHỈ CẬP NHẬT STATUS
+// KHÔNG TỰ ĐỘNG THÊM VÀO KHO
 // ============================================================
 const updateReceiptStatus = async (req, res) => {
   try {
@@ -88,156 +99,47 @@ const updateReceiptStatus = async (req, res) => {
 
     console.log(`📋 Cập nhật phiếu ID: ${id}, Status: ${status}`);
 
+    // Lấy thông tin phiếu
     const receipt = await Receipt.findById(id);
     if (!receipt) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy phiếu" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy phiếu",
+      });
     }
 
     console.log(
       `📦 Phiếu ${receipt.receiptNo} có ${receipt.items?.length || 0} sản phẩm`,
     );
 
-    // ✅ NẾU DUYỆT -> THÊM VÀO KHO
+    // ✅ CHỈ CẬP NHẬT STATUS - KHÔNG XỬ LÝ ITEMS
+    // Đây là chức năng "Nhập hàng chờ duyệt", chỉ cần đổi trạng thái
+    await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
+
+    // Gửi thông báo cho người tạo phiếu
     if (status === "approved") {
-      const items = receipt.items || [];
-
-      if (items.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Phiếu không có sản phẩm để nhập kho!",
-        });
-      }
-
-      let addedCount = 0;
-      let updatedCount = 0;
-
-      // ✅ Lấy STT lớn nhất hiện tại
-      const [maxSttResult] = await db.execute(
-        "SELECT MAX(stt) as maxStt FROM inventory",
-      );
-      let currentStt = maxSttResult[0]?.maxStt || 0;
-      console.log(`📊 STT hiện tại: ${currentStt}`);
-
-      for (const item of items) {
-        try {
-          console.log(
-            `📦 Xử lý sản phẩm: ${item.maHang} - ${item.tenThuongMai}`,
-          );
-
-          // ✅ Kiểm tra sản phẩm đã tồn tại trong kho chưa
-          const [existing] = await db.execute(
-            "SELECT * FROM inventory WHERE maHang = ?",
-            [item.maHang],
-          );
-
-          if (existing.length > 0) {
-            // ✅ Cập nhật sản phẩm hiện có
-            console.log(
-              `📦 Sản phẩm ${item.maHang} đã tồn tại, cập nhật số lượng...`,
-            );
-            await db.execute(
-              `UPDATE inventory SET 
-                tonKho = tonKho + ?,
-                soLuongNhap = soLuongNhap + ?,
-                giaNhap = ?,
-                soHopDongNhap = ?,
-                soHoaDonNhap = ?,
-                ngayNhapHD = ?,
-                soLot = ?,
-                ngayHetHan = ?,
-                ghiChu = ?,
-                updatedAt = NOW()
-              WHERE maHang = ?`,
-              [
-                item.soLuongNhap || 0,
-                item.soLuongNhap || 0,
-                item.giaNhap || 0,
-                item.soHopDongNhap || "",
-                item.soHoaDonNhap || "",
-                item.ngayNhapHD || null,
-                item.soLot || "",
-                item.ngayHetHan || null,
-                item.ghiChu || "",
-                item.maHang,
-              ],
-            );
-            updatedCount++;
-          } else {
-            // ✅ Thêm sản phẩm mới
-            currentStt++;
-            console.log(
-              `📦 Thêm sản phẩm mới STT: ${currentStt}, Mã: ${item.maHang}`,
-            );
-
-            await db.execute(
-              `INSERT INTO inventory (
-                stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-                giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
-                soLot, ngayHetHan,
-                soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-                ngayNhapHD, ngayXuatHD, ghiChu,
-                status, createdBy, approvedBy, approvedAt
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
-              [
-                currentStt,
-                item.tenThuongMai || "",
-                item.maHang || "",
-                item.quyCach || "",
-                item.hangSX || "",
-                item.dvt || "",
-                item.phanLoai || "",
-                item.giaNhap || 0,
-                item.giaNhap || 0,
-                item.soLuongNhap || 0,
-                0,
-                item.soLuongNhap || 0,
-                item.soLot || "",
-                item.ngayHetHan || null,
-                item.soHopDongNhap || "",
-                item.soHoaDonNhap || "",
-                "",
-                item.ngayNhapHD || null,
-                null,
-                item.ghiChu || "",
-                receipt.createdBy,
-                approvedBy,
-              ],
-            );
-            addedCount++;
-          }
-        } catch (err) {
-          console.error(
-            `❌ Lỗi khi thêm sản phẩm ${item.maHang}:`,
-            err.message,
-          );
-        }
-      }
-
-      console.log(
-        `✅ Đã thêm ${addedCount} sản phẩm mới, cập nhật ${updatedCount} sản phẩm vào kho`,
-      );
-
-      // ✅ Gửi thông báo cho Admin
       await Notification.create(
         receipt.createdBy,
         `✅ Phiếu nhập ${receipt.receiptNo} đã được duyệt`,
-        `Quản lý đã duyệt phiếu nhập. Đã thêm ${addedCount} sản phẩm mới và cập nhật ${updatedCount} sản phẩm vào kho.`,
+        `Quản lý đã duyệt phiếu nhập của bạn.`,
         "success",
         id,
+        "receipt",
+      );
+    } else if (status === "rejected") {
+      await Notification.create(
+        receipt.createdBy,
+        `❌ Phiếu nhập ${receipt.receiptNo} bị từ chối`,
+        `Lý do: ${rejectedReason || "Không được chấp thuận"}`,
+        "warning",
+        id,
+        "receipt",
       );
     }
 
-    // ✅ Cập nhật trạng thái phiếu
-    await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
-
     res.json({
       success: true,
-      message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu`,
-      data: {
-        addedCount: status === "approved" ? items.length : 0,
-      },
+      message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu nhập thành công`,
     });
   } catch (error) {
     console.error("❌ Update receipt status error:", error);
@@ -248,6 +150,9 @@ const updateReceiptStatus = async (req, res) => {
   }
 };
 
+// ============================================================
+// LẤY DANH SÁCH PHIẾU NHẬP CHỜ DUYỆT (QUẢN LÝ)
+// ============================================================
 const getPendingReceipts = async (req, res) => {
   try {
     console.log("📋 Fetching pending receipts...");
@@ -292,6 +197,9 @@ const getPendingReceipts = async (req, res) => {
   }
 };
 
+// ============================================================
+// XÓA PHIẾU NHẬP (ADMIN)
+// ============================================================
 const deleteReceipt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -312,6 +220,9 @@ const deleteReceipt = async (req, res) => {
   }
 };
 
+// ============================================================
+// EXPORT
+// ============================================================
 module.exports = {
   getAllReceipts,
   getReceiptById,

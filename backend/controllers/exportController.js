@@ -4,6 +4,9 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
+// ============================================================
+// LẤY TẤT CẢ PHIẾU XUẤT
+// ============================================================
 const getAllExports = async (req, res) => {
   try {
     const exports = await Export.getAll();
@@ -14,6 +17,9 @@ const getAllExports = async (req, res) => {
   }
 };
 
+// ============================================================
+// LẤY PHIẾU XUẤT THEO ID
+// ============================================================
 const getExportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -30,11 +36,15 @@ const getExportById = async (req, res) => {
   }
 };
 
+// ============================================================
+// TẠO PHIẾU XUẤT MỚI (ADMIN)
+// ============================================================
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
+    // Kiểm tra tồn kho
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -62,6 +72,7 @@ const createExport = async (req, res) => {
 
     await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
+    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📤 Phiếu xuất ${exportItem.exportNo} chờ duyệt`,
       `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`,
@@ -88,7 +99,8 @@ const createExport = async (req, res) => {
 };
 
 // ============================================================
-// CẬP NHẬT TRẠNG THÁI PHIẾU XUẤT - FIX SL XUẤT VÀ SỐ HĐ XUẤT
+// CẬP NHẬT TRẠNG THÁI PHIẾU XUẤT - CHỈ CẬP NHẬT STATUS
+// KHÔNG TỰ ĐỘNG TRỪ TỒN KHO
 // ============================================================
 const updateExportStatus = async (req, res) => {
   try {
@@ -96,87 +108,61 @@ const updateExportStatus = async (req, res) => {
     const { status, rejectedReason } = req.body;
     const approvedBy = req.user.userId;
 
+    console.log(`📋 Cập nhật phiếu xuất ID: ${id}, Status: ${status}`);
+
     const exportItem = await Export.findById(id);
     if (!exportItem) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy phiếu" });
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy phiếu",
+      });
     }
 
-    // Nếu duyệt -> trừ tồn kho và cập nhật số lượng xuất, số HĐ xuất
+    console.log(
+      `📦 Phiếu ${exportItem.exportNo} có ${exportItem.items?.length || 0} sản phẩm`,
+    );
+
+    // ✅ CHỈ CẬP NHẬT STATUS - KHÔNG TRỪ TỒN KHO
+    // Đây là chức năng "Xuất kho chờ duyệt", chỉ cần đổi trạng thái
+    await Export.updateStatus(id, status, approvedBy, rejectedReason);
+
+    // Gửi thông báo cho người tạo phiếu
     if (status === "approved") {
-      const items = exportItem.items || [];
-
-      for (const item of items) {
-        // ✅ TRỪ TỒN KHO
-        await Inventory.updateStock(item.maHang, item.soLuong, "export");
-
-        // ✅ CẬP NHẬT SỐ LƯỢNG XUẤT VÀ SỐ HĐ XUẤT TRONG INVENTORY
-        const product = await Inventory.findByMaHang(item.maHang);
-        if (product) {
-          const currentSoLuongXuat = product.soLuongXuat || 0;
-          const newSoLuongXuat = currentSoLuongXuat + (item.soLuong || 0);
-
-          await db.execute(
-            `UPDATE inventory SET 
-              soLuongXuat = ?,
-              giaXuat = ?,
-              soHopDongXuat = ?,
-              soHoaDonXuat = ?,
-              ngayXuatHD = ?,
-              updatedAt = NOW()
-            WHERE maHang = ?`,
-            [
-              newSoLuongXuat,
-              item.donGia || product.giaXuat || 0,
-              item.soHopDongXuat || product.soHopDongXuat || "",
-              item.soHoaDonXuat || product.soHoaDonXuat || "",
-              item.ngayXuatHD || exportItem.exportDate || null,
-              item.maHang,
-            ],
-          );
-          console.log(
-            `✅ Cập nhật SL xuất cho ${item.maHang}: ${newSoLuongXuat}`,
-          );
-        }
-      }
-
       await Notification.create(
         exportItem.createdBy,
         `✅ Phiếu xuất ${exportItem.exportNo} đã được duyệt`,
-        `Quản lý đã duyệt phiếu xuất. Đã xuất ${items.length} sản phẩm.`,
+        `Quản lý đã duyệt phiếu xuất của bạn.`,
         "success",
         id,
+        "export",
       );
-    }
-
-    await Export.updateStatus(id, status, approvedBy, rejectedReason);
-
-    const statusText =
-      status === "approved" ? "đã được duyệt" : "đã bị từ chối";
-
-    if (status === "rejected") {
+    } else if (status === "rejected") {
       await Notification.create(
         exportItem.createdBy,
-        `Phiếu xuất ${exportItem.exportNo} ${statusText}`,
-        `Lý do: ${rejectedReason}`,
+        `❌ Phiếu xuất ${exportItem.exportNo} bị từ chối`,
+        `Lý do: ${rejectedReason || "Không được chấp thuận"}`,
         "warning",
         id,
+        "export",
       );
     }
 
     res.json({
       success: true,
-      message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu`,
+      message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu xuất thành công`,
     });
   } catch (error) {
-    console.error("Update export status error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi server: " + error.message });
+    console.error("❌ Update export status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: " + error.message,
+    });
   }
 };
 
+// ============================================================
+// LẤY DANH SÁCH PHIẾU XUẤT CHỜ DUYỆT (QUẢN LÝ)
+// ============================================================
 const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
@@ -190,6 +176,9 @@ const getPendingExports = async (req, res) => {
   }
 };
 
+// ============================================================
+// XÓA PHIẾU XUẤT (ADMIN)
+// ============================================================
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -210,6 +199,9 @@ const deleteExport = async (req, res) => {
   }
 };
 
+// ============================================================
+// EXPORT
+// ============================================================
 module.exports = {
   getAllExports,
   getExportById,
