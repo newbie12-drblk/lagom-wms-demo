@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * FIXED: Full logic + Nút hamburger hoạt động trên Mobile + Fix items is not defined
+ * FIXED: Full logic + Nút hamburger hoạt động trên Mobile
  */
 
 (function () {
@@ -43,6 +43,13 @@
     if (overlay) {
       overlay.classList.toggle("active");
     }
+
+    // Ngăn scroll body khi sidebar mở
+    if (sidebar && sidebar.classList.contains("open")) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
   };
 
   window.closeSidebar = function () {
@@ -55,7 +62,15 @@
     if (overlay) {
       overlay.classList.remove("active");
     }
+    document.body.style.overflow = "";
   };
+
+  // Đóng sidebar khi bấm ESC
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      window.closeSidebar();
+    }
+  });
 
   // ============================================================
   // UPDATE TOPBAR
@@ -152,6 +167,7 @@
       }
     });
 
+    // Load dữ liệu cho view tương ứng
     if (viewName === "dashboard") {
       loadDashboardStats();
       loadNotifications();
@@ -577,7 +593,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS - THÊM HÀM NÀY
+  // LOAD PENDING APPROVALS
   // ============================================================
   async function loadPendingApprovals() {
     var container = document.getElementById("pendingApprovalsList");
@@ -917,12 +933,45 @@
     if (!receipt.status) receipt.status = "pending";
 
     var html = renderReceiptDetail(receipt);
+
+    // ✅ THÊM FORM NHẬP 4 TRƯỜNG HÓA ĐƠN
+    html += `
+      <div style="margin-top: 20px; padding: 16px; background: #0f172a; border: 1px solid #1e2d45; border-radius: 8px;">
+        <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 14px;">📄 Thông tin hóa đơn</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
+            <input type="text" id="approve_soHoaDonNhap" placeholder="Nhập số hóa đơn nhập" 
+                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
+            <input type="date" id="approve_ngayNhapHD" 
+                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn xuất</label>
+            <input type="text" id="approve_soHoaDonXuat" placeholder="Nhập số hóa đơn xuất" 
+                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất</label>
+            <input type="date" id="approve_ngayXuatHD" 
+                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
+          </div>
+        </div>
+        <p style="font-size: 11px; color: #6b82a0; margin-top: 8px;">
+          <i class="fas fa-info-circle"></i> Nhập thông tin hóa đơn trước khi duyệt (các trường * là bắt buộc)
+        </p>
+      </div>
+    `;
+
     html += `
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-times"></i> Từ chối
         </button>
-        <button class="btn btn-success" onclick="window.approveReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
+        <button class="btn btn-success" onclick="window.approveReceiptWithInvoice(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-check"></i> Duyệt
         </button>
       </div>
@@ -941,10 +990,26 @@
   };
 
   // ============================================================
-  // APPROVE / REJECT RECEIPT
+  // APPROVE RECEIPT WITH INVOICE - DUYỆT KÈM THÔNG TIN HÓA ĐƠN
   // ============================================================
-  window.approveReceipt = async function (id) {
+  window.approveReceiptWithInvoice = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
+
+    var soHoaDonNhap =
+      document.getElementById("approve_soHoaDonNhap")?.value || "";
+    var ngayNhapHD = document.getElementById("approve_ngayNhapHD")?.value || "";
+    var soHoaDonXuat =
+      document.getElementById("approve_soHoaDonXuat")?.value || "";
+    var ngayXuatHD = document.getElementById("approve_ngayXuatHD")?.value || "";
+
+    if (!soHoaDonNhap) {
+      Utils.showToast("⚠️ Vui lòng nhập Số hóa đơn nhập!", "warning");
+      return;
+    }
+    if (!ngayNhapHD) {
+      Utils.showToast("⚠️ Vui lòng nhập Ngày hóa đơn nhập!", "warning");
+      return;
+    }
 
     Utils.showLoading(true, "Đang duyệt...");
     try {
@@ -955,7 +1020,13 @@
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({ status: "approved" }),
+        body: JSON.stringify({
+          status: "approved",
+          soHoaDonNhap: soHoaDonNhap,
+          ngayNhapHD: ngayNhapHD,
+          soHoaDonXuat: soHoaDonXuat,
+          ngayXuatHD: ngayXuatHD,
+        }),
       });
       var result = await response.json();
 
@@ -979,6 +1050,9 @@
     }
   };
 
+  // ============================================================
+  // REJECT RECEIPT
+  // ============================================================
   window.rejectReceipt = async function (id) {
     var reason = prompt("Nhập lý do từ chối:");
     if (reason === null) return;
@@ -1204,7 +1278,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS (GIỮ NGUYÊN)
+  // LOAD PENDING EDITS
   // ============================================================
   async function loadPendingEdits() {
     var container = document.getElementById("pendingEditsList");
@@ -1318,7 +1392,7 @@
   }
 
   // ============================================================
-  // VIEW EDIT DETAIL (GIỮ NGUYÊN)
+  // VIEW EDIT DETAIL
   // ============================================================
   window.viewEditDetail = function (id) {
     var container = document.getElementById("pendingEditsList");
@@ -1422,7 +1496,7 @@
   };
 
   // ============================================================
-  // APPROVE / REJECT EDIT (GIỮ NGUYÊN)
+  // APPROVE / REJECT EDIT
   // ============================================================
   window.approveEditRequest = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt yêu cầu chỉnh sửa này?")) return;
@@ -1486,7 +1560,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING DELETIONS (GIỮ NGUYÊN)
+  // LOAD PENDING DELETIONS
   // ============================================================
   async function loadPendingDeletions() {
     var container = document.getElementById("pendingDeletionsList");
@@ -1554,7 +1628,7 @@
   }
 
   // ============================================================
-  // VIEW DELETION DETAIL (GIỮ NGUYÊN)
+  // VIEW DELETION DETAIL
   // ============================================================
   window.viewDeletionDetail = function (id) {
     var container = document.getElementById("pendingDeletionsList");
@@ -1605,7 +1679,7 @@
   };
 
   // ============================================================
-  // APPROVE / REJECT DELETION (GIỮ NGUYÊN)
+  // APPROVE / REJECT DELETION
   // ============================================================
   window.approveDeletionRequest = async function (id) {
     if (
@@ -1680,7 +1754,7 @@
   };
 
   // ============================================================
-  // QUẢN LÝ NGƯỜI DÙNG (GIỮ NGUYÊN)
+  // QUẢN LÝ NGƯỜI DÙNG
   // ============================================================
   var usersData = [];
 
@@ -2057,24 +2131,42 @@
   // BIND EVENTS
   // ============================================================
   function bindEvents() {
-    document.querySelectorAll(".nav-item").forEach(function (item) {
-      item.addEventListener("click", function (e) {
+    // Nav items - dùng event delegation để đảm bảo hoạt động sau khi DOM thay đổi
+    document.addEventListener("click", function (e) {
+      var item = e.target.closest(".nav-item");
+      if (item && item.dataset && item.dataset.view) {
         e.preventDefault();
-        switchView(item.dataset.view);
-        if (window.innerWidth <= 768) {
+        var viewName = item.dataset.view;
+        console.log("🖱️ Nav clicked:", viewName);
+        if (viewName && typeof switchView === "function") {
+          switchView(viewName);
+        }
+        // Đóng sidebar trên mobile
+        if (
+          window.innerWidth <= 768 &&
+          typeof window.closeSidebar === "function"
+        ) {
           window.closeSidebar();
         }
-      });
+      }
     });
 
-    const btnHamburger = document.getElementById("btnHamburger");
+    // Hamburger button
+    var btnHamburger = document.getElementById("btnHamburger");
     if (btnHamburger) {
-      btnHamburger.addEventListener("click", function (e) {
+      // Xóa event listener cũ bằng cách clone và thay thế
+      var newBtn = btnHamburger.cloneNode(true);
+      btnHamburger.parentNode.replaceChild(newBtn, btnHamburger);
+      newBtn.addEventListener("click", function (e) {
         e.preventDefault();
-        window.toggleSidebar();
+        console.log("🍔 Hamburger clicked!");
+        if (typeof window.toggleSidebar === "function") {
+          window.toggleSidebar();
+        }
       });
     }
 
+    // Refresh button
     var refreshBtn = document.getElementById("btnRefresh");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
@@ -2084,6 +2176,7 @@
       });
     }
 
+    // Add user button
     var btnAddUser = document.getElementById("btnAddUser");
     if (btnAddUser) {
       btnAddUser.addEventListener("click", function (e) {
@@ -2093,6 +2186,7 @@
       });
     }
 
+    // Refresh users button
     var btnRefreshUsers = document.getElementById("btnRefreshUsers");
     if (btnRefreshUsers) {
       btnRefreshUsers.addEventListener("click", function (e) {
@@ -2101,6 +2195,7 @@
       });
     }
 
+    // Save user button
     var btnSaveUser = document.getElementById("btnSaveUser");
     if (btnSaveUser) {
       btnSaveUser.addEventListener("click", function (e) {
@@ -2109,6 +2204,7 @@
       });
     }
 
+    // Close modal on overlay click
     var modal = document.getElementById("userModal");
     if (modal) {
       modal.addEventListener("click", function (e) {
@@ -2118,6 +2214,7 @@
       });
     }
 
+    // Close modal button
     var closeBtn = document.querySelector(".close-modal");
     if (closeBtn) {
       closeBtn.addEventListener("click", function (e) {
@@ -2175,6 +2272,11 @@
       else if (viewId === "pending-deletions") loadPendingDeletions();
       else if (viewId === "users") loadUsers();
     }
+
+    // Đảm bảo sidebar đóng trên mobile khi load
+    if (window.innerWidth <= 768) {
+      window.closeSidebar();
+    }
   }
 
   // ============================================================
@@ -2182,422 +2284,22 @@
   // ============================================================
   window.switchView = switchView;
   window.goBackFromPending = goBackFromPending;
-  window.approveReceipt = approveReceipt;
-  window.rejectReceipt = rejectReceipt;
-  window.approveExport = approveExport;
-  window.rejectExport = rejectExport;
-  window.approveApproval = approveApproval;
-  window.rejectApproval = rejectApproval;
-  window.approveEditRequest = approveEditRequest;
-  window.rejectEditRequest = rejectEditRequest;
-  window.approveDeletionRequest = approveDeletionRequest;
-  window.rejectDeletionRequest = rejectDeletionRequest;
+  window.loadPendingApprovals = loadPendingApprovals;
+  window.loadPendingReceipts = loadPendingReceipts;
+  window.loadPendingExports = loadPendingExports;
+  window.loadPendingEdits = loadPendingEdits;
+  window.loadPendingDeletions = loadPendingDeletions;
   window.loadUsers = loadUsers;
   window.editUser = editUser;
   window.deleteUser = deleteUser;
   window.closeUserModal = closeUserModal;
   window.openAddUserModal = openAddUserModal;
   window.saveUser = saveUser;
-  window.loadPendingApprovals = loadPendingApprovals;
-  window.loadPendingReceipts = loadPendingReceipts;
-  window.loadPendingExports = loadPendingExports;
-  window.loadPendingEdits = loadPendingEdits;
-  window.loadPendingDeletions = loadPendingDeletions;
 
+  // Khởi tạo
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
-  }
-
-  // ============================================================
-  // FIX: RE-BIND NAVBAR EVENTS (GIỮ NGUYÊN CHỨC NĂNG CŨ)
-  // ============================================================
-  function fixNavbarEvents() {
-    console.log("🔧 Fixing navbar events...");
-
-    var navItems = document.querySelectorAll(".nav-item");
-    console.log("📋 Found", navItems.length, "nav items");
-
-    navItems.forEach(function (item) {
-      // Kiểm tra xem item đã có sự kiện click chưa
-      var hasListener = false;
-      // Clone và thay thế để reset sự kiện
-      var newItem = item.cloneNode(true);
-      item.parentNode.replaceChild(newItem, item);
-
-      // Gán sự kiện mới
-      newItem.addEventListener("click", function (e) {
-        e.preventDefault();
-        var viewName = this.getAttribute("data-view");
-        console.log("🖱️ Nav clicked:", viewName);
-        if (viewName && typeof switchView === "function") {
-          switchView(viewName);
-        }
-        // Đóng sidebar trên mobile
-        if (
-          window.innerWidth <= 768 &&
-          typeof window.closeSidebar === "function"
-        ) {
-          window.closeSidebar();
-        }
-      });
-    });
-
-    console.log("✅ Navbar events fixed!");
-  }
-
-  // Fix hamburger menu
-  function fixHamburger() {
-    var btn = document.getElementById("btnHamburger");
-    if (btn) {
-      var newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        console.log("🍔 Hamburger clicked!");
-        if (typeof window.toggleSidebar === "function") {
-          window.toggleSidebar();
-        }
-      });
-      console.log("✅ Hamburger fixed!");
-    }
-  }
-
-  // Gọi fix sau khi trang load
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () {
-      setTimeout(function () {
-        fixNavbarEvents();
-        fixHamburger();
-      }, 100);
-    });
-  } else {
-    setTimeout(function () {
-      fixNavbarEvents();
-      fixHamburger();
-    }, 100);
-  }
-
-  // Gọi lại khi trang load xong
-  window.addEventListener("load", function () {
-    setTimeout(function () {
-      fixNavbarEvents();
-      fixHamburger();
-    }, 200);
-  });
-
-  // ============================================================
-  // FIX: THÊM quyCachDongGoi VÀO RENDER INVENTORY DETAIL
-  // ============================================================
-  // Hàm renderInventoryDetail đã được cập nhật ở trên
-  // Nếu file chưa có hàm này, thêm vào
-
-  // ============================================================
-  // FIX: VIEW RECEIPT DETAIL - HIỂN THỊ FORM NHẬP 4 TRƯỜNG KHI DUYỆT
-  // ============================================================
-  window.viewReceiptDetail = function (id) {
-    var container = document.getElementById("pendingReceiptsList");
-    if (!container) return;
-
-    var receipt = window._pendingReceipts.find(function (r) {
-      return r.id === id;
-    });
-
-    if (!receipt) {
-      Utils.showToast(
-        "Không tìm thấy dữ liệu, vui lòng tải lại trang",
-        "error",
-      );
-      return;
-    }
-
-    if (!receipt.items) receipt.items = [];
-    if (!receipt.receiptNo) receipt.receiptNo = "PN-" + receipt.id;
-    if (!receipt.total) receipt.total = 0;
-    if (!receipt.status) receipt.status = "pending";
-
-    var html = renderReceiptDetail(receipt);
-
-    // ✅ THÊM FORM NHẬP 4 TRƯỜNG HÓA ĐƠN
-    html += `
-      <div style="margin-top: 20px; padding: 16px; background: #0f172a; border: 1px solid #1e2d45; border-radius: 8px;">
-        <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 14px;">📄 Thông tin hóa đơn</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
-            <input type="text" id="approve_soHoaDonNhap" placeholder="Nhập số hóa đơn nhập" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
-            <input type="date" id="approve_ngayNhapHD" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn xuất</label>
-            <input type="text" id="approve_soHoaDonXuat" placeholder="Nhập số hóa đơn xuất" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất</label>
-            <input type="date" id="approve_ngayXuatHD" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-        </div>
-        <p style="font-size: 11px; color: #6b82a0; margin-top: 8px;">
-          <i class="fas fa-info-circle"></i> Nhập thông tin hóa đơn trước khi duyệt (các trường * là bắt buộc)
-        </p>
-      </div>
-    `;
-
-    html += `
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
-        <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
-          <i class="fas fa-times"></i> Từ chối
-        </button>
-        <button class="btn btn-success" onclick="window.approveReceiptWithInvoice(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
-          <i class="fas fa-check"></i> Duyệt
-        </button>
-      </div>
-    `;
-
-    container.innerHTML = `
-      <div style="margin-bottom: 16px;">
-        <button class="btn btn-outline" onclick="window.loadPendingReceipts()" style="margin-bottom: 16px;">
-          <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </button>
-        <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #f59e0b;">
-          ${html}
-        </div>
-      </div>
-    `;
-  };
-
-  // ============================================================
-  // APPROVE RECEIPT WITH INVOICE - DUYỆT KÈM THÔNG TIN HÓA ĐƠN
-  // ============================================================
-  window.approveReceiptWithInvoice = async function (id) {
-    if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
-
-    // Lấy thông tin hóa đơn từ form
-    var soHoaDonNhap =
-      document.getElementById("approve_soHoaDonNhap")?.value || "";
-    var ngayNhapHD = document.getElementById("approve_ngayNhapHD")?.value || "";
-    var soHoaDonXuat =
-      document.getElementById("approve_soHoaDonXuat")?.value || "";
-    var ngayXuatHD = document.getElementById("approve_ngayXuatHD")?.value || "";
-
-    // Kiểm tra bắt buộc nhập
-    if (!soHoaDonNhap) {
-      Utils.showToast("⚠️ Vui lòng nhập Số hóa đơn nhập!", "warning");
-      return;
-    }
-    if (!ngayNhapHD) {
-      Utils.showToast("⚠️ Vui lòng nhập Ngày hóa đơn nhập!", "warning");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang duyệt...");
-    try {
-      var token = API.getToken();
-      var response = await fetch(API_BASE_URL + "/receipts/" + id + "/status", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          status: "approved",
-          soHoaDonNhap: soHoaDonNhap,
-          ngayNhapHD: ngayNhapHD,
-          soHoaDonXuat: soHoaDonXuat,
-          ngayXuatHD: ngayXuatHD,
-        }),
-      });
-      var result = await response.json();
-
-      if (result.success) {
-        Utils.showToast("✅ Đã duyệt phiếu nhập!");
-        await loadPendingReceipts();
-        await loadDashboardStats();
-        if (typeof window.refreshInventoryData === "function") {
-          await window.refreshInventoryData();
-        }
-        if (typeof window.initHome === "function") {
-          await window.initHome();
-        }
-      } else {
-        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
-      }
-    } catch (error) {
-      Utils.showToast("❌ " + error.message, "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
-
-  // ============================================================
-  // FIX: RENDER RECEIPT DETAIL - CẬP NHẬT HIỂN THỊ
-  // ============================================================
-  function renderReceiptDetail(receipt) {
-    if (!receipt) {
-      return `
-        <div style="padding: 20px; text-align: center; color: #f87171;">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Không có dữ liệu phiếu nhập</p>
-        </div>
-      `;
-    }
-
-    var items = receipt.items || [];
-    var totalValue = receipt.total || 0;
-
-    var statusMap = {
-      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
-      awaiting_confirmation: {
-        class: "status-awaiting",
-        text: "🔄 Chờ xác nhận",
-      },
-      approved: { class: "status-approved", text: "✅ Đã duyệt" },
-      rejected: { class: "status-rejected", text: "❌ Từ chối" },
-    };
-    var status = statusMap[receipt.status] || statusMap["pending"];
-
-    var itemsHtml = "";
-    if (items && items.length > 0) {
-      itemsHtml = `
-        <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-          <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
-            <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; white-space: nowrap;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">TÊN THƯƠNG MẠI</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 90px;">MÃ HÀNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">SL NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700;">THÀNH TIỀN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ HĐƠN NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY NHẬP HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">SỐ LOT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700;">NGÀY HẾT HẠN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700;">GHI CHÚ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(function (item, idx) {
-                  if (!item) return "";
-                  var expiryColor =
-                    item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
-                      ? "#f87171"
-                      : "#e2eaf5";
-                  return `
-                  <tr style="border-bottom: 1px solid #1e2d45;">
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                  </tr>
-                `;
-                })
-                .join("")}
-            </tbody>
-            <tfoot>
-              <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="6" style="padding: 8px 12px;"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      `;
-    } else {
-      itemsHtml = `
-        <div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;">
-          <i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>
-          Không có sản phẩm trong phiếu này
-        </div>
-      `;
-    }
-
-    return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}</span></div>
-        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge ${status.class}" style="padding: 2px 10px;">${status.text}</span></div>
-        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.createdAt)}</span></div>
-        <div><span style="color: #6b82a0;">Ngày nhập:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.receiptDate)}</span></div>
-        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.creatorName || "Admin")}</span></div>
-        <div><span style="color: #6b82a0;">Nhà cung cấp:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Địa chỉ NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierAddress || "—")}</span></div>
-        <div><span style="color: #6b82a0;">MST NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierTax || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Địa chỉ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerAddress || "—")}</span></div>
-        <div><span style="color: #6b82a0;">MST KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerTax || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerContract || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 700;">${Utils.formatCurrency(totalValue)}</span></div>
-      </div>
-      ${itemsHtml}
-    `;
-  }
-
-  // ============================================================
-  // RENDER INVENTORY DETAIL - THÊM quyCachDongGoi
-  // ============================================================
-  function renderInventoryDetail(product) {
-    if (!product) {
-      return '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có dữ liệu</div>';
-    }
-
-    var expiryColor =
-      product.ngayHetHan && new Date(product.ngayHetHan) < new Date()
-        ? "#f87171"
-        : "#e2eaf5";
-    var stockColor = (product.tonKho || 0) === 0 ? "#f87171" : "#4ade80";
-
-    return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px;">
-        <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(product.maHang || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Quy cách:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.quyCach || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Quy cách đóng gói:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.quyCachDongGoi || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Hãng SX:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.hangSX || "—")}</span></div>
-        <div><span style="color: #6b82a0;">ĐVT:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.dvt || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
-        <div><span style="color: #6b82a0;">SL nhập:</span> <span style="color: #86efac; font-weight: 600;">${product.soLuongNhap || 0}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐơn nhập:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày nhập HĐ:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayNhapHD)}</span></div>
-        <div><span style="color: #6b82a0;">Số lot:</span> <span style="color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(product.soLot || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày hết hạn:</span> <span style="color: ${expiryColor};">${Utils.formatDate(product.ngayHetHan)}</span></div>
-        <div><span style="color: #6b82a0;">SL xuất:</span> <span style="color: #e2eaf5;">${product.soLuongXuat || 0}</span></div>
-        <div><span style="color: #6b82a0;">Giá xuất:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaXuat || 0)}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongXuat || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐơn xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayXuatHD)}</span></div>
-        <div><span style="color: #6b82a0;">Tồn cuối:</span> <span style="color: ${stockColor}; font-weight: 700;">${product.tonKho || 0}</span></div>
-        <div><span style="color: #6b82a0;">Công nợ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.congNo || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ghi chú:</span> <span style="color: #6b82a0; font-style: italic;">${Utils.escapeHtml(product.ghiChu || "—")}</span></div>
-      </div>
-    `;
   }
 })();

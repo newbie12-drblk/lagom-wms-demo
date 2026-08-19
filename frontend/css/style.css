@@ -680,7 +680,6 @@ body::before {
 .text-right {
   text-align: right;
 }
-
 .text-center {
   text-align: center;
 }
@@ -690,17 +689,14 @@ body::before {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: var(--border);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb {
   background: var(--border2);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: var(--blue);
 }
@@ -787,8 +783,66 @@ body::before {
 
 /* Mobile nhỏ (dưới 768px) */
 @media (max-width: 768px) {
+  /* Ẩn sidebar mặc định, hiển thị dạng overlay */
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
+    border-right: 1px solid var(--border);
+    background: #0b1220;
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Overlay để đóng sidebar khi bấm ra ngoài */
+  .sidebar-overlay {
     display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  /* Nút hamburger */
+  .btn-hamburger {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #e2eaf5;
+    font-size: 22px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 4px;
+  }
+
+  .btn-hamburger:hover {
+    color: #60a5fa;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .content-area {
@@ -1067,23 +1121,7 @@ body::before {
     height: auto;
   }
 }
-/* ==================== STATUS BADGE - CHỜ XÁC NHẬN ==================== */
-.status-awaiting {
-  background: rgba(59, 130, 246, 0.25);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  animation: pulseAwaiting 1.5s infinite;
-}
 
-@keyframes pulseAwaiting {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
 /* ==================== STATUS BADGE - CHỜ XÁC NHẬN ==================== */
 .status-awaiting {
   background: rgba(59, 130, 246, 0.25);

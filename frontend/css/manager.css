@@ -118,6 +118,7 @@
   transition:
     transform 0.2s,
     border-color 0.2s;
+  cursor: pointer;
 }
 
 .stat-card:hover {
@@ -910,8 +911,6 @@
 }
 
 /* ==================== QUẢN LÝ NGƯỜI DÙNG - BẢNG ==================== */
-
-/* Bảng quản lý người dùng */
 .user-management-table {
   width: 100%;
   border-collapse: collapse;
@@ -1070,7 +1069,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 998; /* Thấp hơn sidebar */
+  z-index: 998;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
@@ -1100,7 +1099,7 @@
     left: -280px !important;
     width: 280px !important;
     height: 100vh !important;
-    z-index: 999 !important; /* CAO HƠN OVERLAY */
+    z-index: 999 !important;
     transition: left 0.3s ease !important;
     box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5) !important;
     border-right: 1px solid var(--border) !important;
@@ -1114,5 +1113,10 @@
 
   .content-area {
     width: 100% !important;
+  }
+
+  /* Đảm bảo nút hamburger hiển thị trên topbar */
+  .topbar .topbar-left .btn-hamburger {
+    display: inline-flex !important;
   }
 }
