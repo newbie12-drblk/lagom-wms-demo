@@ -2,6 +2,7 @@
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
+ * ĐÃ THÊM: Quy cách đóng gói
  */
 
 (function () {
@@ -102,7 +103,10 @@
     if (!tbody) return;
 
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;padding:60px;">Không có dữ liệu tồn kho</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="22" style="text-align:center;padding:60px;color:#6b82a0;">
+        <i class="fas fa-box-open" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
+        Không có dữ liệu tồn kho
+      </td></tr>`;
       updatePaginationControls(0);
       return;
     }
@@ -118,30 +122,31 @@
         const isOutOfStock = (item.tonKho || 0) === 0;
 
         return `
-                <tr class="${isOutOfStock ? "out-of-stock" : ""}">
-                    <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff;">${globalIdx}</td>
-                    <td class="sticky-col-2" style="position: sticky; left: 50px; z-index: 100; background: #0f172a;"><strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai)}</strong></td>
-                    <td>${renderEditableField(item.maHang)}</td>
-                    <td>${renderEditableField(item.quyCach)}</td>
-                    <td>${renderEditableField(item.hangSX)}</td>
-                    <td>${renderEditableField(item.dvt)}</td>
-                    <td>${renderEditableField(item.phanLoai)}</td>
-                    <td class="text-right">${renderEditableField(item.giaNhap, true)}</td>
-                    <td class="text-right">${renderEditableField(item.soLuongNhap, true)}</td>
-                    <td>${renderEditableField(item.soHopDongNhap)}</td>
-                    <td>${renderEditableField(item.soHoaDonNhap)}</td>
-                    <td>${renderEditableField(formatDate(item.ngayNhapHD))}</td>
-                    <td>${renderEditableField(item.soLot)}</td>
-                    <td>${renderEditableField(formatDate(item.ngayHetHan))}</td>
-                    <td class="text-right">${renderEditableField(item.soLuongXuat, true)}</td>
-                    <td class="text-right">${renderEditableField(item.giaXuat, true)}</td>
-                    <td>${renderEditableField(item.soHopDongXuat)}</td>
-                    <td>${renderEditableField(item.soHoaDonXuat)}</td>
-                    <td>${renderEditableField(formatDate(item.ngayXuatHD))}</td>
-                    <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, true)}</strong></td>
-                    <td>${getDebtBadge(remainingDays)}</td>
-                </tr>
-            `;
+          <tr class="${isOutOfStock ? "out-of-stock" : ""}">
+            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff;">${globalIdx}</td>
+            <td class="sticky-col-2" style="position: sticky; left: 50px; z-index: 100; background: #0f172a;"><strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai)}</strong></td>
+            <td>${renderEditableField(item.maHang)}</td>
+            <td>${renderEditableField(item.quyCach)}</td>
+            <td>${renderEditableField(item.quyCachDongGoi)}</td>
+            <td>${renderEditableField(item.hangSX)}</td>
+            <td>${renderEditableField(item.dvt)}</td>
+            <td>${renderEditableField(item.phanLoai)}</td>
+            <td class="text-right">${renderEditableField(item.giaNhap, true)}</td>
+            <td class="text-right">${renderEditableField(item.soLuongNhap, true)}</td>
+            <td>${renderEditableField(item.soHopDongNhap)}</td>
+            <td>${renderEditableField(item.soHoaDonNhap)}</td>
+            <td>${renderEditableField(formatDate(item.ngayNhapHD))}</td>
+            <td>${renderEditableField(item.soLot)}</td>
+            <td>${renderEditableField(formatDate(item.ngayHetHan))}</td>
+            <td class="text-right">${renderEditableField(item.soLuongXuat, true)}</td>
+            <td class="text-right">${renderEditableField(item.giaXuat, true)}</td>
+            <td>${renderEditableField(item.soHopDongXuat)}</td>
+            <td>${renderEditableField(item.soHoaDonXuat)}</td>
+            <td>${renderEditableField(formatDate(item.ngayXuatHD))}</td>
+            <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, true)}</strong></td>
+            <td>${getDebtBadge(remainingDays)}</td>
+          </tr>
+        `;
       })
       .join("");
 
@@ -287,6 +292,7 @@
       "Tên thương mại": item.tenThuongMai,
       "Mã hàng": item.maHang,
       "Quy cách": item.quyCach,
+      "Quy cách đóng gói": item.quyCachDongGoi,
       "Hãng SX": item.hangSX,
       ĐVT: item.dvt,
       "Phân loại": item.phanLoai,
@@ -380,14 +386,12 @@
   window.setRequestType = function (type) {
     requestType = type;
 
-    // ✅ RESET TẤT CẢ BUTTON
     document.querySelectorAll(".request-options .btn").forEach((btn) => {
       btn.classList.remove("active");
       btn.classList.remove("btn-primary");
       btn.classList.add("btn-outline");
     });
 
-    // ✅ ACTIVE BUTTON ĐƯỢC CHỌN
     document.querySelectorAll(".request-options .btn").forEach((btn) => {
       if (btn.dataset.type === type) {
         btn.classList.remove("btn-outline");
@@ -413,7 +417,7 @@
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 7 TRƯỜNG ==========
+      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG (THÊM quyCachDongGoi) ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
@@ -425,6 +429,8 @@
                 <th style="width:30px;">STT</th>
                 <th>TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
                 <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
+                <th>QUY CÁCH</th>
+                <th>QUY CÁCH ĐÓNG GÓI</th>
                 <th>ĐVT</th>
                 <th>HÃNG/NƯỚC SX</th>
                 <th>PHÂN LOẠI MÁY</th>
@@ -438,6 +444,8 @@
                 <td>1</td>
                 <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
                 <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
+                <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
+                <td><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói"></td>
                 <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
                 <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
                 <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
@@ -454,12 +462,12 @@
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
           <p style="font-size: 12px; color: #6b82a0;">
             <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Chỉ cần nhập 7 trường cơ bản. Các trường khác sẽ được tự động điền khi tạo đề nghị nhập hàng.
+            <strong>Lưu ý:</strong> Chỉ cần nhập 9 trường cơ bản (bao gồm Quy cách đóng gói). Các trường khác sẽ được nhập khi Quản lý duyệt đề nghị nhập hàng.
           </p>
         </div>
       `;
     } else if (type === "edit") {
-      // ========== SỬA SẢN PHẨM - 7 TRƯỜNG ==========
+      // ========== SỬA SẢN PHẨM ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -478,6 +486,8 @@
           <td>${idx + 1}</td>
           <td>${escapeHtml(item.tenThuongMai || "")}</td>
           <td>${escapeHtml(item.maHang || "")}</td>
+          <td>${escapeHtml(item.quyCach || "")}</td>
+          <td>${escapeHtml(item.quyCachDongGoi || "")}</td>
           <td>${escapeHtml(item.dvt || "")}</td>
           <td>${escapeHtml(item.hangSX || "")}</td>
           <td>${escapeHtml(item.phanLoai || "")}</td>
@@ -491,7 +501,7 @@
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> 
-          <strong>Chọn sản phẩm cần sửa</strong> (chỉ sửa được 7 trường cơ bản):
+          <strong>Chọn sản phẩm cần sửa</strong> (chỉ sửa được 9 trường cơ bản):
         </p>
         <div class="request-table-wrap">
           <table class="request-table">
@@ -501,6 +511,8 @@
                 <th style="width:30px;">STT</th>
                 <th>TÊN THƯƠNG MẠI</th>
                 <th>MÃ HÀNG</th>
+                <th>QUY CÁCH</th>
+                <th>QUY CÁCH ĐÓNG GÓI</th>
                 <th>ĐVT</th>
                 <th>HÃNG/NƯỚC SX</th>
                 <th>PHÂN LOẠI MÁY</th>
@@ -514,10 +526,12 @@
           </table>
         </div>
         <div id="editFormContainer" style="margin-top:16px; display:none;">
-          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (7 trường):</p>
+          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (9 trường):</p>
           <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px;">
             <div><label style="color:#6b82a0;font-size:11px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;">Quy cách đóng gói</label><input type="text" id="edit-quyCachDongGoi" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">ĐVT</label><input type="text" id="edit-dvt" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
@@ -528,7 +542,7 @@
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
           <p style="font-size: 12px; color: #6b82a0;">
             <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Chỉ sửa được 7 trường cơ bản. Các trường khác sẽ được cập nhật qua đề nghị nhập/xuất.
+            <strong>Lưu ý:</strong> Chỉ sửa được 9 trường cơ bản. Các trường khác sẽ được cập nhật qua đề nghị nhập/xuất.
           </p>
         </div>
       `;
@@ -553,6 +567,7 @@
           <td>${escapeHtml(item.tenThuongMai || "")}</td>
           <td>${escapeHtml(item.maHang || "")}</td>
           <td>${escapeHtml(item.quyCach || "")}</td>
+          <td>${escapeHtml(item.quyCachDongGoi || "")}</td>
           <td>${escapeHtml(item.hangSX || "")}</td>
           <td>${escapeHtml(item.dvt || "")}</td>
           <td>${escapeHtml(item.phanLoai || "")}</td>
@@ -580,6 +595,7 @@
                 <th>TÊN THƯƠNG MẠI</th>
                 <th>MÃ HÀNG</th>
                 <th>QUY CÁCH</th>
+                <th>QUY CÁCH ĐÓNG GÓI</th>
                 <th>HÃNG/NƯỚC SX</th>
                 <th>ĐVT</th>
                 <th>PHÂN LOẠI MÁY</th>
@@ -641,6 +657,8 @@
       <td>${rowCount}</td>
       <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
       <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
+      <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
+      <td><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói"></td>
       <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
       <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
       <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
@@ -659,7 +677,7 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (7 TRƯỜNG) ====================
+  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (9 TRƯỜNG) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -677,6 +695,8 @@
       products.push({
         tenThuongMai: tenThuongMai,
         maHang: maHang,
+        quyCach: row.querySelector(".add-quyCach")?.value || "",
+        quyCachDongGoi: row.querySelector(".add-quyCachDongGoi")?.value || "",
         dvt: row.querySelector(".add-dvt")?.value || "",
         hangSX: row.querySelector(".add-hangSX")?.value || "",
         phanLoai: row.querySelector(".add-phanLoai")?.value || "",
@@ -710,7 +730,7 @@
           return;
         }
 
-        console.log("📦 Gửi yêu cầu thêm sản phẩm (7 trường):", products);
+        console.log("📦 Gửi yêu cầu thêm sản phẩm (9 trường):", products);
 
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
@@ -754,6 +774,12 @@
             oldProduct.tenThuongMai,
           maHang:
             document.getElementById("edit-maHang")?.value || oldProduct.maHang,
+          quyCach:
+            document.getElementById("edit-quyCach")?.value ||
+            oldProduct.quyCach,
+          quyCachDongGoi:
+            document.getElementById("edit-quyCachDongGoi")?.value ||
+            oldProduct.quyCachDongGoi,
           dvt: document.getElementById("edit-dvt")?.value || oldProduct.dvt,
           hangSX:
             document.getElementById("edit-hangSX")?.value || oldProduct.hangSX,
@@ -878,7 +904,6 @@
         ?.addEventListener("change", applyFilters);
     }
 
-    // CHỈ ADMIN MỚI THẤY NÚT "Tạo yêu cầu"
     const createRequestBtn = document.getElementById("btnCreateRequest");
     if (createRequestBtn) {
       if (isAdmin()) {

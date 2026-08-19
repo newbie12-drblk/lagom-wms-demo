@@ -43,18 +43,19 @@ const Inventory = {
 
     const [result] = await db.execute(
       `INSERT INTO inventory 
-        (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+        (stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, hangSX, dvt, phanLoai,
          giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
          soLot, ngayHetHan,
          soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
          ngayNhapHD, ngayXuatHD, ghiChu, 
          status, createdBy) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         newStt,
         data.tenThuongMai || "",
         data.maHang || "",
         data.quyCach || "",
+        data.quyCachDongGoi || "", // ← TRƯỜNG MỚI
         data.hangSX || "",
         data.dvt || "",
         data.phanLoai || "",
@@ -114,6 +115,7 @@ const Inventory = {
       "tenThuongMai",
       "maHang",
       "quyCach",
+      "quyCachDongGoi", // ← TRƯỜNG MỚI
       "hangSX",
       "dvt",
       "phanLoai",

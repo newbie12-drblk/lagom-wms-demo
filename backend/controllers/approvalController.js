@@ -20,7 +20,6 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Phải có ít nhất một sản phẩm" });
     }
 
-    // Kiểm tra mã hàng trùng trong yêu cầu
     const maHangs = products.map((p) => p.maHang);
     if (new Set(maHangs).size !== maHangs.length) {
       return res
@@ -28,7 +27,6 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Mã hàng bị trùng trong yêu cầu" });
     }
 
-    // Kiểm tra mã hàng đã tồn tại trong kho chưa
     for (const prod of products) {
       const existing = await Inventory.findByMaHang(prod.maHang);
       if (existing) {
@@ -39,11 +37,9 @@ const createApprovalRequest = async (req, res) => {
       }
     }
 
-    // Tạo yêu cầu
     const requestId = await ApprovalRequest.create(requesterId, { products });
     console.log("✅ Đã tạo yêu cầu ID:", requestId);
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📦 Yêu cầu thêm ${products.length} sản phẩm mới`,
       `Admin đã tạo yêu cầu thêm sản phẩm. Vui lòng kiểm tra và duyệt.`,
@@ -111,7 +107,6 @@ const approveRequest = async (req, res) => {
     const createdIds = [];
     const errors = [];
 
-    // ✅ LẤY STT LỚN NHẤT HIỆN TẠI
     const [maxSttResult] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
     );
@@ -120,23 +115,21 @@ const approveRequest = async (req, res) => {
 
     for (const prod of products) {
       try {
-        // Kiểm tra mã hàng đã tồn tại trong kho chưa
         const existing = await Inventory.findByMaHang(prod.maHang);
         if (existing) {
           errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
           continue;
         }
 
-        // ✅ TĂNG STT LÊN 1
         currentStt++;
         console.log(`📦 Thêm sản phẩm STT: ${currentStt}, Mã: ${prod.maHang}`);
 
-        // Chuẩn bị dữ liệu sản phẩm
         const productData = {
           stt: currentStt,
           tenThuongMai: prod.tenThuongMai || "",
           maHang: prod.maHang || "",
           quyCach: prod.quyCach || "",
+          quyCachDongGoi: prod.quyCachDongGoi || "", // ← TRƯỜNG MỚI
           hangSX: prod.hangSX || "",
           dvt: prod.dvt || "",
           phanLoai: prod.phanLoai || "",
@@ -160,21 +153,21 @@ const approveRequest = async (req, res) => {
           approvedAt: new Date(),
         };
 
-        // ✅ INSERT TRỰC TIẾP VỚI STT ĐÃ TĂNG
         const [result] = await db.execute(
           `INSERT INTO inventory (
-            stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+            stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, hangSX, dvt, phanLoai,
             giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
             soLot, ngayHetHan,
             soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
             ngayNhapHD, ngayXuatHD, ghiChu,
             status, createdBy, approvedBy, approvedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
           [
             productData.stt,
             productData.tenThuongMai,
             productData.maHang,
             productData.quyCach,
+            productData.quyCachDongGoi, // ← TRƯỜNG MỚI
             productData.hangSX,
             productData.dvt,
             productData.phanLoai,
@@ -221,7 +214,6 @@ const approveRequest = async (req, res) => {
     let message = `Đã duyệt yêu cầu, thêm ${createdIds.length} sản phẩm vào kho.`;
     if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
 
-    // Gửi thông báo cho Admin
     await Notification.create(
       request.requesterId,
       "✅ Yêu cầu thêm sản phẩm đã được duyệt",

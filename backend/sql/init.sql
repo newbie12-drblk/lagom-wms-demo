@@ -1,7 +1,7 @@
 -- ======================================================
 -- DATABASE: LAGOM WMS - Phiên bản 2.0
--- Ngày: 2026-07-07
--- Mô tả: 2 role (admin, quan_ly) với quy trình duyệt
+-- Ngày: 2026-08-19
+-- Mô tả: Đã thêm quyCachDongGoi, xóa 3 cột trong export
 -- ======================================================
 
 USE defaultdb;
@@ -25,6 +25,7 @@ CREATE TABLE users (
 
 -- ======================================================
 -- 2. Bảng inventory (Tồn kho - có trạng thái duyệt)
+-- ĐÃ THÊM CỘT quyCachDongGoi
 -- ======================================================
 DROP TABLE IF EXISTS inventory;
 CREATE TABLE inventory (
@@ -33,16 +34,18 @@ CREATE TABLE inventory (
     -- Thông tin cơ bản
     tenThuongMai VARCHAR(200) NOT NULL,
     maHang VARCHAR(50) UNIQUE NOT NULL,
-    dvt VARCHAR(20),
+    quyCach VARCHAR(100),
+    quyCachDongGoi VARCHAR(200),  -- ← CỘT MỚI
     hangSX VARCHAR(200),
+    dvt VARCHAR(20),
     phanLoai VARCHAR(100),
     giaNhap DECIMAL(15,0) DEFAULT 0,
     giaXuat DECIMAL(15,0) DEFAULT 0,
     soHopDongNhap VARCHAR(50),
-    soHoaDonNhap VARCHAR(50),
-    soHoaDonXuat VARCHAR(50),
-    ngayNhapHD DATE,
-    ngayXuatHD DATE,
+    soHoaDonNhap VARCHAR(50),     -- NHẬP TAY KHI DUYỆT
+    soHoaDonXuat VARCHAR(50),     -- NHẬP TAY KHI DUYỆT
+    ngayNhapHD DATE,              -- NHẬP TAY KHI DUYỆT
+    ngayXuatHD DATE,              -- NHẬP TAY KHI DUYỆT
     ghiChu TEXT,
     -- Số lượng
     soLuongNhap INT DEFAULT 0,
@@ -84,6 +87,8 @@ CREATE TABLE approval_requests (
 
 -- ======================================================
 -- 4. Bảng receipt_requests (Đề nghị nhập hàng)
+-- ĐÃ BỎ 4 TRƯỜNG: soHoaDonNhap, soHoaDonXuat, ngayNhapHD, ngayXuatHD
+-- ĐÃ THÊM: quyCachDongGoi
 -- ======================================================
 DROP TABLE IF EXISTS receipt_requests;
 CREATE TABLE receipt_requests (
@@ -96,12 +101,16 @@ CREATE TABLE receipt_requests (
     phanLoai VARCHAR(100),
     giaNhap DECIMAL(15,0) DEFAULT 0,
     soHopDongNhap VARCHAR(50),
-    soHoaDonNhap VARCHAR(50),
-    soHoaDonXuat VARCHAR(50),
-    ngayNhapHD DATE,
-    ngayXuatHD DATE,
-    ghiChu TEXT,
     soLuongNhap INT DEFAULT 0,
+    soLot VARCHAR(50),
+    ngayHetHan DATE,
+    quyCachDongGoi VARCHAR(200),   -- ← CỘT MỚI
+    -- 4 TRƯỜNG NÀY SẼ NHẬP KHI DUYỆT
+    soHoaDonNhap VARCHAR(50) DEFAULT NULL,
+    soHoaDonXuat VARCHAR(50) DEFAULT NULL,
+    ngayNhapHD DATE DEFAULT NULL,
+    ngayXuatHD DATE DEFAULT NULL,
+    -- Các trường khác
     matchStatus ENUM('matched', 'unmatched') DEFAULT 'unmatched',
     status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
@@ -208,6 +217,7 @@ CREATE TABLE receipt_items (
 
 -- ======================================================
 -- 8. Bảng exports (Phiếu xuất kho - thực tế)
+-- ĐÃ XÓA 3 CỘT: giaNhap, soHopDongNhap, soHoaDonXuat
 -- ======================================================
 DROP TABLE IF EXISTS exports;
 CREATE TABLE exports (
@@ -234,6 +244,7 @@ CREATE TABLE exports (
 
 -- ======================================================
 -- 9. Bảng export_items (Chi tiết phiếu xuất)
+-- ĐÃ XÓA 3 CỘT: giaNhap, soHopDongNhap, soHoaDonXuat
 -- ======================================================
 DROP TABLE IF EXISTS export_items;
 CREATE TABLE export_items (
@@ -251,7 +262,6 @@ CREATE TABLE export_items (
     soLot VARCHAR(50),
     ngayHetHan DATE,
     soHopDongXuat VARCHAR(50),
-    soHoaDonXuat VARCHAR(50),
     ngayXuatHD DATE,
     ghiChu TEXT,
     FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE
@@ -379,15 +389,15 @@ CREATE TABLE user_permissions (
 -- 16. CHÈN DỮ LIỆU MẪU
 -- ======================================================
 
--- User mẫu (password plain text)
+-- User mẫu (password: admin123, quanly123)
 INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
 ('admin', '$2b$10$2g4cl763dUCrtM/buaa6s.VWp.k.K9EpV5EJp5DN1vhUwN0XcMXiu', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
 ('quanly', '$2b$10$TwJSxMoVGJUd/JVs33XYYOXFkWKoG4/KGNDXKguplrU9El5i5ttve', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
 
 -- Sản phẩm mẫu (đã được duyệt)
-INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai, giaNhap, giaXuat, tonKho, status, createdBy, approvedBy, approvedAt) VALUES
-(1, 'Atelica IM TSH3-Ultra II', '11208706', 'Hộp', 'Siemens Healthcare', 'Máy sinh hóa miễn dịch', 2915000, 3500000, 10, 'approved', 1, 2, NOW()),
-(2, 'Cobas e601 TSH', 'TSH601', 'Hộp', 'Roche Diagnostics', 'Máy miễn dịch', 3500000, 4200000, 5, 'approved', 1, 2, NOW());
+INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, dvt, hangSX, phanLoai, giaNhap, giaXuat, tonKho, status, createdBy, approvedBy, approvedAt) VALUES
+(1, 'Atelica IM TSH3-Ultra II', '11208706', 'Hộp 100 test', 'Hộp 2x50 test', 'Hộp', 'Siemens Healthcare', 'Máy sinh hóa miễn dịch', 2915000, 3500000, 10, 'approved', 1, 2, NOW()),
+(2, 'Cobas e601 TSH', 'TSH601', 'Hộp 100 test', 'Hộp 4x25 test', 'Hộp', 'Roche Diagnostics', 'Máy miễn dịch', 3500000, 4200000, 5, 'approved', 1, 2, NOW());
 
 -- Quyền mẫu cho Admin (user id = 1)
 INSERT IGNORE INTO user_permissions (userId, canEditTenThuongMai, canEditMaHang, canEditDVT, canEditHangSX, canEditPhanLoai, canEditGiaNhap, canEditSoHopDongNhap, canEditSoHoaDonNhap, canEditSoHoaDonXuat, canEditNgayNhapHD, canEditNgayXuatHD, canEditGhiChu, canCreateReceipt, canCreateExport, canViewAll) VALUES

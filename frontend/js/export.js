@@ -1,6 +1,6 @@
 /**
  * ==================== EXPORT MODULE ====================
- * Quản lý phiếu xuất kho - 7 TRƯỜNG TỰ ĐỘNG + 5 TRƯỜNG NHẬP TAY = 12 TRƯỜNG
+ * Quản lý phiếu xuất kho - ĐÃ XÓA 3 CỘT
  */
 
 (function () {
@@ -114,8 +114,6 @@
         const unitInput = row.querySelector(".unit");
         const manufacturerInput = row.querySelector(".manufacturer");
         const categoryInput = row.querySelector(".category");
-        const giaNhapInput = row.querySelector(".giaNhap-input");
-        const contractInput = row.querySelector(".contract-input");
         const priceInput = row.querySelector(".price-input");
 
         if (nameInput) {
@@ -133,14 +131,6 @@
         if (categoryInput) {
           categoryInput.value = product.phanLoai || "";
           categoryInput.style.borderColor = "#4ade80";
-        }
-        if (giaNhapInput) {
-          giaNhapInput.value = formatCurrency(product.giaNhap || 0);
-          giaNhapInput.style.borderColor = "#4ade80";
-        }
-        if (contractInput && product.soHopDongNhap) {
-          contractInput.value = product.soHopDongNhap;
-          contractInput.style.borderColor = "#4ade80";
         }
 
         if (priceInput) {
@@ -175,7 +165,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - VẪN GIỮ NÚT XÓA ==========
+  // ========== Tạo dòng sản phẩm - ĐÃ XÓA 3 CỘT ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -190,13 +180,13 @@
       <td><input type="text" class="unit" value="${escapeHtml(data?.dvt || "")}" placeholder="ĐVT" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="manufacturer" value="${escapeHtml(data?.hangSX || "")}" placeholder="Hãng/Nước SX" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy" readonly style="background:#f0f0f0;color:#333;"></td>
-      <td><input type="text" class="giaNhap-input" value="${data?.giaNhap ? formatCurrency(data.giaNhap) : "0"}" placeholder="Giá nhập" readonly style="background:#f0f0f0;color:#333;"></td>
-      <td><input type="text" class="contract-input" value="${escapeHtml(data?.soHopDongNhap || "")}" placeholder="Số HĐ nhập" readonly style="background:#f0f0f0;color:#333;"></td>
+      <!-- ĐÃ XÓA: GIÁ NHẬP -->
+      <!-- ĐÃ XÓA: SỐ HĐ NHẬP -->
       <td><input type="text" class="price-input" placeholder="Đơn giá xuất *"></td>
       <td><input type="text" class="qty-input" placeholder="Số lượng *"></td>
       <td><input type="text" class="lot-input" placeholder="Số lot *"></td>
       <td><input type="date" class="expiry-input"></td>
-      <td><input type="text" class="soHopDongXuat-input" placeholder="Số HĐ xuất *"></td>
+      <!-- ĐÃ XÓA: SỐ HĐ XUẤT -->
       <td class="row-total" data-total="0">0</td>
       <td class="text-center" style="width:35px;">${removeButton}</td>
     `;
@@ -277,13 +267,10 @@
       const unitInput = row.querySelector(".unit");
       const manufacturerInput = row.querySelector(".manufacturer");
       const categoryInput = row.querySelector(".category");
-      const giaNhapInput = row.querySelector(".giaNhap-input");
-      const contractInput = row.querySelector(".contract-input");
       const priceInput = row.querySelector(".price-input");
       const qtyInput = row.querySelector(".qty-input");
       const lotInput = row.querySelector(".lot-input");
       const expiryInput = row.querySelector(".expiry-input");
-      const soHopDongXuatInput = row.querySelector(".soHopDongXuat-input");
       const totalSpan = row.querySelector(".row-total");
 
       items.push({
@@ -292,13 +279,10 @@
         dvt: unitInput?.value || "",
         hangSX: manufacturerInput?.value || "",
         phanLoai: categoryInput?.value || "",
-        giaNhap: parseNumber(giaNhapInput?.value),
-        soHopDongNhap: contractInput?.value || "",
         donGia: parseNumber(priceInput?.value),
         soLuong: parseNumber(qtyInput?.value),
         soLot: lotInput?.value || "",
         ngayHetHan: expiryInput?.value || "",
-        soHopDongXuat: soHopDongXuatInput?.value || "",
         thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
       });
     });
@@ -424,7 +408,6 @@
       inputValues[index] = input.value;
     });
 
-    // Ẩn cột xóa khi in bằng style
     document.querySelectorAll(".col-delete").forEach((el) => {
       el.style.display = "none !important";
     });

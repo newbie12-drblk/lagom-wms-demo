@@ -4,9 +4,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// ============================================================
-// LẤY TẤT CẢ PHIẾU NHẬP
-// ============================================================
 const getAllReceipts = async (req, res) => {
   try {
     const receipts = await Receipt.getAll();
@@ -17,9 +14,6 @@ const getAllReceipts = async (req, res) => {
   }
 };
 
-// ============================================================
-// LẤY PHIẾU NHẬP THEO ID
-// ============================================================
 const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -36,9 +30,7 @@ const getReceiptById = async (req, res) => {
   }
 };
 
-// ============================================================
-// TẠO PHIẾU NHẬP MỚI (ADMIN)
-// ============================================================
+// Tạo phiếu nhập từ đề nghị đã duyệt
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
@@ -60,7 +52,6 @@ const createReceipt = async (req, res) => {
 
     console.log("✅ Phiếu tạo thành công:", receipt.receiptNo);
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Phiếu nhập ${receipt.receiptNo} chờ duyệt`,
       `Admin vừa tạo phiếu nhập mới. Vui lòng kiểm tra và duyệt.`,
@@ -87,10 +78,7 @@ const createReceipt = async (req, res) => {
   }
 };
 
-// ============================================================
-// CẬP NHẬT TRẠNG THÁI PHIẾU NHẬP - CHỈ CẬP NHẬT STATUS
-// KHÔNG TỰ ĐỘNG THÊM VÀO KHO
-// ============================================================
+// Cập nhật trạng thái phiếu nhập - CHỈ CẬP NHẬT STATUS
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -99,7 +87,6 @@ const updateReceiptStatus = async (req, res) => {
 
     console.log(`📋 Cập nhật phiếu ID: ${id}, Status: ${status}`);
 
-    // Lấy thông tin phiếu
     const receipt = await Receipt.findById(id);
     if (!receipt) {
       return res.status(404).json({
@@ -113,10 +100,8 @@ const updateReceiptStatus = async (req, res) => {
     );
 
     // ✅ CHỈ CẬP NHẬT STATUS - KHÔNG XỬ LÝ ITEMS
-    // Đây là chức năng "Nhập hàng chờ duyệt", chỉ cần đổi trạng thái
     await Receipt.updateStatus(id, status, approvedBy, rejectedReason);
 
-    // Gửi thông báo cho người tạo phiếu
     if (status === "approved") {
       await Notification.create(
         receipt.createdBy,
@@ -150,9 +135,6 @@ const updateReceiptStatus = async (req, res) => {
   }
 };
 
-// ============================================================
-// LẤY DANH SÁCH PHIẾU NHẬP CHỜ DUYỆT (QUẢN LÝ)
-// ============================================================
 const getPendingReceipts = async (req, res) => {
   try {
     console.log("📋 Fetching pending receipts...");
@@ -197,9 +179,6 @@ const getPendingReceipts = async (req, res) => {
   }
 };
 
-// ============================================================
-// XÓA PHIẾU NHẬP (ADMIN)
-// ============================================================
 const deleteReceipt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -220,9 +199,6 @@ const deleteReceipt = async (req, res) => {
   }
 };
 
-// ============================================================
-// EXPORT
-// ============================================================
 module.exports = {
   getAllReceipts,
   getReceiptById,

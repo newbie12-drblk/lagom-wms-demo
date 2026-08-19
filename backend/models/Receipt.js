@@ -25,7 +25,6 @@ const Receipt = {
 
     const receipt = receipts[0];
 
-    // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
     const [items] = await db.execute(
       `SELECT 
         id, receiptId, 
@@ -53,7 +52,6 @@ const Receipt = {
 
     const result = [];
     for (const row of rows) {
-      // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
       const [items] = await db.execute(
         `SELECT 
           id, receiptId, 
@@ -114,7 +112,6 @@ const Receipt = {
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
         console.log(`  - ${item.maHang}: ${item.tenThuongMai}`);
-        // ✅ BỎ soHoaDonXuat (không có trong receipt_items)
         await db.execute(
           `INSERT INTO receipt_items 
             (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 

@@ -1,8 +1,7 @@
 /* ======================================================
    FILE: export.css
-   TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu xuất kho (export.html)
-   NGÀY: 2026 - FIXED PRINT FORMAT
+   NGÀY: 2026 - ĐÃ XÓA 3 CỘT
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -149,7 +148,7 @@ body {
   border-bottom-color: #1e3a5f;
 }
 
-/* ==================== 5. BẢNG SẢN PHẨM ==================== */
+/* ==================== 5. BẢNG SẢN PHẨM - ĐÃ XÓA 3 CỘT ==================== */
 .items-table-wrapper {
   overflow-x: auto;
   margin: 20px 0;
@@ -323,7 +322,7 @@ body {
   background: #b91c1c;
 }
 
-/* ==================== 9. PRINT STYLES - FIX ==================== */
+/* ==================== 9. PRINT STYLES ==================== */
 @media print {
   * {
     box-sizing: border-box;
@@ -350,7 +349,6 @@ body {
     background: white !important;
   }
 
-  /* Ẩn nút bấm */
   .action-buttons,
   .toolbar,
   .no-print,
@@ -360,7 +358,6 @@ body {
     display: none !important;
   }
 
-  /* Ẩn cột xóa */
   .col-delete {
     display: none !important;
   }
@@ -369,9 +366,6 @@ body {
     display: none !important;
   }
 
-  /* ============================================================ */
-  /* ✅ FIX BẢNG - CÓ BORDER ĐẦY ĐỦ, KHÔNG TRÀN */
-  /* ============================================================ */
   .items-table-wrapper {
     overflow-x: visible !important;
     margin: 8px 0 !important;
@@ -385,48 +379,39 @@ body {
     border: 1px solid #000 !important;
   }
 
-  /* Đặt chiều rộng cố định cho từng cột */
+  /* Đặt chiều rộng cố định cho từng cột - ĐÃ CẬP NHẬT */
   .items-table th:nth-child(1) {
     width: 5% !important;
   } /* STT */
   .items-table th:nth-child(2) {
-    width: 9% !important;
+    width: 12% !important;
   } /* Mã hàng */
   .items-table th:nth-child(3) {
-    width: 13% !important;
+    width: 18% !important;
   } /* Tên thương mại */
   .items-table th:nth-child(4) {
-    width: 5% !important;
+    width: 7% !important;
   } /* ĐVT */
   .items-table th:nth-child(5) {
-    width: 9% !important;
+    width: 12% !important;
   } /* Hãng SX */
   .items-table th:nth-child(6) {
-    width: 9% !important;
+    width: 12% !important;
   } /* Phân loại */
   .items-table th:nth-child(7) {
-    width: 7% !important;
-  } /* Giá nhập */
-  .items-table th:nth-child(8) {
-    width: 7% !important;
-  } /* Số HĐ nhập */
-  .items-table th:nth-child(9) {
-    width: 7% !important;
+    width: 10% !important;
   } /* Đơn giá xuất */
-  .items-table th:nth-child(10) {
-    width: 5% !important;
-  } /* Số lượng */
-  .items-table th:nth-child(11) {
-    width: 7% !important;
-  } /* Số lot */
-  .items-table th:nth-child(12) {
-    width: 7% !important;
-  } /* HSD */
-  .items-table th:nth-child(13) {
-    width: 7% !important;
-  } /* Số HĐ xuất */
-  .items-table th:nth-child(14) {
+  .items-table th:nth-child(8) {
     width: 8% !important;
+  } /* Số lượng */
+  .items-table th:nth-child(9) {
+    width: 10% !important;
+  } /* Số lot */
+  .items-table th:nth-child(10) {
+    width: 10% !important;
+  } /* HSD */
+  .items-table th:nth-child(11) {
+    width: 10% !important;
   } /* Thành tiền */
 
   .items-table th,
@@ -480,9 +465,6 @@ body {
     background: #f5f5f5 !important;
   }
 
-  /* ============================================================ */
-  /* ✅ FIX INPUT KHI IN */
-  /* ============================================================ */
   input,
   select,
   textarea {
@@ -536,9 +518,6 @@ body {
     display: inline !important;
   }
 
-  /* ============================================================ */
-  /* ✅ FIX HEADER VÀ INFO */
-  /* ============================================================ */
   .company-header {
     margin-bottom: 6px !important;
     padding-bottom: 4px !important;
@@ -573,7 +552,6 @@ body {
     color: #333 !important;
   }
 
-  /* Info grid - 2 cột ngang hàng */
   .info-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
@@ -607,9 +585,6 @@ body {
     font-weight: 600 !important;
   }
 
-  /* ============================================================ */
-  /* ✅ FIX CHỮ KÝ */
-  /* ============================================================ */
   .signature {
     margin-top: 15px !important;
     padding-top: 6px !important;

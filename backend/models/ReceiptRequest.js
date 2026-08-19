@@ -46,13 +46,14 @@ const ReceiptRequest = {
       }
     }
 
+    // ✅ KHÔNG LƯU 4 TRƯỜNG HÓA ĐƠN Ở BƯỚC TẠO ĐỀ NGHỊ
     const [result] = await db.execute(
       `INSERT INTO receipt_requests 
         (requestNo, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-         giaNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-         ngayNhapHD, ngayXuatHD, ghiChu, soLuongNhap,
+         giaNhap, soHopDongNhap, 
+         soLuongNhap, soLot, ngayHetHan, quyCachDongGoi,
          matchStatus, status, createdBy)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         requestNo,
         data.tenThuongMai,
@@ -62,12 +63,10 @@ const ReceiptRequest = {
         data.phanLoai || "",
         data.giaNhap || 0,
         data.soHopDongNhap || "",
-        data.soHoaDonNhap || "",
-        data.soHoaDonXuat || "",
-        data.ngayNhapHD || null,
-        data.ngayXuatHD || null,
-        data.ghiChu || "",
         data.soLuongNhap || 0,
+        data.soLot || "",
+        data.ngayHetHan || null,
+        data.quyCachDongGoi || "", // ← TRƯỜNG MỚI
         matchStatus,
         createdBy,
       ],
@@ -91,7 +90,7 @@ const ReceiptRequest = {
        WHERE r.id = ?`,
       [id],
     );
-    return rows[0];
+    return rows[0] || null;
   },
 
   getAll: async (status = null) => {
@@ -121,7 +120,8 @@ const ReceiptRequest = {
     return rows;
   },
 
-  approve: async (id, approvedBy, soLuongNhap = null) => {
+  // ✅ DUYỆT VỚI 4 TRƯỜNG HÓA ĐƠN
+  approve: async (id, approvedBy, extraData = {}) => {
     const request = await ReceiptRequest.findById(id);
     if (!request) return false;
 
@@ -129,32 +129,52 @@ const ReceiptRequest = {
     try {
       await conn.beginTransaction();
 
-      if (request.matchStatus === "matched") {
-        const finalQuantity = soLuongNhap || request.soLuongNhap || 0;
+      const finalQuantity = extraData.soLuongNhap || request.soLuongNhap || 0;
 
+      if (request.matchStatus === "matched") {
+        // Cập nhật số lượng
         await conn.execute(
           `UPDATE receipt_requests 
-           SET soLuongNhap = ?, status = 'approved', approvedBy = ?, approvedAt = NOW()
+           SET soLuongNhap = ?, 
+               soHoaDonNhap = ?,      // ← NHẬP TAY
+               ngayNhapHD = ?,        // ← NHẬP TAY
+               soHoaDonXuat = ?,      // ← NHẬP TAY
+               ngayXuatHD = ?,        // ← NHẬP TAY
+               status = 'approved', 
+               approvedBy = ?, 
+               approvedAt = NOW()
            WHERE id = ?`,
-          [finalQuantity, approvedBy, id],
+          [
+            finalQuantity,
+            extraData.soHoaDonNhap || "",
+            extraData.ngayNhapHD || null,
+            extraData.soHoaDonXuat || "",
+            extraData.ngayXuatHD || null,
+            approvedBy,
+            id,
+          ],
         );
 
+        // Cập nhật tồn kho
         await conn.execute(
           `UPDATE inventory 
-           SET tonKho = tonKho + ? 
+           SET tonKho = tonKho + ?,
+               soHoaDonNhap = ?,
+               ngayNhapHD = ?,
+               soHoaDonXuat = ?,
+               ngayXuatHD = ?
            WHERE maHang = ?`,
-          [finalQuantity, request.maHang],
+          [
+            finalQuantity,
+            extraData.soHoaDonNhap || "",
+            extraData.ngayNhapHD || null,
+            extraData.soHoaDonXuat || "",
+            extraData.ngayXuatHD || null,
+            request.maHang,
+          ],
         );
       } else {
-        const finalQuantity = soLuongNhap || request.soLuongNhap || 0;
-
-        await conn.execute(
-          `UPDATE receipt_requests 
-           SET status = 'approved', approvedBy = ?, approvedAt = NOW()
-           WHERE id = ?`,
-          [approvedBy, id],
-        );
-
+        // Thêm sản phẩm mới vào inventory
         const [maxStt] = await conn.execute(
           "SELECT MAX(stt) as maxStt FROM inventory",
         );
@@ -163,9 +183,11 @@ const ReceiptRequest = {
         await conn.execute(
           `INSERT INTO inventory 
             (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-             giaNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-             ngayNhapHD, ngayXuatHD, ghiChu, tonKho, status, createdBy, approvedBy, approvedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+             giaNhap, soHopDongNhap, 
+             soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
+             soLot, ngayHetHan, quyCachDongGoi,
+             tonKho, status, createdBy, approvedBy, approvedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
           [
             newStt,
             request.tenThuongMai,
@@ -175,14 +197,38 @@ const ReceiptRequest = {
             request.phanLoai || "",
             request.giaNhap || 0,
             request.soHopDongNhap || "",
-            request.soHoaDonNhap || "",
-            request.soHoaDonXuat || "",
-            request.ngayNhapHD || null,
-            request.ngayXuatHD || null,
-            request.ghiChu || "",
+            extraData.soHoaDonNhap || "",
+            extraData.ngayNhapHD || null,
+            extraData.soHoaDonXuat || "",
+            extraData.ngayXuatHD || null,
+            request.soLot || "",
+            request.ngayHetHan || null,
+            request.quyCachDongGoi || "",
             finalQuantity,
             request.createdBy,
             approvedBy,
+          ],
+        );
+
+        await conn.execute(
+          `UPDATE receipt_requests 
+           SET soLuongNhap = ?,
+               soHoaDonNhap = ?,
+               ngayNhapHD = ?,
+               soHoaDonXuat = ?,
+               ngayXuatHD = ?,
+               status = 'approved', 
+               approvedBy = ?, 
+               approvedAt = NOW()
+           WHERE id = ?`,
+          [
+            finalQuantity,
+            extraData.soHoaDonNhap || "",
+            extraData.ngayNhapHD || null,
+            extraData.soHoaDonXuat || "",
+            extraData.ngayXuatHD || null,
+            approvedBy,
+            id,
           ],
         );
       }

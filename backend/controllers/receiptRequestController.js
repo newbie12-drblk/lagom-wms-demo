@@ -2,7 +2,7 @@ const ReceiptRequest = require("../models/ReceiptRequest");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// ADMIN: Tạo đề nghị nhập hàng
+// ADMIN: Tạo đề nghị nhập hàng - KHÔNG CÓ 4 TRƯỜNG HÓA ĐƠN
 const createReceiptRequest = async (req, res) => {
   try {
     const data = req.body;
@@ -19,7 +19,6 @@ const createReceiptRequest = async (req, res) => {
 
     const statusText = result.isMatched ? "Chờ xác nhận" : "Chờ duyệt";
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📥 Đề nghị nhập hàng - ${statusText}`,
       `Admin đề nghị nhập "${data.tenThuongMai}" (${data.maHang})`,
@@ -45,10 +44,9 @@ const createReceiptRequest = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy danh sách chờ duyệt - SỬA LẠI
+// QUẢN LÝ: Lấy danh sách chờ duyệt
 const getPendingReceiptRequests = async (req, res) => {
   try {
-    // Lấy tất cả status pending và awaiting_confirmation
     const requests = await ReceiptRequest.getPending();
     console.log(`📥 Found ${requests.length} pending receipt requests`);
     res.json({ success: true, data: requests });
@@ -70,11 +68,17 @@ const getAllReceiptRequests = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Xác nhận/duyệt đề nghị nhập hàng
+// QUẢN LÝ: Xác nhận/duyệt đề nghị nhập hàng - CÓ 4 TRƯỜNG HÓA ĐƠN
 const approveReceiptRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { soLuongNhap } = req.body;
+    const {
+      soLuongNhap,
+      soHoaDonNhap, // ← NHẬP TAY
+      ngayNhapHD, // ← NHẬP TAY
+      soHoaDonXuat, // ← NHẬP TAY
+      ngayXuatHD, // ← NHẬP TAY
+    } = req.body;
     const approvedBy = req.user.userId;
 
     const request = await ReceiptRequest.findById(id);
@@ -102,7 +106,14 @@ const approveReceiptRequest = async (req, res) => {
       });
     }
 
-    await ReceiptRequest.approve(id, approvedBy, soLuongNhap);
+    // ✅ DUYỆT VỚI 4 TRƯỜNG HÓA ĐƠN
+    await ReceiptRequest.approve(id, approvedBy, {
+      soLuongNhap,
+      soHoaDonNhap,
+      ngayNhapHD,
+      soHoaDonXuat,
+      ngayXuatHD,
+    });
 
     const statusText = request.matchStatus === "matched" ? "xác nhận" : "duyệt";
     await Notification.create(
