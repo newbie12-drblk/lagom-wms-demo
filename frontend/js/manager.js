@@ -282,7 +282,7 @@
   }
 
   // ============================================================
-  // RENDER RECEIPT DETAIL - FIX LỖI HIỂN THỊ BẢNG
+  // RENDER RECEIPT DETAIL - FIX LỖI items is not defined
   // ============================================================
   function renderReceiptDetail(receipt) {
     // ✅ KIỂM TRA receipt có tồn tại không
@@ -295,8 +295,26 @@
     `;
     }
 
-    // ✅ ĐẢM BẢO items luôn là mảng
-    var items = receipt.items || [];
+    // ✅ ĐẢM BẢO items luôn là mảng - QUAN TRỌNG NHẤT
+    var items = [];
+    if (receipt.items && Array.isArray(receipt.items)) {
+      items = receipt.items;
+    } else if (
+      receipt.data &&
+      receipt.data.items &&
+      Array.isArray(receipt.data.items)
+    ) {
+      // Trường hợp dữ liệu nằm trong data.items
+      items = receipt.data.items;
+    } else if (
+      receipt.productData &&
+      receipt.productData.items &&
+      Array.isArray(receipt.productData.items)
+    ) {
+      // Trường hợp dữ liệu nằm trong productData.items
+      items = receipt.productData.items;
+    }
+
     var totalValue = receipt.total || 0;
 
     var statusMap = {
@@ -386,7 +404,7 @@
     `;
     }
 
-    // ✅ PHẦN THÔNG TIN PHIẾU - ĐÃ SẮP XẾP LẠI
+    // ✅ PHẦN THÔNG TIN PHIẾU
     return `
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
       <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}</span></div>
@@ -569,55 +587,71 @@
   // ============================================================
   // LOAD PENDING APPROVALS
   // ============================================================
-  async function loadPendingApprovals() {
-    var container = document.getElementById("pendingApprovalsList");
+  async function loadPendingReceipts() {
+    var container = document.getElementById("pendingReceiptsList");
     if (!container) return;
 
-    Utils.showLoading(true, "Đang tải yêu cầu thêm sản phẩm...");
+    Utils.showLoading(true, "Đang tải phiếu nhập...");
     try {
       var token = API.getToken();
-      var response = await fetch(API_BASE_URL + "/approvals", {
+      var response = await fetch(API_BASE_URL + "/receipts/pending", {
         headers: { Authorization: "Bearer " + token },
       });
       var result = await response.json();
 
-      console.log("📋 Approval requests:", result);
+      console.log("📥 Receipts response:", result);
 
       if (result.success) {
-        var requests = result.data || [];
-        var pendingRequests = requests.filter(function (r) {
-          return r.status === "pending";
+        var receipts = result.data || [];
+
+        // ✅ ĐẢM BẢO MỖI RECEIPT ĐỀU CÓ items LÀ MẢNG
+        receipts = receipts.map(function (r) {
+          // Kiểm tra nhiều cấu trúc dữ liệu khác nhau
+          if (!r.items) {
+            r.items = [];
+          }
+          // Nếu items là object thì chuyển thành array
+          if (
+            r.items &&
+            typeof r.items === "object" &&
+            !Array.isArray(r.items)
+          ) {
+            r.items = Object.values(r.items);
+          }
+          // Đảm bảo các trường khác có giá trị mặc định
+          if (!r.total) r.total = 0;
+          if (!r.receiptNo) r.receiptNo = "PN-" + r.id;
+          if (!r.status) r.status = "pending";
+          return r;
         });
 
-        window._pendingApprovals = pendingRequests;
+        window._pendingReceipts = receipts;
 
-        if (pendingRequests.length === 0) {
+        if (receipts.length === 0) {
           container.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-check-circle"></i>
-              <p>Không có yêu cầu thêm sản phẩm nào chờ duyệt</p>
-            </div>
-          `;
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>Không có đề nghị nhập hàng nào chờ duyệt</p>
+          </div>
+        `;
           Utils.showLoading(false);
           return;
         }
 
-        container.innerHTML = pendingRequests
+        container.innerHTML = receipts
           .map(function (r) {
-            var products = r.productData?.products || [];
-            var totalProducts = products.length;
-
             return `
-            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
-                 onclick="window.viewApprovalDetail(${r.id})">
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #f59e0b; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
+                 onclick="window.viewReceiptDetail(${r.id})">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
-                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📦 Yêu cầu thêm sản phẩm #${r.id}</div>
+                <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">📥 ${Utils.escapeHtml(r.receiptNo)}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
-                <div><span style="color: #6b82a0; font-size: 11px;">Số sản phẩm</span><br><span style="color: #86efac; font-weight: 600;">${totalProducts}</span></div>
-                <div><span style="color: #6b82a0; font-size: 11px;">Người yêu cầu</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Nhà cung cấp</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.supplierName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Số sản phẩm</span><br><span style="color: #86efac; font-weight: 600;">${r.items ? r.items.length : 0}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Tổng tiền</span><br><span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(r.total || 0)}</span></div>
               </div>
               <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
                 <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
@@ -633,7 +667,7 @@
           "</p></div>";
       }
     } catch (error) {
-      console.error("Load pending approvals error:", error);
+      console.error("Load pending receipts error:", error);
       container.innerHTML =
         '<div class="empty-state"><p>Lỗi: ' + error.message + "</p></div>";
     } finally {
@@ -901,33 +935,44 @@
       return;
     }
 
-    // ✅ ĐẢM BẢO receipt.items là mảng
+    // ✅ ĐẢM BẢO receipt.items luôn là mảng
     if (!receipt.items) {
       receipt.items = [];
     }
 
+    // ✅ ĐẢM BẢO receipt có các trường cần thiết
+    if (!receipt.receiptNo) {
+      receipt.receiptNo = "PN-" + receipt.id;
+    }
+    if (!receipt.total) {
+      receipt.total = 0;
+    }
+    if (!receipt.status) {
+      receipt.status = "pending";
+    }
+
     var html = renderReceiptDetail(receipt);
     html += `
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
-        <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
-          <i class="fas fa-times"></i> Từ chối
-        </button>
-        <button class="btn btn-success" onclick="window.approveReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
-          <i class="fas fa-check"></i> Duyệt
-        </button>
-      </div>
-    `;
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+      <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
+        <i class="fas fa-times"></i> Từ chối
+      </button>
+      <button class="btn btn-success" onclick="window.approveReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
+        <i class="fas fa-check"></i> Duyệt
+      </button>
+    </div>
+  `;
 
     container.innerHTML = `
-      <div style="margin-bottom: 16px;">
-        <button class="btn btn-outline" onclick="window.loadPendingReceipts()" style="margin-bottom: 16px;">
-          <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </button>
-        <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #f59e0b;">
-          ${html}
-        </div>
+    <div style="margin-bottom: 16px;">
+      <button class="btn btn-outline" onclick="window.loadPendingReceipts()" style="margin-bottom: 16px;">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+      </button>
+      <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #f59e0b;">
+        ${html}
       </div>
-    `;
+    </div>
+  `;
   };
 
   // ============================================================
