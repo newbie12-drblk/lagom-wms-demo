@@ -3,7 +3,7 @@
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
  * ĐÃ THÊM: Quy cách đóng gói
- * FIX: Đúng 22 cột trong bảng
+ * FIX: Đúng 22 cột trong bảng + Modal hiển thị đúng
  */
 
 (function () {
@@ -125,74 +125,74 @@
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
             <!-- CỘT 1: STT - CỐ ĐỊNH -->
-            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; text-align: center;">${globalIdx}</td>
+            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${globalIdx}</td>
             
             <!-- CỘT 2: TÊN THƯƠNG MẠI - CỐ ĐỊNH -->
-            <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px;">
-              <strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai)}</strong>
+            <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
+              <strong style="color: #60a5fa;">${escapeHtml(item.tenThuongMai || "—")}</strong>
             </td>
             
             <!-- CỘT 3: MÃ HÀNG -->
-            <td style="min-width: 100px;">${renderEditableField(item.maHang)}</td>
+            <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.maHang || "—")}</td>
             
             <!-- CỘT 4: QUY CÁCH -->
-            <td style="min-width: 80px;">${renderEditableField(item.quyCach)}</td>
+            <td style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.quyCach || "—")}</td>
             
             <!-- CỘT 5: QUY CÁCH ĐÓNG GÓI -->
-            <td style="min-width: 120px;">${renderEditableField(item.quyCachDongGoi)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.quyCachDongGoi || "—")}</td>
             
             <!-- CỘT 6: HÃNG SX -->
-            <td style="min-width: 150px;">${renderEditableField(item.hangSX)}</td>
+            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.hangSX || "—")}</td>
             
             <!-- CỘT 7: ĐVT -->
-            <td style="min-width: 50px; text-align: center;">${renderEditableField(item.dvt)}</td>
+            <td style="min-width: 50px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.dvt || "—")}</td>
             
             <!-- CỘT 8: PHÂN LOẠI -->
-            <td style="min-width: 120px;">${renderEditableField(item.phanLoai)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.phanLoai || "—")}</td>
             
             <!-- CỘT 9: GIÁ NHẬP -->
-            <td class="text-right" style="min-width: 120px;">${renderEditableField(item.giaNhap, true)}</td>
+            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
             
             <!-- CỘT 10: SL NHẬP -->
-            <td class="text-right" style="min-width: 80px;">${renderEditableField(item.soLuongNhap, true)}</td>
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #86efac; font-weight: 600;">${formatNumber(item.soLuongNhap || 0)}</td>
             
             <!-- CỘT 11: SỐ HỢP ĐỒNG NHẬP -->
-            <td style="min-width: 120px;">${renderEditableField(item.soHopDongNhap)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongNhap || "—")}</td>
             
             <!-- CỘT 12: SỐ HÓA ĐƠN NHẬP -->
-            <td style="min-width: 120px;">${renderEditableField(item.soHoaDonNhap)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
             
             <!-- CỘT 13: NGÀY NHẬP HĐ -->
-            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayNhapHD))}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDate(item.ngayNhapHD)}</td>
             
             <!-- CỘT 14: SỐ LOT -->
-            <td style="min-width: 100px;">${renderEditableField(item.soLot)}</td>
+            <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; font-family: monospace;">${escapeHtml(item.soLot || "—")}</td>
             
             <!-- CỘT 15: NGÀY HẾT HẠN -->
-            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayHetHan))}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#ffffff"};">${formatDate(item.ngayHetHan)}</td>
             
             <!-- CỘT 16: SL XUẤT -->
-            <td class="text-right" style="min-width: 80px;">${renderEditableField(item.soLuongXuat, true)}</td>
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatNumber(item.soLuongXuat || 0)}</td>
             
             <!-- CỘT 17: GIÁ XUẤT -->
-            <td class="text-right" style="min-width: 120px;">${renderEditableField(item.giaXuat, true)}</td>
+            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaXuat || 0)}</td>
             
             <!-- CỘT 18: SỐ HỢP ĐỒNG XUẤT -->
-            <td style="min-width: 120px;">${renderEditableField(item.soHopDongXuat)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongXuat || "—")}</td>
             
             <!-- CỘT 19: SỐ HÓA ĐƠN XUẤT -->
-            <td style="min-width: 120px;">${renderEditableField(item.soHoaDonXuat)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
             
             <!-- CỘT 20: NGÀY XUẤT -->
-            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayXuatHD))}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDate(item.ngayXuatHD)}</td>
             
             <!-- CỘT 21: TỒN CUỐI -->
-            <td class="text-right" style="min-width: 80px;">
-              <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, true)}</strong>
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
+              <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${formatNumber(item.tonKho || 0)}</strong>
             </td>
             
             <!-- CỘT 22: CÔNG NỢ -->
-            <td style="min-width: 150px;">${getDebtBadge(remainingDays)}</td>
+            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${getDebtBadge(remainingDays)}</td>
           </tr>
         `;
       })
@@ -460,52 +460,52 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG ====================
+  // ==================== RENDER NỘI DUNG - FIX HOÀN CHỈNH ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM ==========
+      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
         </p>
-        <div class="request-table-wrap">
-          <table class="request-table">
+        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1100px;">
             <thead>
-              <tr>
-                <th style="width:30px;">STT</th>
-                <th>TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
-                <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
-                <th>QUY CÁCH</th>
-                <th>QUY CÁCH ĐÓNG GÓI</th>
-                <th>ĐVT</th>
-                <th>HÃNG/NƯỚC SX</th>
-                <th>PHÂN LOẠI MÁY</th>
-                <th>GIÁ NHẬP</th>
-                <th>SỐ HĐ</th>
-                <th style="width:35px;">XÓA</th>
+              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px; white-space: nowrap;">STT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG <span style="color:#ef4444;">*</span></th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">QUY CÁCH</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 140px;">QUY CÁCH ĐÓNG GÓI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">ĐVT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">HÃNG/NƯỚC SX</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">SỐ HĐ</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 50px; white-space: nowrap;">XÓA</th>
               </tr>
             </thead>
             <tbody id="addProductBody">
-              <tr>
-                <td>1</td>
-                <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-                <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
-                <td><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói"></td>
-                <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
-                <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
-                <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
-                <td><input type="text" class="add-giaNhap" placeholder="Giá nhập"></td>
-                <td><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ"></td>
-                <td><button class="btn-remove" onclick="window.removeAddRow(this)"><i class="fas fa-trash"></i></button></td>
+              <tr style="border-bottom: 1px solid #1e2d45;">
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a; font-weight: 600;">1</td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-maHang" placeholder="Mã hàng *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCach" placeholder="Quy cách" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:center;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><button class="btn-remove" onclick="window.removeAddRow(this)" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <button class="btn-add-sm" style="margin-top:10px;" onclick="window.addNewAddRow()">
+        <button class="btn-add-sm" style="margin-top:10px; background:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;" onclick="window.addNewAddRow()">
           <i class="fas fa-plus"></i> Thêm dòng
         </button>
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
@@ -530,18 +530,20 @@
       let tableRows = data
         .map(
           (item, idx) => `
-        <tr>
-          <td class="checkbox-cell"><input type="checkbox" class="edit-checkbox" data-id="${item.id}" onchange="window.onEditSelect(this)"></td>
-          <td>${idx + 1}</td>
-          <td>${escapeHtml(item.tenThuongMai || "")}</td>
-          <td>${escapeHtml(item.maHang || "")}</td>
-          <td>${escapeHtml(item.quyCach || "")}</td>
-          <td>${escapeHtml(item.quyCachDongGoi || "")}</td>
-          <td>${escapeHtml(item.dvt || "")}</td>
-          <td>${escapeHtml(item.hangSX || "")}</td>
-          <td>${escapeHtml(item.phanLoai || "")}</td>
-          <td>${formatCurrency(item.giaNhap || 0)}</td>
-          <td>${escapeHtml(item.soHopDongNhap || "")}</td>
+        <tr style="border-bottom: 1px solid #1e2d45;">
+          <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+            <input type="checkbox" class="edit-checkbox" data-id="${item.id}" onchange="window.onEditSelect(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
+          </td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCachDongGoi || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
         </tr>
       `,
         )
@@ -552,21 +554,21 @@
           <i class="fas fa-info-circle"></i> 
           <strong>Chọn sản phẩm cần sửa</strong> (chỉ sửa được 9 trường cơ bản):
         </p>
-        <div class="request-table-wrap">
-          <table class="request-table">
+        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1100px;">
             <thead>
-              <tr>
-                <th style="width:40px;">Chọn</th>
-                <th style="width:30px;">STT</th>
-                <th>TÊN THƯƠNG MẠI</th>
-                <th>MÃ HÀNG</th>
-                <th>QUY CÁCH</th>
-                <th>QUY CÁCH ĐÓNG GÓI</th>
-                <th>ĐVT</th>
-                <th>HÃNG/NƯỚC SX</th>
-                <th>PHÂN LOẠI MÁY</th>
-                <th>GIÁ NHẬP</th>
-                <th>SỐ HĐ</th>
+              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px; white-space: nowrap;">Chọn</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px;">STT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">QUY CÁCH</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 140px;">QUY CÁCH ĐÓNG GÓI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">ĐVT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">HÃNG/NƯỚC SX</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">SỐ HĐ</th>
               </tr>
             </thead>
             <tbody>
@@ -576,16 +578,16 @@
         </div>
         <div id="editFormContainer" style="margin-top:16px; display:none;">
           <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (9 trường):</p>
-          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px;">
-            <div><label style="color:#6b82a0;font-size:11px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Quy cách đóng gói</label><input type="text" id="edit-quyCachDongGoi" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">ĐVT</label><input type="text" id="edit-dvt" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;">Số HĐ</label><input type="text" id="edit-soHopDongNhap" class="edit-field" style="width:100%;padding:6px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Quy cách đóng gói</label><input type="text" id="edit-quyCachDongGoi" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">ĐVT</label><input type="text" id="edit-dvt" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Số HĐ</label><input type="text" id="edit-soHopDongNhap" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
           </div>
         </div>
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
@@ -610,21 +612,23 @@
       let tableRows = data
         .map(
           (item, idx) => `
-        <tr>
-          <td class="checkbox-cell"><input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}"></td>
-          <td>${idx + 1}</td>
-          <td>${escapeHtml(item.tenThuongMai || "")}</td>
-          <td>${escapeHtml(item.maHang || "")}</td>
-          <td>${escapeHtml(item.quyCach || "")}</td>
-          <td>${escapeHtml(item.quyCachDongGoi || "")}</td>
-          <td>${escapeHtml(item.hangSX || "")}</td>
-          <td>${escapeHtml(item.dvt || "")}</td>
-          <td>${escapeHtml(item.phanLoai || "")}</td>
-          <td>${formatCurrency(item.giaNhap || 0)}</td>
-          <td>${item.soLuongNhap || 0}</td>
-          <td>${escapeHtml(item.soLot || "")}</td>
-          <td>${formatDate(item.ngayHetHan)}</td>
-          <td>${item.tonKho || 0}</td>
+        <tr style="border-bottom: 1px solid #1e2d45;">
+          <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+            <input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
+          </td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCachDongGoi || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${item.soLuongNhap || 0}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${escapeHtml(item.soLot || "")}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${formatDate(item.ngayHetHan)}</td>
+          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: ${(item.tonKho || 0) === 0 ? "#f87171" : "#4ade80"}; font-weight: 600;">${item.tonKho || 0}</td>
         </tr>
       `,
         )
@@ -635,24 +639,24 @@
           <i class="fas fa-exclamation-triangle"></i> 
           <strong>Chọn sản phẩm cần xóa:</strong> Hành động này KHÔNG thể hoàn tác!
         </p>
-        <div class="request-table-wrap">
-          <table class="request-table">
+        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1100px;">
             <thead>
-              <tr>
-                <th style="width:40px;"><input type="checkbox" id="selectAllDelete" onchange="window.toggleAllDelete(this)"></th>
-                <th style="width:30px;">STT</th>
-                <th>TÊN THƯƠNG MẠI</th>
-                <th>MÃ HÀNG</th>
-                <th>QUY CÁCH</th>
-                <th>QUY CÁCH ĐÓNG GÓI</th>
-                <th>HÃNG/NƯỚC SX</th>
-                <th>ĐVT</th>
-                <th>PHÂN LOẠI MÁY</th>
-                <th>GIÁ NHẬP</th>
-                <th>SL NHẬP</th>
-                <th>SỐ LOT</th>
-                <th>NGÀY HẾT HẠN</th>
-                <th>TỒN KHO</th>
+              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px; white-space: nowrap;"><input type="checkbox" id="selectAllDelete" onchange="window.toggleAllDelete(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;"></th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px;">STT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">QUY CÁCH</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 140px;">QUY CÁCH ĐÓNG GÓI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">HÃNG/NƯỚC SX</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">ĐVT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">SL NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">SỐ LOT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 110px;">NGÀY HẾT HẠN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; width: 80px;">TỒN KHO</th>
               </tr>
             </thead>
             <tbody>
@@ -703,17 +707,17 @@
     const rowCount = tbody.querySelectorAll("tr").length + 1;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${rowCount}</td>
-      <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="add-maHang" placeholder="Mã hàng *" style="border-color: #3b82f6;"></td>
-      <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
-      <td><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói"></td>
-      <td><input type="text" class="add-dvt" placeholder="ĐVT"></td>
-      <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
-      <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
-      <td><input type="text" class="add-giaNhap" placeholder="Giá nhập"></td>
-      <td><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ"></td>
-      <td><button class="btn-remove" onclick="window.removeAddRow(this)"><i class="fas fa-trash"></i></button></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a; font-weight: 600;">${rowCount}</td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-maHang" placeholder="Mã hàng *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCach" placeholder="Quy cách" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCachDongGoi" placeholder="Quy cách đóng gói" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:center;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><button class="btn-remove" onclick="window.removeAddRow(this)" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
   };
