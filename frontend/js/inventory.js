@@ -3,6 +3,7 @@
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
  * ĐÃ THÊM: Quy cách đóng gói
+ * FIX: Đúng 22 cột trong bảng
  */
 
 (function () {
@@ -98,7 +99,7 @@
     return `<span class="readonly-field" style="color:#ffffff;">${escapeHtml(String(value || "—"))}</span>`;
   }
 
-  // Render table
+  // ==================== RENDER TABLE - 22 CỘT ====================
   function renderInventoryTable(data) {
     if (!tbody) return;
 
@@ -123,28 +124,75 @@
 
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
-            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff;">${globalIdx}</td>
-            <td class="sticky-col-2" style="position: sticky; left: 50px; z-index: 100; background: #0f172a;"><strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai)}</strong></td>
-            <td>${renderEditableField(item.maHang)}</td>
-            <td>${renderEditableField(item.quyCach)}</td>
-            <td>${renderEditableField(item.quyCachDongGoi)}</td>
-            <td>${renderEditableField(item.hangSX)}</td>
-            <td>${renderEditableField(item.dvt)}</td>
-            <td>${renderEditableField(item.phanLoai)}</td>
-            <td class="text-right">${renderEditableField(item.giaNhap, true)}</td>
-            <td class="text-right">${renderEditableField(item.soLuongNhap, true)}</td>
-            <td>${renderEditableField(item.soHopDongNhap)}</td>
-            <td>${renderEditableField(item.soHoaDonNhap)}</td>
-            <td>${renderEditableField(formatDate(item.ngayNhapHD))}</td>
-            <td>${renderEditableField(item.soLot)}</td>
-            <td>${renderEditableField(formatDate(item.ngayHetHan))}</td>
-            <td class="text-right">${renderEditableField(item.soLuongXuat, true)}</td>
-            <td class="text-right">${renderEditableField(item.giaXuat, true)}</td>
-            <td>${renderEditableField(item.soHopDongXuat)}</td>
-            <td>${renderEditableField(item.soHoaDonXuat)}</td>
-            <td>${renderEditableField(formatDate(item.ngayXuatHD))}</td>
-            <td class="text-right"><strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, true)}</strong></td>
-            <td>${getDebtBadge(remainingDays)}</td>
+            <!-- CỘT 1: STT - CỐ ĐỊNH -->
+            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px;">${globalIdx}</td>
+            
+            <!-- CỘT 2: TÊN THƯƠNG MẠI - CỐ ĐỊNH -->
+            <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px;">
+              <strong style="color: #60a5fa;">${renderEditableField(item.tenThuongMai)}</strong>
+            </td>
+            
+            <!-- CỘT 3: MÃ HÀNG -->
+            <td style="min-width: 100px;">${renderEditableField(item.maHang)}</td>
+            
+            <!-- CỘT 4: QUY CÁCH -->
+            <td style="min-width: 80px;">${renderEditableField(item.quyCach)}</td>
+            
+            <!-- CỘT 5: QUY CÁCH ĐÓNG GÓI -->
+            <td style="min-width: 120px;">${renderEditableField(item.quyCachDongGoi)}</td>
+            
+            <!-- CỘT 6: HÃNG SX -->
+            <td style="min-width: 150px;">${renderEditableField(item.hangSX)}</td>
+            
+            <!-- CỘT 7: ĐVT -->
+            <td style="min-width: 50px; text-align: center;">${renderEditableField(item.dvt)}</td>
+            
+            <!-- CỘT 8: PHÂN LOẠI -->
+            <td style="min-width: 120px;">${renderEditableField(item.phanLoai)}</td>
+            
+            <!-- CỘT 9: GIÁ NHẬP -->
+            <td class="text-right" style="min-width: 120px;">${renderEditableField(item.giaNhap, true)}</td>
+            
+            <!-- CỘT 10: SL NHẬP -->
+            <td class="text-right" style="min-width: 80px;">${renderEditableField(item.soLuongNhap, true)}</td>
+            
+            <!-- CỘT 11: SỐ HỢP ĐỒNG NHẬP -->
+            <td style="min-width: 120px;">${renderEditableField(item.soHopDongNhap)}</td>
+            
+            <!-- CỘT 12: SỐ HÓA ĐƠN NHẬP -->
+            <td style="min-width: 120px;">${renderEditableField(item.soHoaDonNhap)}</td>
+            
+            <!-- CỘT 13: NGÀY NHẬP HĐ -->
+            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayNhapHD))}</td>
+            
+            <!-- CỘT 14: SỐ LOT -->
+            <td style="min-width: 100px;">${renderEditableField(item.soLot)}</td>
+            
+            <!-- CỘT 15: NGÀY HẾT HẠN -->
+            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayHetHan))}</td>
+            
+            <!-- CỘT 16: SL XUẤT -->
+            <td class="text-right" style="min-width: 80px;">${renderEditableField(item.soLuongXuat, true)}</td>
+            
+            <!-- CỘT 17: GIÁ XUẤT -->
+            <td class="text-right" style="min-width: 120px;">${renderEditableField(item.giaXuat, true)}</td>
+            
+            <!-- CỘT 18: SỐ HỢP ĐỒNG XUẤT -->
+            <td style="min-width: 120px;">${renderEditableField(item.soHopDongXuat)}</td>
+            
+            <!-- CỘT 19: SỐ HÓA ĐƠN XUẤT -->
+            <td style="min-width: 120px;">${renderEditableField(item.soHoaDonXuat)}</td>
+            
+            <!-- CỘT 20: NGÀY XUẤT -->
+            <td style="min-width: 110px; text-align: center;">${renderEditableField(formatDate(item.ngayXuatHD))}</td>
+            
+            <!-- CỘT 21: TỒN CUỐI -->
+            <td class="text-right" style="min-width: 80px;">
+              <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${renderEditableField(item.tonKho, true)}</strong>
+            </td>
+            
+            <!-- CỘT 22: CÔNG NỢ -->
+            <td style="min-width: 150px;">${getDebtBadge(remainingDays)}</td>
           </tr>
         `;
       })
@@ -281,6 +329,7 @@
     applyInventoryFilters(inventoryData);
   }
 
+  // ==================== EXPORT TO EXCEL - THÊM CỘT quyCachDongGoi ====================
   function exportInventoryToExcel() {
     if (!filteredInventoryData || filteredInventoryData.length === 0) {
       Utils.showToast("Không có dữ liệu để xuất!", "error");
@@ -289,26 +338,26 @@
 
     const exportData = filteredInventoryData.map((item, idx) => ({
       STT: idx + 1,
-      "Tên thương mại": item.tenThuongMai,
-      "Mã hàng": item.maHang,
-      "Quy cách": item.quyCach,
-      "Quy cách đóng gói": item.quyCachDongGoi,
-      "Hãng SX": item.hangSX,
-      ĐVT: item.dvt,
-      "Phân loại": item.phanLoai,
-      "Giá nhập": item.giaNhap,
-      "Số lượng nhập": item.soLuongNhap,
-      "Số hợp đồng": item.soHopDongNhap,
-      "Số hóa đơn nhập": item.soHoaDonNhap,
-      "Ngày nhập HĐ": item.ngayNhapHD,
-      "Số lot": item.soLot,
-      "Ngày hết hạn": item.ngayHetHan,
-      "Số lượng xuất": item.soLuongXuat,
-      "Giá xuất": item.giaXuat,
-      "Số hợp đồng xuất": item.soHopDongXuat,
-      "Số hóa đơn xuất": item.soHoaDonXuat,
-      "Ngày xuất": item.ngayXuatHD,
-      "Tồn cuối": item.tonKho,
+      "Tên thương mại": item.tenThuongMai || "",
+      "Mã hàng": item.maHang || "",
+      "Quy cách": item.quyCach || "",
+      "Quy cách đóng gói": item.quyCachDongGoi || "",
+      "Hãng SX": item.hangSX || "",
+      ĐVT: item.dvt || "",
+      "Phân loại": item.phanLoai || "",
+      "Giá nhập": item.giaNhap || 0,
+      "Số lượng nhập": item.soLuongNhap || 0,
+      "Số hợp đồng": item.soHopDongNhap || "",
+      "Số hóa đơn nhập": item.soHoaDonNhap || "",
+      "Ngày nhập HĐ": item.ngayNhapHD || "",
+      "Số lot": item.soLot || "",
+      "Ngày hết hạn": item.ngayHetHan || "",
+      "Số lượng xuất": item.soLuongXuat || 0,
+      "Giá xuất": item.giaXuat || 0,
+      "Số hợp đồng xuất": item.soHopDongXuat || "",
+      "Số hóa đơn xuất": item.soHoaDonXuat || "",
+      "Ngày xuất": item.ngayXuatHD || "",
+      "Tồn cuối": item.tonKho || 0,
     }));
 
     const headers = Object.keys(exportData[0]);
@@ -333,7 +382,7 @@
     Utils.showToast("Đã xuất file CSV thành công");
   }
 
-  // ==================== TẠO MODAL YÊU CẦU - CHỈ 3 TAB ====================
+  // ==================== TẠO MODAL YÊU CẦU ====================
   function showRequestModal() {
     const overlay = document.createElement("div");
     overlay.className = "request-modal-overlay";
@@ -417,7 +466,7 @@
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG (THÊM quyCachDongGoi) ==========
+      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
