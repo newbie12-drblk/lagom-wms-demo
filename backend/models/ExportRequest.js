@@ -21,6 +21,7 @@ const ExportRequest = {
 
     if (product) {
       currentStock = product.tonKho || 0;
+      // ✅ ĐÃ XÓA soHoaDonXuat khỏi fields
       const fields = [
         "tenThuongMai",
         "dvt",
@@ -29,7 +30,6 @@ const ExportRequest = {
         "giaNhap",
         "soHopDongNhap",
         "soHoaDonNhap",
-        "soHoaDonXuat",
         "ngayNhapHD",
         "ngayXuatHD",
         "ghiChu",
@@ -48,14 +48,15 @@ const ExportRequest = {
       }
     }
 
+    // ✅ ĐÃ XÓA soHoaDonXuat khỏi INSERT
     const [result] = await db.execute(
       `INSERT INTO export_requests 
         (requestNo, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-         giaNhap, soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+         giaNhap, soHopDongNhap, soHoaDonNhap,
          ngayNhapHD, ngayXuatHD, ghiChu,
          donGiaXuat, soLuong, soLot, ngayHetHan, soHopDongXuat,
          tonKho, matchStatus, status, createdBy)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         requestNo,
         data.tenThuongMai || "",
@@ -66,7 +67,6 @@ const ExportRequest = {
         data.giaNhap || 0,
         data.soHopDongNhap || "",
         data.soHoaDonNhap || "",
-        data.soHoaDonXuat || "",
         data.ngayNhapHD || null,
         data.ngayXuatHD || null,
         data.ghiChu || "",

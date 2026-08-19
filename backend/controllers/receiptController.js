@@ -30,7 +30,6 @@ const getReceiptById = async (req, res) => {
   }
 };
 
-// Tạo phiếu nhập từ đề nghị đã duyệt
 const createReceipt = async (req, res) => {
   try {
     const receiptData = req.body;
@@ -78,7 +77,7 @@ const createReceipt = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái phiếu nhập - CHỈ CẬP NHẬT STATUS
+// ✅ CHỈ CẬP NHẬT STATUS - KHÔNG XỬ LÝ ITEMS
 const updateReceiptStatus = async (req, res) => {
   try {
     const { id } = req.params;

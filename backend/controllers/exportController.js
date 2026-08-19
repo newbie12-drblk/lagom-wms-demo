@@ -4,9 +4,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// ============================================================
-// LẤY TẤT CẢ PHIẾU XUẤT
-// ============================================================
 const getAllExports = async (req, res) => {
   try {
     const exports = await Export.getAll();
@@ -17,9 +14,6 @@ const getAllExports = async (req, res) => {
   }
 };
 
-// ============================================================
-// LẤY PHIẾU XUẤT THEO ID
-// ============================================================
 const getExportById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -36,15 +30,11 @@ const getExportById = async (req, res) => {
   }
 };
 
-// ============================================================
-// TẠO PHIẾU XUẤT MỚI (ADMIN)
-// ============================================================
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
-    // Kiểm tra tồn kho
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -72,7 +62,6 @@ const createExport = async (req, res) => {
 
     await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       `📤 Phiếu xuất ${exportItem.exportNo} chờ duyệt`,
       `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`,
@@ -98,10 +87,7 @@ const createExport = async (req, res) => {
   }
 };
 
-// ============================================================
-// CẬP NHẬT TRẠNG THÁI PHIẾU XUẤT - CHỈ CẬP NHẬT STATUS
-// KHÔNG TỰ ĐỘNG TRỪ TỒN KHO
-// ============================================================
+// ✅ CHỈ CẬP NHẬT STATUS - KHÔNG XỬ LÝ ITEMS
 const updateExportStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -122,11 +108,9 @@ const updateExportStatus = async (req, res) => {
       `📦 Phiếu ${exportItem.exportNo} có ${exportItem.items?.length || 0} sản phẩm`,
     );
 
-    // ✅ CHỈ CẬP NHẬT STATUS - KHÔNG TRỪ TỒN KHO
-    // Đây là chức năng "Xuất kho chờ duyệt", chỉ cần đổi trạng thái
+    // ✅ CHỈ CẬP NHẬT STATUS - KHÔNG XỬ LÝ ITEMS
     await Export.updateStatus(id, status, approvedBy, rejectedReason);
 
-    // Gửi thông báo cho người tạo phiếu
     if (status === "approved") {
       await Notification.create(
         exportItem.createdBy,
@@ -160,9 +144,6 @@ const updateExportStatus = async (req, res) => {
   }
 };
 
-// ============================================================
-// LẤY DANH SÁCH PHIẾU XUẤT CHỜ DUYỆT (QUẢN LÝ)
-// ============================================================
 const getPendingExports = async (req, res) => {
   try {
     const exports = await Export.getPendingApprovals();
@@ -176,9 +157,6 @@ const getPendingExports = async (req, res) => {
   }
 };
 
-// ============================================================
-// XÓA PHIẾU XUẤT (ADMIN)
-// ============================================================
 const deleteExport = async (req, res) => {
   try {
     const { id } = req.params;
@@ -199,9 +177,6 @@ const deleteExport = async (req, res) => {
   }
 };
 
-// ============================================================
-// EXPORT
-// ============================================================
 module.exports = {
   getAllExports,
   getExportById,

@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const Export = {
-  // Lấy tất cả phiếu xuất
   getAll: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
@@ -12,7 +11,6 @@ const Export = {
     return rows;
   },
 
-  // Lấy phiếu xuất theo ID kèm items
   findById: async (id) => {
     const [exports] = await db.execute(
       `SELECT e.*, u.fullName as creatorName, a.fullName as approverName
@@ -34,7 +32,6 @@ const Export = {
     return { ...exportItem, items };
   },
 
-  // Lấy danh sách phiếu chờ duyệt
   getPendingApprovals: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName 
@@ -56,7 +53,6 @@ const Export = {
     return result;
   },
 
-  // Tạo phiếu xuất
   create: async (data, createdBy) => {
     const [lastExport] = await db.execute(
       "SELECT exportNo FROM exports ORDER BY id DESC LIMIT 1",
@@ -93,12 +89,13 @@ const Export = {
 
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
+        // ✅ ĐÃ XÓA: giaNhap, soHopDongNhap, soHoaDonXuat
         await db.execute(
           `INSERT INTO export_items 
             (exportId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
              phanLoai, donGia, soLuong, thanhTien, soLot, ngayHetHan, 
-             soHopDongXuat, soHoaDonXuat, ngayXuatHD, ghiChu) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             soHopDongXuat, ngayXuatHD, ghiChu) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             exportId,
             item.tenThuongMai || "",
@@ -113,7 +110,6 @@ const Export = {
             item.soLot || "",
             item.ngayHetHan || null,
             item.soHopDongXuat || "",
-            item.soHoaDonXuat || "",
             item.ngayXuatHD || null,
             item.ghiChu || "",
           ],
@@ -124,7 +120,6 @@ const Export = {
     return exportId;
   },
 
-  // Cập nhật trạng thái
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
     await db.execute(
       `UPDATE exports 
@@ -135,7 +130,6 @@ const Export = {
     return true;
   },
 
-  // Xóa phiếu
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM exports WHERE id = ?", [id]);
     return result.affectedRows > 0;

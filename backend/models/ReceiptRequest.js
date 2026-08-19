@@ -19,6 +19,7 @@ const ReceiptRequest = {
     let matchDetails = [];
 
     if (product) {
+      // ✅ ĐÃ XÓA soHoaDonXuat khỏi fields
       const fields = [
         "tenThuongMai",
         "dvt",
@@ -27,7 +28,6 @@ const ReceiptRequest = {
         "giaNhap",
         "soHopDongNhap",
         "soHoaDonNhap",
-        "soHoaDonXuat",
         "ngayNhapHD",
         "ngayXuatHD",
         "ghiChu",
@@ -66,7 +66,7 @@ const ReceiptRequest = {
         data.soLuongNhap || 0,
         data.soLot || "",
         data.ngayHetHan || null,
-        data.quyCachDongGoi || "", // ← TRƯỜNG MỚI
+        data.quyCachDongGoi || "",
         matchStatus,
         createdBy,
       ],
@@ -136,10 +136,10 @@ const ReceiptRequest = {
         await conn.execute(
           `UPDATE receipt_requests 
            SET soLuongNhap = ?, 
-               soHoaDonNhap = ?,      // ← NHẬP TAY
-               ngayNhapHD = ?,        // ← NHẬP TAY
-               soHoaDonXuat = ?,      // ← NHẬP TAY
-               ngayXuatHD = ?,        // ← NHẬP TAY
+               soHoaDonNhap = ?,
+               ngayNhapHD = ?,
+               soHoaDonXuat = ?,
+               ngayXuatHD = ?,
                status = 'approved', 
                approvedBy = ?, 
                approvedAt = NOW()

@@ -55,7 +55,7 @@ const Inventory = {
         data.tenThuongMai || "",
         data.maHang || "",
         data.quyCach || "",
-        data.quyCachDongGoi || "", // ← TRƯỜNG MỚI
+        data.quyCachDongGoi || "",
         data.hangSX || "",
         data.dvt || "",
         data.phanLoai || "",
@@ -115,7 +115,7 @@ const Inventory = {
       "tenThuongMai",
       "maHang",
       "quyCach",
-      "quyCachDongGoi", // ← TRƯỜNG MỚI
+      "quyCachDongGoi",
       "hangSX",
       "dvt",
       "phanLoai",
