@@ -130,3 +130,50 @@
   background: var(--surface2);
   font-weight: 600;
 }
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .export-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .export-card-id {
+    font-size: 14px !important;
+  }
+
+  .export-card-body {
+    gap: 12px !important;
+  }
+
+  .export-card-info {
+    min-width: 80px !important;
+  }
+
+  .export-card-info .value {
+    font-size: 12px !important;
+  }
+
+  .export-card-total .value {
+    font-size: 15px !important;
+  }
+
+  .filter-bar {
+    flex-direction: column !important;
+  }
+
+  .filter-bar .search-box,
+  .filter-bar .cat-select,
+  .filter-bar .btn {
+    width: 100% !important;
+  }
+
+  .inventory-stats {
+    flex-direction: column !important;
+  }
+
+  .stat-mini {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+}

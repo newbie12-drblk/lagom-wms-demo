@@ -165,7 +165,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  min-width: 2200px;
+  min-width: 1200px;
   background: #111827;
 }
 
@@ -202,18 +202,31 @@
   left: 0;
   z-index: 100;
   background-color: #0f172a;
-  min-width: 50px;
-  width: 50px;
+  min-width: 40px;
+  width: 40px;
 }
 
 .inv-table th.sticky-col-2,
 .inv-table td.sticky-col-2 {
   position: sticky;
-  left: 50px;
+  left: 40px;
   z-index: 100;
   background-color: #0f172a;
-  min-width: 220px;
-  width: 220px;
+  min-width: 140px;
+  width: 140px;
+  max-width: 160px;
+}
+
+/* Tên sản phẩm - cắt bớt nếu quá dài */
+.inv-table td.sticky-col-2 strong {
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 700;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 /* Hover cho sticky columns */
@@ -655,7 +668,7 @@
   }
 }
 
-/* Mobile responsive */
+/* ==================== MOBILE RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .filter-bar {
     flex-direction: column;
@@ -683,17 +696,38 @@
   }
 
   .table-wrap {
-    overflow-x: auto;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: 60vh;
   }
 
   .inv-table {
-    min-width: 800px;
+    min-width: 1200px;
+    font-size: 11px;
   }
 
   .inv-table th,
   .inv-table td {
-    padding: 8px 6px;
-    font-size: 11px;
+    padding: 6px 6px;
+    font-size: 10px;
+  }
+
+  .inv-table th.sticky-col-2,
+  .inv-table td.sticky-col-2 {
+    min-width: 100px !important;
+    width: 100px !important;
+    max-width: 120px !important;
+  }
+
+  .inv-table td.sticky-col-2 strong {
+    font-size: 10px;
+    max-width: 100px;
+  }
+
+  .inv-table th.sticky-col,
+  .inv-table td.sticky-col {
+    min-width: 30px !important;
+    width: 30px !important;
   }
 
   .request-modal {
@@ -727,24 +761,6 @@
   }
 }
 
-/* Fix scroll cho bảng inventory */
-@media (max-width: 768px) {
-  .table-wrap {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    max-height: 60vh;
-  }
-
-  .inv-table {
-    min-width: 800px;
-  }
-
-  .inventory-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-}
 /* ==================== REQUEST MODAL TABS - FIX ACTIVE ==================== */
 .request-options {
   display: flex;

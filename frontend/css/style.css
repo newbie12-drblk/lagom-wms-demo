@@ -1096,3 +1096,58 @@ body::before {
     display: none !important;
   }
 }
+/* ==================== FIX: HIỂN THỊ NÚT TẠO PHIẾU TRÊN MOBILE ==================== */
+@media (max-width: 768px) {
+  .header-actions .btn-primary,
+  #btnCreateNewReceipt,
+  #btnCreateNewExport {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+  }
+
+  .header-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .header-actions .btn {
+    flex: 1 !important;
+    min-width: 120px !important;
+  }
+
+  /* Ẩn breadcrumb trên mobile */
+  .breadcrumb {
+    display: none !important;
+  }
+
+  /* Sidebar full màn hình */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    background: #0b1220 !important;
+    border-right: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 20px 24px !important;
+  }
+
+  .sidebar.hidden {
+    display: none !important;
+  }
+
+  .btn-back {
+    display: none !important;
+  }
+
+  .btn-back.visible {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+}

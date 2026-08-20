@@ -159,3 +159,50 @@
 .detail-items-table .text-right {
   text-align: right;
 }
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .receipt-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .receipt-card-id {
+    font-size: 14px !important;
+  }
+
+  .receipt-card-body {
+    gap: 12px !important;
+  }
+
+  .receipt-card-info {
+    min-width: 80px !important;
+  }
+
+  .receipt-card-info .value {
+    font-size: 12px !important;
+  }
+
+  .receipt-card-total .value {
+    font-size: 15px !important;
+  }
+
+  .filter-bar {
+    flex-direction: column !important;
+  }
+
+  .filter-bar .search-box,
+  .filter-bar .cat-select,
+  .filter-bar .btn {
+    width: 100% !important;
+  }
+
+  .inventory-stats {
+    flex-direction: column !important;
+  }
+
+  .stat-mini {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+}

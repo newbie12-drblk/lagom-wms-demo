@@ -25,9 +25,13 @@
 .btn-remove,
 .toolbar .btn,
 .action-buttons .btn-success,
-.action-buttons .btn-danger,
-.header-actions .btn-primary {
+.action-buttons .btn-danger {
   display: none !important;
+}
+
+/* ✅ QUAN TRỌNG: KHÔNG ẨN NÚT TẠO PHIẾU TRONG HEADER-ACTIONS */
+.header-actions .btn-primary {
+  display: inline-flex !important;
 }
 
 /* Class để khóa tính năng khi không có quyền */
@@ -272,4 +276,69 @@
 
 .cat-select:hover {
   border-color: var(--blue);
+}
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .header-actions .btn-primary {
+    display: inline-flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .header-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .header-actions .btn {
+    flex: 1 !important;
+    min-width: 120px !important;
+  }
+
+  .filter-bar {
+    flex-direction: column !important;
+  }
+
+  .filter-bar .search-box,
+  .filter-bar .cat-select,
+  .filter-bar .btn {
+    width: 100% !important;
+  }
+
+  .receipt-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .receipt-card-id {
+    font-size: 14px !important;
+  }
+
+  .receipt-card-body {
+    gap: 12px !important;
+  }
+
+  .receipt-card-info {
+    min-width: 80px !important;
+  }
+
+  .receipt-card-info .value {
+    font-size: 12px !important;
+  }
+
+  .receipt-card-total .value {
+    font-size: 15px !important;
+  }
+
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .page-title {
+    font-size: 18px !important;
+  }
 }
