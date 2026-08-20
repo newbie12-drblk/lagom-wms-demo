@@ -1,7 +1,7 @@
 /* ======================================================
    FILE: export.css
    MÔ TẢ: Styles riêng cho trang Phiếu xuất kho (export.html)
-   NGÀY: 2026 - ĐÃ XÓA 3 CỘT
+   NGÀY: 2026 - ĐÃ XÓA 3 CỘT - FIX MOBILE
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -70,6 +70,12 @@ body {
   letter-spacing: 2px;
 }
 
+.export-title p {
+  font-size: 12px;
+  color: #4a5568;
+  margin-top: 4px;
+}
+
 .date-row {
   text-align: right;
   font-size: 14px;
@@ -125,6 +131,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   background: transparent;
+  min-width: 100px;
 }
 
 .info-line input:focus {
@@ -141,6 +148,7 @@ body {
   font-size: 13px;
   background: transparent;
   cursor: pointer;
+  min-width: 100px;
 }
 
 .info-line select:focus {
@@ -152,12 +160,14 @@ body {
 .items-table-wrapper {
   overflow-x: auto;
   margin: 20px 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .items-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
+  min-width: 900px;
 }
 
 .items-table th {
@@ -211,12 +221,17 @@ body {
 .text-right {
   text-align: right;
 }
+.text-center {
+  text-align: center;
+}
 
 /* ==================== 6. TOOLBAR ==================== */
 .toolbar {
   display: flex;
   justify-content: flex-end;
   margin: 12px 0 20px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* ==================== 7. SIGNATURE ==================== */
@@ -225,6 +240,8 @@ body {
   justify-content: space-between;
   margin-top: 48px;
   padding-top: 24px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .sign-item {
@@ -322,7 +339,185 @@ body {
   background: #b91c1c;
 }
 
-/* ==================== 9. PRINT STYLES ==================== */
+/* ==================== 9. MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  body {
+    padding: 12px 8px;
+  }
+
+  .export-paper {
+    padding: 16px 12px;
+    border-radius: 2px;
+  }
+
+  .company-name {
+    font-size: 14px;
+  }
+
+  .company-address,
+  .company-tax {
+    font-size: 10px;
+  }
+
+  .export-title h2 {
+    font-size: 15px;
+  }
+
+  .export-title p {
+    font-size: 10px;
+  }
+
+  .date-row {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-box {
+    padding: 10px 12px;
+  }
+
+  .info-box strong {
+    font-size: 12px;
+  }
+
+  .info-line {
+    font-size: 12px;
+  }
+
+  .info-line label {
+    width: 80px;
+    font-size: 12px;
+  }
+
+  .info-line input,
+  .info-line select {
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  .items-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 12px 0;
+  }
+
+  .items-table {
+    min-width: 700px;
+    font-size: 9px;
+  }
+
+  .items-table th {
+    font-size: 7px;
+    padding: 6px 3px;
+  }
+
+  .items-table td {
+    padding: 3px 2px;
+  }
+
+  .items-table input {
+    font-size: 8px;
+    padding: 2px;
+    min-width: 20px;
+  }
+
+  .signature {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .sign-item {
+    width: 100%;
+  }
+
+  .sign-line {
+    margin-top: 20px;
+    font-size: 10px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .toolbar {
+    justify-content: center;
+  }
+
+  .toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-remove {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .export-paper {
+    padding: 10px 6px;
+  }
+
+  .company-name {
+    font-size: 12px;
+  }
+
+  .export-title h2 {
+    font-size: 13px;
+  }
+
+  .items-table {
+    min-width: 550px;
+    font-size: 8px;
+  }
+
+  .items-table th {
+    font-size: 6px;
+    padding: 4px 2px;
+  }
+
+  .items-table td {
+    padding: 2px 1px;
+  }
+
+  .items-table input {
+    font-size: 7px;
+    padding: 1px;
+    min-width: 15px;
+  }
+
+  .info-line label {
+    width: 60px;
+    font-size: 11px;
+  }
+
+  .info-line input,
+  .info-line select {
+    font-size: 11px;
+  }
+}
+
+/* ==================== 10. PRINT STYLES ==================== */
 @media print {
   * {
     box-sizing: border-box;
@@ -379,40 +574,39 @@ body {
     border: 1px solid #000 !important;
   }
 
-  /* Đặt chiều rộng cố định cho từng cột - ĐÃ CẬP NHẬT */
   .items-table th:nth-child(1) {
     width: 5% !important;
-  } /* STT */
+  }
   .items-table th:nth-child(2) {
     width: 12% !important;
-  } /* Mã hàng */
+  }
   .items-table th:nth-child(3) {
     width: 18% !important;
-  } /* Tên thương mại */
+  }
   .items-table th:nth-child(4) {
     width: 7% !important;
-  } /* ĐVT */
+  }
   .items-table th:nth-child(5) {
     width: 12% !important;
-  } /* Hãng SX */
+  }
   .items-table th:nth-child(6) {
     width: 12% !important;
-  } /* Phân loại */
+  }
   .items-table th:nth-child(7) {
     width: 10% !important;
-  } /* Đơn giá xuất */
+  }
   .items-table th:nth-child(8) {
     width: 8% !important;
-  } /* Số lượng */
+  }
   .items-table th:nth-child(9) {
     width: 10% !important;
-  } /* Số lot */
+  }
   .items-table th:nth-child(10) {
     width: 10% !important;
-  } /* HSD */
+  }
   .items-table th:nth-child(11) {
     width: 10% !important;
-  } /* Thành tiền */
+  }
 
   .items-table th,
   .items-table td {

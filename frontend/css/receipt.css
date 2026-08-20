@@ -2,7 +2,7 @@
    FILE: receipt.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Styles riêng cho trang Phiếu nhập hàng (receipt.html)
-   NGÀY: 2026
+   NGÀY: 2026 - FIX MOBILE
 ====================================================== */
 
 /* ==================== 1. RESET & CONTAINER ==================== */
@@ -126,6 +126,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   background: transparent;
+  min-width: 100px;
 }
 
 .info-line input:focus {
@@ -137,12 +138,14 @@ body {
 .items-table-wrapper {
   overflow-x: auto;
   margin: 20px 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .items-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
+  min-width: 900px;
 }
 
 .items-table th {
@@ -202,6 +205,8 @@ body {
   display: flex;
   justify-content: flex-end;
   margin: 12px 0 20px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* ==================== 7. SIGNATURE ==================== */
@@ -210,6 +215,8 @@ body {
   justify-content: space-between;
   margin-top: 48px;
   padding-top: 24px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .sign-item {
@@ -308,7 +315,179 @@ body {
   background: #b91c1c;
 }
 
-/* ==================== 9. PRINT STYLES ==================== */
+/* ==================== 9. MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  body {
+    padding: 12px 8px;
+  }
+
+  .receipt-paper {
+    padding: 16px 12px;
+    border-radius: 2px;
+  }
+
+  .company-name {
+    font-size: 14px;
+  }
+
+  .company-address,
+  .company-tax {
+    font-size: 10px;
+  }
+
+  .receipt-title h2 {
+    font-size: 15px;
+  }
+
+  .date-row {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-box {
+    padding: 10px 12px;
+  }
+
+  .info-box strong {
+    font-size: 12px;
+  }
+
+  .info-line {
+    font-size: 12px;
+  }
+
+  .info-line label {
+    width: 60px;
+    font-size: 12px;
+  }
+
+  .info-line input {
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  .items-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 12px 0;
+  }
+
+  .items-table {
+    min-width: 700px;
+    font-size: 9px;
+  }
+
+  .items-table th {
+    font-size: 7px;
+    padding: 6px 3px;
+  }
+
+  .items-table td {
+    padding: 3px 2px;
+  }
+
+  .items-table input {
+    font-size: 8px;
+    padding: 2px;
+    min-width: 20px;
+  }
+
+  .signature {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .sign-item {
+    width: 100%;
+  }
+
+  .sign-line {
+    margin-top: 20px;
+    font-size: 10px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .toolbar {
+    justify-content: center;
+  }
+
+  .toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-remove {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .receipt-paper {
+    padding: 10px 6px;
+  }
+
+  .company-name {
+    font-size: 12px;
+  }
+
+  .receipt-title h2 {
+    font-size: 13px;
+  }
+
+  .items-table {
+    min-width: 550px;
+    font-size: 8px;
+  }
+
+  .items-table th {
+    font-size: 6px;
+    padding: 4px 2px;
+  }
+
+  .items-table td {
+    padding: 2px 1px;
+  }
+
+  .items-table input {
+    font-size: 7px;
+    padding: 1px;
+    min-width: 15px;
+  }
+
+  .info-line label {
+    width: 50px;
+    font-size: 11px;
+  }
+
+  .info-line input {
+    font-size: 11px;
+  }
+}
+
+/* ==================== 10. PRINT STYLES ==================== */
 @media print {
   * {
     box-sizing: border-box;
@@ -344,7 +523,6 @@ body {
     display: none !important;
   }
 
-  /* Ẩn cột xóa khi in - KHÔNG CÓ CỘT XÓA TRONG HEADER NÊN K CẦN */
   .col-delete {
     display: none !important;
   }
