@@ -134,9 +134,6 @@
       users: "Quản lý người dùng",
     };
 
-    var breadcrumb = document.getElementById("breadcrumb-title");
-    if (breadcrumb) breadcrumb.textContent = titles[viewName] || viewName;
-
     // TRÊN MOBILE: ẨN SIDEBAR, HIỆN NÚT BACK
     if (isMobile()) {
       window.hideSidebar();

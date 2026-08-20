@@ -1090,4 +1090,9 @@ body::before {
     min-height: 100vh !important;
     height: auto !important;
   }
+
+  /* Ẩn breadcrumb trên mobile */
+  .breadcrumb {
+    display: none !important;
+  }
 }
