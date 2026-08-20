@@ -58,6 +58,7 @@
     }
     if (backBtn) {
       backBtn.classList.add("visible");
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Quay lại';
     }
     document.body.style.overflow = "";
   };
@@ -141,26 +142,6 @@
       window.hideSidebar();
     }
 
-    // HIỂN THỊ NÚT BACK TRÊN MOBILE CHO CÁC TRANG PENDING
-    var backButtons = document.querySelectorAll(".btn-mobile-back");
-    var isPendingPage = [
-      "pending-products",
-      "pending-receipts",
-      "pending-exports",
-      "pending-edits",
-      "pending-deletions",
-    ].includes(viewName);
-
-    backButtons.forEach(function (btn) {
-      if (isMobile() && isPendingPage) {
-        btn.style.display = "inline-flex";
-        btn.style.alignItems = "center";
-        btn.style.gap = "8px";
-      } else {
-        btn.style.display = "none";
-      }
-    });
-
     // Load dữ liệu cho view tương ứng
     if (viewName === "dashboard") {
       loadDashboardStats();
@@ -181,7 +162,7 @@
   }
 
   // ============================================================
-  // HÀM QUAY LẠI TỪ CÁC TRANG PENDING
+  // HÀM QUAY LẠI TỪ CÁC TRANG PENDING - KHÔNG CẦN NỮA VÌ ĐÃ CÓ NÚT BACK
   // ============================================================
   window.goBackFromPending = function () {
     switchView("dashboard");
