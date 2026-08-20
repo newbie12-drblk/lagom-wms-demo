@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * FIXED: Full logic + Nút hamburger hoạt động trên Mobile
+ * MOBILE: Sidebar full màn hình + Nút Back
  */
 
 (function () {
@@ -31,46 +31,41 @@
   window._pendingDeletions = [];
 
   // ============================================================
-  // HAMBURGER MENU - MỞ/ĐÓNG SIDEBAR TRÊN MOBILE
+  // SIDEBAR MOBILE - FULL MÀN HÌNH
   // ============================================================
-  window.toggleSidebar = function () {
+
+  // Hiển thị sidebar (quay lại menu chính)
+  window.showSidebar = function () {
     var sidebar = document.getElementById("sidebar");
-    var overlay = document.getElementById("sidebarOverlay");
+    var backBtn = document.getElementById("btnBackMobile");
 
     if (sidebar) {
-      sidebar.classList.toggle("open");
+      sidebar.classList.remove("hidden");
     }
-    if (overlay) {
-      overlay.classList.toggle("active");
+    if (backBtn) {
+      backBtn.classList.remove("visible");
     }
-
-    // Ngăn scroll body khi sidebar mở
-    if (sidebar && sidebar.classList.contains("open")) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = "hidden";
   };
 
-  window.closeSidebar = function () {
+  // Ẩn sidebar (khi đã chọn trang)
+  window.hideSidebar = function () {
     var sidebar = document.getElementById("sidebar");
-    var overlay = document.getElementById("sidebarOverlay");
+    var backBtn = document.getElementById("btnBackMobile");
 
     if (sidebar) {
-      sidebar.classList.remove("open");
+      sidebar.classList.add("hidden");
     }
-    if (overlay) {
-      overlay.classList.remove("active");
+    if (backBtn) {
+      backBtn.classList.add("visible");
     }
     document.body.style.overflow = "";
   };
 
-  // Đóng sidebar khi bấm ESC
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-      window.closeSidebar();
-    }
-  });
+  // Kiểm tra mobile
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
 
   // ============================================================
   // UPDATE TOPBAR
@@ -110,7 +105,7 @@
   }
 
   // ============================================================
-  // SWITCH VIEW - CÓ XỬ LÝ NÚT BACK
+  // SWITCH VIEW - CÓ XỬ LÝ SIDEBAR MOBILE
   // ============================================================
   function switchView(viewName) {
     document.querySelectorAll(".view").forEach(function (v) {
@@ -141,13 +136,12 @@
     var breadcrumb = document.getElementById("breadcrumb-title");
     if (breadcrumb) breadcrumb.textContent = titles[viewName] || viewName;
 
-    // Đóng sidebar trên mobile sau khi chuyển trang
-    if (window.innerWidth <= 768) {
-      window.closeSidebar();
+    // TRÊN MOBILE: ẨN SIDEBAR, HIỆN NÚT BACK
+    if (isMobile()) {
+      window.hideSidebar();
     }
 
     // HIỂN THỊ NÚT BACK TRÊN MOBILE CHO CÁC TRANG PENDING
-    var isMobile = window.innerWidth <= 768;
     var backButtons = document.querySelectorAll(".btn-mobile-back");
     var isPendingPage = [
       "pending-products",
@@ -158,7 +152,7 @@
     ].includes(viewName);
 
     backButtons.forEach(function (btn) {
-      if (isMobile && isPendingPage) {
+      if (isMobile() && isPendingPage) {
         btn.style.display = "inline-flex";
         btn.style.alignItems = "center";
         btn.style.gap = "8px";
@@ -298,7 +292,7 @@
   }
 
   // ============================================================
-  // RENDER RECEIPT DETAIL - FIX LỖI items is not defined
+  // RENDER RECEIPT DETAIL
   // ============================================================
   function renderReceiptDetail(receipt) {
     if (!receipt) {
@@ -310,7 +304,6 @@
       `;
     }
 
-    // ✅ ĐẢM BẢO items luôn là mảng
     var items = [];
     if (receipt.items && Array.isArray(receipt.items)) {
       items = receipt.items;
@@ -934,7 +927,6 @@
 
     var html = renderReceiptDetail(receipt);
 
-    // ✅ THÊM FORM NHẬP 4 TRƯỜNG HÓA ĐƠN
     html += `
       <div style="margin-top: 20px; padding: 16px; background: #0f172a; border: 1px solid #1e2d45; border-radius: 8px;">
         <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 14px;">📄 Thông tin hóa đơn</h4>
@@ -990,7 +982,7 @@
   };
 
   // ============================================================
-  // APPROVE RECEIPT WITH INVOICE - DUYỆT KÈM THÔNG TIN HÓA ĐƠN
+  // APPROVE RECEIPT WITH INVOICE
   // ============================================================
   window.approveReceiptWithInvoice = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
@@ -2131,7 +2123,7 @@
   // BIND EVENTS
   // ============================================================
   function bindEvents() {
-    // Nav items - dùng event delegation để đảm bảo hoạt động sau khi DOM thay đổi
+    // Nav items - dùng event delegation
     document.addEventListener("click", function (e) {
       var item = e.target.closest(".nav-item");
       if (item && item.dataset && item.dataset.view) {
@@ -2141,32 +2133,9 @@
         if (viewName && typeof switchView === "function") {
           switchView(viewName);
         }
-        // Đóng sidebar trên mobile
-        if (
-          window.innerWidth <= 768 &&
-          typeof window.closeSidebar === "function"
-        ) {
-          window.closeSidebar();
-        }
       }
     });
 
-    // Hamburger button
-    var btnHamburger = document.getElementById("btnHamburger");
-    if (btnHamburger) {
-      // Xóa event listener cũ bằng cách clone và thay thế
-      var newBtn = btnHamburger.cloneNode(true);
-      btnHamburger.parentNode.replaceChild(newBtn, btnHamburger);
-      newBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        console.log("🍔 Hamburger clicked!");
-        if (typeof window.toggleSidebar === "function") {
-          window.toggleSidebar();
-        }
-      });
-    }
-
-    // Refresh button
     var refreshBtn = document.getElementById("btnRefresh");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
@@ -2176,17 +2145,14 @@
       });
     }
 
-    // Add user button
     var btnAddUser = document.getElementById("btnAddUser");
     if (btnAddUser) {
       btnAddUser.addEventListener("click", function (e) {
         e.preventDefault();
-        console.log("🟢 Nút Thêm người dùng được click");
         openAddUserModal();
       });
     }
 
-    // Refresh users button
     var btnRefreshUsers = document.getElementById("btnRefreshUsers");
     if (btnRefreshUsers) {
       btnRefreshUsers.addEventListener("click", function (e) {
@@ -2195,7 +2161,6 @@
       });
     }
 
-    // Save user button
     var btnSaveUser = document.getElementById("btnSaveUser");
     if (btnSaveUser) {
       btnSaveUser.addEventListener("click", function (e) {
@@ -2204,7 +2169,6 @@
       });
     }
 
-    // Close modal on overlay click
     var modal = document.getElementById("userModal");
     if (modal) {
       modal.addEventListener("click", function (e) {
@@ -2214,7 +2178,6 @@
       });
     }
 
-    // Close modal button
     var closeBtn = document.querySelector(".close-modal");
     if (closeBtn) {
       closeBtn.addEventListener("click", function (e) {
@@ -2228,28 +2191,23 @@
   // RESIZE HANDLER
   // ============================================================
   window.addEventListener("resize", function () {
-    var activeView = document.querySelector(".view.active");
-    if (activeView) {
-      var viewId = activeView.id.replace("view-", "");
-      var isMobile = window.innerWidth <= 768;
-      var backButtons = document.querySelectorAll(".btn-mobile-back");
-      var isPendingPage = [
-        "pending-products",
-        "pending-receipts",
-        "pending-exports",
-        "pending-edits",
-        "pending-deletions",
-      ].includes(viewId);
+    var isMobileNow = window.innerWidth <= 768;
 
-      backButtons.forEach(function (btn) {
-        if (isMobile && isPendingPage) {
-          btn.style.display = "inline-flex";
-          btn.style.alignItems = "center";
-          btn.style.gap = "8px";
-        } else {
-          btn.style.display = "none";
-        }
-      });
+    if (!isMobileNow) {
+      // Trên desktop: luôn hiển thị sidebar
+      var sidebar = document.getElementById("sidebar");
+      var backBtn = document.getElementById("btnBackMobile");
+      if (sidebar) sidebar.classList.remove("hidden");
+      if (backBtn) backBtn.classList.remove("visible");
+      document.body.style.overflow = "";
+    } else {
+      // Trên mobile: nếu đang ở trang con thì ẩn sidebar
+      var activeView = document.querySelector(".view.active");
+      if (activeView && activeView.id !== "view-dashboard") {
+        window.hideSidebar();
+      } else {
+        window.showSidebar();
+      }
     }
   });
 
@@ -2262,6 +2220,11 @@
     loadDashboardStats();
     loadNotifications();
 
+    // TRÊN MOBILE: HIỂN THỊ SIDEBAR FULL MÀN HÌNH BAN ĐẦU
+    if (isMobile()) {
+      window.showSidebar();
+    }
+
     var activeView = document.querySelector(".view.active");
     if (activeView) {
       var viewId = activeView.id.replace("view-", "");
@@ -2272,11 +2235,6 @@
       else if (viewId === "pending-deletions") loadPendingDeletions();
       else if (viewId === "users") loadUsers();
     }
-
-    // Đảm bảo sidebar đóng trên mobile khi load
-    if (window.innerWidth <= 768) {
-      window.closeSidebar();
-    }
   }
 
   // ============================================================
@@ -2284,6 +2242,8 @@
   // ============================================================
   window.switchView = switchView;
   window.goBackFromPending = goBackFromPending;
+  window.showSidebar = showSidebar;
+  window.hideSidebar = hideSidebar;
   window.loadPendingApprovals = loadPendingApprovals;
   window.loadPendingReceipts = loadPendingReceipts;
   window.loadPendingExports = loadPendingExports;

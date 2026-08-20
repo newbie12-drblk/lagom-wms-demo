@@ -1,7 +1,6 @@
 /* ==================== ADMIN PAGE STYLES ==================== */
 /* Quản lý người dùng và duyệt yêu cầu */
 
-/* ==================== CONTAINER ==================== */
 .admin-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -10,7 +9,6 @@
   z-index: 1;
 }
 
-/* ==================== HEADER ==================== */
 .admin-header {
   display: flex;
   align-items: center;
@@ -28,7 +26,6 @@
   background-clip: text;
 }
 
-/* ==================== BUTTONS ==================== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -100,7 +97,6 @@
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-/* ==================== STATS CARDS ==================== */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -251,7 +247,6 @@
   font-family: var(--font-mono);
 }
 
-/* ==================== PANEL ==================== */
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -281,7 +276,6 @@
   font-size: 15px;
 }
 
-/* ==================== PILL BADGES ==================== */
 .pill {
   font-size: 10px;
   font-weight: 700;
@@ -311,7 +305,6 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-/* ==================== STATUS BADGES ==================== */
 .status-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -324,28 +317,23 @@
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
-
 .status-locked {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
-
 .status-pending {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
 }
-
 .status-approved {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
-
 .status-rejected {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
 
-/* ==================== FILTER BAR ==================== */
 .filter-bar {
   display: flex;
   gap: 12px;
@@ -405,7 +393,6 @@
   border-color: var(--blue);
 }
 
-/* ==================== TABLE ==================== */
 .table-wrap {
   background: var(--surface);
   border-radius: 12px;
@@ -455,12 +442,10 @@
 .user-table tr:hover td {
   background: rgba(59, 130, 246, 0.05);
 }
-
 .user-table tr:last-child td {
   border-bottom: none;
 }
 
-/* ==================== ACTION BUTTONS ==================== */
 .action-buttons {
   display: flex;
   gap: 6px;
@@ -503,7 +488,6 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
-/* ==================== APPROVAL CARDS ==================== */
 .approval-list {
   display: flex;
   flex-direction: column;
@@ -570,7 +554,6 @@
   border-top: 1px solid var(--border);
 }
 
-/* ==================== HISTORY TABLE ==================== */
 .history-list {
   overflow-x: auto;
 }
@@ -603,7 +586,6 @@
   background: rgba(59, 130, 246, 0.05);
 }
 
-/* ==================== MODAL ==================== */
 .modal {
   display: none;
   position: fixed;
@@ -695,7 +677,6 @@
   border-radius: 0 0 16px 16px;
 }
 
-/* ==================== FORM ==================== */
 .form-group {
   margin-bottom: 16px;
 }
@@ -738,7 +719,6 @@
   display: block;
 }
 
-/* ==================== EMPTY STATE ==================== */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -750,12 +730,10 @@
   margin-bottom: 16px;
   opacity: 0.5;
 }
-
 .empty-state p {
   margin-bottom: 8px;
 }
 
-/* ==================== ALERT SCROLL ==================== */
 .alert-scroll {
   max-height: 300px;
   overflow-y: auto;
@@ -811,7 +789,6 @@
   margin-top: 4px;
 }
 
-/* ==================== HEADER ACTIONS ==================== */
 .header-actions {
   display: flex;
   gap: 10px;
@@ -936,12 +913,10 @@
 .user-management-table tbody tr:hover {
   background: rgba(59, 130, 246, 0.05);
 }
-
 .user-management-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Role badges trong bảng user */
 .role-badge {
   display: inline-block;
   padding: 4px 14px;
@@ -954,33 +929,27 @@
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
-
 .role-badge.role-quan_ly {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
 }
-
 .role-badge.role-ke_toan {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
 }
-
 .role-badge.role-quan_ly_kho {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
-
 .role-badge.role-nhan_vien {
   background: rgba(107, 114, 128, 0.2);
   color: #9ca3af;
 }
-
 .role-badge.role-nhap_lieu {
   background: rgba(139, 92, 246, 0.2);
   color: #a78bfa;
 }
 
-/* Status dot animation */
 @keyframes pulse {
   0%,
   100% {
@@ -991,12 +960,10 @@
   }
 }
 
-/* Action buttons */
 .action-buttons .btn-outline:hover {
   background: rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
 }
-
 .action-buttons .btn-danger:hover {
   background: rgba(239, 68, 68, 0.3);
   border-color: #ef4444;
@@ -1029,14 +996,12 @@
   font-size: 14px !important;
 }
 
-/* Mobile: hiển thị nút back */
 @media (max-width: 768px) {
   .btn-mobile-back {
     display: inline-flex !important;
   }
 }
 
-/* Ẩn nút back trên desktop */
 @media (min-width: 769px) {
   .btn-mobile-back {
     display: none !important;

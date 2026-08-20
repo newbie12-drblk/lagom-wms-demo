@@ -76,13 +76,13 @@
       <div class="content-area">
         <div class="topbar">
           <div class="topbar-left">
-            <!-- NÚT HAMBURGER CHO MOBILE -->
+            <!-- NÚT BACK - CHỈ HIỂN THỊ KHI ĐÃ CHỌN TRANG -->
             <button
-              class="btn-hamburger"
-              id="btnHamburger"
-              onclick="window.toggleSidebar()"
+              class="btn-back"
+              id="btnBackMobile"
+              onclick="window.showSidebar()"
             >
-              <i class="fas fa-bars"></i>
+              <i class="fas fa-arrow-left"></i>
             </button>
             <div class="breadcrumb">
               LAGOM <span>/</span>
@@ -97,13 +97,6 @@
             <div class="top-date" id="currentDate"></div>
           </div>
         </div>
-
-        <!-- OVERLAY ĐỂ ĐÓNG SIDEBAR KHI BẤM RA NGOÀI -->
-        <div
-          class="sidebar-overlay"
-          id="sidebarOverlay"
-          onclick="window.closeSidebar()"
-        ></div>
 
         <div class="view-container">
           <!-- VIEW: DASHBOARD -->
