@@ -22,7 +22,7 @@
 
     <div class="app-shell">
       <!-- SIDEBAR -->
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">
             <div class="logo-icon">🧪</div>
@@ -62,14 +62,18 @@
         </div>
       </aside>
 
-      <!-- CONTENT AREA -->
+      <!-- CONTENT -->
       <div class="content-area">
         <div class="topbar">
           <div class="topbar-left">
-            <div class="breadcrumb">
-              LAGOM <span>/</span>
-              <strong id="breadcrumb-title">Trang chủ</strong>
-            </div>
+            <!-- NÚT BACK - CHỈ HIỂN THỊ KHI ĐÃ CHỌN TRANG -->
+            <button
+              class="btn-back"
+              id="btnBackMobile"
+              onclick="window.showSidebar()"
+            >
+              <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
           </div>
           <div class="topbar-right" id="topbarRight">
             <div class="top-pulse">
@@ -597,7 +601,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP - ĐÃ XÓA NÚT IN                -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU NHẬP -->
     <!-- ============================================================ -->
     <div id="receiptDetailModal" class="modal" style="display: none">
       <div
@@ -639,7 +643,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT - ĐÃ XÓA NÚT IN                -->
+    <!-- MODAL XEM CHI TIẾT PHIẾU XUẤT -->
     <!-- ============================================================ -->
     <div id="exportDetailModal" class="modal" style="display: none">
       <div
@@ -680,7 +684,6 @@
       </div>
     </div>
 
-    <!-- Scripts -->
     <script src="js/utils.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>

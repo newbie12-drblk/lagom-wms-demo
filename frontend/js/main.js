@@ -15,6 +15,44 @@
     return;
   }
 
+  // ============================================================
+  // SIDEBAR MOBILE - FULL MÀN HÌNH
+  // ============================================================
+
+  // Hiển thị sidebar (quay lại menu chính)
+  window.showSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var backBtn = document.getElementById("btnBackMobile");
+
+    if (sidebar) {
+      sidebar.classList.remove("hidden");
+    }
+    if (backBtn) {
+      backBtn.classList.remove("visible");
+    }
+    document.body.style.overflow = "hidden";
+  };
+
+  // Ẩn sidebar (khi đã chọn trang)
+  window.hideSidebar = function () {
+    var sidebar = document.getElementById("sidebar");
+    var backBtn = document.getElementById("btnBackMobile");
+
+    if (sidebar) {
+      sidebar.classList.add("hidden");
+    }
+    if (backBtn) {
+      backBtn.classList.add("visible");
+      backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Quay lại';
+    }
+    document.body.style.overflow = "";
+  };
+
+  // Kiểm tra mobile
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
+
   // Update topbar user
   function updateTopbarUser() {
     const user = Auth.getCurrentUser();
@@ -217,16 +255,10 @@
       else item.classList.remove("active");
     });
 
-    const titles = {
-      home: "Trang chủ",
-      inventory: "Tồn kho",
-      receipts: "Phiếu nhập hàng",
-      exports: "Phiếu xuất kho",
-      statistics: "Thống kê",
-    };
-    const breadcrumb = document.getElementById("breadcrumb-title");
-    if (breadcrumb && titles[viewName])
-      breadcrumb.textContent = titles[viewName];
+    // TRÊN MOBILE: ẨN SIDEBAR, HIỆN NÚT BACK
+    if (isMobile()) {
+      window.hideSidebar();
+    }
 
     localStorage.removeItem("lagom_inventory");
     localStorage.removeItem("lagom_receipts");
@@ -236,7 +268,6 @@
       await loadInventory();
       initInventory(inventoryData);
     } else if (viewName === "home" && typeof initHome === "function") {
-      // ✅ CHỈ GỌI initHome NẾU CHƯA ĐƯỢC INIT
       if (!isInitialized) {
         await loadInventory();
         await initHome();
@@ -317,6 +348,12 @@
       await initHome();
       isInitialized = true;
     }
+
+    // TRÊN MOBILE: HIỂN THỊ SIDEBAR FULL MÀN HÌNH BAN ĐẦU
+    if (isMobile()) {
+      window.showSidebar();
+    }
+
     switchView("home");
   }
 
