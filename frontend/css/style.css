@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026 - MOBILE: SIDEBAR FULL MÀN HÌNH + NÚT BACK
+   NGÀY: 2026 - FIX MOBILE SIDEBAR ĐẸP
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -635,7 +635,7 @@ body::before {
   display: inline-flex !important;
 }
 
-/* ==================== STATUS BADGE - CHỜ XÁC NHẬN ==================== */
+/* ==================== STATUS BADGE ==================== */
 .status-awaiting {
   background: rgba(59, 130, 246, 0.25);
   color: #60a5fa;
@@ -732,9 +732,11 @@ body::before {
   }
 }
 
-/* Mobile (dưới 768px) - SIDEBAR FULL MÀN HÌNH */
+/* ================================================================ */
+/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH ĐẸP                */
+/* ================================================================ */
 @media (max-width: 768px) {
-  /* Sidebar full màn hình - MẶC ĐỊNH HIỂN THỊ */
+  /* Sidebar full màn hình - CĂN GIỮA ĐẸP */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -744,85 +746,125 @@ body::before {
     z-index: 999 !important;
     background: #0b1220 !important;
     border-right: none !important;
-    overflow-y: auto !important;
     display: flex !important;
     flex-direction: column !important;
-    transition: none !important;
-    box-shadow: none !important;
-    padding: 20px 24px !important;
+    padding: 30px 28px 20px !important;
+    overflow-y: auto !important;
   }
 
   .sidebar.hidden {
     display: none !important;
   }
 
-  /* Logo to hơn trên mobile */
+  /* Logo - CĂN GIỮA ĐẸP */
   .sidebar-logo {
-    padding: 30px 0 24px !important;
+    padding: 0 0 24px 0 !important;
     text-align: center !important;
-    border-bottom: 1px solid var(--border) !important;
+    border-bottom: 1px solid rgba(30, 45, 69, 0.6) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .logo-mark {
+    justify-content: center !important;
+    gap: 12px !important;
   }
 
   .logo-icon {
-    width: 56px !important;
-    height: 56px !important;
-    font-size: 28px !important;
-    margin: 0 auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 24px !important;
+    border-radius: 12px !important;
   }
 
   .logo-text-main {
-    font-size: 20px !important;
+    font-size: 22px !important;
     display: block !important;
-    text-align: center !important;
-    margin-top: 8px !important;
   }
 
   .logo-text-sub {
-    font-size: 12px !important;
+    font-size: 11px !important;
     display: block !important;
-    text-align: center !important;
     padding-left: 0 !important;
+    text-align: center !important;
     margin-top: 2px !important;
+    color: #6b82a0 !important;
   }
 
+  /* Navigation - CĂN ĐỀU, KHÔNG LỆCH */
   .sidebar .nav-label {
-    font-size: 11px !important;
-    padding: 20px 12px 10px !important;
-    display: block !important;
+    font-size: 10px !important;
+    padding: 16px 4px 8px !important;
+    color: #4a5a7a !important;
+    letter-spacing: 1px !important;
   }
 
   .sidebar .nav-item {
-    padding: 16px 20px !important;
-    margin: 4px 0 !important;
-    border-radius: 12px !important;
-    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
     gap: 14px !important;
+    padding: 14px 18px !important;
+    margin: 3px 0 !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #6b82a0 !important;
+    transition: all 0.2s !important;
+  }
+
+  .sidebar .nav-item:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    color: #e2eaf5 !important;
+  }
+
+  .sidebar .nav-item.active {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
   }
 
   .sidebar .nav-icon {
-    font-size: 22px !important;
-    width: 40px !important;
-    height: 40px !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    flex-shrink: 0 !important;
+    background: rgba(26, 34, 53, 0.6) !important;
+  }
+
+  .sidebar .nav-item.active .nav-icon {
+    background: rgba(59, 130, 246, 0.2) !important;
   }
 
   .sidebar .nav-item span:not(.nav-icon) {
     display: inline !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
   }
 
   .nav-badge {
+    margin-left: auto !important;
+    font-size: 10px !important;
+    padding: 2px 8px !important;
+    border-radius: 12px !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.25) !important;
     display: inline-block !important;
-    font-size: 12px !important;
-    padding: 2px 10px !important;
   }
 
+  /* Sidebar Footer - CĂN GIỮA */
   .sidebar-footer {
     margin-top: auto !important;
-    padding: 20px 12px !important;
+    padding: 16px 0 4px !important;
+    border-top: 1px solid rgba(30, 45, 69, 0.4) !important;
+    text-align: center !important;
   }
 
   .sidebar-ver {
-    font-size: 12px !important;
+    font-size: 11px !important;
+    color: #374b66 !important;
   }
 
   /* Content area - chiếm toàn bộ */
@@ -830,51 +872,102 @@ body::before {
     width: 100% !important;
   }
 
-  /* Topbar - có nút Back */
+  /* Topbar - CÓ NÚT BACK */
   .topbar {
     flex-direction: row !important;
     height: 56px !important;
-    padding: 0 16px !important;
+    padding: 0 14px !important;
     gap: 8px !important;
+    background: rgba(8, 12, 18, 0.95) !important;
   }
 
   .topbar-left {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     width: auto !important;
   }
 
   .topbar-right {
     width: auto !important;
     justify-content: flex-end !important;
+    gap: 8px !important;
   }
 
-  /* Nút Back - chỉ hiển thị khi sidebar đã ẩn */
+  /* Nút Back - đẹp hơn */
   .btn-back {
     display: none !important;
+    background: rgba(59, 130, 246, 0.12) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 8px !important;
+    color: #60a5fa !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.2s !important;
   }
 
   .btn-back.visible {
     display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
   }
 
-  .breadcrumb {
+  .btn-back:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+  }
+
+  .btn-back i {
     font-size: 14px !important;
+  }
+
+  /* Ẩn breadcrumb */
+  .breadcrumb {
+    display: none !important;
   }
 
   .top-pulse {
     font-size: 10px !important;
   }
+
   .top-date {
     font-size: 10px !important;
     padding: 4px 10px !important;
+    background: rgba(26, 34, 53, 0.6) !important;
+    border: 1px solid rgba(30, 45, 69, 0.4) !important;
+    border-radius: 16px !important;
   }
 
+  /* User info trên mobile - thu gọn */
+  .user-info {
+    padding: 4px 10px 4px 6px !important;
+    margin-right: 6px !important;
+    border-radius: 30px !important;
+  }
+
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  .user-name {
+    font-size: 11px !important;
+  }
+
+  .user-details {
+    display: none !important;
+  }
+
+  .logout-btn {
+    font-size: 12px !important;
+    padding: 4px !important;
+  }
+
+  /* Scroll area */
   .scroll-area {
-    padding: 16px !important;
+    padding: 14px 14px 30px !important;
     height: auto !important;
     min-height: calc(100vh - 56px) !important;
   }
@@ -884,167 +977,339 @@ body::before {
     min-height: calc(100vh - 56px) !important;
   }
 
-  .stats-row {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+  .view {
+    height: auto !important;
+    min-height: calc(100vh - 56px) !important;
   }
 
+  /* Stats */
+  .stats-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .stat-card {
+    padding: 10px 12px !important;
+    min-height: 70px !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-value {
+    font-size: 20px !important;
+  }
+
+  .stat-label {
+    font-size: 9px !important;
+  }
+
+  .stat-icon-wrap {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+  }
+
+  .stat-top {
+    margin-bottom: 4px !important;
+  }
+
+  /* Page header */
   .page-header {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
   }
 
   .page-title {
-    font-size: 20px !important;
+    font-size: 18px !important;
   }
 
   .page-sub {
     font-size: 11px !important;
   }
 
+  .page-title-tag {
+    font-size: 9px !important;
+  }
+
+  /* Buttons - dễ chạm */
   .btn,
   button,
   .action-btn,
   .page-btn {
-    min-height: 44px !important;
-    padding: 8px 16px !important;
+    min-height: 40px !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
   }
 
   .btn i,
   button i {
+    font-size: 13px !important;
+  }
+
+  /* Header actions */
+  .header-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .header-actions .btn {
+    flex: 1 !important;
+    min-width: 100px !important;
+    justify-content: center !important;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  .filter-bar .search-box,
+  .filter-bar .cat-select,
+  .filter-bar .btn {
+    width: 100% !important;
+  }
+
+  .search-box input {
+    padding: 8px 12px 8px 36px !important;
+    font-size: 13px !important;
+    min-height: 40px !important;
+  }
+
+  /* Inventory stats */
+  .inventory-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .stat-mini {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .stat-mini-value {
     font-size: 14px !important;
   }
 
+  .stat-mini-label {
+    font-size: 9px !important;
+  }
+
+  /* Table */
+  .table-wrap {
+    max-height: 50vh !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .inv-table {
+    min-width: 1200px !important;
+    font-size: 10px !important;
+  }
+
+  .inv-table th,
+  .inv-table td {
+    padding: 6px 6px !important;
+    font-size: 9px !important;
+  }
+
+  .inv-table th.sticky-col-2,
+  .inv-table td.sticky-col-2 {
+    min-width: 100px !important;
+    width: 100px !important;
+    max-width: 120px !important;
+  }
+
+  .inv-table td.sticky-col-2 strong {
+    font-size: 10px !important;
+    max-width: 100px !important;
+  }
+
+  .inv-table th.sticky-col,
+  .inv-table td.sticky-col {
+    min-width: 30px !important;
+    width: 30px !important;
+  }
+
+  /* Pagination */
+  .pagination {
+    gap: 8px !important;
+    padding: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .page-btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  .page-info {
+    font-size: 11px !important;
+  }
+
+  /* Modal */
   .modal-content {
     width: 95% !important;
-    margin: 20px auto !important;
+    margin: 10px auto !important;
+    max-height: 92vh !important;
   }
 
   .modal-header h3 {
     font-size: 16px !important;
   }
 
-  .pagination {
+  .modal-body {
+    padding: 14px !important;
+  }
+
+  .modal-footer {
+    padding: 12px 14px !important;
     flex-wrap: wrap !important;
+  }
+
+  .modal-footer .btn {
+    flex: 1 !important;
     justify-content: center !important;
   }
 
+  /* Approval cards */
   .approval-card {
-    padding: 14px !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .approval-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .approval-card-body {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px 12px !important;
   }
 
   .approval-card-actions {
     flex-direction: column !important;
+    gap: 6px !important;
   }
+
   .approval-card-actions .btn {
     width: 100% !important;
     justify-content: center !important;
   }
 
-  .approval-body {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  .approval-body table {
-    min-width: 500px !important;
-  }
-
-  .admin-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
+  /* Receipt/Export cards */
+  .receipt-card,
+  .export-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
   }
 
-  .special-buttons {
-    width: 100% !important;
-    flex-wrap: wrap !important;
-  }
-  .special-buttons button {
-    flex: 1 !important;
+  .receipt-card-id,
+  .export-card-id {
+    font-size: 14px !important;
   }
 
-  .admin-stats {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
+  .receipt-card-body,
+  .export-card-body {
+    gap: 10px !important;
   }
 
-  .admin-toolbar {
-    flex-direction: column !important;
+  .receipt-card-info,
+  .export-card-info {
+    min-width: 80px !important;
   }
 
-  .user-table {
-    min-width: 600px !important;
+  .receipt-card-info .value,
+  .export-card-info .value {
+    font-size: 12px !important;
   }
 
-  .history-table {
-    min-width: 500px !important;
+  .receipt-card-total .value,
+  .export-card-total .value {
+    font-size: 15px !important;
   }
 
+  /* Quick tiles */
+  .quick-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .quick-tile {
+    padding: 12px !important;
+  }
+
+  .quick-tile-icon {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+  }
+
+  .quick-tile-name {
+    font-size: 11px !important;
+  }
+
+  .quick-tile-desc {
+    font-size: 9px !important;
+  }
+
+  /* Quick grid - 1 cột trên màn hình nhỏ */
+  @media (max-width: 480px) {
+    .quick-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .stats-row {
+      grid-template-columns: 1fr !important;
+    }
+
+    .inventory-stats {
+      grid-template-columns: 1fr !important;
+    }
+
+    .approval-card-body {
+      grid-template-columns: 1fr !important;
+    }
+
+    .stat-card {
+      padding: 8px 10px !important;
+      min-height: 56px !important;
+    }
+
+    .stat-value {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Signature */
   .signature {
     flex-direction: column !important;
-    gap: 20px !important;
+    gap: 16px !important;
     align-items: center !important;
   }
+
   .sign-item {
     width: 100% !important;
     text-align: center !important;
   }
 
   .action-buttons {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+    flex-direction: column !important;
+    gap: 6px !important;
   }
+
   .action-buttons .btn {
-    flex: 1 !important;
+    width: 100% !important;
     justify-content: center !important;
   }
 }
 
-/* Mobile siêu nhỏ (dưới 480px) */
-@media (max-width: 480px) {
-  .scroll-area {
-    padding: 12px !important;
-  }
-
-  .stat-mini {
-    justify-content: space-between !important;
-  }
-  .stat-mini-value {
-    font-size: 14px !important;
-  }
-  .stat-mini-label {
-    font-size: 10px !important;
-  }
-
-  .btn {
-    font-size: 11px !important;
-    padding: 6px 10px !important;
-  }
-
-  .page-info {
-    font-size: 11px !important;
-  }
-  .page-btn {
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-  }
-
-  .user-avatar {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 12px !important;
-  }
-  .user-details {
-    display: none !important;
-  }
-  .user-info {
-    padding: 4px 8px !important;
-  }
-}
-
-/* Touch-friendly */
+/* ==================== TOUCH FRIENDLY ==================== */
 @media (hover: none) and (pointer: coarse) {
   button,
   .btn,
@@ -1070,7 +1335,7 @@ body::before {
   }
 }
 
-/* Đảm bảo cuộn được */
+/* ==================== ĐẢM BẢO CUỘN TRÊN MOBILE ==================== */
 @media (max-width: 768px) {
   .scroll-area,
   .view-container,
@@ -1089,65 +1354,5 @@ body::before {
   .app-shell {
     min-height: 100vh !important;
     height: auto !important;
-  }
-
-  /* Ẩn breadcrumb trên mobile */
-  .breadcrumb {
-    display: none !important;
-  }
-}
-/* ==================== FIX: HIỂN THỊ NÚT TẠO PHIẾU TRÊN MOBILE ==================== */
-@media (max-width: 768px) {
-  .header-actions .btn-primary,
-  #btnCreateNewReceipt,
-  #btnCreateNewExport {
-    width: 100% !important;
-    justify-content: center !important;
-    min-height: 44px !important;
-  }
-
-  .header-actions {
-    width: 100% !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-
-  .header-actions .btn {
-    flex: 1 !important;
-    min-width: 120px !important;
-  }
-
-  /* Ẩn breadcrumb trên mobile */
-  .breadcrumb {
-    display: none !important;
-  }
-
-  /* Sidebar full màn hình */
-  .sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100vh !important;
-    z-index: 999 !important;
-    background: #0b1220 !important;
-    border-right: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 20px 24px !important;
-  }
-
-  .sidebar.hidden {
-    display: none !important;
-  }
-
-  .btn-back {
-    display: none !important;
-  }
-
-  .btn-back.visible {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
   }
 }
