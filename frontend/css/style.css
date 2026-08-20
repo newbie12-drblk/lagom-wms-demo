@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026 - FIX MOBILE SIDEBAR ĐẸP
+   NGÀY: 2026 - FIX MOBILE SIDEBAR LỆCH
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -733,10 +733,10 @@ body::before {
 }
 
 /* ================================================================ */
-/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH ĐẸP                */
+/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH                    */
 /* ================================================================ */
 @media (max-width: 768px) {
-  /* Sidebar full màn hình - CĂN GIỮA ĐẸP */
+  /* Sidebar full màn hình */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -748,7 +748,7 @@ body::before {
     border-right: none !important;
     display: flex !important;
     flex-direction: column !important;
-    padding: 30px 28px 20px !important;
+    padding: 24px 20px 16px !important;
     overflow-y: auto !important;
   }
 
@@ -756,33 +756,33 @@ body::before {
     display: none !important;
   }
 
-  /* Logo - CĂN GIỮA ĐẸP */
+  /* Logo - căn giữa */
   .sidebar-logo {
-    padding: 0 0 24px 0 !important;
+    padding: 0 0 20px 0 !important;
     text-align: center !important;
-    border-bottom: 1px solid rgba(30, 45, 69, 0.6) !important;
-    margin-bottom: 12px !important;
+    border-bottom: 1px solid rgba(30, 45, 69, 0.5) !important;
+    margin-bottom: 8px !important;
   }
 
   .logo-mark {
     justify-content: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
   .logo-icon {
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 24px !important;
-    border-radius: 12px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 22px !important;
+    border-radius: 11px !important;
   }
 
   .logo-text-main {
-    font-size: 22px !important;
+    font-size: 20px !important;
     display: block !important;
   }
 
   .logo-text-sub {
-    font-size: 11px !important;
+    font-size: 10px !important;
     display: block !important;
     padding-left: 0 !important;
     text-align: center !important;
@@ -790,57 +790,60 @@ body::before {
     color: #6b82a0 !important;
   }
 
-  /* Navigation - CĂN ĐỀU, KHÔNG LỆCH */
+  /* Navigation - căn đều */
   .sidebar .nav-label {
     font-size: 10px !important;
-    padding: 16px 4px 8px !important;
+    padding: 14px 12px 6px !important;
     color: #4a5a7a !important;
     letter-spacing: 1px !important;
+    display: block !important;
   }
 
   .sidebar .nav-item {
     display: flex !important;
     align-items: center !important;
-    gap: 14px !important;
-    padding: 14px 18px !important;
-    margin: 3px 0 !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    margin: 2px 0 !important;
     border-radius: 10px !important;
     font-size: 15px !important;
     font-weight: 500 !important;
     color: #6b82a0 !important;
     transition: all 0.2s !important;
+    text-decoration: none !important;
+    width: 100% !important;
   }
 
   .sidebar .nav-item:hover {
-    background: rgba(59, 130, 246, 0.1) !important;
+    background: rgba(59, 130, 246, 0.08) !important;
     color: #e2eaf5 !important;
   }
 
   .sidebar .nav-item.active {
-    background: rgba(59, 130, 246, 0.15) !important;
+    background: rgba(59, 130, 246, 0.12) !important;
     color: #60a5fa !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border: 1px solid rgba(59, 130, 246, 0.15) !important;
   }
 
   .sidebar .nav-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 18px !important;
+    font-size: 16px !important;
     flex-shrink: 0 !important;
-    background: rgba(26, 34, 53, 0.6) !important;
+    background: rgba(26, 34, 53, 0.5) !important;
   }
 
   .sidebar .nav-item.active .nav-icon {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(59, 130, 246, 0.15) !important;
   }
 
   .sidebar .nav-item span:not(.nav-icon) {
     display: inline !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
   }
 
   .nav-badge {
@@ -854,30 +857,30 @@ body::before {
     display: inline-block !important;
   }
 
-  /* Sidebar Footer - CĂN GIỮA */
+  /* Sidebar Footer */
   .sidebar-footer {
     margin-top: auto !important;
-    padding: 16px 0 4px !important;
-    border-top: 1px solid rgba(30, 45, 69, 0.4) !important;
+    padding: 14px 0 4px !important;
+    border-top: 1px solid rgba(30, 45, 69, 0.3) !important;
     text-align: center !important;
   }
 
   .sidebar-ver {
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: #374b66 !important;
   }
 
-  /* Content area - chiếm toàn bộ */
+  /* Content area */
   .content-area {
     width: 100% !important;
   }
 
-  /* Topbar - CÓ NÚT BACK */
+  /* Topbar */
   .topbar {
     flex-direction: row !important;
-    height: 56px !important;
-    padding: 0 14px !important;
-    gap: 8px !important;
+    height: 52px !important;
+    padding: 0 12px !important;
+    gap: 6px !important;
     background: rgba(8, 12, 18, 0.95) !important;
   }
 
@@ -891,22 +894,22 @@ body::before {
   .topbar-right {
     width: auto !important;
     justify-content: flex-end !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
-  /* Nút Back - đẹp hơn */
+  /* Nút Back */
   .btn-back {
     display: none !important;
-    background: rgba(59, 130, 246, 0.12) !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.15) !important;
     border-radius: 8px !important;
     color: #60a5fa !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 500 !important;
-    padding: 6px 12px !important;
+    padding: 4px 10px !important;
     cursor: pointer !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
     transition: all 0.2s !important;
   }
 
@@ -915,11 +918,11 @@ body::before {
   }
 
   .btn-back:hover {
-    background: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(59, 130, 246, 0.18) !important;
   }
 
   .btn-back i {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   /* Ẩn breadcrumb */
@@ -928,32 +931,33 @@ body::before {
   }
 
   .top-pulse {
-    font-size: 10px !important;
+    font-size: 9px !important;
   }
 
   .top-date {
-    font-size: 10px !important;
-    padding: 4px 10px !important;
+    font-size: 9px !important;
+    padding: 3px 8px !important;
     background: rgba(26, 34, 53, 0.6) !important;
-    border: 1px solid rgba(30, 45, 69, 0.4) !important;
-    border-radius: 16px !important;
+    border: 1px solid rgba(30, 45, 69, 0.3) !important;
+    border-radius: 14px !important;
   }
 
-  /* User info trên mobile - thu gọn */
+  /* User info trên mobile */
   .user-info {
-    padding: 4px 10px 4px 6px !important;
-    margin-right: 6px !important;
-    border-radius: 30px !important;
+    padding: 3px 8px 3px 4px !important;
+    margin-right: 4px !important;
+    border-radius: 24px !important;
+    gap: 6px !important;
   }
 
   .user-avatar {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 12px !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 10px !important;
   }
 
   .user-name {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   .user-details {
@@ -961,110 +965,110 @@ body::before {
   }
 
   .logout-btn {
-    font-size: 12px !important;
-    padding: 4px !important;
+    font-size: 11px !important;
+    padding: 2px !important;
   }
 
   /* Scroll area */
   .scroll-area {
-    padding: 14px 14px 30px !important;
+    padding: 12px 12px 24px !important;
     height: auto !important;
-    min-height: calc(100vh - 56px) !important;
+    min-height: calc(100vh - 52px) !important;
   }
 
   .view-container {
     height: auto !important;
-    min-height: calc(100vh - 56px) !important;
+    min-height: calc(100vh - 52px) !important;
   }
 
   .view {
     height: auto !important;
-    min-height: calc(100vh - 56px) !important;
+    min-height: calc(100vh - 52px) !important;
   }
 
   /* Stats */
   .stats-row {
     grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .stat-card {
-    padding: 10px 12px !important;
-    min-height: 70px !important;
-    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    min-height: 60px !important;
+    border-radius: 8px !important;
   }
 
   .stat-value {
-    font-size: 20px !important;
+    font-size: 18px !important;
   }
 
   .stat-label {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   .stat-icon-wrap {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 13px !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 11px !important;
   }
 
   .stat-top {
-    margin-bottom: 4px !important;
+    margin-bottom: 2px !important;
   }
 
   /* Page header */
   .page-header {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 10px !important;
-    margin-bottom: 16px !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
   }
 
   .page-title {
-    font-size: 18px !important;
+    font-size: 17px !important;
   }
 
   .page-sub {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   .page-title-tag {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
-  /* Buttons - dễ chạm */
+  /* Buttons */
   .btn,
   button,
   .action-btn,
   .page-btn {
-    min-height: 40px !important;
-    padding: 6px 14px !important;
-    font-size: 12px !important;
+    min-height: 36px !important;
+    padding: 5px 12px !important;
+    font-size: 11px !important;
   }
 
   .btn i,
   button i {
-    font-size: 13px !important;
+    font-size: 12px !important;
   }
 
   /* Header actions */
   .header-actions {
     width: 100% !important;
     flex-wrap: wrap !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .header-actions .btn {
     flex: 1 !important;
-    min-width: 100px !important;
+    min-width: 80px !important;
     justify-content: center !important;
   }
 
   /* Filter bar */
   .filter-bar {
     flex-direction: column !important;
-    gap: 8px !important;
-    padding: 10px 12px !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
   }
 
   .filter-bar .search-box,
@@ -1074,100 +1078,105 @@ body::before {
   }
 
   .search-box input {
-    padding: 8px 12px 8px 36px !important;
-    font-size: 13px !important;
-    min-height: 40px !important;
+    padding: 6px 10px 6px 32px !important;
+    font-size: 12px !important;
+    min-height: 36px !important;
+  }
+
+  .search-box i {
+    left: 10px !important;
+    font-size: 12px !important;
   }
 
   /* Inventory stats */
   .inventory-stats {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .stat-mini {
-    padding: 8px 12px !important;
-    border-radius: 8px !important;
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
   }
 
   .stat-mini-value {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   .stat-mini-label {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   /* Table */
   .table-wrap {
-    max-height: 50vh !important;
+    max-height: 45vh !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
 
   .inv-table {
-    min-width: 1200px !important;
-    font-size: 10px !important;
+    min-width: 1000px !important;
+    font-size: 9px !important;
   }
 
   .inv-table th,
   .inv-table td {
-    padding: 6px 6px !important;
-    font-size: 9px !important;
+    padding: 4px 4px !important;
+    font-size: 8px !important;
   }
 
   .inv-table th.sticky-col-2,
   .inv-table td.sticky-col-2 {
-    min-width: 100px !important;
-    width: 100px !important;
-    max-width: 120px !important;
+    min-width: 80px !important;
+    width: 80px !important;
+    max-width: 100px !important;
   }
 
   .inv-table td.sticky-col-2 strong {
-    font-size: 10px !important;
-    max-width: 100px !important;
+    font-size: 9px !important;
+    max-width: 80px !important;
   }
 
   .inv-table th.sticky-col,
   .inv-table td.sticky-col {
-    min-width: 30px !important;
-    width: 30px !important;
+    min-width: 24px !important;
+    width: 24px !important;
   }
 
   /* Pagination */
   .pagination {
-    gap: 8px !important;
-    padding: 8px !important;
+    gap: 6px !important;
+    padding: 6px !important;
     flex-wrap: wrap !important;
   }
 
   .page-btn {
-    padding: 6px 12px !important;
-    font-size: 11px !important;
+    padding: 4px 10px !important;
+    font-size: 10px !important;
   }
 
   .page-info {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   /* Modal */
   .modal-content {
     width: 95% !important;
-    margin: 10px auto !important;
+    margin: 8px auto !important;
     max-height: 92vh !important;
   }
 
   .modal-header h3 {
-    font-size: 16px !important;
+    font-size: 15px !important;
   }
 
   .modal-body {
-    padding: 14px !important;
+    padding: 12px !important;
   }
 
   .modal-footer {
-    padding: 12px 14px !important;
+    padding: 10px 12px !important;
     flex-wrap: wrap !important;
   }
 
@@ -1178,24 +1187,24 @@ body::before {
 
   /* Approval cards */
   .approval-card {
-    padding: 12px 14px !important;
-    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
   }
 
   .approval-card-header {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 4px !important;
+    gap: 2px !important;
   }
 
   .approval-card-body {
     grid-template-columns: 1fr 1fr !important;
-    gap: 4px 12px !important;
+    gap: 2px 8px !important;
   }
 
   .approval-card-actions {
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .approval-card-actions .btn {
@@ -1206,33 +1215,33 @@ body::before {
   /* Receipt/Export cards */
   .receipt-card,
   .export-card {
-    padding: 12px 14px !important;
-    border-radius: 12px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
   }
 
   .receipt-card-id,
   .export-card-id {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   .receipt-card-body,
   .export-card-body {
-    gap: 10px !important;
+    gap: 8px !important;
   }
 
   .receipt-card-info,
   .export-card-info {
-    min-width: 80px !important;
+    min-width: 60px !important;
   }
 
   .receipt-card-info .value,
   .export-card-info .value {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
 
   .receipt-card-total .value,
   .export-card-total .value {
-    font-size: 15px !important;
+    font-size: 14px !important;
   }
 
   /* Quick tiles */
@@ -1241,21 +1250,21 @@ body::before {
   }
 
   .quick-tile {
-    padding: 12px !important;
+    padding: 10px !important;
   }
 
   .quick-tile-icon {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 14px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
   }
 
   .quick-tile-name {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   .quick-tile-desc {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   /* Quick grid - 1 cột trên màn hình nhỏ */
@@ -1277,19 +1286,29 @@ body::before {
     }
 
     .stat-card {
-      padding: 8px 10px !important;
-      min-height: 56px !important;
+      padding: 6px 8px !important;
+      min-height: 48px !important;
     }
 
     .stat-value {
-      font-size: 16px !important;
+      font-size: 15px !important;
+    }
+
+    .stat-label {
+      font-size: 7px !important;
+    }
+
+    .stat-icon-wrap {
+      width: 20px !important;
+      height: 20px !important;
+      font-size: 10px !important;
     }
   }
 
   /* Signature */
   .signature {
     flex-direction: column !important;
-    gap: 16px !important;
+    gap: 12px !important;
     align-items: center !important;
   }
 
@@ -1300,7 +1319,7 @@ body::before {
 
   .action-buttons {
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .action-buttons .btn {
