@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026 - FIX MOBILE SIDEBAR THẲNG HÀNG
+   NGÀY: 2026 - FIX MOBILE SIDEBAR CĂN TRÁI
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -733,7 +733,7 @@ body::before {
 }
 
 /* ================================================================ */
-/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH THẲNG HÀNG         */
+/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH CĂN TRÁI           */
 /* ================================================================ */
 @media (max-width: 768px) {
   /* Sidebar full màn hình */
@@ -790,7 +790,7 @@ body::before {
     color: #6b82a0 !important;
   }
 
-  /* Navigation - THẲNG HÀNG, KHÔNG LỆCH */
+  /* Navigation - CĂN TRÁI HOÀN TOÀN */
   .sidebar .nav-label {
     font-size: 10px !important;
     padding: 14px 0 6px 0 !important;
@@ -799,6 +799,7 @@ body::before {
     display: block !important;
     text-transform: uppercase !important;
     text-align: left !important;
+    padding-left: 4px !important;
   }
 
   .sidebar .nav-item {
@@ -817,6 +818,7 @@ body::before {
     border: none !important;
     background: transparent !important;
     text-align: left !important;
+    justify-content: flex-start !important;
   }
 
   .sidebar .nav-item:hover {
@@ -847,13 +849,12 @@ body::before {
     background: rgba(59, 130, 246, 0.15) !important;
   }
 
-  /* TEXT CỦA NAV ITEM - CĂN TRÁI, KHÔNG LỆCH */
+  /* TEXT - CĂN TRÁI */
   .sidebar .nav-item .nav-text {
     display: inline-block !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     color: inherit !important;
-    flex: 1 !important;
     text-align: left !important;
   }
 
