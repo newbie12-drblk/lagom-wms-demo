@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026 - FIX MOBILE SIDEBAR LỆCH
+   NGÀY: 2026 - FIX MOBILE SIDEBAR THẲNG HÀNG
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -733,7 +733,7 @@ body::before {
 }
 
 /* ================================================================ */
-/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH                    */
+/* MOBILE (dưới 768px) - SIDEBAR FULL MÀN HÌNH THẲNG HÀNG         */
 /* ================================================================ */
 @media (max-width: 768px) {
   /* Sidebar full màn hình */
@@ -748,7 +748,7 @@ body::before {
     border-right: none !important;
     display: flex !important;
     flex-direction: column !important;
-    padding: 24px 20px 16px !important;
+    padding: 28px 24px 20px !important;
     overflow-y: auto !important;
   }
 
@@ -760,8 +760,8 @@ body::before {
   .sidebar-logo {
     padding: 0 0 20px 0 !important;
     text-align: center !important;
-    border-bottom: 1px solid rgba(30, 45, 69, 0.5) !important;
-    margin-bottom: 8px !important;
+    border-bottom: 1px solid rgba(30, 45, 69, 0.4) !important;
+    margin-bottom: 10px !important;
   }
 
   .logo-mark {
@@ -790,28 +790,31 @@ body::before {
     color: #6b82a0 !important;
   }
 
-  /* Navigation - căn đều */
+  /* Navigation - THẲNG HÀNG */
   .sidebar .nav-label {
     font-size: 10px !important;
-    padding: 14px 12px 6px !important;
+    padding: 16px 4px 6px !important;
     color: #4a5a7a !important;
     letter-spacing: 1px !important;
     display: block !important;
+    text-transform: uppercase !important;
   }
 
   .sidebar .nav-item {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 14px !important;
     padding: 12px 16px !important;
     margin: 2px 0 !important;
     border-radius: 10px !important;
     font-size: 15px !important;
     font-weight: 500 !important;
-    color: #6b82a0 !important;
+    color: #8ba0bc !important;
     transition: all 0.2s !important;
     text-decoration: none !important;
     width: 100% !important;
+    border: none !important;
+    background: transparent !important;
   }
 
   .sidebar .nav-item:hover {
@@ -835,26 +838,36 @@ body::before {
     font-size: 16px !important;
     flex-shrink: 0 !important;
     background: rgba(26, 34, 53, 0.5) !important;
+    color: inherit !important;
   }
 
   .sidebar .nav-item.active .nav-icon {
     background: rgba(59, 130, 246, 0.15) !important;
   }
 
-  .sidebar .nav-item span:not(.nav-icon) {
+  /* TEXT CỦA NAV ITEM - THẲNG HÀNG, KHÔNG LỆCH */
+  .sidebar .nav-item .nav-text {
     display: inline !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+    flex: 1 !important;
+  }
+
+  .sidebar .nav-item.active .nav-text {
+    color: #60a5fa !important;
   }
 
   .nav-badge {
     margin-left: auto !important;
     font-size: 10px !important;
-    padding: 2px 8px !important;
+    padding: 2px 10px !important;
     border-radius: 12px !important;
     background: rgba(239, 68, 68, 0.2) !important;
     color: #f87171 !important;
     border: 1px solid rgba(239, 68, 68, 0.25) !important;
     display: inline-block !important;
+    flex-shrink: 0 !important;
   }
 
   /* Sidebar Footer */
@@ -915,10 +928,6 @@ body::before {
 
   .btn-back.visible {
     display: inline-flex !important;
-  }
-
-  .btn-back:hover {
-    background: rgba(59, 130, 246, 0.18) !important;
   }
 
   .btn-back i {
