@@ -1,3 +1,4 @@
+const db = require("../config/database");
 const EditRequest = require("../models/EditRequest");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
@@ -114,6 +115,7 @@ const approveEditRequest = async (req, res) => {
     const newData = request.newData || {};
     const updateFields = {};
 
+    // ✅ THÊM quyCach VÀO DANH SÁCH CHO PHÉP
     const allowedFields = [
       "tenThuongMai",
       "maHang",
@@ -131,17 +133,31 @@ const approveEditRequest = async (req, res) => {
       }
     }
 
+    console.log("📦 Cập nhật các trường:", updateFields);
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Không có trường nào được cập nhật",
+      });
+    }
+
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
+      // Cập nhật sản phẩm
+      const setClause = Object.keys(updateFields)
+        .map((f) => `${f} = ?`)
+        .join(", ");
+      const values = [...Object.values(updateFields), request.productId];
+
       await conn.execute(
-        `UPDATE inventory SET ${Object.keys(updateFields)
-          .map((f) => `${f} = ?`)
-          .join(", ")} WHERE id = ?`,
-        [...Object.values(updateFields), request.productId],
+        `UPDATE inventory SET ${setClause} WHERE id = ?`,
+        values,
       );
 
+      // Cập nhật trạng thái request
       await conn.execute(
         `UPDATE edit_requests 
          SET status = 'approved', approvedBy = ?, approvedAt = NOW()
@@ -151,6 +167,7 @@ const approveEditRequest = async (req, res) => {
 
       await conn.commit();
 
+      // Gửi thông báo
       await Notification.create(
         request.requesterId,
         "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",

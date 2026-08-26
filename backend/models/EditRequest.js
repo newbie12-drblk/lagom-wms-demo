@@ -1,7 +1,6 @@
 const db = require("../config/database");
 
 const EditRequest = {
-  // Tạo yêu cầu chỉnh sửa
   create: async (requesterId, productId, oldData, newData) => {
     const [result] = await db.execute(
       `INSERT INTO edit_requests (requesterId, productId, oldData, newData, status)
@@ -16,7 +15,6 @@ const EditRequest = {
     return result.insertId;
   },
 
-  // Lấy yêu cầu theo ID
   findById: async (id) => {
     const [rows] = await db.execute(
       `SELECT er.*, u.fullName as requesterName, a.fullName as approverName,
@@ -37,7 +35,6 @@ const EditRequest = {
     return row;
   },
 
-  // Lấy tất cả yêu cầu (Quản lý)
   getAllRequests: async (status = null) => {
     let query = `
       SELECT er.*, u.fullName as requesterName, a.fullName as approverName,
@@ -63,7 +60,6 @@ const EditRequest = {
     }));
   },
 
-  // Lấy yêu cầu của tôi (Admin)
   getByRequester: async (requesterId) => {
     const [rows] = await db.execute(
       `SELECT er.*, a.fullName as approverName,
@@ -78,7 +74,6 @@ const EditRequest = {
     return rows;
   },
 
-  // Duyệt yêu cầu chỉnh sửa
   approve: async (id, approvedBy) => {
     await db.execute(
       `UPDATE edit_requests 
@@ -89,7 +84,6 @@ const EditRequest = {
     return true;
   },
 
-  // Từ chối yêu cầu chỉnh sửa
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE edit_requests 
@@ -100,7 +94,6 @@ const EditRequest = {
     return true;
   },
 
-  // Xóa yêu cầu
   delete: async (id) => {
     const [result] = await db.execute(
       "DELETE FROM edit_requests WHERE id = ?",
