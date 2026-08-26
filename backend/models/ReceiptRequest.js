@@ -46,7 +46,8 @@ const ReceiptRequest = {
     const [result] = await db.execute(
       `INSERT INTO receipt_requests 
         (requestNo, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-         giaNhap, soHopDongNhap, soLuongNhap, soLot, ngayHetHan, quyCachDongGoi,
+         giaNhap, soHopDongNhap, 
+         soLuongNhap, soLot, ngayHetHan, quyCach,
          matchStatus, status, createdBy)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
@@ -61,7 +62,7 @@ const ReceiptRequest = {
         data.soLuongNhap || 0,
         data.soLot || "",
         data.ngayHetHan || null,
-        data.quyCachDongGoi || "",
+        data.quyCach || "",
         matchStatus,
         createdBy,
       ],
@@ -133,10 +134,10 @@ const ReceiptRequest = {
 
       await conn.execute(
         `INSERT INTO inventory 
-          (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai,
+          (stt, tenThuongMai, maHang, quyCach, dvt, hangSX, phanLoai,
            giaNhap, giaXuat, soHopDongNhap, 
            soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
-           soLot, ngayHetHan, quyCachDongGoi,
+           soLot, ngayHetHan,
            soLuongNhap, soLuongXuat, tonKho,
            status, createdBy, approvedBy, approvedAt, ghiChu)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
@@ -144,6 +145,7 @@ const ReceiptRequest = {
           newStt,
           request.tenThuongMai,
           request.maHang,
+          request.quyCach || "",
           request.dvt || "",
           request.hangSX || "",
           request.phanLoai || "",
@@ -156,7 +158,6 @@ const ReceiptRequest = {
           extraData.ngayXuatHD || null,
           request.soLot || "",
           request.ngayHetHan || null,
-          request.quyCachDongGoi || "",
           finalQuantity,
           0,
           finalQuantity,
