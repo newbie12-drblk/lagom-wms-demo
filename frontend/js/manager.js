@@ -707,7 +707,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING RECEIPTS
+  // LOAD PENDING RECEIPTS - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
   // ============================================================
   async function loadPendingReceipts() {
     var container = document.getElementById("pendingReceiptsList");
@@ -782,6 +782,9 @@
     }
   }
 
+  // ============================================================
+  // VIEW RECEIPT DETAIL - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // ============================================================
   window.viewReceiptDetail = function (id) {
     var container = document.getElementById("pendingReceiptsList");
     if (!container) return;
@@ -805,43 +808,13 @@
 
     var html = renderReceiptDetail(receipt);
 
-    html += `
-      <div style="margin-top: 20px; padding: 16px; background: #0f172a; border: 1px solid #1e2d45; border-radius: 8px;">
-        <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 14px;">📄 Thông tin hóa đơn</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
-            <input type="text" id="approve_soHoaDonNhap" placeholder="Nhập số hóa đơn nhập" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
-            <input type="date" id="approve_ngayNhapHD" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn xuất</label>
-            <input type="text" id="approve_soHoaDonXuat" placeholder="Nhập số hóa đơn xuất" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất</label>
-            <input type="date" id="approve_ngayXuatHD" 
-                   style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5;">
-          </div>
-        </div>
-        <p style="font-size: 11px; color: #6b82a0; margin-top: 8px;">
-          <i class="fas fa-info-circle"></i> Nhập thông tin hóa đơn trước khi duyệt (các trường * là bắt buộc)
-        </p>
-      </div>
-    `;
-
+    // ✅ ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
     html += `
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-times"></i> Từ chối
         </button>
-        <button class="btn btn-success" onclick="window.approveReceiptWithInvoice(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
+        <button class="btn btn-success" onclick="window.approveReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-check"></i> Duyệt
         </button>
       </div>
@@ -859,24 +832,11 @@
     `;
   };
 
-  window.approveReceiptWithInvoice = async function (id) {
+  // ============================================================
+  // APPROVE RECEIPT - KHÔNG CẦN NHẬP HÓA ĐƠN
+  // ============================================================
+  window.approveReceipt = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
-
-    var soHoaDonNhap =
-      document.getElementById("approve_soHoaDonNhap")?.value || "";
-    var ngayNhapHD = document.getElementById("approve_ngayNhapHD")?.value || "";
-    var soHoaDonXuat =
-      document.getElementById("approve_soHoaDonXuat")?.value || "";
-    var ngayXuatHD = document.getElementById("approve_ngayXuatHD")?.value || "";
-
-    if (!soHoaDonNhap) {
-      Utils.showToast("⚠️ Vui lòng nhập Số hóa đơn nhập!", "warning");
-      return;
-    }
-    if (!ngayNhapHD) {
-      Utils.showToast("⚠️ Vui lòng nhập Ngày hóa đơn nhập!", "warning");
-      return;
-    }
 
     Utils.showLoading(true, "Đang duyệt...");
     try {
@@ -887,13 +847,7 @@
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({
-          status: "approved",
-          soHoaDonNhap: soHoaDonNhap,
-          ngayNhapHD: ngayNhapHD,
-          soHoaDonXuat: soHoaDonXuat,
-          ngayXuatHD: ngayXuatHD,
-        }),
+        body: JSON.stringify({ status: "approved" }),
       });
       var result = await response.json();
 
@@ -949,7 +903,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EXPORTS
+  // LOAD PENDING EXPORTS - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
   // ============================================================
   async function loadPendingExports() {
     var container = document.getElementById("pendingExportsList");
@@ -1024,6 +978,9 @@
     }
   }
 
+  // ============================================================
+  // VIEW EXPORT DETAIL - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // ============================================================
   window.viewExportDetail = function (id) {
     var container = document.getElementById("pendingExportsList");
     if (!container) return;
@@ -1043,6 +1000,8 @@
     if (!exportItem.items) exportItem.items = [];
 
     var html = renderExportDetail(exportItem);
+
+    // ✅ ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
     html += `
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectExport(${exportItem.id})" style="padding: 8px 20px; font-size: 13px;">
