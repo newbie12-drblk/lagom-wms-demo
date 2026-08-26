@@ -1,7 +1,7 @@
 /**
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
- * CHỈ 3 TAB: Thêm, Sửa, Xóa
+ * CHỈ 4 TAB: Thêm, Sửa, Xóa, Tạo hóa đơn
  * ĐÃ THÊM: Quy cách đóng gói
  * FIX: Đúng 22 cột trong bảng + Modal hiển thị đúng
  */
@@ -13,7 +13,7 @@
   const rowsPerPage = 20;
   let filteredInventoryData = [];
   let inventoryData = [];
-  let requestType = "add"; // 'add', 'edit', 'delete'
+  let requestType = "add"; // 'add', 'edit', 'delete', 'invoice'
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -99,7 +99,7 @@
     return `<span class="readonly-field" style="color:#ffffff;">${escapeHtml(String(value || "—"))}</span>`;
   }
 
-  // ==================== RENDER TABLE - 22 CỘT ====================
+  // ==================== RENDER TABLE - 22 CỘT ĐÚNG THỨ TỰ ====================
   function renderInventoryTable(data) {
     if (!tbody) return;
 
@@ -121,6 +121,17 @@
         const remainingDays = getRemainingDays(item);
         const globalIdx = start + idx + 1;
         const isOutOfStock = (item.tonKho || 0) === 0;
+
+        const formatDateDisplay = (dateStr) => {
+          if (!dateStr || dateStr === "" || dateStr === "—") return "—";
+          try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString("vi-VN");
+          } catch (e) {
+            return dateStr;
+          }
+        };
 
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
@@ -147,7 +158,7 @@
             <!-- CỘT 7: ĐVT -->
             <td style="min-width: 50px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.dvt || "—")}</td>
             
-            <!-- CỘT 8: PHÂN LOẠI -->
+            <!-- CỘT 8: PHÂN LOẠI MÁY -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.phanLoai || "—")}</td>
             
             <!-- CỘT 9: GIÁ NHẬP -->
@@ -156,20 +167,20 @@
             <!-- CỘT 10: SL NHẬP -->
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #86efac; font-weight: 600;">${formatNumber(item.soLuongNhap || 0)}</td>
             
-            <!-- CỘT 11: SỐ HỢP ĐỒNG NHẬP -->
+            <!-- CỘT 11: SỐ HĐ (Số hợp đồng nhập) -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongNhap || "—")}</td>
             
-            <!-- CỘT 12: SỐ HÓA ĐƠN NHẬP -->
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
+            <!-- CỘT 12: SỐ HĐƠN NHẬP (Số hóa đơn nhập) -->
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
             
             <!-- CỘT 13: NGÀY NHẬP HĐ -->
-            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDate(item.ngayNhapHD)}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayNhapHD)}</td>
             
             <!-- CỘT 14: SỐ LOT -->
             <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; font-family: monospace;">${escapeHtml(item.soLot || "—")}</td>
             
             <!-- CỘT 15: NGÀY HẾT HẠN -->
-            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#ffffff"};">${formatDate(item.ngayHetHan)}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#ffffff"};">${formatDateDisplay(item.ngayHetHan)}</td>
             
             <!-- CỘT 16: SL XUẤT -->
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatNumber(item.soLuongXuat || 0)}</td>
@@ -177,14 +188,14 @@
             <!-- CỘT 17: GIÁ XUẤT -->
             <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaXuat || 0)}</td>
             
-            <!-- CỘT 18: SỐ HỢP ĐỒNG XUẤT -->
+            <!-- CỘT 18: SỐ HĐ XUẤT (Số hợp đồng xuất) -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongXuat || "—")}</td>
             
-            <!-- CỘT 19: SỐ HÓA ĐƠN XUẤT -->
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
+            <!-- CỘT 19: SỐ HĐƠN XUẤT (Số hóa đơn xuất) -->
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
             
             <!-- CỘT 20: NGÀY XUẤT -->
-            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDate(item.ngayXuatHD)}</td>
+            <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayXuatHD)}</td>
             
             <!-- CỘT 21: TỒN CUỐI -->
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
@@ -382,6 +393,47 @@
     Utils.showToast("Đã xuất file CSV thành công");
   }
 
+  // ==================== LOAD DANH SÁCH PHIẾU ĐÃ DUYỆT ====================
+  async function loadApprovedReferences() {
+    const typeSelect = document.getElementById("invoiceType");
+    const refSelect = document.getElementById("invoiceReference");
+
+    if (!typeSelect || !refSelect) return;
+
+    const type = typeSelect.value;
+    refSelect.innerHTML = '<option value="">-- Đang tải --</option>';
+
+    try {
+      let data = [];
+      if (type === "receipt") {
+        const result = await window.API.receipt.getAll();
+        data = result.filter((r) => r.status === "approved");
+      } else {
+        const result = await window.API.export.getAll();
+        data = result.filter((r) => r.status === "approved");
+      }
+
+      if (data.length === 0) {
+        refSelect.innerHTML =
+          '<option value="">-- Không có phiếu nào đã duyệt --</option>';
+        return;
+      }
+
+      refSelect.innerHTML = data
+        .map((item) => {
+          const label =
+            type === "receipt"
+              ? `${item.receiptNo || "PN-" + item.id} - ${item.supplierName || "Nhà cung cấp"}`
+              : `${item.exportNo || "PX-" + item.id} - ${item.receiverName || "Người nhận"}`;
+          return `<option value="${item.id}">${escapeHtml(label)}</option>`;
+        })
+        .join("");
+    } catch (error) {
+      console.error("Load references error:", error);
+      refSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+    }
+  }
+
   // ==================== TẠO MODAL YÊU CẦU ====================
   function showRequestModal() {
     const overlay = document.createElement("div");
@@ -393,7 +445,7 @@
           <h3 id="requestModalTitle">📋 Tạo yêu cầu</h3>
           <button class="request-modal-close" onclick="window.closeRequestModal()">&times;</button>
         </div>
-        
+
         <div class="request-options">
           <button class="btn btn-primary active" data-type="add" onclick="window.setRequestType('add')">
             <i class="fas fa-plus"></i> Thêm sản phẩm
@@ -403,6 +455,9 @@
           </button>
           <button class="btn btn-outline" data-type="delete" onclick="window.setRequestType('delete')">
             <i class="fas fa-trash"></i> Xóa sản phẩm
+          </button>
+          <button class="btn btn-outline" data-type="invoice" onclick="window.setRequestType('invoice')" style="border-color: #a78bfa; color: #a78bfa;">
+            <i class="fas fa-file-invoice"></i> Tạo hóa đơn
           </button>
         </div>
 
@@ -453,14 +508,15 @@
       add: "📝 Thêm sản phẩm mới",
       edit: "✏️ Sửa sản phẩm",
       delete: "🗑️ Xóa sản phẩm",
+      invoice: "🧾 Tạo hóa đơn",
     };
     const titleEl = document.getElementById("requestModalTitle");
-    if (titleEl) titleEl.textContent = titles[type];
+    if (titleEl) titleEl.textContent = titles[type] || "📋 Tạo yêu cầu";
 
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG - FIX HOÀN CHỈNH ====================
+  // ==================== RENDER NỘI DUNG ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
@@ -671,6 +727,60 @@
           </p>
         </div>
       `;
+    } else if (type === "invoice") {
+      // ========== TẠO HÓA ĐƠN ==========
+      container.innerHTML = `
+        <p style="color: #6b82a0; margin-bottom: 12px;">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Tạo yêu cầu hóa đơn:</strong> Chọn phiếu nhập hoặc xuất đã được duyệt để tạo hóa đơn.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45; margin-bottom: 16px;">
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Loại hóa đơn *</label>
+            <select id="invoiceType" onchange="window.loadApprovedReferences()" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+              <option value="receipt">📥 Phiếu nhập</option>
+              <option value="export">📤 Phiếu xuất</option>
+            </select>
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Chọn phiếu *</label>
+            <select id="invoiceReference" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+              <option value="">-- Đang tải danh sách --</option>
+            </select>
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
+            <input type="text" id="invoiceSoHoaDonNhap" placeholder="VD: 123/HĐNT/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
+            <input type="date" id="invoiceNgayNhapHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn xuất</label>
+            <input type="text" id="invoiceSoHoaDonXuat" placeholder="VD: 456/HĐX/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+          </div>
+          <div>
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất</label>
+            <input type="date" id="invoiceNgayXuatHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ghi chú</label>
+            <textarea id="invoiceNotes" placeholder="Ghi chú thêm..." style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px; min-height:60px; resize:vertical;"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
+          <p style="font-size: 12px; color: #6b82a0;">
+            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+            <strong>Lưu ý:</strong> Chọn phiếu đã được duyệt để tạo hóa đơn. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
+          </p>
+        </div>
+      `;
+
+      // Load danh sách phiếu đã duyệt
+      loadApprovedReferences();
     }
   }
 
@@ -783,8 +893,6 @@
           return;
         }
 
-        console.log("📦 Gửi yêu cầu thêm sản phẩm:", products);
-
         const response = await fetch(`${API_BASE_URL}/approvals`, {
           method: "POST",
           headers: {
@@ -890,8 +998,6 @@
           return;
         }
 
-        console.log("📦 Gửi yêu cầu xóa sản phẩm (IDs):", productIds);
-
         const response = await fetch(`${API_BASE_URL}/deletions`, {
           method: "POST",
           headers: {
@@ -910,6 +1016,65 @@
           }
         } else {
           Utils.showToast("❌ " + result.message, "error");
+        }
+      } else if (requestType === "invoice") {
+        // ========== TẠO HÓA ĐƠN ==========
+        const type = document.getElementById("invoiceType")?.value;
+        const referenceId = document.getElementById("invoiceReference")?.value;
+        const soHoaDonNhap = document
+          .getElementById("invoiceSoHoaDonNhap")
+          ?.value.trim();
+        const ngayNhapHD = document.getElementById("invoiceNgayNhapHD")?.value;
+        const soHoaDonXuat = document
+          .getElementById("invoiceSoHoaDonXuat")
+          ?.value.trim();
+        const ngayXuatHD = document.getElementById("invoiceNgayXuatHD")?.value;
+        const notes = document.getElementById("invoiceNotes")?.value.trim();
+
+        if (!type || !referenceId) {
+          Utils.showToast(
+            "⚠️ Vui lòng chọn loại hóa đơn và phiếu tham chiếu!",
+            "warning",
+          );
+          Utils.showLoading(false);
+          return;
+        }
+
+        if (!soHoaDonNhap) {
+          Utils.showToast("⚠️ Vui lòng nhập Số hóa đơn nhập!", "warning");
+          Utils.showLoading(false);
+          return;
+        }
+
+        if (!ngayNhapHD) {
+          Utils.showToast("⚠️ Vui lòng nhập Ngày hóa đơn nhập!", "warning");
+          Utils.showLoading(false);
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/invoices`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            type,
+            referenceId: parseInt(referenceId),
+            soHoaDonNhap,
+            ngayNhapHD,
+            soHoaDonXuat: soHoaDonXuat || "",
+            ngayXuatHD: ngayXuatHD || null,
+            notes: notes || "",
+          }),
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          Utils.showToast("✅ " + result.message);
+          closeRequestModal();
+        } else {
+          Utils.showToast("❌ " + (result.message || "Có lỗi xảy ra"), "error");
         }
       }
     } catch (error) {
@@ -1003,4 +1168,5 @@
   window.isAdmin = isAdmin;
   window.isQuanLy = isQuanLy;
   window.refreshInventoryData = refreshInventoryData;
+  window.loadApprovedReferences = loadApprovedReferences;
 })();

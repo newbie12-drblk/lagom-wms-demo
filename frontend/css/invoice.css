@@ -1,9 +1,10 @@
 /* ======================================================
    FILE: invoice.css
-   MÔ TẢ: Styles riêng cho phần Hóa đơn trong manager
+   MÔ TẢ: Styles riêng cho phần Hóa đơn
    NGÀY: 2026
 ====================================================== */
 
+/* ==================== INVOICE CARDS ==================== */
 .invoice-list {
   display: flex;
   flex-direction: column;
@@ -91,6 +92,7 @@
   text-align: right;
 }
 
+/* ==================== INVOICE DETAIL ==================== */
 .invoice-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -123,6 +125,33 @@
   color: #fbbf24;
 }
 
+/* ==================== STATUS BADGES ==================== */
+.status-invoice-pending {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.status-invoice-approved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-invoice-rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== NAV BADGE ==================== */
+.nav-item[data-view="pending-invoices"] .nav-badge {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .invoice-card {
     padding: 12px 14px !important;
@@ -149,52 +178,4 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-}
-
-.filter-bar-invoice {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  align-items: center;
-  background: var(--surface);
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-
-.filter-bar-invoice .search-box {
-  flex: 1;
-  min-width: 200px;
-}
-
-.filter-bar-invoice .search-box input {
-  width: 100%;
-  padding: 8px 12px 8px 36px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: white;
-  font-size: 13px;
-}
-
-.filter-bar-invoice .search-box input:focus {
-  outline: none;
-  border-color: var(--blue);
-}
-
-.filter-bar-invoice select {
-  padding: 8px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-  min-width: 140px;
-}
-
-.filter-bar-invoice select:focus {
-  outline: none;
-  border-color: var(--blue);
 }
