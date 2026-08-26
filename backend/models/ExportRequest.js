@@ -21,7 +21,6 @@ const ExportRequest = {
 
     if (product) {
       currentStock = product.tonKho || 0;
-      // ✅ ĐÃ XÓA soHoaDonXuat khỏi fields
       const fields = [
         "tenThuongMai",
         "dvt",
@@ -43,12 +42,9 @@ const ExportRequest = {
           matchDetails.push(`${field}: "${oldVal}" → "${newVal}"`);
         }
       }
-      if (allMatch) {
-        matchStatus = "matched";
-      }
+      if (allMatch) matchStatus = "matched";
     }
 
-    // ✅ ĐÃ XÓA soHoaDonXuat khỏi INSERT
     const [result] = await db.execute(
       `INSERT INTO export_requests 
         (requestNo, tenThuongMai, maHang, dvt, hangSX, phanLoai,
@@ -138,55 +134,82 @@ const ExportRequest = {
     try {
       await conn.beginTransaction();
 
-      if (request.matchStatus === "matched") {
-        const { donGiaXuat, soLuong, soLot, ngayHetHan, soHopDongXuat } =
-          extraData;
+      // Tìm dòng inventory theo mã + lô + ngày nhập
+      const [items] = await conn.execute(
+        `SELECT * FROM inventory 
+         WHERE maHang = ? AND soLot = ? AND ngayNhapHD = ? 
+         AND status = 'approved'
+         ORDER BY id ASC`,
+        [request.maHang, request.soLot || "", request.ngayNhapHD || null],
+      );
 
-        await conn.execute(
-          `UPDATE export_requests 
-           SET donGiaXuat = ?, soLuong = ?, soLot = ?, 
-               ngayHetHan = ?, soHopDongXuat = ?,
-               status = 'approved', approvedBy = ?, approvedAt = NOW()
-           WHERE id = ?`,
-          [
-            donGiaXuat || request.donGiaXuat || 0,
-            soLuong || request.soLuong || 0,
-            soLot || request.soLot || "",
-            ngayHetHan || request.ngayHetHan || null,
-            soHopDongXuat || request.soHopDongXuat || "",
-            approvedBy,
-            id,
-          ],
+      let targetItem = items[0];
+
+      if (!targetItem) {
+        const [fallback] = await conn.execute(
+          `SELECT * FROM inventory 
+           WHERE maHang = ? AND status = 'approved' AND tonKho > 0
+           ORDER BY ngayNhapHD ASC, id ASC`,
+          [request.maHang],
         );
+        targetItem = fallback[0];
+      }
 
-        const finalQuantity = soLuong || request.soLuong || 0;
-        await conn.execute(
-          `UPDATE inventory 
-           SET tonKho = tonKho - ? 
-           WHERE maHang = ?`,
-          [finalQuantity, request.maHang],
-        );
-      } else {
-        const { donGiaXuat, soLuong, soLot, ngayHetHan, soHopDongXuat } =
-          extraData;
-
-        await conn.execute(
-          `UPDATE export_requests 
-           SET donGiaXuat = ?, soLuong = ?, soLot = ?, 
-               ngayHetHan = ?, soHopDongXuat = ?,
-               status = 'approved', approvedBy = ?, approvedAt = NOW()
-           WHERE id = ?`,
-          [
-            donGiaXuat || request.donGiaXuat || 0,
-            soLuong || request.soLuong || 0,
-            soLot || request.soLot || "",
-            ngayHetHan || request.ngayHetHan || null,
-            soHopDongXuat || request.soHopDongXuat || "",
-            approvedBy,
-            id,
-          ],
+      if (!targetItem) {
+        throw new Error(
+          `Không tìm thấy sản phẩm "${request.maHang}" trong kho`,
         );
       }
+
+      const finalQuantity = extraData.soLuong || request.soLuong || 0;
+      const donGiaXuat = extraData.donGiaXuat || request.donGiaXuat || 0;
+
+      if (finalQuantity > targetItem.tonKho) {
+        throw new Error(
+          `Tồn kho không đủ (cần ${finalQuantity}, còn ${targetItem.tonKho})`,
+        );
+      }
+
+      // Cập nhật tồn kho
+      await conn.execute(
+        `UPDATE inventory 
+         SET tonKho = tonKho - ?,
+             soLuongXuat = soLuongXuat + ?,
+             giaXuat = ?,
+             ngayXuatHD = ?
+         WHERE id = ?`,
+        [
+          finalQuantity,
+          finalQuantity,
+          donGiaXuat,
+          extraData.ngayXuatHD || new Date().toISOString().split("T")[0],
+          targetItem.id,
+        ],
+      );
+
+      // Cập nhật request
+      await conn.execute(
+        `UPDATE export_requests 
+         SET donGiaXuat = ?, soLuong = ?, soLot = ?,
+             ngayHetHan = ?, soHopDongXuat = ?,
+             soHoaDonXuat = ?, ngayXuatHD = ?,
+             soHoaDonNhap = ?, ngayNhapHD = ?,
+             status = 'approved', approvedBy = ?, approvedAt = NOW()
+         WHERE id = ?`,
+        [
+          donGiaXuat,
+          finalQuantity,
+          extraData.soLot || request.soLot || "",
+          extraData.ngayHetHan || request.ngayHetHan || null,
+          extraData.soHopDongXuat || request.soHopDongXuat || "",
+          extraData.soHoaDonXuat || "",
+          extraData.ngayXuatHD || new Date().toISOString().split("T")[0],
+          extraData.soHoaDonNhap || request.soHoaDonNhap || "",
+          extraData.ngayNhapHD || request.ngayNhapHD || null,
+          approvedBy,
+          id,
+        ],
+      );
 
       await conn.commit();
       return true;

@@ -1,8 +1,6 @@
 const ReceiptRequest = require("../models/ReceiptRequest");
 const Notification = require("../models/Notification");
-const EditHistory = require("../models/EditHistory");
 
-// ADMIN: Tạo đề nghị nhập hàng - KHÔNG CÓ 4 TRƯỜNG HÓA ĐƠN
 const createReceiptRequest = async (req, res) => {
   try {
     const data = req.body;
@@ -44,11 +42,9 @@ const createReceiptRequest = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy danh sách chờ duyệt
 const getPendingReceiptRequests = async (req, res) => {
   try {
     const requests = await ReceiptRequest.getPending();
-    console.log(`📥 Found ${requests.length} pending receipt requests`);
     res.json({ success: true, data: requests });
   } catch (error) {
     console.error("Get pending receipt requests error:", error);
@@ -56,7 +52,6 @@ const getPendingReceiptRequests = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy tất cả đề nghị
 const getAllReceiptRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -68,17 +63,11 @@ const getAllReceiptRequests = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Xác nhận/duyệt đề nghị nhập hàng - CÓ 4 TRƯỜNG HÓA ĐƠN
 const approveReceiptRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      soLuongNhap,
-      soHoaDonNhap, // ← NHẬP TAY
-      ngayNhapHD, // ← NHẬP TAY
-      soHoaDonXuat, // ← NHẬP TAY
-      ngayXuatHD, // ← NHẬP TAY
-    } = req.body;
+    const { soLuongNhap, soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD } =
+      req.body;
     const approvedBy = req.user.userId;
 
     const request = await ReceiptRequest.findById(id);
@@ -99,20 +88,33 @@ const approveReceiptRequest = async (req, res) => {
       });
     }
 
-    if (request.matchStatus === "matched" && !soLuongNhap) {
+    const finalQuantity = soLuongNhap || request.soLuongNhap || 0;
+    if (finalQuantity <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập số lượng nhập để xác nhận",
+        message: "Vui lòng nhập số lượng nhập hợp lệ (> 0)",
       });
     }
 
-    // ✅ DUYỆT VỚI 4 TRƯỜNG HÓA ĐƠN
+    if (!soHoaDonNhap) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập Số hóa đơn nhập",
+      });
+    }
+    if (!ngayNhapHD) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập Ngày hóa đơn nhập",
+      });
+    }
+
     await ReceiptRequest.approve(id, approvedBy, {
-      soLuongNhap,
+      soLuongNhap: finalQuantity,
       soHoaDonNhap,
       ngayNhapHD,
-      soHoaDonXuat,
-      ngayXuatHD,
+      soHoaDonXuat: soHoaDonXuat || "",
+      ngayXuatHD: ngayXuatHD || null,
     });
 
     const statusText = request.matchStatus === "matched" ? "xác nhận" : "duyệt";
@@ -131,11 +133,12 @@ const approveReceiptRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve receipt request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// QUẢN LÝ: Từ chối đề nghị nhập hàng
 const rejectReceiptRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,7 +174,6 @@ const rejectReceiptRequest = async (req, res) => {
   }
 };
 
-// Lấy chi tiết đề nghị
 const getReceiptRequestById = async (req, res) => {
   try {
     const { id } = req.params;

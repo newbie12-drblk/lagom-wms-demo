@@ -1,0 +1,200 @@
+/* ======================================================
+   FILE: invoice.css
+   MÔ TẢ: Styles riêng cho phần Hóa đơn trong manager
+   NGÀY: 2026
+====================================================== */
+
+.invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invoice-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 24px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.invoice-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--blue);
+  background: var(--surface2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.invoice-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.invoice-card-id {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invoice-card-id i {
+  font-size: 18px;
+}
+
+.invoice-card-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invoice-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.invoice-card-info {
+  flex: 1;
+  min-width: 140px;
+}
+
+.invoice-card-info .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.invoice-card-info .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.invoice-card-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.invoice-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: #0f172a;
+  padding: 14px 18px;
+  border-radius: 8px;
+  border: 1px solid #1e2d45;
+  margin-bottom: 12px;
+}
+
+.invoice-detail-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invoice-detail-grid .field-label {
+  font-size: 11px;
+  color: #6b82a0;
+}
+
+.invoice-detail-grid .field-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2eaf5;
+}
+
+.invoice-detail-grid .field-value.highlight {
+  color: #fbbf24;
+}
+
+@media (max-width: 768px) {
+  .invoice-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .invoice-card-id {
+    font-size: 14px !important;
+  }
+
+  .invoice-card-body {
+    gap: 12px !important;
+  }
+
+  .invoice-card-info {
+    min-width: 80px !important;
+  }
+
+  .invoice-card-info .value {
+    font-size: 12px !important;
+  }
+
+  .invoice-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.filter-bar-invoice {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.filter-bar-invoice .search-box {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-bar-invoice .search-box input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+}
+
+.filter-bar-invoice .search-box input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.filter-bar-invoice select {
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.filter-bar-invoice select:focus {
+  outline: none;
+  border-color: var(--blue);
+}

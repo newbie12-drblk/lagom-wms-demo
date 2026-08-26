@@ -1,8 +1,6 @@
 const ExportRequest = require("../models/ExportRequest");
 const Notification = require("../models/Notification");
-const EditHistory = require("../models/EditHistory");
 
-// ADMIN: Tạo đề nghị xuất kho
 const createExportRequest = async (req, res) => {
   try {
     const data = req.body;
@@ -45,7 +43,6 @@ const createExportRequest = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy danh sách chờ duyệt
 const getPendingExportRequests = async (req, res) => {
   try {
     const requests = await ExportRequest.getPending();
@@ -56,7 +53,6 @@ const getPendingExportRequests = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Lấy tất cả đề nghị
 const getAllExportRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -68,11 +64,20 @@ const getAllExportRequests = async (req, res) => {
   }
 };
 
-// QUẢN LÝ: Xác nhận/duyệt đề nghị xuất kho
 const approveExportRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { donGiaXuat, soLuong, soLot, ngayHetHan, soHopDongXuat } = req.body;
+    const {
+      donGiaXuat,
+      soLuong,
+      soLot,
+      ngayHetHan,
+      soHopDongXuat,
+      soHoaDonXuat,
+      ngayXuatHD,
+      soHoaDonNhap,
+      ngayNhapHD,
+    } = req.body;
     const approvedBy = req.user.userId;
 
     const request = await ExportRequest.findById(id);
@@ -90,22 +95,37 @@ const approveExportRequest = async (req, res) => {
       });
     }
 
-    if (request.matchStatus === "matched") {
-      if (!donGiaXuat || !soLuong || !soLot || !ngayHetHan || !soHopDongXuat) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Vui lòng nhập đầy đủ: Đơn giá xuất, Số lượng, Số lot, HSD, Số hợp đồng xuất",
-        });
-      }
+    const finalQuantity = soLuong || request.soLuong || 0;
+    if (finalQuantity <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập số lượng xuất hợp lệ (> 0)",
+      });
+    }
+
+    if (!soLot) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập Số lot",
+      });
+    }
+    if (!ngayHetHan) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập Ngày hết hạn",
+      });
     }
 
     await ExportRequest.approve(id, approvedBy, {
-      donGiaXuat,
-      soLuong,
-      soLot,
-      ngayHetHan,
-      soHopDongXuat,
+      donGiaXuat: donGiaXuat || request.donGiaXuat || 0,
+      soLuong: finalQuantity,
+      soLot: soLot || request.soLot || "",
+      ngayHetHan: ngayHetHan || request.ngayHetHan || null,
+      soHopDongXuat: soHopDongXuat || request.soHopDongXuat || "",
+      soHoaDonXuat: soHoaDonXuat || "",
+      ngayXuatHD: ngayXuatHD || new Date().toISOString().split("T")[0],
+      soHoaDonNhap: soHoaDonNhap || request.soHoaDonNhap || "",
+      ngayNhapHD: ngayNhapHD || request.ngayNhapHD || null,
     });
 
     const statusText = request.matchStatus === "matched" ? "xác nhận" : "duyệt";
@@ -124,11 +144,12 @@ const approveExportRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve export request error:", error);
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// QUẢN LÝ: Từ chối đề nghị xuất kho
 const rejectExportRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,7 +185,6 @@ const rejectExportRequest = async (req, res) => {
   }
 };
 
-// Lấy chi tiết đề nghị
 const getExportRequestById = async (req, res) => {
   try {
     const { id } = req.params;

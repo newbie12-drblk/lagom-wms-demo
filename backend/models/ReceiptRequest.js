@@ -19,7 +19,6 @@ const ReceiptRequest = {
     let matchDetails = [];
 
     if (product) {
-      // ✅ ĐÃ XÓA soHoaDonXuat khỏi fields
       const fields = [
         "tenThuongMai",
         "dvt",
@@ -41,17 +40,13 @@ const ReceiptRequest = {
           matchDetails.push(`${field}: "${oldVal}" → "${newVal}"`);
         }
       }
-      if (allMatch) {
-        matchStatus = "matched";
-      }
+      if (allMatch) matchStatus = "matched";
     }
 
-    // ✅ KHÔNG LƯU 4 TRƯỜNG HÓA ĐƠN Ở BƯỚC TẠO ĐỀ NGHỊ
     const [result] = await db.execute(
       `INSERT INTO receipt_requests 
         (requestNo, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-         giaNhap, soHopDongNhap, 
-         soLuongNhap, soLot, ngayHetHan, quyCachDongGoi,
+         giaNhap, soHopDongNhap, soLuongNhap, soLot, ngayHetHan, quyCachDongGoi,
          matchStatus, status, createdBy)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
@@ -120,7 +115,6 @@ const ReceiptRequest = {
     return rows;
   },
 
-  // ✅ DUYỆT VỚI 4 TRƯỜNG HÓA ĐƠN
   approve: async (id, approvedBy, extraData = {}) => {
     const request = await ReceiptRequest.findById(id);
     if (!request) return false;
@@ -131,107 +125,63 @@ const ReceiptRequest = {
 
       const finalQuantity = extraData.soLuongNhap || request.soLuongNhap || 0;
 
-      if (request.matchStatus === "matched") {
-        // Cập nhật số lượng
-        await conn.execute(
-          `UPDATE receipt_requests 
-           SET soLuongNhap = ?, 
-               soHoaDonNhap = ?,
-               ngayNhapHD = ?,
-               soHoaDonXuat = ?,
-               ngayXuatHD = ?,
-               status = 'approved', 
-               approvedBy = ?, 
-               approvedAt = NOW()
-           WHERE id = ?`,
-          [
-            finalQuantity,
-            extraData.soHoaDonNhap || "",
-            extraData.ngayNhapHD || null,
-            extraData.soHoaDonXuat || "",
-            extraData.ngayXuatHD || null,
-            approvedBy,
-            id,
-          ],
-        );
+      // Tạo mới dòng inventory
+      const [maxStt] = await conn.execute(
+        "SELECT MAX(stt) as maxStt FROM inventory",
+      );
+      const newStt = (maxStt[0].maxStt || 0) + 1;
 
-        // Cập nhật tồn kho
-        await conn.execute(
-          `UPDATE inventory 
-           SET tonKho = tonKho + ?,
-               soHoaDonNhap = ?,
-               ngayNhapHD = ?,
-               soHoaDonXuat = ?,
-               ngayXuatHD = ?
-           WHERE maHang = ?`,
-          [
-            finalQuantity,
-            extraData.soHoaDonNhap || "",
-            extraData.ngayNhapHD || null,
-            extraData.soHoaDonXuat || "",
-            extraData.ngayXuatHD || null,
-            request.maHang,
-          ],
-        );
-      } else {
-        // Thêm sản phẩm mới vào inventory
-        const [maxStt] = await conn.execute(
-          "SELECT MAX(stt) as maxStt FROM inventory",
-        );
-        const newStt = (maxStt[0].maxStt || 0) + 1;
+      await conn.execute(
+        `INSERT INTO inventory 
+          (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai,
+           giaNhap, giaXuat, soHopDongNhap, 
+           soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
+           soLot, ngayHetHan, quyCachDongGoi,
+           soLuongNhap, soLuongXuat, tonKho,
+           status, createdBy, approvedBy, approvedAt, ghiChu)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
+        [
+          newStt,
+          request.tenThuongMai,
+          request.maHang,
+          request.dvt || "",
+          request.hangSX || "",
+          request.phanLoai || "",
+          request.giaNhap || 0,
+          0,
+          request.soHopDongNhap || "",
+          extraData.soHoaDonNhap || "",
+          extraData.ngayNhapHD || null,
+          extraData.soHoaDonXuat || "",
+          extraData.ngayXuatHD || null,
+          request.soLot || "",
+          request.ngayHetHan || null,
+          request.quyCachDongGoi || "",
+          finalQuantity,
+          0,
+          finalQuantity,
+          request.createdBy,
+          approvedBy,
+          "",
+        ],
+      );
 
-        await conn.execute(
-          `INSERT INTO inventory 
-            (stt, tenThuongMai, maHang, dvt, hangSX, phanLoai,
-             giaNhap, soHopDongNhap, 
-             soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
-             soLot, ngayHetHan, quyCachDongGoi,
-             tonKho, status, createdBy, approvedBy, approvedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
-          [
-            newStt,
-            request.tenThuongMai,
-            request.maHang,
-            request.dvt || "",
-            request.hangSX || "",
-            request.phanLoai || "",
-            request.giaNhap || 0,
-            request.soHopDongNhap || "",
-            extraData.soHoaDonNhap || "",
-            extraData.ngayNhapHD || null,
-            extraData.soHoaDonXuat || "",
-            extraData.ngayXuatHD || null,
-            request.soLot || "",
-            request.ngayHetHan || null,
-            request.quyCachDongGoi || "",
-            finalQuantity,
-            request.createdBy,
-            approvedBy,
-          ],
-        );
-
-        await conn.execute(
-          `UPDATE receipt_requests 
-           SET soLuongNhap = ?,
-               soHoaDonNhap = ?,
-               ngayNhapHD = ?,
-               soHoaDonXuat = ?,
-               ngayXuatHD = ?,
-               status = 'approved', 
-               approvedBy = ?, 
-               approvedAt = NOW()
-           WHERE id = ?`,
-          [
-            finalQuantity,
-            extraData.soHoaDonNhap || "",
-            extraData.ngayNhapHD || null,
-            extraData.soHoaDonXuat || "",
-            extraData.ngayXuatHD || null,
-            approvedBy,
-            id,
-          ],
-        );
-      }
+      await conn.execute(
+        `UPDATE receipt_requests 
+         SET soLuongNhap = ?, soHoaDonNhap = ?, ngayNhapHD = ?,
+             soHoaDonXuat = ?, ngayXuatHD = ?,
+             status = 'approved', approvedBy = ?, approvedAt = NOW()
+         WHERE id = ?`,
+        [
+          finalQuantity,
+          extraData.soHoaDonNhap || "",
+          extraData.ngayNhapHD || null,
+          extraData.soHoaDonXuat || "",
+          extraData.ngayXuatHD || null,
+          approvedBy,
+          id,
+        ],
+      );
 
       await conn.commit();
       return true;

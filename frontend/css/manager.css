@@ -1007,3 +1007,54 @@
     display: none !important;
   }
 }
+/* ==================== INVOICE SECTION ==================== */
+.invoice-section {
+  margin-top: 20px;
+}
+
+.invoice-section .panel-head {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.08), transparent);
+}
+
+.invoice-section .panel-head .ph-icon {
+  color: #a78bfa;
+}
+
+/* Invoice badge trong sidebar */
+.nav-item[data-view="pending-invoices"] .nav-badge {
+  background: var(--purple-glow, rgba(139, 92, 246, 0.2));
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Invoice card border left */
+.invoice-card.pending {
+  border-left: 4px solid #a78bfa;
+}
+
+.invoice-card.approved {
+  border-left: 4px solid #4ade80;
+}
+
+.invoice-card.rejected {
+  border-left: 4px solid #f87171;
+}
+
+/* Invoice status badges */
+.status-invoice-pending {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.status-invoice-approved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-invoice-rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
