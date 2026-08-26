@@ -559,9 +559,6 @@
     }
   }
 
-  // ============================================================
-  // VIEW APPROVAL DETAIL
-  // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
     if (!container) return;
@@ -589,6 +586,7 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">QUY CÁCH</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">ĐVT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG SX</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI</th>
@@ -603,6 +601,7 @@
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
                     <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
@@ -669,6 +668,12 @@
         Utils.showToast("✅ Đã duyệt yêu cầu! Sản phẩm đã được thêm vào kho.");
         await loadPendingApprovals();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -908,6 +913,12 @@
         Utils.showToast("✅ Đã duyệt phiếu nhập!");
         await loadPendingReceipts();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1087,6 +1098,12 @@
         Utils.showToast("✅ Đã duyệt phiếu xuất!");
         await loadPendingExports();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1129,7 +1146,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EDITS
+  // LOAD PENDING EDITS - FIX HIỂN THỊ TẤT CẢ TRƯỜNG
   // ============================================================
   async function loadPendingEdits() {
     var container = document.getElementById("pendingEditsList");
@@ -1166,6 +1183,7 @@
             var fieldLabels = {
               tenThuongMai: "Tên thương mại",
               maHang: "Mã hàng",
+              quyCach: "Quy cách",
               dvt: "ĐVT",
               hangSX: "Hãng/Nước SX",
               phanLoai: "Phân loại máy",
@@ -1173,13 +1191,35 @@
               soHopDongNhap: "Số HĐ",
             };
 
-            var allowedFields = Object.keys(fieldLabels);
-            var changedFields = allowedFields.filter(function (key) {
-              return (oldData[key] || "") != (newData[key] || "");
+            var allFields = Object.keys(fieldLabels);
+            var changedFields = allFields.filter(function (key) {
+              var oldVal = oldData[key] || "";
+              var newVal = newData[key] || "";
+              return String(oldVal).trim() !== String(newVal).trim();
             });
 
             if (changedFields.length === 0) {
-              changedFields = allowedFields;
+              return `
+                <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #ef4444; cursor: pointer;" 
+                     onclick="window.viewEditDetail(${r.id})">
+                  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                    <div style="font-size: 18px; font-weight: 700; color: #f87171;">⚠️ Không có thay đổi #${r.id}</div>
+                    <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
+                    <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <div><span style="color: #6b82a0; font-size: 11px;">Sản phẩm</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
+                    <div><span style="color: #6b82a0; font-size: 11px;">Mã hàng</span><br><span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
+                    <div><span style="color: #6b82a0; font-size: 11px;">Người tạo</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+                  </div>
+                  <div style="font-size: 12px; color: #f87171; padding: 6px 0;">
+                    ⚠️ Không có trường nào thay đổi!
+                  </div>
+                  <div style="margin-top: 6px; font-size: 11px; color: #6b82a0; text-align: right;">
+                    <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
+                  </div>
+                </div>
+              `;
             }
 
             var previewFields = changedFields.slice(0, 2);
@@ -1203,6 +1243,12 @@
               })
               .join(" &nbsp;|&nbsp; ");
 
+            var changeCount = changedFields.length;
+            var changeBadge =
+              changeCount > 1
+                ? `${changeCount} trường`
+                : `${changeCount} trường`;
+
             return `
             <div class="approval-card" style="margin-bottom: 16px; background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6; cursor: pointer;" 
                  onclick="window.viewEditDetail(${r.id})">
@@ -1215,6 +1261,7 @@
                 <div><span style="color: #6b82a0; font-size: 11px;">Sản phẩm</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.productName || "—")}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Mã hàng</span><br><span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(r.productCode || "—")}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Người tạo</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Thay đổi</span><br><span style="color: #fbbf24; font-weight: 600;">${changeBadge}</span></div>
               </div>
               <div style="font-size: 12px; color: #e2eaf5; padding: 6px 0;">
                 ${previewHtml}
@@ -1262,6 +1309,7 @@
     var fieldLabels = {
       tenThuongMai: "Tên thương mại",
       maHang: "Mã hàng",
+      quyCach: "Quy cách",
       dvt: "ĐVT",
       hangSX: "Hãng/Nước SX",
       phanLoai: "Phân loại máy",
@@ -1269,14 +1317,43 @@
       soHopDongNhap: "Số HĐ",
     };
 
-    var allowedFields = Object.keys(fieldLabels);
-    var changedFields = allowedFields.filter(function (key) {
-      return (oldData[key] || "") != (newData[key] || "");
+    var allFields = Object.keys(fieldLabels);
+
+    var changedFields = allFields.filter(function (key) {
+      var oldVal = oldData[key] || "";
+      var newVal = newData[key] || "";
+      return String(oldVal).trim() !== String(newVal).trim();
     });
 
-    if (changedFields.length === 0) {
-      changedFields = allowedFields;
-    }
+    var rowsHtml = allFields
+      .map(function (key) {
+        var oldVal = oldData[key] || "—";
+        var newVal = newData[key] || "—";
+        var isChanged = changedFields.includes(key);
+
+        if (key === "giaNhap") {
+          oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
+          newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+        }
+
+        var highlightStyle = isChanged
+          ? "background: rgba(59, 130, 246, 0.1);"
+          : "";
+        var oldColor = isChanged ? "#f87171" : "#6b82a0";
+        var newColor = isChanged ? "#4ade80" : "#6b82a0";
+        var changeBadge = isChanged
+          ? ' <span style="color:#fbbf24;font-size:10px;">⬆ Đã thay đổi</span>'
+          : ' <span style="color:#6b82a0;font-size:10px;">— Không đổi</span>';
+
+        return `
+          <tr style="border-bottom: 1px solid #1e2d45; ${highlightStyle}">
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${oldColor};">${Utils.escapeHtml(String(oldVal))}</td>
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${newColor}; font-weight: ${isChanged ? "600" : "400"};">${Utils.escapeHtml(String(newVal))}${changeBadge}</td>
+          </tr>
+        `;
+      })
+      .join("");
 
     var changesHtml = `
       <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
@@ -1289,27 +1366,21 @@
             </tr>
           </thead>
           <tbody>
-            ${changedFields
-              .map(function (key) {
-                var oldVal = oldData[key] || "—";
-                var newVal = newData[key] || "—";
-                if (key === "giaNhap") {
-                  oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
-                  newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
-                }
-                return `
-                <tr style="border-bottom: 1px solid #1e2d45;">
-                  <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
-                  <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #f87171;">${Utils.escapeHtml(String(oldVal))}</td>
-                  <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #4ade80; font-weight: 600;">${Utils.escapeHtml(String(newVal))}</td>
-                </tr>
-              `;
-              })
-              .join("")}
+            ${rowsHtml}
           </tbody>
         </table>
       </div>
     `;
+
+    var changeCount = changedFields.length;
+    var changeNotice =
+      changeCount > 0
+        ? `<div style="padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; margin-bottom: 12px; color: #fbbf24; font-size: 13px;">
+           <i class="fas fa-info-circle"></i> Có <strong>${changeCount}</strong> trường được yêu cầu thay đổi.
+         </div>`
+        : `<div style="padding: 8px 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; margin-bottom: 12px; color: #f87171; font-size: 13px;">
+           <i class="fas fa-exclamation-triangle"></i> <strong>Không có trường nào thay đổi!</strong> Vui lòng kiểm tra lại yêu cầu.
+         </div>`;
 
     var html = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
@@ -1318,6 +1389,7 @@
         <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(editItem.requesterName || "Admin")}</span></div>
         <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(editItem.createdAt)}</span></div>
       </div>
+      ${changeNotice}
       ${changesHtml}
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectEditRequest(${editItem.id})" style="padding: 8px 20px; font-size: 13px;">
@@ -1356,6 +1428,12 @@
         Utils.showToast("✅ Đã duyệt yêu cầu chỉnh sửa!");
         await loadPendingEdits();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1533,6 +1611,12 @@
         Utils.showToast("✅ Đã duyệt xóa sản phẩm!");
         await loadPendingDeletions();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1577,7 +1661,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES (THÊM MỚI)
+  // LOAD PENDING INVOICES
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");
@@ -1674,7 +1758,7 @@
         <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.createdAt)}</span></div>
         <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge status-pending">⏳ Chờ duyệt</span></div>
       </div>
-      
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #0f172a; padding: 14px 18px; border-radius: 8px; border: 1px solid #1e2d45; margin-bottom: 12px;">
         <div style="grid-column: 1 / -1; border-bottom: 1px solid #1e2d45; padding-bottom: 8px; margin-bottom: 8px;">
           <strong style="color: #fbbf24;">📄 Thông tin hóa đơn</strong>
@@ -1706,7 +1790,7 @@
             : ""
         }
       </div>
-      
+
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectInvoice(${request.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-times"></i> Từ chối
@@ -1751,6 +1835,12 @@
         Utils.showToast("✅ " + result.message);
         await loadPendingInvoices();
         await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
