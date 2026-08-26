@@ -30,7 +30,6 @@ const historyRoutes = require("./routes/historyRoutes");
 const fileRoutes = require("./routes/fileRoutes");
 const editRoutes = require("./routes/editRoutes");
 const deletionRoutes = require("./routes/deletionRoutes");
-const invoiceRoutes = require("./routes/invoiceRoutes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -46,7 +45,6 @@ app.use("/api/history", historyRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/edits", editRoutes);
 app.use("/api/deletions", deletionRoutes);
-app.use("/api/invoices", invoiceRoutes); // ✅ PHẢI CÓ DÒNG NÀY
 
 // Health check
 app.get("/api/health", (req, res) => {

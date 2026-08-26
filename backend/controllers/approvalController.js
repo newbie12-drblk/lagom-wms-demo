@@ -9,6 +9,11 @@ const createApprovalRequest = async (req, res) => {
     const { products } = req.body;
     const requesterId = req.user.userId;
 
+    console.log(
+      "📦 Tạo yêu cầu thêm sản phẩm:",
+      JSON.stringify(products, null, 2),
+    );
+
     if (!products || !Array.isArray(products) || products.length === 0) {
       return res
         .status(400)
@@ -32,19 +37,27 @@ const createApprovalRequest = async (req, res) => {
       }
     }
 
-    const requestId = await ApprovalRequest.create(requesterId, { products });
+    // Lưu từng sản phẩm với 4 trường hóa đơn
+    for (const prod of products) {
+      const requestId = await ApprovalRequest.create(requesterId, prod);
+      console.log("✅ Đã tạo yêu cầu ID:", requestId);
+    }
+
+    // Lấy danh sách yêu cầu vừa tạo
+    const allRequests = await ApprovalRequest.getByRequester(requesterId);
+    const latestRequests = allRequests.slice(0, products.length);
 
     await Notification.createForManagers(
       `📦 Yêu cầu thêm ${products.length} sản phẩm mới`,
       `Admin đã tạo yêu cầu thêm sản phẩm. Vui lòng kiểm tra và duyệt.`,
       "approval",
-      requestId,
+      latestRequests[0]?.id || null,
       "approval_request",
     );
 
     res.json({
       success: true,
-      data: { id: requestId },
+      data: { ids: latestRequests.map((r) => r.id) },
       message: "✅ Đã gửi yêu cầu thêm sản phẩm! Chờ Quản lý duyệt.",
     });
   } catch (error) {
@@ -82,7 +95,7 @@ const approveRequest = async (req, res) => {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
-    console.log(`✅ Duyệt yêu cầu thêm sản phẩm ID: ${id}`);
+    console.log(`✅ Duyệt yêu cầu ID: ${id}`);
 
     const request = await ApprovalRequest.findById(id);
     if (!request) {
@@ -97,7 +110,7 @@ const approveRequest = async (req, res) => {
         .json({ success: false, message: "Yêu cầu này đã được xử lý" });
     }
 
-    const products = request.productData.products || [];
+    const productData = request.productData || {};
     const createdIds = [];
     const errors = [];
 
@@ -110,56 +123,45 @@ const approveRequest = async (req, res) => {
     try {
       await conn.beginTransaction();
 
-      for (const prod of products) {
-        try {
-          const existing = await Inventory.findByMaHang(prod.maHang);
-          if (existing) {
-            errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
-            continue;
-          }
+      currentStt++;
 
-          currentStt++;
+      // ✅ LƯU 11 TRƯỜNG VÀO INVENTORY (7 + 4 HÓA ĐƠN)
+      await conn.execute(
+        `INSERT INTO inventory (
+          stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+          giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+          soLot, ngayHetHan,
+          soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+          ngayNhapHD, ngayXuatHD, ghiChu,
+          status, createdBy, approvedBy, approvedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+        [
+          currentStt,
+          productData.tenThuongMai || "",
+          productData.maHang || "",
+          productData.quyCach || "",
+          productData.hangSX || "",
+          productData.dvt || "",
+          productData.phanLoai || "",
+          productData.giaNhap || 0,
+          0,
+          productData.soLuongNhap || 0,
+          0,
+          productData.soLuongNhap || 0,
+          productData.soLot || "",
+          productData.ngayHetHan || null,
+          productData.soHopDongNhap || "",
+          productData.soHoaDonNhap || "", // ✅ TRƯỜNG MỚI
+          productData.soHoaDonXuat || "", // ✅ TRƯỜNG MỚI
+          productData.ngayNhapHD || null, // ✅ TRƯỜNG MỚI
+          productData.ngayXuatHD || null, // ✅ TRƯỜNG MỚI
+          productData.ghiChu || "",
+          request.requesterId,
+          approvedBy,
+        ],
+      );
 
-          await conn.execute(
-            `INSERT INTO inventory (
-              stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-              giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
-              soLot, ngayHetHan,
-              soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-              ngayNhapHD, ngayXuatHD, ghiChu,
-              status, createdBy, approvedBy, approvedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
-            [
-              currentStt,
-              prod.tenThuongMai || "",
-              prod.maHang || "",
-              prod.quyCach || "",
-              prod.hangSX || "",
-              prod.dvt || "",
-              prod.phanLoai || "",
-              prod.giaNhap || 0,
-              0,
-              prod.soLuongNhap || 0,
-              0,
-              prod.soLuongNhap || 0,
-              prod.soLot || "",
-              prod.ngayHetHan || null,
-              prod.soHopDongNhap || "",
-              prod.soHoaDonNhap || "",
-              prod.soHoaDonXuat || "",
-              prod.ngayNhapHD || null,
-              null,
-              prod.ghiChu || "",
-              request.requesterId,
-              approvedBy,
-            ],
-          );
-
-          createdIds.push(currentStt);
-        } catch (err) {
-          errors.push(`Lỗi khi thêm ${prod.maHang}: ${err.message}`);
-        }
-      }
+      createdIds.push(currentStt);
 
       await conn.execute(
         `UPDATE approval_requests 
@@ -170,7 +172,7 @@ const approveRequest = async (req, res) => {
 
       await conn.commit();
 
-      let message = `Đã duyệt yêu cầu, thêm ${createdIds.length} sản phẩm vào kho.`;
+      let message = `Đã duyệt yêu cầu, thêm 1 sản phẩm vào kho.`;
       if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
 
       await Notification.create(
@@ -184,7 +186,7 @@ const approveRequest = async (req, res) => {
 
       res.json({
         success: true,
-        message: `Đã duyệt và thêm ${createdIds.length} sản phẩm vào kho`,
+        message: `Đã duyệt và thêm sản phẩm vào kho`,
         errors,
         data: { createdIds, count: createdIds.length },
       });

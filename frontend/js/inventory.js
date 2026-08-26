@@ -1,8 +1,8 @@
 /**
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
- * CHỈ 4 TAB: Thêm, Sửa, Xóa, Tạo hóa đơn
- * FIX: Đúng 21 cột trong bảng
+ * CHỈ 4 TAB: Thêm, Sửa, Xóa
+ * FIX: Đúng 21 cột trong bảng + 11 trường khi thêm sản phẩm
  */
 
 (function () {
@@ -12,7 +12,7 @@
   const rowsPerPage = 20;
   let filteredInventoryData = [];
   let inventoryData = [];
-  let requestType = "add"; // 'add', 'edit', 'delete', 'invoice'
+  let requestType = "add"; // 'add', 'edit', 'delete'
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -381,47 +381,6 @@
     Utils.showToast("Đã xuất file CSV thành công");
   }
 
-  // ==================== LOAD DANH SÁCH PHIẾU ĐÃ DUYỆT ====================
-  async function loadApprovedReferences() {
-    const typeSelect = document.getElementById("invoiceType");
-    const refSelect = document.getElementById("invoiceReference");
-
-    if (!typeSelect || !refSelect) return;
-
-    const type = typeSelect.value;
-    refSelect.innerHTML = '<option value="">-- Đang tải --</option>';
-
-    try {
-      let data = [];
-      if (type === "receipt") {
-        const result = await window.API.receipt.getAll();
-        data = result.filter((r) => r.status === "approved");
-      } else {
-        const result = await window.API.export.getAll();
-        data = result.filter((r) => r.status === "approved");
-      }
-
-      if (data.length === 0) {
-        refSelect.innerHTML =
-          '<option value="">-- Không có phiếu nào đã duyệt --</option>';
-        return;
-      }
-
-      refSelect.innerHTML = data
-        .map((item) => {
-          const label =
-            type === "receipt"
-              ? `${item.receiptNo || "PN-" + item.id} - ${item.supplierName || "Nhà cung cấp"}`
-              : `${item.exportNo || "PX-" + item.id} - ${item.receiverName || "Người nhận"}`;
-          return `<option value="${item.id}">${escapeHtml(label)}</option>`;
-        })
-        .join("");
-    } catch (error) {
-      console.error("Load references error:", error);
-      refSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
-    }
-  }
-
   // ==================== TẠO MODAL YÊU CẦU ====================
   function showRequestModal() {
     const overlay = document.createElement("div");
@@ -443,9 +402,6 @@
           </button>
           <button class="btn btn-outline" data-type="delete" onclick="window.setRequestType('delete')">
             <i class="fas fa-trash"></i> Xóa sản phẩm
-          </button>
-          <button class="btn btn-outline" data-type="invoice" onclick="window.setRequestType('invoice')" style="border-color: #a78bfa; color: #a78bfa;">
-            <i class="fas fa-file-invoice"></i> Tạo hóa đơn
           </button>
         </div>
 
@@ -496,7 +452,6 @@
       add: "📝 Thêm sản phẩm mới",
       edit: "✏️ Sửa sản phẩm",
       delete: "🗑️ Xóa sản phẩm",
-      invoice: "🧾 Tạo hóa đơn",
     };
     const titleEl = document.getElementById("requestModalTitle");
     if (titleEl) titleEl.textContent = titles[type] || "📋 Tạo yêu cầu";
@@ -504,19 +459,19 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG ====================
+  // ==================== RENDER NỘI DUNG - THÊM SẢN PHẨM 11 TRƯỜNG ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 8 TRƯỜNG (BỎ QUY CÁCH ĐÓNG GÓI) ==========
+      // ========== THÊM SẢN PHẨM - 11 TRƯỜNG (7 + 4 HÓA ĐƠN) ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
         </p>
         <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1000px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1100px;">
             <thead>
               <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px; white-space: nowrap;">STT</th>
@@ -528,6 +483,10 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">SỐ HĐ</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐƠN NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 120px;">NGÀY HĐ NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐƠN XUẤT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 120px;">NGÀY HĐ XUẤT</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 50px; white-space: nowrap;">XÓA</th>
               </tr>
             </thead>
@@ -542,6 +501,10 @@
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayNhapHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonXuat" placeholder="Số HĐơn xuất" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayXuatHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><button class="btn-remove" onclick="window.removeAddRow(this)" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button></td>
               </tr>
             </tbody>
@@ -553,7 +516,7 @@
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
           <p style="font-size: 12px; color: #6b82a0;">
             <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Chỉ cần nhập 8 trường cơ bản. Các trường khác sẽ được nhập khi Quản lý duyệt đề nghị nhập hàng.
+            <strong>Lưu ý:</strong> Nhập đầy đủ 11 trường. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
           </p>
         </div>
       `;
@@ -708,60 +671,6 @@
           </p>
         </div>
       `;
-    } else if (type === "invoice") {
-      // ========== TẠO HÓA ĐƠN ==========
-      container.innerHTML = `
-        <p style="color: #6b82a0; margin-bottom: 12px;">
-          <i class="fas fa-info-circle"></i> 
-          <strong>Tạo yêu cầu hóa đơn:</strong> Chọn phiếu nhập hoặc xuất đã được duyệt để tạo hóa đơn.
-        </p>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45; margin-bottom: 16px;">
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Loại hóa đơn *</label>
-            <select id="invoiceType" onchange="window.loadApprovedReferences()" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-              <option value="receipt">📥 Phiếu nhập</option>
-              <option value="export">📤 Phiếu xuất</option>
-            </select>
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Chọn phiếu *</label>
-            <select id="invoiceReference" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-              <option value="">-- Đang tải danh sách --</option>
-            </select>
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
-            <input type="text" id="invoiceSoHoaDonNhap" placeholder="VD: 123/HĐNT/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
-            <input type="date" id="invoiceNgayNhapHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Số hóa đơn xuất</label>
-            <input type="text" id="invoiceSoHoaDonXuat" placeholder="VD: 456/HĐX/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-          </div>
-          <div>
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất</label>
-            <input type="date" id="invoiceNgayXuatHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-          </div>
-          <div style="grid-column: 1 / -1;">
-            <label style="color: #6b82a0; font-size: 12px; display: block; margin-bottom: 4px;">Ghi chú</label>
-            <textarea id="invoiceNotes" placeholder="Ghi chú thêm..." style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px; min-height:60px; resize:vertical;"></textarea>
-          </div>
-        </div>
-
-        <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
-          <p style="font-size: 12px; color: #6b82a0;">
-            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Chọn phiếu đã được duyệt để tạo hóa đơn. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
-          </p>
-        </div>
-      `;
-
-      // Load danh sách phiếu đã duyệt
-      loadApprovedReferences();
     }
   }
 
@@ -807,6 +716,10 @@
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayNhapHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonXuat" placeholder="Số HĐơn xuất" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayXuatHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><button class="btn-remove" onclick="window.removeAddRow(this)" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
@@ -820,7 +733,7 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (8 TRƯỜNG) ====================
+  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (11 TRƯỜNG) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -846,6 +759,10 @@
           row.querySelector(".add-giaNhap")?.value?.replace(/[^0-9]/g, "") || 0,
         ),
         soHopDongNhap: row.querySelector(".add-soHopDongNhap")?.value || "",
+        soHoaDonNhap: row.querySelector(".add-soHoaDonNhap")?.value || "",
+        ngayNhapHD: row.querySelector(".add-ngayNhapHD")?.value || null,
+        soHoaDonXuat: row.querySelector(".add-soHoaDonXuat")?.value || "",
+        ngayXuatHD: row.querySelector(".add-ngayXuatHD")?.value || null,
       });
     });
 
@@ -993,65 +910,6 @@
         } else {
           Utils.showToast("❌ " + result.message, "error");
         }
-      } else if (requestType === "invoice") {
-        // ========== TẠO HÓA ĐƠN ==========
-        const type = document.getElementById("invoiceType")?.value;
-        const referenceId = document.getElementById("invoiceReference")?.value;
-        const soHoaDonNhap = document
-          .getElementById("invoiceSoHoaDonNhap")
-          ?.value.trim();
-        const ngayNhapHD = document.getElementById("invoiceNgayNhapHD")?.value;
-        const soHoaDonXuat = document
-          .getElementById("invoiceSoHoaDonXuat")
-          ?.value.trim();
-        const ngayXuatHD = document.getElementById("invoiceNgayXuatHD")?.value;
-        const notes = document.getElementById("invoiceNotes")?.value.trim();
-
-        if (!type || !referenceId) {
-          Utils.showToast(
-            "⚠️ Vui lòng chọn loại hóa đơn và phiếu tham chiếu!",
-            "warning",
-          );
-          Utils.showLoading(false);
-          return;
-        }
-
-        if (!soHoaDonNhap) {
-          Utils.showToast("⚠️ Vui lòng nhập Số hóa đơn nhập!", "warning");
-          Utils.showLoading(false);
-          return;
-        }
-
-        if (!ngayNhapHD) {
-          Utils.showToast("⚠️ Vui lòng nhập Ngày hóa đơn nhập!", "warning");
-          Utils.showLoading(false);
-          return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/invoices`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            type,
-            referenceId: parseInt(referenceId),
-            soHoaDonNhap,
-            ngayNhapHD,
-            soHoaDonXuat: soHoaDonXuat || "",
-            ngayXuatHD: ngayXuatHD || null,
-            notes: notes || "",
-          }),
-        });
-        const result = await response.json();
-
-        if (result.success) {
-          Utils.showToast("✅ " + result.message);
-          closeRequestModal();
-        } else {
-          Utils.showToast("❌ " + (result.message || "Có lỗi xảy ra"), "error");
-        }
       }
     } catch (error) {
       console.error("❌ Submit request error:", error);
@@ -1144,5 +1002,4 @@
   window.isAdmin = isAdmin;
   window.isQuanLy = isQuanLy;
   window.refreshInventoryData = refreshInventoryData;
-  window.loadApprovedReferences = loadApprovedReferences;
 })();

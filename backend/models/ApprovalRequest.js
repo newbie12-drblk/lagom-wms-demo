@@ -3,10 +3,25 @@ const db = require("../config/database");
 const ApprovalRequest = {
   create: async (requesterId, productData) => {
     try {
+      // productData đã bao gồm 4 trường hóa đơn
       const [result] = await db.execute(
-        `INSERT INTO approval_requests (requesterId, productData, status)
-         VALUES (?, ?, 'pending')`,
-        [requesterId, JSON.stringify(productData)],
+        `INSERT INTO approval_requests (
+          requesterId, 
+          productData, 
+          soHoaDonNhap, 
+          ngayNhapHD, 
+          soHoaDonXuat, 
+          ngayXuatHD,
+          status
+        ) VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+        [
+          requesterId,
+          JSON.stringify(productData),
+          productData.soHoaDonNhap || "",
+          productData.ngayNhapHD || null,
+          productData.soHoaDonXuat || "",
+          productData.ngayXuatHD || null,
+        ],
       );
       console.log("📝 ApprovalRequest created:", result.insertId);
       return result.insertId;
