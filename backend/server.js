@@ -46,7 +46,7 @@ app.use("/api/history", historyRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/edits", editRoutes);
 app.use("/api/deletions", deletionRoutes);
-app.use("/api/invoices", invoiceRoutes);
+app.use("/api/invoices", invoiceRoutes); // ✅ PHẢI CÓ DÒNG NÀY
 
 // Health check
 app.get("/api/health", (req, res) => {

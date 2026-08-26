@@ -4,6 +4,7 @@ const Receipt = require("../models/Receipt");
 const Export = require("../models/Export");
 const Notification = require("../models/Notification");
 
+// ==================== ADMIN: TẠO YÊU CẦU HÓA ĐƠN ====================
 const createInvoiceRequest = async (req, res) => {
   try {
     const {
@@ -102,6 +103,7 @@ const createInvoiceRequest = async (req, res) => {
   }
 };
 
+// ==================== QUẢN LÝ: LẤY DANH SÁCH CHỜ DUYỆT ====================
 const getPendingInvoices = async (req, res) => {
   try {
     const requests = await InvoiceRequest.getPending();
@@ -112,6 +114,7 @@ const getPendingInvoices = async (req, res) => {
   }
 };
 
+// ==================== QUẢN LÝ: LẤY TẤT CẢ YÊU CẦU HÓA ĐƠN ====================
 const getAllInvoices = async (req, res) => {
   try {
     const { status } = req.query;
@@ -123,10 +126,13 @@ const getAllInvoices = async (req, res) => {
   }
 };
 
+// ==================== QUẢN LÝ: DUYỆT YÊU CẦU HÓA ĐƠN ====================
 const approveInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
+
+    console.log(`✅ Duyệt hóa đơn ID: ${id}`);
 
     const request = await InvoiceRequest.findById(id);
     if (!request) {
@@ -147,9 +153,13 @@ const approveInvoice = async (req, res) => {
     try {
       await conn.beginTransaction();
 
+      // Cập nhật yêu cầu thành approved
       await InvoiceRequest.approve(id, approvedBy);
 
+      const typeText = request.type === "receipt" ? "nhập" : "xuất";
+
       if (request.type === "receipt") {
+        // Cập nhật vào bảng receipts
         await conn.execute(
           `UPDATE receipts 
            SET soHoaDonNhap = ?, ngayNhapHD = ?, soHoaDonXuat = ?, ngayXuatHD = ?
@@ -163,29 +173,39 @@ const approveInvoice = async (req, res) => {
           ],
         );
 
+        // Lấy danh sách items từ receipt
         const [items] = await conn.execute(
           `SELECT * FROM receipt_items WHERE receiptId = ?`,
           [request.referenceId],
         );
 
+        // Cập nhật vào inventory cho từng item
         for (const item of items) {
-          await conn.execute(
-            `UPDATE inventory 
-             SET soHoaDonNhap = ?, ngayNhapHD = ?, soHoaDonXuat = ?, ngayXuatHD = ?
+          // Tìm dòng inventory tương ứng
+          const [invItems] = await conn.execute(
+            `SELECT id FROM inventory 
              WHERE maHang = ? AND soLot = ? AND ngayNhapHD = ?
              ORDER BY id DESC LIMIT 1`,
-            [
-              request.soHoaDonNhap || "",
-              request.ngayNhapHD || null,
-              request.soHoaDonXuat || "",
-              request.ngayXuatHD || null,
-              item.maHang,
-              item.soLot || "",
-              item.ngayNhapHD || null,
-            ],
+            [item.maHang, item.soLot || "", item.ngayNhapHD || null],
           );
+
+          if (invItems.length > 0) {
+            await conn.execute(
+              `UPDATE inventory 
+               SET soHoaDonNhap = ?, ngayNhapHD = ?, soHoaDonXuat = ?, ngayXuatHD = ?
+               WHERE id = ?`,
+              [
+                request.soHoaDonNhap || "",
+                request.ngayNhapHD || null,
+                request.soHoaDonXuat || "",
+                request.ngayXuatHD || null,
+                invItems[0].id,
+              ],
+            );
+          }
         }
       } else if (request.type === "export") {
+        // Cập nhật vào bảng exports
         await conn.execute(
           `UPDATE exports 
            SET soHoaDonNhap = ?, ngayNhapHD = ?, soHoaDonXuat = ?, ngayXuatHD = ?
@@ -199,31 +219,39 @@ const approveInvoice = async (req, res) => {
           ],
         );
 
+        // Lấy danh sách items từ export
         const [items] = await conn.execute(
           `SELECT * FROM export_items WHERE exportId = ?`,
           [request.referenceId],
         );
 
+        // Cập nhật vào inventory cho từng item
         for (const item of items) {
-          await conn.execute(
-            `UPDATE inventory 
-             SET soHoaDonXuat = ?, ngayXuatHD = ?
+          const [invItems] = await conn.execute(
+            `SELECT id FROM inventory 
              WHERE maHang = ? AND soLot = ? AND ngayNhapHD = ?
              ORDER BY id DESC LIMIT 1`,
-            [
-              request.soHoaDonXuat || "",
-              request.ngayXuatHD || null,
-              item.maHang,
-              item.soLot || "",
-              item.ngayNhapHD || null,
-            ],
+            [item.maHang, item.soLot || "", item.ngayNhapHD || null],
           );
+
+          if (invItems.length > 0) {
+            await conn.execute(
+              `UPDATE inventory 
+               SET soHoaDonXuat = ?, ngayXuatHD = ?
+               WHERE id = ?`,
+              [
+                request.soHoaDonXuat || "",
+                request.ngayXuatHD || null,
+                invItems[0].id,
+              ],
+            );
+          }
         }
       }
 
       await conn.commit();
 
-      const typeText = request.type === "receipt" ? "nhập" : "xuất";
+      // Gửi thông báo cho Admin
       await Notification.create(
         request.createdBy,
         `✅ Yêu cầu hóa đơn ${typeText} đã được duyệt`,
@@ -251,6 +279,7 @@ const approveInvoice = async (req, res) => {
   }
 };
 
+// ==================== QUẢN LÝ: TỪ CHỐI YÊU CẦU HÓA ĐƠN ====================
 const rejectInvoice = async (req, res) => {
   try {
     const { id } = req.params;

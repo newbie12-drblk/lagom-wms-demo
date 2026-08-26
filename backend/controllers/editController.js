@@ -3,7 +3,6 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// Tạo yêu cầu chỉnh sửa sản phẩm (Admin)
 const createEditRequest = async (req, res) => {
   try {
     const { productId, updatedData } = req.body;
@@ -24,7 +23,6 @@ const createEditRequest = async (req, res) => {
       });
     }
 
-    // Kiểm tra xem đã có yêu cầu chỉnh sửa cho sản phẩm này chưa
     const existingRequests = await EditRequest.getAllRequests("pending");
     const alreadyRequested = existingRequests.some(
       (req) => req.productId == productId,
@@ -43,7 +41,6 @@ const createEditRequest = async (req, res) => {
       updatedData,
     );
 
-    // Gửi thông báo cho Quản lý
     await Notification.createForManagers(
       "✏️ Yêu cầu chỉnh sửa sản phẩm",
       `Admin yêu cầu chỉnh sửa sản phẩm "${oldProduct.tenThuongMai}" (${oldProduct.maHang})`,
@@ -63,7 +60,6 @@ const createEditRequest = async (req, res) => {
   }
 };
 
-// Lấy tất cả yêu cầu chỉnh sửa (Quản lý)
 const getAllEditRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -75,7 +71,6 @@ const getAllEditRequests = async (req, res) => {
   }
 };
 
-// Lấy yêu cầu chỉnh sửa của tôi (Admin)
 const getMyEditRequests = async (req, res) => {
   try {
     const requests = await EditRequest.getByRequester(req.user.userId);
@@ -86,9 +81,6 @@ const getMyEditRequests = async (req, res) => {
   }
 };
 
-// ============================================================
-// DUYỆT YÊU CẦU CHỈNH SỬA - FIX
-// ============================================================
 const approveEditRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,7 +103,6 @@ const approveEditRequest = async (req, res) => {
       });
     }
 
-    // ✅ LẤY DỮ LIỆU CŨ TRƯỚC KHI CẬP NHẬT
     const oldProduct = await Inventory.findById(request.productId);
     if (!oldProduct) {
       return res.status(404).json({
@@ -120,14 +111,13 @@ const approveEditRequest = async (req, res) => {
       });
     }
 
-    // ✅ CHỈ CẬP NHẬT 7 TRƯỜNG CƠ BẢN
     const newData = request.newData || {};
     const updateFields = {};
 
-    // Chỉ cập nhật các trường được phép (7 trường)
     const allowedFields = [
       "tenThuongMai",
       "maHang",
+      "quyCach",
       "dvt",
       "hangSX",
       "phanLoai",
@@ -141,39 +131,45 @@ const approveEditRequest = async (req, res) => {
       }
     }
 
-    console.log("📦 Cập nhật các trường:", updateFields);
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    // ✅ CẬP NHẬT SẢN PHẨM TRONG INVENTORY
-    await Inventory.update(request.productId, updateFields);
+      await conn.execute(
+        `UPDATE inventory SET ${Object.keys(updateFields)
+          .map((f) => `${f} = ?`)
+          .join(", ")} WHERE id = ?`,
+        [...Object.values(updateFields), request.productId],
+      );
 
-    // ✅ CẬP NHẬT TRẠNG THÁI YÊU CẦU
-    await EditRequest.approve(id, approvedBy);
+      await conn.execute(
+        `UPDATE edit_requests 
+         SET status = 'approved', approvedBy = ?, approvedAt = NOW()
+         WHERE id = ?`,
+        [approvedBy, id],
+      );
 
-    // ✅ GHI LỊCH SỬ
-    await EditHistory.log(
-      approvedBy,
-      "inventory",
-      request.productId,
-      "EDIT_BY_APPROVAL",
-      null,
-      JSON.stringify(oldProduct),
-      JSON.stringify({ ...oldProduct, ...updateFields }),
-    );
+      await conn.commit();
 
-    // ✅ GỬI THÔNG BÁO CHO ADMIN
-    await Notification.create(
-      request.requesterId,
-      "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
-      `Sản phẩm "${request.productName}" đã được cập nhật theo yêu cầu của bạn`,
-      "success",
-      id,
-      "edit_request",
-    );
+      await Notification.create(
+        request.requesterId,
+        "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
+        `Sản phẩm "${request.productName}" đã được cập nhật theo yêu cầu của bạn`,
+        "success",
+        id,
+        "edit_request",
+      );
 
-    res.json({
-      success: true,
-      message: `Đã duyệt và cập nhật sản phẩm "${request.productName}"`,
-    });
+      res.json({
+        success: true,
+        message: `Đã duyệt và cập nhật sản phẩm "${request.productName}"`,
+      });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
   } catch (error) {
     console.error("Approve edit request error:", error);
     res
@@ -182,7 +178,6 @@ const approveEditRequest = async (req, res) => {
   }
 };
 
-// Từ chối yêu cầu chỉnh sửa (Quản lý)
 const rejectEditRequest = async (req, res) => {
   try {
     const { id } = req.params;

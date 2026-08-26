@@ -9,11 +9,6 @@ const createApprovalRequest = async (req, res) => {
     const { products } = req.body;
     const requesterId = req.user.userId;
 
-    console.log(
-      "📦 Tạo yêu cầu thêm sản phẩm:",
-      JSON.stringify(products, null, 2),
-    );
-
     if (!products || !Array.isArray(products) || products.length === 0) {
       return res
         .status(400)
@@ -38,7 +33,6 @@ const createApprovalRequest = async (req, res) => {
     }
 
     const requestId = await ApprovalRequest.create(requesterId, { products });
-    console.log("✅ Đã tạo yêu cầu ID:", requestId);
 
     await Notification.createForManagers(
       `📦 Yêu cầu thêm ${products.length} sản phẩm mới`,
@@ -88,7 +82,7 @@ const approveRequest = async (req, res) => {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
-    console.log(`✅ Duyệt yêu cầu ID: ${id}`);
+    console.log(`✅ Duyệt yêu cầu thêm sản phẩm ID: ${id}`);
 
     const request = await ApprovalRequest.findById(id);
     if (!request) {
@@ -111,124 +105,95 @@ const approveRequest = async (req, res) => {
       "SELECT MAX(stt) as maxStt FROM inventory",
     );
     let currentStt = maxSttResult[0]?.maxStt || 0;
-    console.log(`📊 STT hiện tại: ${currentStt}`);
 
-    for (const prod of products) {
-      try {
-        const existing = await Inventory.findByMaHang(prod.maHang);
-        if (existing) {
-          errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
-          continue;
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      for (const prod of products) {
+        try {
+          const existing = await Inventory.findByMaHang(prod.maHang);
+          if (existing) {
+            errors.push(`Mã hàng ${prod.maHang} đã tồn tại trong kho, bỏ qua`);
+            continue;
+          }
+
+          currentStt++;
+
+          await conn.execute(
+            `INSERT INTO inventory (
+              stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+              giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+              soLot, ngayHetHan,
+              soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+              ngayNhapHD, ngayXuatHD, ghiChu,
+              status, createdBy, approvedBy, approvedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+            [
+              currentStt,
+              prod.tenThuongMai || "",
+              prod.maHang || "",
+              prod.quyCach || "",
+              prod.hangSX || "",
+              prod.dvt || "",
+              prod.phanLoai || "",
+              prod.giaNhap || 0,
+              0,
+              prod.soLuongNhap || 0,
+              0,
+              prod.soLuongNhap || 0,
+              prod.soLot || "",
+              prod.ngayHetHan || null,
+              prod.soHopDongNhap || "",
+              prod.soHoaDonNhap || "",
+              prod.soHoaDonXuat || "",
+              prod.ngayNhapHD || null,
+              null,
+              prod.ghiChu || "",
+              request.requesterId,
+              approvedBy,
+            ],
+          );
+
+          createdIds.push(currentStt);
+        } catch (err) {
+          errors.push(`Lỗi khi thêm ${prod.maHang}: ${err.message}`);
         }
-
-        currentStt++;
-        console.log(`📦 Thêm sản phẩm STT: ${currentStt}, Mã: ${prod.maHang}`);
-
-        const productData = {
-          stt: currentStt,
-          tenThuongMai: prod.tenThuongMai || "",
-          maHang: prod.maHang || "",
-          quyCach: prod.quyCach || "",
-          quyCachDongGoi: prod.quyCachDongGoi || "", // ← TRƯỜNG MỚI
-          hangSX: prod.hangSX || "",
-          dvt: prod.dvt || "",
-          phanLoai: prod.phanLoai || "",
-          giaNhap: prod.giaNhap || 0,
-          giaXuat: prod.giaXuat || prod.giaNhap || 0,
-          tonKho: prod.tonKho || prod.soLuongNhap || 0,
-          soLuongNhap: prod.soLuongNhap || 0,
-          soLuongXuat: 0,
-          soLot: prod.soLot || "",
-          ngayHetHan: prod.ngayHetHan || null,
-          soHopDongNhap: prod.soHopDongNhap || "",
-          soHoaDonNhap: prod.soHoaDonNhap || "",
-          soHopDongXuat: "",
-          soHoaDonXuat: "",
-          ngayNhapHD: prod.ngayNhapHD || null,
-          ngayXuatHD: null,
-          ghiChu: prod.ghiChu || "",
-          status: "approved",
-          createdBy: request.requesterId,
-          approvedBy: approvedBy,
-          approvedAt: new Date(),
-        };
-
-        const [result] = await db.execute(
-          `INSERT INTO inventory (
-            stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, hangSX, dvt, phanLoai,
-            giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
-            soLot, ngayHetHan,
-            soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-            ngayNhapHD, ngayXuatHD, ghiChu,
-            status, createdBy, approvedBy, approvedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
-          [
-            productData.stt,
-            productData.tenThuongMai,
-            productData.maHang,
-            productData.quyCach,
-            productData.quyCachDongGoi, // ← TRƯỜNG MỚI
-            productData.hangSX,
-            productData.dvt,
-            productData.phanLoai,
-            productData.giaNhap,
-            productData.giaXuat,
-            productData.soLuongNhap,
-            productData.soLuongXuat,
-            productData.tonKho,
-            productData.soLot,
-            productData.ngayHetHan,
-            productData.soHopDongNhap,
-            productData.soHoaDonNhap,
-            productData.soHoaDonXuat,
-            productData.ngayNhapHD,
-            productData.ngayXuatHD,
-            productData.ghiChu,
-            productData.createdBy,
-            productData.approvedBy,
-          ],
-        );
-
-        createdIds.push(result.insertId);
-        console.log(
-          `✅ Đã thêm sản phẩm ID: ${result.insertId}, STT: ${currentStt}`,
-        );
-
-        await EditHistory.log(
-          approvedBy,
-          "inventory",
-          result.insertId,
-          "APPROVE_CREATE",
-          null,
-          null,
-          JSON.stringify(productData),
-        );
-      } catch (err) {
-        console.error(`❌ Lỗi khi thêm sản phẩm ${prod.maHang}:`, err.message);
-        errors.push(`Lỗi khi thêm ${prod.maHang}: ${err.message}`);
       }
+
+      await conn.execute(
+        `UPDATE approval_requests 
+         SET status = 'approved', approvedBy = ?, approvedAt = NOW()
+         WHERE id = ?`,
+        [approvedBy, id],
+      );
+
+      await conn.commit();
+
+      let message = `Đã duyệt yêu cầu, thêm ${createdIds.length} sản phẩm vào kho.`;
+      if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
+
+      await Notification.create(
+        request.requesterId,
+        "✅ Yêu cầu thêm sản phẩm đã được duyệt",
+        message,
+        "success",
+        id,
+        "approval_request",
+      );
+
+      res.json({
+        success: true,
+        message: `Đã duyệt và thêm ${createdIds.length} sản phẩm vào kho`,
+        errors,
+        data: { createdIds, count: createdIds.length },
+      });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
     }
-
-    await ApprovalRequest.approve(id, approvedBy);
-
-    let message = `Đã duyệt yêu cầu, thêm ${createdIds.length} sản phẩm vào kho.`;
-    if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
-
-    await Notification.create(
-      request.requesterId,
-      "✅ Yêu cầu thêm sản phẩm đã được duyệt",
-      message,
-      "success",
-      id,
-      "approval_request",
-    );
-
-    res.json({
-      success: true,
-      message: `Đã duyệt và thêm ${createdIds.length} sản phẩm vào kho`,
-      errors,
-      data: { createdIds, count: createdIds.length },
-    });
   } catch (error) {
     console.error("Approve request error:", error);
     res

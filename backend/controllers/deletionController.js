@@ -1,17 +1,14 @@
+const db = require("../config/database");
 const DeletionRequest = require("../models/DeletionRequest");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
-// ==================== TẠO YÊU CẦU XÓA (NHIỀU SẢN PHẨM) ====================
 const createDeletionRequest = async (req, res) => {
   try {
     const { productIds } = req.body;
     const requesterId = req.user.userId;
 
-    console.log("📦 Nhận yêu cầu xóa từ Admin:", JSON.stringify(productIds));
-
-    // Kiểm tra dữ liệu đầu vào
     if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
       return res.status(400).json({
         success: false,
@@ -19,14 +16,12 @@ const createDeletionRequest = async (req, res) => {
       });
     }
 
-    // Kiểm tra sản phẩm có tồn tại không
     const products = [];
     const notFoundIds = [];
 
     for (const productId of productIds) {
       const product = await Inventory.findById(productId);
       if (!product) {
-        console.log(`⚠️ Sản phẩm ID ${productId} không tồn tại, bỏ qua`);
         notFoundIds.push(productId);
         continue;
       }
@@ -36,13 +31,10 @@ const createDeletionRequest = async (req, res) => {
     if (products.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `Không tìm thấy sản phẩm nào hợp lệ để xóa. IDs không tồn tại: ${notFoundIds.join(", ")}`,
+        message: `Không tìm thấy sản phẩm nào hợp lệ để xóa.`,
       });
     }
 
-    console.log(`📦 Tìm thấy ${products.length} sản phẩm hợp lệ`);
-
-    // Kiểm tra sản phẩm nào đã có yêu cầu xóa đang chờ
     const existingRequests = await DeletionRequest.getAllRequests("pending");
     const existingProductIds = existingRequests.map((req) => req.productId);
 
@@ -60,18 +52,15 @@ const createDeletionRequest = async (req, res) => {
     if (validProducts.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `Tất cả sản phẩm đã có yêu cầu xóa đang chờ duyệt: ${skippedProducts.join(", ")}`,
+        message: `Tất cả sản phẩm đã có yêu cầu xóa đang chờ duyệt`,
       });
     }
 
-    // ✅ SỬ DỤNG createMultiple ĐỂ TẠO NHIỀU YÊU CẦU
     const createdIds = await DeletionRequest.createMultiple(
       requesterId,
       validProducts,
     );
-    console.log(`✅ Đã tạo ${createdIds.length} yêu cầu xóa, IDs:`, createdIds);
 
-    // Gửi thông báo cho Quản lý
     const productNames = validProducts
       .map((p) => `"${p.tenThuongMai}"`)
       .join(", ");
@@ -84,12 +73,6 @@ const createDeletionRequest = async (req, res) => {
     );
 
     let message = `✅ Đã gửi yêu cầu xóa ${validProducts.length} sản phẩm, chờ Quản lý duyệt.`;
-    if (skippedProducts.length > 0) {
-      message += `\n⚠️ Bỏ qua: ${skippedProducts.join(", ")} (đã có yêu cầu chờ duyệt)`;
-    }
-    if (notFoundIds.length > 0) {
-      message += `\n⚠️ Không tìm thấy sản phẩm: ${notFoundIds.join(", ")}`;
-    }
 
     res.json({
       success: true,
@@ -110,7 +93,6 @@ const createDeletionRequest = async (req, res) => {
   }
 };
 
-// ==================== LẤY TẤT CẢ YÊU CẦU XÓA ====================
 const getAllDeletionRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -122,7 +104,6 @@ const getAllDeletionRequests = async (req, res) => {
   }
 };
 
-// ==================== LẤY YÊU CẦU XÓA CỦA TÔI ====================
 const getMyDeletionRequests = async (req, res) => {
   try {
     const requests = await DeletionRequest.getByRequester(req.user.userId);
@@ -133,11 +114,12 @@ const getMyDeletionRequests = async (req, res) => {
   }
 };
 
-// ==================== DUYỆT YÊU CẦU XÓA ====================
 const approveDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
+
+    console.log(`✅ Duyệt yêu cầu xóa ID: ${id}`);
 
     const request = await DeletionRequest.findById(id);
     if (!request) {
@@ -154,44 +136,48 @@ const approveDeletionRequest = async (req, res) => {
       });
     }
 
-    // Cập nhật trạng thái yêu cầu
-    await DeletionRequest.approve(id, approvedBy);
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    // Xóa sản phẩm khỏi inventory
-    await Inventory.delete(request.productId);
+      await conn.execute(`DELETE FROM inventory WHERE id = ?`, [
+        request.productId,
+      ]);
 
-    // Ghi lịch sử
-    await EditHistory.log(
-      approvedBy,
-      "inventory",
-      request.productId,
-      "DELETE_BY_APPROVAL",
-      null,
-      null,
-      JSON.stringify(request.productData),
-    );
+      await conn.execute(
+        `UPDATE deletion_requests 
+         SET status = 'approved', approvedBy = ?, approvedAt = NOW()
+         WHERE id = ?`,
+        [approvedBy, id],
+      );
 
-    // Gửi thông báo cho Admin
-    await Notification.create(
-      request.requesterId,
-      "✅ Yêu cầu xóa sản phẩm đã được duyệt",
-      `Sản phẩm "${request.productName}" đã được xóa khỏi kho theo yêu cầu của bạn`,
-      "success",
-      id,
-      "deletion_request",
-    );
+      await conn.commit();
 
-    res.json({
-      success: true,
-      message: `Đã duyệt và xóa sản phẩm "${request.productName}" khỏi kho`,
-    });
+      await Notification.create(
+        request.requesterId,
+        "✅ Yêu cầu xóa sản phẩm đã được duyệt",
+        `Sản phẩm "${request.productName}" đã được xóa khỏi kho theo yêu cầu của bạn`,
+        "success",
+        id,
+        "deletion_request",
+      );
+
+      res.json({
+        success: true,
+        message: `Đã duyệt và xóa sản phẩm "${request.productName}" khỏi kho`,
+      });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
   } catch (error) {
     console.error("Approve deletion request error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
-// ==================== TỪ CHỐI YÊU CẦU XÓA ====================
 const rejectDeletionRequest = async (req, res) => {
   try {
     const { id } = req.params;
