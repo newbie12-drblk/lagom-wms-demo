@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="css/receipt-list.css" />
     <link rel="stylesheet" href="css/export-list.css" />
     <link rel="stylesheet" href="css/invoice.css" />
-    <!-- ✅ MỚI -->
   </head>
   <body>
     <div class="orb orb-1"></div>
@@ -23,9 +22,7 @@
     <div class="orb orb-3"></div>
 
     <div class="app-shell">
-      <!-- ========================================================== -->
       <!-- SIDEBAR -->
-      <!-- ========================================================== -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">
@@ -47,7 +44,6 @@
           Tồn kho
         </a>
         <a href="#" class="nav-item" data-view="invoices">
-          <!-- ✅ MỚI -->
           <div class="nav-icon">📄</div>
           Hóa đơn
           <span class="nav-badge" id="invoiceBadge" style="display: none"
@@ -74,9 +70,7 @@
         </div>
       </aside>
 
-      <!-- ========================================================== -->
       <!-- CONTENT AREA -->
-      <!-- ========================================================== -->
       <div class="content-area">
         <!-- TOPBAR -->
         <div class="topbar">
@@ -100,9 +94,9 @@
 
         <!-- VIEW CONTAINER -->
         <div class="view-container">
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <!-- VIEW: HOME -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <div class="view active" id="view-home">
             <div class="scroll-area">
               <div class="page-header">
@@ -122,7 +116,6 @@
                 </div>
               </div>
 
-              <!-- Stats -->
               <div class="stats-row">
                 <div class="stat-card s-blue">
                   <div class="stat-top">
@@ -158,9 +151,7 @@
                 </div>
               </div>
 
-              <!-- Content Grid -->
               <div class="content-grid">
-                <!-- Quick Access -->
                 <div class="panel">
                   <div class="panel-head">
                     <div class="panel-head-title">
@@ -178,7 +169,6 @@
                       </div>
                     </a>
                     <a href="#" class="quick-tile t-purple" data-nav="invoices">
-                      <!-- ✅ MỚI -->
                       <span class="quick-tile-arrow">↗</span>
                       <div class="quick-tile-icon">📄</div>
                       <div class="quick-tile-name">Quản lý hóa đơn</div>
@@ -205,7 +195,6 @@
                   </div>
                 </div>
 
-                <!-- Supplier Debt Alerts -->
                 <div class="panel">
                   <div class="panel-head">
                     <div class="panel-head-title">
@@ -217,7 +206,6 @@
                   <div class="alert-scroll" id="supplierAlertList"></div>
                 </div>
 
-                <!-- Customer Debt Alerts -->
                 <div class="panel">
                   <div class="panel-head">
                     <div class="panel-head-title">
@@ -231,7 +219,6 @@
                   <div class="alert-scroll" id="customerAlertList"></div>
                 </div>
 
-                <!-- Categories -->
                 <div class="panel" style="grid-column: 1 / -1">
                   <div class="panel-head">
                     <div class="panel-head-title">
@@ -245,9 +232,9 @@
             </div>
           </div>
 
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <!-- VIEW: INVENTORY -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <div class="view" id="view-inventory">
             <div class="scroll-area">
               <div class="page-header">
@@ -356,14 +343,14 @@
             </div>
           </div>
 
-          <!-- ======================================================== -->
-          <!-- VIEW: INVOICES (MỚI) -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
+          <!-- VIEW: INVOICES -->
+          <!-- ========================================================== -->
           <div class="view" id="view-invoices">
             <div class="scroll-area">
               <div class="page-header">
                 <div>
-                  <div class="page-title-tag">INVOICE MANAGEMENT</div>
+                  <div class="page-title-tag">INVOICE</div>
                   <div class="page-title">Quản lý hóa đơn</div>
                   <div class="page-sub">
                     Nhập thông tin hóa đơn cho phiếu xuất đã duyệt
@@ -376,34 +363,34 @@
                 </div>
               </div>
 
-              <!-- Hướng dẫn -->
               <div
                 style="
-                  background: rgba(59, 130, 246, 0.1);
-                  border: 1px solid rgba(59, 130, 246, 0.2);
+                  background: rgba(59, 130, 246, 0.08);
+                  border: 1px solid rgba(59, 130, 246, 0.15);
                   border-radius: 10px;
-                  padding: 16px 20px;
+                  padding: 14px 20px;
                   margin-bottom: 20px;
                 "
               >
                 <div style="display: flex; align-items: center; gap: 12px">
                   <i
                     class="fas fa-info-circle"
-                    style="color: #60a5fa; font-size: 20px"
+                    style="color: #60a5fa; font-size: 18px"
                   ></i>
                   <div>
-                    <div style="font-weight: 600; color: #e2eaf5">
+                    <div
+                      style="font-weight: 600; color: #e2eaf5; font-size: 13px"
+                    >
                       Hướng dẫn
                     </div>
-                    <div style="font-size: 13px; color: #6b82a0">
-                      Chọn phiếu xuất đã được duyệt → Nhập 4 trường hóa đơn →
-                      Gửi Quản lý duyệt
+                    <div style="font-size: 12px; color: #6b82a0">
+                      Chọn phiếu xuất → Nhập 4 trường hóa đơn → Gửi Quản lý
+                      duyệt
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Filter -->
               <div
                 class="filter-bar"
                 style="
@@ -432,10 +419,10 @@
                   style="min-width: 130px"
                 >
                   <option value="all">Tất cả trạng thái</option>
-                  <option value="no-invoice">🔴 Chưa nhập hóa đơn</option>
+                  <option value="no-invoice">🔴 Chưa nhập</option>
                   <option value="pending">🟡 Chờ duyệt</option>
-                  <option value="approved">🟢 Đã hoàn thành</option>
-                  <option value="rejected">🔴 Bị từ chối</option>
+                  <option value="approved">🟢 Hoàn thành</option>
+                  <option value="rejected">🔴 Từ chối</option>
                 </select>
                 <button
                   class="btn btn-outline"
@@ -446,10 +433,9 @@
                 </button>
               </div>
 
-              <!-- Stats -->
               <div class="inventory-stats" style="margin-bottom: 20px">
                 <div class="stat-mini">
-                  <span class="stat-mini-label">Chưa nhập hóa đơn:</span>
+                  <span class="stat-mini-label">Chưa nhập:</span>
                   <span
                     class="stat-mini-value"
                     id="invoiceNoInvoice"
@@ -467,7 +453,7 @@
                   >
                 </div>
                 <div class="stat-mini">
-                  <span class="stat-mini-label">Đã hoàn thành:</span>
+                  <span class="stat-mini-label">Hoàn thành:</span>
                   <span
                     class="stat-mini-value"
                     id="invoiceApproved"
@@ -476,7 +462,7 @@
                   >
                 </div>
                 <div class="stat-mini">
-                  <span class="stat-mini-label">Bị từ chối:</span>
+                  <span class="stat-mini-label">Từ chối:</span>
                   <span
                     class="stat-mini-value"
                     id="invoiceRejected"
@@ -486,14 +472,13 @@
                 </div>
               </div>
 
-              <!-- List -->
               <div id="invoicesList" class="invoices-list"></div>
             </div>
           </div>
 
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <!-- VIEW: RECEIPTS -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <div class="view" id="view-receipts">
             <div class="scroll-area">
               <div class="page-header">
@@ -509,7 +494,6 @@
                 </div>
               </div>
 
-              <!-- Filter -->
               <div
                 class="filter-bar"
                 style="
@@ -618,9 +602,9 @@
             </div>
           </div>
 
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <!-- VIEW: EXPORTS -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <div class="view" id="view-exports">
             <div class="scroll-area">
               <div class="page-header">
@@ -636,7 +620,6 @@
                 </div>
               </div>
 
-              <!-- Filter -->
               <div
                 class="filter-bar"
                 style="
@@ -743,9 +726,9 @@
             </div>
           </div>
 
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <!-- VIEW: STATISTICS -->
-          <!-- ======================================================== -->
+          <!-- ========================================================== -->
           <div class="view" id="view-statistics">
             <div class="scroll-area">
               <div class="page-header">
@@ -758,11 +741,8 @@
             </div>
           </div>
         </div>
-        <!-- end view-container -->
       </div>
-      <!-- end content-area -->
     </div>
-    <!-- end app-shell -->
 
     <!-- ========================================================== -->
     <!-- MODAL: RECEIPT DETAIL -->
@@ -860,7 +840,6 @@
     <script src="js/receipt-list.js"></script>
     <script src="js/export-list.js"></script>
     <script src="js/invoices.js"></script>
-    <!-- ✅ MỚI -->
     <script src="js/main.js"></script>
   </body>
 </html>

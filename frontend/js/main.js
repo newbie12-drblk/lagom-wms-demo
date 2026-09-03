@@ -50,7 +50,9 @@
     return window.innerWidth <= 768;
   }
 
-  // Update topbar user
+  // ============================================================
+  // UPDATE TOPBAR USER
+  // ============================================================
   function updateTopbarUser() {
     const user = Auth.getCurrentUser();
     if (!user) return;
@@ -82,7 +84,9 @@
       });
   }
 
-  // Load inventory
+  // ============================================================
+  // LOAD DATA
+  // ============================================================
   async function loadInventory() {
     try {
       localStorage.removeItem("lagom_inventory");
@@ -95,7 +99,6 @@
     }
   }
 
-  // Load receipts
   async function loadReceipts() {
     try {
       return await window.API.receipt.getAll();
@@ -105,7 +108,6 @@
     }
   }
 
-  // Load exports
   async function loadExports() {
     try {
       return await window.API.export.getAll();
@@ -115,7 +117,9 @@
     }
   }
 
-  // ==================== RESET ALL DATA ====================
+  // ============================================================
+  // RESET ALL DATA
+  // ============================================================
   async function resetAllData() {
     Utils.showLoading(true, "Đang làm mới toàn bộ dữ liệu...");
     try {
@@ -142,7 +146,9 @@
     }
   }
 
-  // Render receipts list
+  // ============================================================
+  // RENDER LISTS
+  // ============================================================
   async function renderReceiptsList() {
     const container = document.getElementById("receiptsList");
     if (!container) return;
@@ -190,7 +196,6 @@
       .join("");
   }
 
-  // Render exports list
   async function renderExportsList() {
     const container = document.getElementById("exportsList");
     if (!container) return;
@@ -238,7 +243,9 @@
       .join("");
   }
 
-  // ==================== SWITCH VIEW ====================
+  // ============================================================
+  // SWITCH VIEW
+  // ============================================================
   async function switchView(viewName) {
     document
       .querySelectorAll(".view")
@@ -282,6 +289,15 @@
           document.getElementById("receiptFilterDate").value = "all";
           renderReceiptsList();
         });
+      document
+        .getElementById("btnClearReceiptFilters")
+        ?.addEventListener("click", () => {
+          document.getElementById("searchReceipt").value = "";
+          document.getElementById("receiptFilterDate").value = "all";
+          document.getElementById("receiptFromDate").value = "";
+          document.getElementById("receiptToDate").value = "";
+          renderReceiptsList();
+        });
     } else if (viewName === "exports") {
       await renderExportsList();
       document
@@ -297,16 +313,26 @@
           document.getElementById("exportFilterDate").value = "all";
           renderExportsList();
         });
+      document
+        .getElementById("btnClearExportFilters")
+        ?.addEventListener("click", () => {
+          document.getElementById("searchExport").value = "";
+          document.getElementById("exportFilterDate").value = "all";
+          document.getElementById("exportFromDate").value = "";
+          document.getElementById("exportToDate").value = "";
+          renderExportsList();
+        });
     } else if (
       viewName === "invoices" &&
       typeof window.loadInvoiceData === "function"
     ) {
-      // ✅ MỚI: Load dữ liệu hóa đơn
       window.loadInvoiceData();
     }
   }
 
-  // ==================== INIT ====================
+  // ============================================================
+  // INIT
+  // ============================================================
   async function init() {
     updateTopbarUser();
 
@@ -356,10 +382,14 @@
     switchView("home");
   }
 
+  // ============================================================
+  // EXPOSE
+  // ============================================================
   window.loadInventoryData = loadInventory;
   window.loadReceiptsData = loadReceipts;
   window.loadExportsData = loadExports;
   window.resetAllData = resetAllData;
+  window.switchView = switchView;
 
   init();
 })();
