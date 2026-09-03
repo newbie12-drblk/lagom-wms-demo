@@ -1,6 +1,7 @@
 /**
  * ==================== INVOICES MODULE ====================
  * Quản lý hóa đơn - Admin nhập, Quản lý duyệt
+ * ✅ CÓ NÚT TẠO HÓA ĐƠN TRÊN MỖI CARD
  */
 
 (function () {
@@ -132,6 +133,83 @@
     renderList(filtered);
   }
 
+  // ==================== TOGGLE INVOICE FORM ====================
+  function toggleInvoiceForm(exportId) {
+    const formContainer = document.getElementById("invoiceForm_" + exportId);
+    if (!formContainer) return;
+
+    // Toggle hiển thị
+    if (
+      formContainer.style.display === "none" ||
+      !formContainer.style.display
+    ) {
+      formContainer.style.display = "block";
+      // Ẩn các form khác
+      document.querySelectorAll(".invoice-form-container").forEach((el) => {
+        if (el.id !== "invoiceForm_" + exportId) {
+          el.style.display = "none";
+        }
+      });
+    } else {
+      formContainer.style.display = "none";
+    }
+  }
+
+  // ==================== SUBMIT INVOICE ====================
+  async function submitInvoiceInline(exportId) {
+    const soHoaDonNhap = document
+      .getElementById("soHoaDonNhap_" + exportId)
+      ?.value.trim();
+    const ngayNhapHD = document.getElementById("ngayNhapHD_" + exportId)?.value;
+    const soHoaDonXuat = document
+      .getElementById("soHoaDonXuat_" + exportId)
+      ?.value.trim();
+    const ngayXuatHD = document.getElementById("ngayXuatHD_" + exportId)?.value;
+
+    if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
+      Utils.showToast("⚠️ Vui lòng nhập đầy đủ 4 trường hóa đơn!", "warning");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu...");
+    try {
+      const token = API.getToken();
+      const response = await fetch(API_BASE_URL + "/invoice/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          exportId: exportId,
+          soHoaDonNhap: soHoaDonNhap,
+          ngayNhapHD: ngayNhapHD,
+          soHoaDonXuat: soHoaDonXuat,
+          ngayXuatHD: ngayXuatHD,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ " + result.message);
+        // Ẩn form
+        const formContainer = document.getElementById(
+          "invoiceForm_" + exportId,
+        );
+        if (formContainer) formContainer.style.display = "none";
+        // Reload dữ liệu
+        loadData();
+      } else {
+        Utils.showToast("❌ " + result.message, "error");
+      }
+    } catch (error) {
+      console.error("Submit invoice error:", error);
+      Utils.showToast("❌ " + (error.message || "Lỗi server"), "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
   // ==================== RENDER LIST ====================
   function renderList(data) {
     if (!container) return;
@@ -157,53 +235,110 @@
         let statusBadge = "";
         let statusClass = "";
         let statusText = "";
+        let statusColor = "";
 
         if (isNoInvoice) {
           statusBadge = `<span class="status-badge status-pending">🔴 Chưa nhập hóa đơn</span>`;
           statusClass = "no-invoice";
+          statusColor = "#f87171";
         } else if (isPending) {
           statusBadge = `<span class="status-badge status-pending">🟡 Chờ duyệt</span>`;
           statusClass = "pending";
+          statusColor = "#fbbf24";
         } else if (isApproved) {
           statusBadge = `<span class="status-badge status-approved">🟢 Đã hoàn thành</span>`;
           statusClass = "approved";
+          statusColor = "#4ade80";
         } else if (isRejected) {
           statusBadge = `<span class="status-badge status-rejected">🔴 Bị từ chối</span>`;
           statusClass = "rejected";
+          statusColor = "#ef4444";
         }
 
-        // Button actions
-        let actionButton = "";
+        // Action buttons
+        let actionButtons = "";
         if (isNoInvoice) {
-          actionButton = `
-            <button class="btn btn-primary btn-sm" onclick="window.openInvoiceModal(${item.id})" style="font-size:12px; padding:4px 14px;">
-              <i class="fas fa-pen"></i> Nhập hóa đơn
+          actionButtons = `
+            <button class="btn btn-primary btn-sm" onclick="window.toggleInvoiceForm(${item.id})" style="font-size:12px; padding:4px 14px;">
+              <i class="fas fa-pen"></i> Tạo hóa đơn
             </button>
           `;
         } else if (isPending) {
-          actionButton = `
+          actionButtons = `
             <span style="color: #fbbf24; font-size: 12px;">
               <i class="fas fa-spinner fa-spin"></i> Đang chờ duyệt
             </span>
           `;
         } else if (isApproved) {
-          actionButton = `
+          actionButtons = `
             <span style="color: #4ade80; font-size: 12px;">
               <i class="fas fa-check-circle"></i> Đã hoàn thành
             </span>
           `;
+        } else if (isRejected) {
+          actionButtons = `
+            <span style="color: #f87171; font-size: 12px;">
+              <i class="fas fa-times-circle"></i> Bị từ chối
+            </span>
+          `;
+        }
+
+        // Form nhập hóa đơn (chỉ hiển thị khi chưa có hóa đơn)
+        let invoiceForm = "";
+        if (isNoInvoice) {
+          invoiceForm = `
+            <div class="invoice-form-container" id="invoiceForm_${item.id}" style="display: none; margin-top: 16px; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                  <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
+                  <input type="text" id="soHoaDonNhap_${item.id}" placeholder="VD: HD001/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #3b82f6; border-radius:6px; color:#e2eaf5; font-size:13px;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
+                  <input type="date" id="ngayNhapHD_${item.id}" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #3b82f6; border-radius:6px; color:#e2eaf5; font-size:13px;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Số hóa đơn xuất *</label>
+                  <input type="text" id="soHoaDonXuat_${item.id}" placeholder="VD: HDX001/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #3b82f6; border-radius:6px; color:#e2eaf5; font-size:13px;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất *</label>
+                  <input type="date" id="ngayXuatHD_${item.id}" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #3b82f6; border-radius:6px; color:#e2eaf5; font-size:13px;">
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #1e2d45;">
+                <button class="btn btn-outline btn-sm" onclick="window.toggleInvoiceForm(${item.id})" style="padding: 6px 16px; font-size: 12px;">
+                  <i class="fas fa-times"></i> Hủy
+                </button>
+                <button class="btn btn-success btn-sm" onclick="window.submitInvoiceInline(${item.id})" style="padding: 6px 16px; font-size: 12px;">
+                  <i class="fas fa-paper-plane"></i> Gửi duyệt
+                </button>
+              </div>
+              <div style="margin-top: 8px; padding: 6px 10px; background: rgba(239, 68, 68, 0.06); border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                <p style="font-size: 11px; color: #f87171; margin: 0;">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <strong>Lưu ý:</strong> Sau khi gửi, Quản lý sẽ duyệt và lưu vào tồn kho. KHÔNG cộng dồn hàng hóa.
+                </p>
+              </div>
+            </div>
+          `;
+        }
+
+        // Hiển thị thông tin hóa đơn nếu đã có
+        let invoiceInfo = "";
+        if (isPending || isApproved || isRejected) {
+          invoiceInfo = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 12px; border: 1px solid #1e2d45;">
+              <div><span style="color: #6b82a0;">Số HĐ nhập:</span> <span style="color: #60a5fa; font-weight: 500;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</span></div>
+              <div><span style="color: #6b82a0;">Ngày HĐ nhập:</span> <span style="color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</span></div>
+              <div><span style="color: #6b82a0;">Số HĐ xuất:</span> <span style="color: #60a5fa; font-weight: 500;">${Utils.escapeHtml(item.soHoaDonXuat || "—")}</span></div>
+              <div><span style="color: #6b82a0;">Ngày HĐ xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(item.ngayXuatHD)}</span></div>
+            </div>
+          `;
         }
 
         return `
-          <div class="receipt-card invoice-card ${statusClass}" data-id="${item.id}" style="border-left: 4px solid ${
-            isNoInvoice
-              ? "#f87171"
-              : isPending
-                ? "#fbbf24"
-                : isApproved
-                  ? "#4ade80"
-                  : "#ef4444"
-          };">
+          <div class="receipt-card invoice-card ${statusClass}" data-id="${item.id}" style="border-left: 4px solid ${statusColor};">
             <div class="receipt-card-header">
               <div class="receipt-card-id">
                 <i class="fas fa-file-export"></i> ${Utils.escapeHtml(item.exportNo || "PX-" + item.id)}
@@ -235,153 +370,16 @@
                 ${isRejected ? "🔴 Bị từ chối" : ""}
               </div>
               <div>
-                ${actionButton}
+                ${actionButtons}
               </div>
             </div>
+            ${invoiceInfo}
+            ${invoiceForm}
           </div>
         `;
       })
       .join("");
   }
-
-  // ==================== OPEN INVOICE MODAL ====================
-  window.openInvoiceModal = function (exportId) {
-    const item = allData.find((d) => d.id === exportId);
-    if (!item) {
-      Utils.showToast("Không tìm thấy phiếu xuất", "error");
-      return;
-    }
-
-    // Tạo modal
-    const overlay = document.createElement("div");
-    overlay.className = "request-modal-overlay";
-    overlay.id = "invoiceModal";
-    overlay.innerHTML = `
-      <div class="request-modal" style="max-width: 700px;">
-        <div class="request-modal-header">
-          <h3 style="color: #60a5fa;">📄 Nhập thông tin hóa đơn</h3>
-          <button class="request-modal-close" onclick="window.closeInvoiceModal()">&times;</button>
-        </div>
-
-        <div style="background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #1e2d45;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px;">
-            <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(item.exportNo)}</span></div>
-            <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(item.exportDate)}</span></div>
-            <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(item.customerName || item.receiverName || "—")}</span></div>
-            <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(item.total)}</span></div>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 13px; font-weight: 600; color: #60a5fa; margin-bottom: 8px;">
-            📄 Thông tin hóa đơn nhập
-          </label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div>
-              <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Số hóa đơn nhập *</label>
-              <input type="text" id="invoiceSoHoaDonNhap" placeholder="VD: HD001/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-            </div>
-            <div>
-              <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Ngày hóa đơn nhập *</label>
-              <input type="date" id="invoiceNgayNhapHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 13px; font-weight: 600; color: #60a5fa; margin-bottom: 8px;">
-            📄 Thông tin hóa đơn xuất
-          </label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div>
-              <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Số hóa đơn xuất *</label>
-              <input type="text" id="invoiceSoHoaDonXuat" placeholder="VD: HDX001/2026" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-            </div>
-            <div>
-              <label style="font-size: 12px; color: #6b82a0; display: block; margin-bottom: 4px;">Ngày hóa đơn xuất *</label>
-              <input type="date" id="invoiceNgayXuatHD" style="width:100%; padding:8px 12px; background:#1a2235; border:1px solid #1e2d45; border-radius:6px; color:#e2eaf5; font-size:13px;">
-            </div>
-          </div>
-        </div>
-
-        <div style="padding: 8px 12px; background: rgba(239, 68, 68, 0.08); border-radius: 6px; margin-bottom: 16px; border: 1px solid rgba(239, 68, 68, 0.15);">
-          <p style="font-size: 12px; color: #f87171; margin: 0;">
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>Lưu ý:</strong> Sau khi gửi, Quản lý sẽ duyệt và lưu vào tồn kho. KHÔNG cộng dồn hàng hóa.
-          </p>
-        </div>
-
-        <div class="request-actions" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #1e2d45;">
-          <button class="btn btn-outline" onclick="window.closeInvoiceModal()">Hủy</button>
-          <button class="btn btn-success" onclick="window.submitInvoice(${exportId})">
-            <i class="fas fa-paper-plane"></i> Gửi duyệt
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    document.body.style.overflow = "hidden";
-  };
-
-  // ==================== CLOSE INVOICE MODAL ====================
-  window.closeInvoiceModal = function () {
-    const modal = document.getElementById("invoiceModal");
-    if (modal) {
-      modal.remove();
-      document.body.style.overflow = "";
-    }
-  };
-
-  // ==================== SUBMIT INVOICE ====================
-  window.submitInvoice = async function (exportId) {
-    const soHoaDonNhap = document
-      .getElementById("invoiceSoHoaDonNhap")
-      ?.value.trim();
-    const ngayNhapHD = document.getElementById("invoiceNgayNhapHD")?.value;
-    const soHoaDonXuat = document
-      .getElementById("invoiceSoHoaDonXuat")
-      ?.value.trim();
-    const ngayXuatHD = document.getElementById("invoiceNgayXuatHD")?.value;
-
-    if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
-      Utils.showToast("⚠️ Vui lòng nhập đầy đủ 4 trường hóa đơn!", "warning");
-      return;
-    }
-
-    Utils.showLoading(true, "Đang gửi yêu cầu...");
-    try {
-      const token = API.getToken();
-      const response = await fetch(API_BASE_URL + "/invoice/requests", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          exportId: exportId,
-          soHoaDonNhap: soHoaDonNhap,
-          ngayNhapHD: ngayNhapHD,
-          soHoaDonXuat: soHoaDonXuat,
-          ngayXuatHD: ngayXuatHD,
-        }),
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        Utils.showToast("✅ " + result.message);
-        closeInvoiceModal();
-        loadData();
-      } else {
-        Utils.showToast("❌ " + result.message, "error");
-      }
-    } catch (error) {
-      console.error("Submit invoice error:", error);
-      Utils.showToast("❌ " + (error.message || "Lỗi server"), "error");
-    } finally {
-      Utils.showLoading(false);
-    }
-  };
 
   // ==================== BIND EVENTS ====================
   function bindEvents() {
@@ -410,16 +408,16 @@
     }
   }
 
+  // ==================== EXPOSE TO WINDOW ====================
+  window.loadInvoiceData = loadData;
+  window.toggleInvoiceForm = toggleInvoiceForm;
+  window.submitInvoiceInline = submitInvoiceInline;
+
   // ==================== INIT ====================
   function init() {
     loadData();
     bindEvents();
   }
-
-  window.loadInvoiceData = loadData;
-  window.openInvoiceModal = openInvoiceModal;
-  window.closeInvoiceModal = closeInvoiceModal;
-  window.submitInvoice = submitInvoice;
 
   init();
 })();
