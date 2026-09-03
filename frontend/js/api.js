@@ -218,20 +218,21 @@ const API = {
       }),
   },
 
+  // ==================== INVOICE API ====================
   invoice: {
-    // ✅ MỚI: Lấy danh sách phiếu xuất chưa có hóa đơn
+    // Lấy danh sách phiếu xuất chưa có hóa đơn
     getExportsWithoutInvoice: async () => {
       const data = await apiCall("/invoice/exports-without-invoice");
       return data.data || [];
     },
-    // ✅ MỚI: Tạo yêu cầu hóa đơn
+    // Tạo yêu cầu hóa đơn
     createRequest: async (invoiceData) => {
       return await apiCall("/invoice/requests", {
         method: "POST",
         body: JSON.stringify(invoiceData),
       });
     },
-    // ✅ MỚI: Lấy danh sách yêu cầu hóa đơn
+    // Lấy danh sách yêu cầu hóa đơn
     getRequests: async (status = null) => {
       const url = status
         ? `/invoice/requests?status=${status}`
@@ -239,25 +240,25 @@ const API = {
       const data = await apiCall(url);
       return data.data || [];
     },
-    // ✅ MỚI: Lấy yêu cầu hóa đơn theo ID
+    // Lấy yêu cầu hóa đơn theo ID
     getRequestById: async (id) => {
       const data = await apiCall(`/invoice/requests/${id}`);
       return data.data;
     },
-    // ✅ MỚI: Duyệt hóa đơn
+    // Duyệt hóa đơn (Quản lý)
     approve: async (id) => {
       return await apiCall(`/invoice/requests/${id}/approve`, {
         method: "PUT",
       });
     },
-    // ✅ MỚI: Từ chối hóa đơn
+    // Từ chối hóa đơn (Quản lý)
     reject: async (id, reason) => {
       return await apiCall(`/invoice/requests/${id}/reject`, {
         method: "PUT",
         body: JSON.stringify({ reason }),
       });
     },
-    // ✅ MỚI: Xóa yêu cầu hóa đơn
+    // Xóa yêu cầu hóa đơn
     delete: async (id) => {
       return await apiCall(`/invoice/requests/${id}`, {
         method: "DELETE",

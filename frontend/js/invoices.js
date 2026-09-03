@@ -7,6 +7,7 @@
   "use strict";
 
   let allData = [];
+  let currentUser = null;
 
   // DOM Elements
   const container = document.getElementById("invoicesList");
@@ -22,27 +23,72 @@
   const approvedEl = document.getElementById("invoiceApproved");
   const rejectedEl = document.getElementById("invoiceRejected");
 
+  // ==================== GET CURRENT USER ====================
+  function getCurrentUser() {
+    if (currentUser) return currentUser;
+    const session = localStorage.getItem("lagom_session");
+    if (session) {
+      try {
+        currentUser = JSON.parse(session);
+        return currentUser;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // ==================== CHECK PERMISSION ====================
+  function isAdmin() {
+    const user = getCurrentUser();
+    return user && user.roleId === "admin";
+  }
+
+  function isManager() {
+    const user = getCurrentUser();
+    return user && user.roleId === "quan_ly";
+  }
+
   // ==================== LOAD DATA ====================
   async function loadData() {
     Utils.showLoading(true, "Đang tải...");
     try {
       const token = API.getToken();
+      console.log("🔑 Token:", token ? "Có token" : "Không có token");
 
       // Lấy phiếu xuất chưa có hóa đơn
+      console.log("📡 Gọi API: /invoice/exports-without-invoice");
       const noInvoiceRes = await fetch(
         API_BASE_URL + "/invoice/exports-without-invoice",
         { headers: { Authorization: "Bearer " + token } },
       );
       const noInvoiceResult = await noInvoiceRes.json();
+      console.log("📦 Kết quả noInvoice:", noInvoiceResult);
 
       // Lấy yêu cầu hóa đơn
+      console.log("📡 Gọi API: /invoice/requests");
       const requestsRes = await fetch(API_BASE_URL + "/invoice/requests", {
         headers: { Authorization: "Bearer " + token },
       });
       const requestsResult = await requestsRes.json();
+      console.log("📦 Kết quả requests:", requestsResult);
 
-      const noInvoice = noInvoiceResult.success ? noInvoiceResult.data : [];
-      const requests = requestsResult.success ? requestsResult.data : [];
+      let noInvoice = [];
+      let requests = [];
+
+      if (noInvoiceResult.success && noInvoiceResult.data) {
+        noInvoice = noInvoiceResult.data;
+        console.log("✅ Đã lấy được noInvoice:", noInvoice.length, "phiếu");
+      } else {
+        console.warn("⚠️ API noInvoice trả về lỗi hoặc rỗng");
+      }
+
+      if (requestsResult.success && requestsResult.data) {
+        requests = requestsResult.data;
+        console.log("✅ Đã lấy được requests:", requests.length, "phiếu");
+      } else {
+        console.warn("⚠️ API requests trả về lỗi hoặc rỗng");
+      }
 
       allData = [];
 
@@ -54,6 +100,8 @@
         allData.push({ ...item, invoiceStatus: item.status });
       });
 
+      console.log("📊 Tổng dữ liệu:", allData.length, "phiếu");
+
       // Sắp xếp: chưa nhập → chờ duyệt → hoàn thành → từ chối
       allData.sort((a, b) => {
         const order = { "no-invoice": 0, pending: 1, approved: 2, rejected: 3 };
@@ -63,8 +111,8 @@
       updateStats();
       render();
     } catch (error) {
-      console.error("Load error:", error);
-      Utils.showToast("Lỗi tải dữ liệu", "error");
+      console.error("❌ Load error:", error);
+      Utils.showToast("Lỗi tải dữ liệu: " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -76,6 +124,13 @@
     const pending = allData.filter((d) => d.invoiceStatus === "pending");
     const approved = allData.filter((d) => d.invoiceStatus === "approved");
     const rejected = allData.filter((d) => d.invoiceStatus === "rejected");
+
+    console.log("📊 Stats:", {
+      noInvoice: noInvoice.length,
+      pending: pending.length,
+      approved: approved.length,
+      rejected: rejected.length,
+    });
 
     if (noInvoiceEl) noInvoiceEl.textContent = noInvoice.length;
     if (pendingEl) pendingEl.textContent = pending.length;
@@ -115,12 +170,24 @@
       ?.value.trim();
     const ngayXuatHD = document.getElementById("ngayXuatHD_" + exportId)?.value;
 
+    // Kiểm tra nhập đủ 4 trường
     if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
-      Utils.showToast("⚠️ Nhập đủ 4 trường!", "warning");
+      Utils.showToast("⚠️ Vui lòng nhập đủ 4 trường!", "warning");
       return;
     }
 
-    Utils.showLoading(true, "Đang gửi...");
+    // Kiểm tra định dạng ngày
+    if (ngayNhapHD && !/^\d{4}-\d{2}-\d{2}$/.test(ngayNhapHD)) {
+      Utils.showToast("⚠️ Ngày hóa đơn nhập không hợp lệ!", "warning");
+      return;
+    }
+
+    if (ngayXuatHD && !/^\d{4}-\d{2}-\d{2}$/.test(ngayXuatHD)) {
+      Utils.showToast("⚠️ Ngày hóa đơn xuất không hợp lệ!", "warning");
+      return;
+    }
+
+    Utils.showLoading(true, "Đang gửi yêu cầu...");
     try {
       const token = API.getToken();
       const res = await fetch(API_BASE_URL + "/invoice/requests", {
@@ -141,14 +208,20 @@
 
       if (result.success) {
         Utils.showToast("✅ " + result.message);
-        document.getElementById("invoiceForm_" + exportId).style.display =
-          "none";
-        loadData();
+        // Ẩn form
+        const form = document.getElementById("invoiceForm_" + exportId);
+        if (form) form.style.display = "none";
+        // Tải lại dữ liệu
+        await loadData();
       } else {
-        Utils.showToast("❌ " + result.message, "error");
+        Utils.showToast(
+          "❌ " + (result.message || "Không thể gửi yêu cầu"),
+          "error",
+        );
       }
     } catch (error) {
-      Utils.showToast("❌ Lỗi server", "error");
+      console.error("❌ Submit invoice error:", error);
+      Utils.showToast("❌ Lỗi server: " + error.message, "error");
     } finally {
       Utils.showLoading(false);
     }
@@ -176,12 +249,20 @@
       );
     }
 
+    console.log("📊 Render filtered:", filtered.length, "phiếu");
+
     if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-receipts">
-          <i class="fas fa-file-invoice"></i>
+          <i class="fas fa-file-invoice" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
           <p>Không có dữ liệu hóa đơn</p>
           <small>Phiếu xuất đã duyệt sẽ hiển thị tại đây</small>
+          <div style="margin-top:16px;padding:12px 20px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px solid rgba(59,130,246,0.2);">
+            <p style="color:#6b82a0;font-size:12px;">
+              <i class="fas fa-info-circle" style="color:#60a5fa;"></i>
+              Để hiển thị nút "Tạo hóa đơn", cần có phiếu xuất đã duyệt (status = 'approved')
+            </p>
+          </div>
         </div>
       `;
       return;
@@ -216,14 +297,16 @@
           badgeClass = "status-rejected";
         }
 
-        // Nút hành động
+        // Nút hành động - Chỉ Admin mới được tạo hóa đơn
         let actions = "";
-        if (isNo) {
+        if (isNo && isAdmin()) {
           actions = `
           <button class="btn-create-invoice" onclick="window.toggleInvoiceForm(${item.id})">
             <i class="fas fa-plus-circle"></i> Tạo hóa đơn
           </button>
         `;
+        } else if (isNo && !isAdmin()) {
+          actions = `<span style="color:#6b82a0;font-size:12px;">Chỉ Admin mới được tạo</span>`;
         } else if (isPending) {
           actions = `<span style="color:#fbbf24;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Đang chờ</span>`;
         } else if (isApproved) {
@@ -232,9 +315,9 @@
           actions = `<span style="color:#f87171;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
         }
 
-        // Form nhập 4 trường (chỉ hiện khi chưa có)
+        // Form nhập 4 trường (chỉ hiện khi chưa có và là Admin)
         let formHtml = "";
-        if (isNo) {
+        if (isNo && isAdmin()) {
           formHtml = `
           <div class="invoice-form-container" id="invoiceForm_${item.id}" style="display:none;">
             <div class="invoice-form-grid">
@@ -275,10 +358,18 @@
         if (isPending || isApproved || isRejected) {
           infoHtml = `
           <div class="invoice-info">
-            <div><span class="label">Số HĐ nhập:</span> <span class="value highlight">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</span></div>
-            <div><span class="label">Ngày HĐ nhập:</span> <span class="value">${Utils.formatDate(item.ngayNhapHD)}</span></div>
-            <div><span class="label">Số HĐ xuất:</span> <span class="value highlight">${Utils.escapeHtml(item.soHoaDonXuat || "—")}</span></div>
-            <div><span class="label">Ngày HĐ xuất:</span> <span class="value">${Utils.formatDate(item.ngayXuatHD)}</span></div>
+            <div><span class="label">Số HĐ nhập:</span> <span class="value highlight">${Utils.escapeHtml(
+              item.soHoaDonNhap || "—",
+            )}</span></div>
+            <div><span class="label">Ngày HĐ nhập:</span> <span class="value">${Utils.formatDate(
+              item.ngayNhapHD,
+            )}</span></div>
+            <div><span class="label">Số HĐ xuất:</span> <span class="value highlight">${Utils.escapeHtml(
+              item.soHoaDonXuat || "—",
+            )}</span></div>
+            <div><span class="label">Ngày HĐ xuất:</span> <span class="value">${Utils.formatDate(
+              item.ngayXuatHD,
+            )}</span></div>
           </div>
         `;
         }
@@ -287,21 +378,29 @@
         <div class="receipt-card invoice-card" style="border-left:4px solid ${color};">
           <div class="receipt-card-header">
             <div class="receipt-card-id">
-              <i class="fas fa-file-export"></i> ${Utils.escapeHtml(item.exportNo || "PX-" + item.id)}
+              <i class="fas fa-file-export"></i> ${Utils.escapeHtml(
+                item.exportNo || "PX-" + item.id,
+              )}
             </div>
             <div class="receipt-card-date">
-              <i class="far fa-calendar-alt"></i> ${Utils.formatDate(item.exportDate || item.createdAt)}
+              <i class="far fa-calendar-alt"></i> ${Utils.formatDate(
+                item.exportDate || item.createdAt,
+              )}
             </div>
             <span class="status-badge ${badgeClass}">${badgeText}</span>
           </div>
           <div class="receipt-card-body">
             <div class="receipt-card-info">
               <div class="label">Khách hàng</div>
-              <div class="value">${Utils.escapeHtml(item.customerName || item.receiverName || "—")}</div>
+              <div class="value">${Utils.escapeHtml(
+                item.customerName || item.receiverName || "—",
+              )}</div>
             </div>
             <div class="receipt-card-info">
               <div class="label">Người nhận</div>
-              <div class="value">${Utils.escapeHtml(item.receiverName || "—")}</div>
+              <div class="value">${Utils.escapeHtml(
+                item.receiverName || "—",
+              )}</div>
             </div>
             <div class="receipt-card-total">
               <div class="label">Tổng tiền</div>
@@ -352,12 +451,20 @@
   window.loadInvoiceData = loadData;
   window.toggleInvoiceForm = toggleForm;
   window.submitInvoice = submitInvoice;
+  window.isAdmin = isAdmin;
+  window.isManager = isManager;
 
   // ==================== INIT ====================
   function init() {
+    console.log("🚀 Invoices module initialized");
     loadData();
     bindEvents();
   }
 
-  init();
+  // Đợi DOM load xong rồi mới init
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
