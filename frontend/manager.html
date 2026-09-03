@@ -20,7 +20,9 @@
     <div class="orb orb-3"></div>
 
     <div class="app-shell">
+      <!-- ========================================================== -->
       <!-- SIDEBAR -->
+      <!-- ========================================================== -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
           <div class="logo-mark">
@@ -60,6 +62,12 @@
           Xóa chờ duyệt
           <span class="nav-badge" id="badgeDeletions">0</span>
         </a>
+        <a href="#" class="nav-item" data-view="pending-invoices">
+          <!-- ✅ MỚI -->
+          <div class="nav-icon">📄</div>
+          Hóa đơn chờ duyệt
+          <span class="nav-badge" id="badgeInvoices">0</span>
+        </a>
 
         <div class="nav-label">Hệ thống</div>
         <a href="#" class="nav-item" data-view="users">
@@ -72,8 +80,11 @@
         </div>
       </aside>
 
-      <!-- CONTENT -->
+      <!-- ========================================================== -->
+      <!-- CONTENT AREA -->
+      <!-- ========================================================== -->
       <div class="content-area">
+        <!-- TOPBAR -->
         <div class="topbar">
           <div class="topbar-left">
             <button
@@ -93,8 +104,11 @@
           </div>
         </div>
 
+        <!-- VIEW CONTAINER -->
         <div class="view-container">
+          <!-- ====================================================== -->
           <!-- VIEW: DASHBOARD -->
+          <!-- ====================================================== -->
           <div class="view active" id="view-dashboard">
             <div class="scroll-area">
               <div class="page-header">
@@ -169,6 +183,33 @@
                   <div class="stat-value" id="statPendingDeletions">0</div>
                   <div class="stat-label">Xóa chờ duyệt</div>
                 </div>
+                <div
+                  class="stat-card"
+                  style="border-color: rgba(139, 92, 246, 0.3)"
+                  onclick="window.switchView('pending-invoices')"
+                >
+                  <!-- ✅ MỚI -->
+                  <div class="stat-top">
+                    <div
+                      class="stat-icon-wrap"
+                      style="
+                        background: rgba(139, 92, 246, 0.15);
+                        border: 1px solid rgba(139, 92, 246, 0.2);
+                      "
+                    >
+                      📄
+                    </div>
+                    <div class="stat-trend trend-warn">Hóa đơn</div>
+                  </div>
+                  <div
+                    class="stat-value"
+                    id="statPendingInvoices"
+                    style="color: #a78bfa"
+                  >
+                    0
+                  </div>
+                  <div class="stat-label">Hóa đơn chờ duyệt</div>
+                </div>
               </div>
 
               <div class="panel" style="margin-top: 20px">
@@ -187,7 +228,9 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
           <!-- VIEW: SẢN PHẨM CHỜ DUYỆT -->
+          <!-- ====================================================== -->
           <div class="view" id="view-pending-products">
             <div class="scroll-area">
               <div class="page-header">
@@ -203,7 +246,9 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
           <!-- VIEW: NHẬP HÀNG CHỜ DUYỆT -->
+          <!-- ====================================================== -->
           <div class="view" id="view-pending-receipts">
             <div class="scroll-area">
               <div class="page-header">
@@ -218,7 +263,9 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
           <!-- VIEW: XUẤT KHO CHỜ DUYỆT -->
+          <!-- ====================================================== -->
           <div class="view" id="view-pending-exports">
             <div class="scroll-area">
               <div class="page-header">
@@ -233,7 +280,9 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
           <!-- VIEW: CHỈNH SỬA CHỜ DUYỆT -->
+          <!-- ====================================================== -->
           <div class="view" id="view-pending-edits">
             <div class="scroll-area">
               <div class="page-header">
@@ -248,7 +297,9 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
           <!-- VIEW: XÓA CHỜ DUYỆT -->
+          <!-- ====================================================== -->
           <div class="view" id="view-pending-deletions">
             <div class="scroll-area">
               <div class="page-header">
@@ -263,7 +314,26 @@
             </div>
           </div>
 
+          <!-- ====================================================== -->
+          <!-- VIEW: HÓA ĐƠN CHỜ DUYỆT (MỚI) -->
+          <!-- ====================================================== -->
+          <div class="view" id="view-pending-invoices">
+            <div class="scroll-area">
+              <div class="page-header">
+                <div>
+                  <div class="page-title-tag">PENDING INVOICES</div>
+                  <div class="page-sub">
+                    Quản lý duyệt thông tin hóa đơn do Admin nhập
+                  </div>
+                </div>
+              </div>
+              <div id="pendingInvoicesList" class="approval-list"></div>
+            </div>
+          </div>
+
+          <!-- ====================================================== -->
           <!-- VIEW: QUẢN LÝ NGƯỜI DÙNG -->
+          <!-- ====================================================== -->
           <div class="view" id="view-users">
             <div class="scroll-area">
               <div class="page-header">
@@ -316,10 +386,15 @@
             </div>
           </div>
         </div>
+        <!-- end view-container -->
       </div>
+      <!-- end content-area -->
     </div>
+    <!-- end app-shell -->
 
-    <!-- ========== MODAL THÊM/SỬA USER ========== -->
+    <!-- ========================================================== -->
+    <!-- MODAL: THÊM/SỬA USER -->
+    <!-- ========================================================== -->
     <div id="userModal" class="modal" style="display: none">
       <div class="modal-content modal-lg">
         <div class="modal-header">
@@ -567,6 +642,9 @@
       </div>
     </div>
 
+    <!-- ========================================================== -->
+    <!-- SCRIPTS -->
+    <!-- ========================================================== -->
     <script src="js/utils.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>

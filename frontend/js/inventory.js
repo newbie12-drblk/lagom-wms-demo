@@ -2,7 +2,7 @@
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
- * FIX: Đúng 21 cột trong bảng + 11 trường khi thêm sản phẩm
+ * ✅ ĐÃ XÓA 4 TRƯỜNG HÓA ĐƠN (chỉ giữ 7 trường)
  */
 
 (function () {
@@ -12,7 +12,7 @@
   const rowsPerPage = 20;
   let filteredInventoryData = [];
   let inventoryData = [];
-  let requestType = "add"; // 'add', 'edit', 'delete'
+  let requestType = "add";
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -159,7 +159,7 @@
             <!-- CỘT 10: SỐ HĐ (Số hợp đồng nhập) -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongNhap || "—")}</td>
             
-            <!-- CỘT 11: SỐ HĐƠN NHẬP (Số hóa đơn nhập) -->
+            <!-- CỘT 11: SỐ HĐƠN NHẬP -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
             
             <!-- CỘT 12: NGÀY NHẬP HĐ -->
@@ -180,7 +180,7 @@
             <!-- CỘT 17: SỐ HĐ XUẤT (Số hợp đồng xuất) -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongXuat || "—")}</td>
             
-            <!-- CỘT 18: SỐ HĐƠN XUẤT (Số hóa đơn xuất) -->
+            <!-- CỘT 18: SỐ HĐƠN XUẤT -->
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
             
             <!-- CỘT 19: NGÀY XUẤT -->
@@ -459,19 +459,19 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG - THÊM SẢN PHẨM 11 TRƯỜNG (KHÔNG CỘT XÓA) ====================
+  // ==================== RENDER NỘI DUNG - THÊM SẢN PHẨM (CHỈ 7 TRƯỜNG) ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 11 TRƯỜNG (KHÔNG CÓ CỘT XÓA) ==========
+      // ========== THÊM SẢN PHẨM - CHỈ 7 TRƯỜNG ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
         </p>
         <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1300px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 900px;">
             <thead>
               <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 45px; white-space: nowrap;">STT</th>
@@ -482,11 +482,6 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 140px;">HÃNG/NƯỚC SX</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">PHÂN LOẠI MÁY</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 110px;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐƠN NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 120px;">NGÀY HĐ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐƠN XUẤT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 120px;">NGÀY HĐ XUẤT</th>
               </tr>
             </thead>
             <tbody id="addProductBody">
@@ -499,11 +494,6 @@
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayNhapHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonXuat" placeholder="Số HĐơn xuất" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayXuatHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
               </tr>
             </tbody>
           </table>
@@ -514,7 +504,7 @@
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
           <p style="font-size: 12px; color: #6b82a0;">
             <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Nhập đầy đủ 11 trường. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
+            <strong>Lưu ý:</strong> Nhập đầy đủ 7 trường. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
           </p>
         </div>
       `;
@@ -533,21 +523,21 @@
       let tableRows = data
         .map(
           (item, idx) => `
-        <tr style="border-bottom: 1px solid #1e2d45;">
-          <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
-            <input type="checkbox" class="edit-checkbox" data-id="${item.id}" onchange="window.onEditSelect(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
-          </td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
-        </tr>
-      `,
+          <tr style="border-bottom: 1px solid #1e2d45;">
+            <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+              <input type="checkbox" class="edit-checkbox" data-id="${item.id}" onchange="window.onEditSelect(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
+            </td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
+          </tr>
+        `,
         )
         .join("");
 
@@ -612,24 +602,24 @@
       let tableRows = data
         .map(
           (item, idx) => `
-        <tr style="border-bottom: 1px solid #1e2d45;">
-          <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
-            <input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
-          </td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${item.soLuongNhap || 0}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${escapeHtml(item.soLot || "")}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${formatDate(item.ngayHetHan)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: ${(item.tonKho || 0) === 0 ? "#f87171" : "#4ade80"}; font-weight: 600;">${item.tonKho || 0}</td>
-        </tr>
-      `,
+          <tr style="border-bottom: 1px solid #1e2d45;">
+            <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+              <input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
+            </td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${item.soLuongNhap || 0}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${escapeHtml(item.soLot || "")}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${formatDate(item.ngayHetHan)}</td>
+            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: ${(item.tonKho || 0) === 0 ? "#f87171" : "#4ade80"}; font-weight: 600;">${item.tonKho || 0}</td>
+          </tr>
+        `,
         )
         .join("");
 
@@ -713,11 +703,6 @@
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDongNhap" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonNhap" placeholder="Số HĐơn nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayNhapHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHoaDonXuat" placeholder="Số HĐơn xuất" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="date" class="add-ngayXuatHD" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
     `;
     tbody.appendChild(tr);
   };
@@ -730,7 +715,7 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (11 TRƯỜNG) ====================
+  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (CHỈ 7 TRƯỜNG) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -755,11 +740,7 @@
         giaNhap: parseFloat(
           row.querySelector(".add-giaNhap")?.value?.replace(/[^0-9]/g, "") || 0,
         ),
-        soHopDongNhap: row.querySelector(".add-soHopDongNhap")?.value || "",
-        soHoaDonNhap: row.querySelector(".add-soHoaDonNhap")?.value || "",
-        ngayNhapHD: row.querySelector(".add-ngayNhapHD")?.value || null,
-        soHoaDonXuat: row.querySelector(".add-soHoaDonXuat")?.value || "",
-        ngayXuatHD: row.querySelector(".add-ngayXuatHD")?.value || null,
+        // ❌ ĐÃ XÓA 4 TRƯỜNG HÓA ĐƠN
       });
     });
 
@@ -968,14 +949,15 @@
     if (exportBtn) exportBtn.addEventListener("click", exportInventoryToExcel);
     if (refreshBtn) refreshBtn.addEventListener("click", refreshInventoryData);
 
-    if (prevPageBtn)
+    if (prevPageBtn) {
       prevPageBtn.addEventListener("click", () => {
         if (currentPage > 1) {
           currentPage--;
           renderInventoryTable(filteredInventoryData);
         }
       });
-    if (nextPageBtn)
+    }
+    if (nextPageBtn) {
       nextPageBtn.addEventListener("click", () => {
         const total = Math.ceil(filteredInventoryData.length / rowsPerPage);
         if (currentPage < total) {
@@ -983,6 +965,7 @@
           renderInventoryTable(filteredInventoryData);
         }
       });
+    }
   }
 
   // Expose functions

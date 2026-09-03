@@ -66,11 +66,12 @@ const Export = {
 
     const total = parseFloat(data.total) || 0;
 
+    // ✅ ĐÃ THÊM hasInvoice = FALSE
     const [result] = await db.execute(
       `INSERT INTO exports 
         (exportNo, exportDate, receiverName, customerName, customerAddress, 
-         customerTax, customerContract, exportReason, total, status, createdBy) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         customerTax, customerContract, exportReason, total, status, hasInvoice, createdBy) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         exportNo,
         data.exportDate || new Date().toISOString().split("T")[0],
@@ -82,6 +83,7 @@ const Export = {
         data.exportReason || "Sử dụng nội bộ",
         total,
         "pending",
+        false, // hasInvoice = FALSE
         createdBy,
       ],
     );
@@ -89,7 +91,6 @@ const Export = {
 
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
-        // ✅ ĐÃ XÓA: giaNhap, soHopDongNhap, soHoaDonXuat
         await db.execute(
           `INSERT INTO export_items 
             (exportId, tenThuongMai, maHang, quyCach, hangSX, dvt, 

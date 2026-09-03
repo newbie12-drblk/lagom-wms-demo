@@ -19,7 +19,6 @@
   // SIDEBAR MOBILE - FULL MÀN HÌNH
   // ============================================================
 
-  // Hiển thị sidebar (quay lại menu chính)
   window.showSidebar = function () {
     var sidebar = document.getElementById("sidebar");
     var backBtn = document.getElementById("btnBackMobile");
@@ -33,7 +32,6 @@
     document.body.style.overflow = "hidden";
   };
 
-  // Ẩn sidebar (khi đã chọn trang)
   window.hideSidebar = function () {
     var sidebar = document.getElementById("sidebar");
     var backBtn = document.getElementById("btnBackMobile");
@@ -48,7 +46,6 @@
     document.body.style.overflow = "";
   };
 
-  // Kiểm tra mobile
   function isMobile() {
     return window.innerWidth <= 768;
   }
@@ -173,7 +170,6 @@
     }
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    // ✅ TÍNH TỔNG ĐÚNG
     const total = filtered.length;
     let totalValue = 0;
     for (const r of filtered) {
@@ -222,7 +218,6 @@
     }
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    // ✅ TÍNH TỔNG ĐÚNG
     const total = filtered.length;
     let totalValue = 0;
     for (const r of filtered) {
@@ -243,7 +238,7 @@
       .join("");
   }
 
-  // Switch view
+  // ==================== SWITCH VIEW ====================
   async function switchView(viewName) {
     document
       .querySelectorAll(".view")
@@ -255,7 +250,6 @@
       else item.classList.remove("active");
     });
 
-    // TRÊN MOBILE: ẨN SIDEBAR, HIỆN NÚT BACK
     if (isMobile()) {
       window.hideSidebar();
     }
@@ -303,10 +297,16 @@
           document.getElementById("exportFilterDate").value = "all";
           renderExportsList();
         });
+    } else if (
+      viewName === "invoices" &&
+      typeof window.loadInvoiceData === "function"
+    ) {
+      // ✅ MỚI: Load dữ liệu hóa đơn
+      window.loadInvoiceData();
     }
   }
 
-  // Init
+  // ==================== INIT ====================
   async function init() {
     updateTopbarUser();
 
@@ -349,7 +349,6 @@
       isInitialized = true;
     }
 
-    // TRÊN MOBILE: HIỂN THỊ SIDEBAR FULL MÀN HÌNH BAN ĐẦU
     if (isMobile()) {
       window.showSidebar();
     }

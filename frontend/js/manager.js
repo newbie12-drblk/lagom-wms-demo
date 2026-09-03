@@ -2,6 +2,7 @@
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
  * MOBILE: Sidebar full màn hình + Nút Back
+ * ✅ ĐÃ THÊM: Hóa đơn chờ duyệt
  */
 
 (function () {
@@ -29,6 +30,7 @@
   window._pendingExports = [];
   window._pendingEdits = [];
   window._pendingDeletions = [];
+  window._pendingInvoices = []; // ✅ MỚI
 
   // ============================================================
   // SIDEBAR MOBILE
@@ -129,6 +131,9 @@
       loadPendingEdits();
     } else if (viewName === "pending-deletions") {
       loadPendingDeletions();
+    } else if (viewName === "pending-invoices") {
+      // ✅ MỚI
+      loadPendingInvoices();
     } else if (viewName === "users") {
       loadUsers();
     }
@@ -154,6 +159,7 @@
           { id: "statPendingExports", value: data.pendingExports || 0 },
           { id: "statPendingEdits", value: data.pendingEdits || 0 },
           { id: "statPendingDeletions", value: data.pendingDeletions || 0 },
+          { id: "statPendingInvoices", value: data.pendingInvoices || 0 }, // ✅ MỚI
         ];
 
         for (var s of stats) {
@@ -167,6 +173,7 @@
           { id: "badgeExports", value: data.pendingExports || 0 },
           { id: "badgeEdits", value: data.pendingEdits || 0 },
           { id: "badgeDeletions", value: data.pendingDeletions || 0 },
+          { id: "badgeInvoices", value: data.pendingInvoices || 0 }, // ✅ MỚI
         ];
 
         for (var b of badges) {
@@ -554,7 +561,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL - HIỂN THỊ 11 TRƯỜNG
+  // VIEW APPROVAL DETAIL - 7 TRƯỜNG (ĐÃ XÓA 4 TRƯỜNG HÓA ĐƠN)
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -597,15 +604,6 @@
         <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
         <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
         <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border-top: 1px solid #1e2d45; padding-top: 12px;">
-        <div style="grid-column: 1 / -1; color: #fbbf24; font-weight: 600; font-size: 13px; margin-bottom: 4px;">
-          <i class="fas fa-file-invoice"></i> Thông tin hóa đơn
-        </div>
-        <div><span style="color: #6b82a0;">Số HĐơn nhập:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày HĐ nhập:</span> <span style="color: #e2eaf5;">${formatDateDisplay(product.ngayNhapHD)}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐơn xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày HĐ xuất:</span> <span style="color: #e2eaf5;">${formatDateDisplay(product.ngayXuatHD)}</span></div>
       </div>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(requesterName)}</span></div>
@@ -707,7 +705,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING RECEIPTS - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // LOAD PENDING RECEIPTS
   // ============================================================
   async function loadPendingReceipts() {
     var container = document.getElementById("pendingReceiptsList");
@@ -783,7 +781,7 @@
   }
 
   // ============================================================
-  // VIEW RECEIPT DETAIL - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // VIEW RECEIPT DETAIL
   // ============================================================
   window.viewReceiptDetail = function (id) {
     var container = document.getElementById("pendingReceiptsList");
@@ -808,7 +806,6 @@
 
     var html = renderReceiptDetail(receipt);
 
-    // ✅ ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
     html += `
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectReceipt(${receipt.id})" style="padding: 8px 20px; font-size: 13px;">
@@ -832,9 +829,6 @@
     `;
   };
 
-  // ============================================================
-  // APPROVE RECEIPT - KHÔNG CẦN NHẬP HÓA ĐƠN
-  // ============================================================
   window.approveReceipt = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
 
@@ -903,7 +897,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING EXPORTS - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // LOAD PENDING EXPORTS
   // ============================================================
   async function loadPendingExports() {
     var container = document.getElementById("pendingExportsList");
@@ -979,7 +973,7 @@
   }
 
   // ============================================================
-  // VIEW EXPORT DETAIL - ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
+  // VIEW EXPORT DETAIL
   // ============================================================
   window.viewExportDetail = function (id) {
     var container = document.getElementById("pendingExportsList");
@@ -1001,7 +995,6 @@
 
     var html = renderExportDetail(exportItem);
 
-    // ✅ ĐÃ XÓA PHẦN THÔNG TIN HÓA ĐƠN
     html += `
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectExport(${exportItem.id})" style="padding: 8px 20px; font-size: 13px;">
@@ -1608,6 +1601,243 @@
   };
 
   // ============================================================
+  // LOAD PENDING INVOICES (MỚI)
+  // ============================================================
+  async function loadPendingInvoices() {
+    var container = document.getElementById("pendingInvoicesList");
+    if (!container) return;
+
+    Utils.showLoading(true, "Đang tải hóa đơn chờ duyệt...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/invoice/requests/pending", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+
+      if (result.success) {
+        var requests = result.data || [];
+        window._pendingInvoices = requests;
+
+        var badge = document.getElementById("badgeInvoices");
+        if (badge) badge.textContent = requests.length;
+
+        // Cập nhật stat trên dashboard
+        var statEl = document.getElementById("statPendingInvoices");
+        if (statEl) statEl.textContent = requests.length;
+
+        if (requests.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>Không có hóa đơn nào chờ duyệt</p>
+            </div>
+          `;
+          Utils.showLoading(false);
+          return;
+        }
+
+        container.innerHTML = requests
+          .map(function (r) {
+            return `
+            <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
+                 onclick="window.viewInvoiceDetail(${r.id})">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📄 Hóa đơn phiếu ${Utils.escapeHtml(r.exportNo)}</div>
+                <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
+                <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;">
+                <div><span style="color: #6b82a0; font-size: 11px;">Khách hàng</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.customerName || r.receiverName || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Số hóa đơn nhập</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.soHoaDonNhap || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Ngày HĐ nhập</span><br><span style="color: #e2eaf5;">${Utils.formatDate(r.ngayNhapHD)}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Số hóa đơn xuất</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.soHoaDonXuat || "—")}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Ngày HĐ xuất</span><br><span style="color: #e2eaf5;">${Utils.formatDate(r.ngayXuatHD)}</span></div>
+              </div>
+              <div style="margin-top: 6px; font-size: 11px; color: #6b82a0; text-align: right;">
+                <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+      } else {
+        container.innerHTML =
+          '<div class="empty-state"><p>Lỗi: ' +
+          (result.message || "") +
+          "</p></div>";
+      }
+    } catch (error) {
+      console.error("Load pending invoices error:", error);
+      container.innerHTML =
+        '<div class="empty-state"><p>Lỗi: ' + error.message + "</p></div>";
+    } finally {
+      Utils.showLoading(false);
+    }
+  }
+
+  // ============================================================
+  // VIEW INVOICE DETAIL (MỚI)
+  // ============================================================
+  window.viewInvoiceDetail = function (id) {
+    var container = document.getElementById("pendingInvoicesList");
+    if (!container) return;
+
+    var request = window._pendingInvoices.find(function (r) {
+      return r.id === id;
+    });
+
+    if (!request) {
+      Utils.showToast("Không tìm thấy dữ liệu", "error");
+      return;
+    }
+
+    var html = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(request.exportNo)}</span></div>
+        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.exportDate)}</span></div>
+        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(request.customerName || request.receiverName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(request.total)}</span></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #0f172a; padding: 14px 18px; border-radius: 8px; border: 1px solid #1e2d45; margin-bottom: 12px;">
+        <div>
+          <h4 style="color: #60a5fa; margin-bottom: 8px; font-size: 14px;">📄 Hóa đơn nhập</h4>
+          <div><span style="color: #6b82a0;">Số HĐ nhập:</span> <span style="color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(request.soHoaDonNhap || "—")}</span></div>
+          <div><span style="color: #6b82a0;">Ngày HĐ nhập:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.ngayNhapHD)}</span></div>
+        </div>
+        <div>
+          <h4 style="color: #60a5fa; margin-bottom: 8px; font-size: 14px;">📄 Hóa đơn xuất</h4>
+          <div><span style="color: #6b82a0;">Số HĐ xuất:</span> <span style="color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(request.soHoaDonXuat || "—")}</span></div>
+          <div><span style="color: #6b82a0;">Ngày HĐ xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.ngayXuatHD)}</span></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(request.creatorName || "Admin")}</span></div>
+        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.createdAt)}</span></div>
+        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge status-pending">⏳ Chờ duyệt</span></div>
+      </div>
+
+      <div style="padding: 8px 12px; background: rgba(16, 185, 129, 0.08); border-radius: 6px; margin-bottom: 16px; border: 1px solid rgba(16, 185, 129, 0.15);">
+        <p style="font-size: 12px; color: #4ade80; margin: 0;">
+          <i class="fas fa-info-circle"></i>
+          <strong>Lưu ý:</strong> Duyệt hóa đơn này sẽ lưu sản phẩm vào tồn kho. <strong>KHÔNG cộng dồn</strong> hàng hóa (mỗi lần xuất là 1 dòng riêng).
+        </p>
+      </div>
+
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-danger" onclick="window.rejectInvoice(${request.id})" style="padding: 8px 20px; font-size: 13px;">
+          <i class="fas fa-times"></i> Từ chối
+        </button>
+        <button class="btn btn-success" onclick="window.approveInvoice(${request.id})" style="padding: 8px 20px; font-size: 13px;">
+          <i class="fas fa-check"></i> Duyệt
+        </button>
+      </div>
+    `;
+
+    container.innerHTML = `
+      <div style="margin-bottom: 16px;">
+        <button class="btn btn-outline" onclick="window.loadPendingInvoices()" style="margin-bottom: 16px;">
+          <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </button>
+        <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
+          ${html}
+        </div>
+      </div>
+    `;
+  };
+
+  // ============================================================
+  // APPROVE INVOICE (MỚI)
+  // ============================================================
+  window.approveInvoice = async function (id) {
+    if (
+      !confirm(
+        "Bạn có chắc muốn duyệt hóa đơn này? Sản phẩm sẽ được lưu vào tồn kho.",
+      )
+    )
+      return;
+
+    Utils.showLoading(true, "Đang duyệt...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(
+        API_BASE_URL + "/invoice/requests/" + id + "/approve",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+        },
+      );
+      var result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ " + result.message);
+        await loadPendingInvoices();
+        await loadDashboardStats();
+        if (typeof window.refreshInventoryData === "function") {
+          await window.refreshInventoryData();
+        }
+        if (typeof window.initHome === "function") {
+          await window.initHome();
+        }
+        if (typeof window.loadInvoiceData === "function") {
+          await window.loadInvoiceData();
+        }
+      } else {
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ============================================================
+  // REJECT INVOICE (MỚI)
+  // ============================================================
+  window.rejectInvoice = async function (id) {
+    var reason = prompt("Nhập lý do từ chối:");
+    if (reason === null) return;
+
+    Utils.showLoading(true, "Đang xử lý...");
+    try {
+      var token = API.getToken();
+      var response = await fetch(
+        API_BASE_URL + "/invoice/requests/" + id + "/reject",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ reason: reason }),
+        },
+      );
+      var result = await response.json();
+
+      if (result.success) {
+        Utils.showToast("✅ " + result.message);
+        await loadPendingInvoices();
+        await loadDashboardStats();
+        if (typeof window.loadInvoiceData === "function") {
+          await window.loadInvoiceData();
+        }
+      } else {
+        Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
+      }
+    } catch (error) {
+      Utils.showToast("❌ " + error.message, "error");
+    } finally {
+      Utils.showLoading(false);
+    }
+  };
+
+  // ============================================================
   // QUẢN LÝ NGƯỜI DÙNG
   // ============================================================
   var usersData = [];
@@ -2088,6 +2318,7 @@
       else if (viewId === "pending-products") loadPendingApprovals();
       else if (viewId === "pending-edits") loadPendingEdits();
       else if (viewId === "pending-deletions") loadPendingDeletions();
+      else if (viewId === "pending-invoices") loadPendingInvoices();
       else if (viewId === "users") loadUsers();
     }
   }
@@ -2103,6 +2334,7 @@
   window.loadPendingExports = loadPendingExports;
   window.loadPendingEdits = loadPendingEdits;
   window.loadPendingDeletions = loadPendingDeletions;
+  window.loadPendingInvoices = loadPendingInvoices;
   window.loadUsers = loadUsers;
   window.editUser = editUser;
   window.deleteUser = deleteUser;
