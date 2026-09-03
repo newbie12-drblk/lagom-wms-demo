@@ -104,7 +104,7 @@
     form.style.display = form.style.display === "none" ? "block" : "none";
   }
 
-  // ==================== SUBMIT ====================
+  // ==================== SUBMIT INVOICE ====================
   async function submitInvoice(exportId) {
     const soHoaDonNhap = document
       .getElementById("soHoaDonNhap_" + exportId)
@@ -232,7 +232,7 @@
           actions = `<span style="color:#f87171;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
         }
 
-        // Form nhập (chỉ hiện khi chưa có)
+        // Form nhập 4 trường (chỉ hiện khi chưa có)
         let formHtml = "";
         if (isNo) {
           formHtml = `
