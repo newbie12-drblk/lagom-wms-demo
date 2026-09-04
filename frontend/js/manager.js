@@ -3,6 +3,7 @@
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
  * MOBILE: Sidebar full màn hình + Nút Back
  * ✅ ĐÃ THÊM: Hóa đơn chờ duyệt
+ * ✅ SỬA: 9 trường cho Edit Request (thêm Số lượng nhập)
  */
 
 (function () {
@@ -30,7 +31,7 @@
   window._pendingExports = [];
   window._pendingEdits = [];
   window._pendingDeletions = [];
-  window._pendingInvoices = []; // ✅ MỚI
+  window._pendingInvoices = [];
 
   // ============================================================
   // SIDEBAR MOBILE
@@ -132,7 +133,6 @@
     } else if (viewName === "pending-deletions") {
       loadPendingDeletions();
     } else if (viewName === "pending-invoices") {
-      // ✅ MỚI
       loadPendingInvoices();
     } else if (viewName === "users") {
       loadUsers();
@@ -159,7 +159,7 @@
           { id: "statPendingExports", value: data.pendingExports || 0 },
           { id: "statPendingEdits", value: data.pendingEdits || 0 },
           { id: "statPendingDeletions", value: data.pendingDeletions || 0 },
-          { id: "statPendingInvoices", value: data.pendingInvoices || 0 }, // ✅ MỚI
+          { id: "statPendingInvoices", value: data.pendingInvoices || 0 },
         ];
 
         for (var s of stats) {
@@ -173,7 +173,7 @@
           { id: "badgeExports", value: data.pendingExports || 0 },
           { id: "badgeEdits", value: data.pendingEdits || 0 },
           { id: "badgeDeletions", value: data.pendingDeletions || 0 },
-          { id: "badgeInvoices", value: data.pendingInvoices || 0 }, // ✅ MỚI
+          { id: "badgeInvoices", value: data.pendingInvoices || 0 },
         ];
 
         for (var b of badges) {
@@ -237,255 +237,6 @@
     } catch (error) {
       console.error("Load notifications error:", error);
     }
-  }
-
-  // ============================================================
-  // RENDER FUNCTIONS
-  // ============================================================
-  function renderReceiptDetail(receipt) {
-    if (!receipt) {
-      return `<div style="padding:20px;text-align:center;color:#f87171;"><i class="fas fa-exclamation-triangle"></i><p>Không có dữ liệu phiếu nhập</p></div>`;
-    }
-
-    var items = receipt.items || [];
-    var totalValue = receipt.total || 0;
-
-    var statusMap = {
-      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
-      awaiting_confirmation: {
-        class: "status-awaiting",
-        text: "🔄 Chờ xác nhận",
-      },
-      approved: { class: "status-approved", text: "✅ Đã duyệt" },
-      rejected: { class: "status-rejected", text: "❌ Từ chối" },
-    };
-    var status = statusMap[receipt.status] || statusMap["pending"];
-
-    var itemsHtml = "";
-    if (items && items.length > 0) {
-      itemsHtml = `
-        <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-          <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
-            <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">SL NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">THÀNH TIỀN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐƠN NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY NHẬP HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ LOT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HẾT HẠN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">GHI CHÚ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(function (item, idx) {
-                  var expiryColor =
-                    item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
-                      ? "#f87171"
-                      : "#e2eaf5";
-                  return `
-                  <tr style="border-bottom: 1px solid #1e2d45;">
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                  </tr>
-                `;
-                })
-                .join("")}
-            </tbody>
-            <tfoot>
-              <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="6" style="padding: 8px 12px;"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      `;
-    } else {
-      itemsHtml = `<div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;"><i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>Không có sản phẩm trong phiếu này</div>`;
-    }
-
-    return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}</span></div>
-        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge ${status.class}" style="padding: 2px 10px;">${status.text}</span></div>
-        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.createdAt)}</span></div>
-        <div><span style="color: #6b82a0;">Ngày nhập:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.receiptDate)}</span></div>
-        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.creatorName || "Admin")}</span></div>
-        <div><span style="color: #6b82a0;">Nhà cung cấp:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Địa chỉ NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierAddress || "—")}</span></div>
-        <div><span style="color: #6b82a0;">MST NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierTax || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Địa chỉ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerAddress || "—")}</span></div>
-        <div><span style="color: #6b82a0;">MST KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerTax || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerContract || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 700;">${Utils.formatCurrency(totalValue)}</span></div>
-      </div>
-      ${itemsHtml}
-    `;
-  }
-
-  function renderExportDetail(exportItem) {
-    if (!exportItem) {
-      return `<div style="padding:20px;text-align:center;color:#f87171;"><i class="fas fa-exclamation-triangle"></i><p>Không có dữ liệu phiếu xuất</p></div>`;
-    }
-
-    var items = exportItem.items || [];
-    var totalValue = exportItem.total || 0;
-
-    var statusMap = {
-      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
-      awaiting_confirmation: {
-        class: "status-awaiting",
-        text: "🔄 Chờ xác nhận",
-      },
-      approved: { class: "status-approved", text: "✅ Đã duyệt" },
-      rejected: { class: "status-rejected", text: "❌ Từ chối" },
-    };
-    var status = statusMap[exportItem.status] || statusMap["pending"];
-
-    var itemsHtml = "";
-    if (items && items.length > 0) {
-      itemsHtml = `
-        <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
-          <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
-            <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">ĐƠN GIÁ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">SỐ LƯỢNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">THÀNH TIỀN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ LOT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HẾT HẠN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">GHI CHÚ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(function (item, idx) {
-                  var expiryColor =
-                    item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
-                      ? "#f87171"
-                      : "#e2eaf5";
-                  return `
-                  <tr style="border-bottom: 1px solid #1e2d45;">
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
-                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
-                  </tr>
-                `;
-                })
-                .join("")}
-            </tbody>
-            <tfoot>
-              <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
-                <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
-                <td colspan="3" style="padding: 8px 12px;"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      `;
-    } else {
-      itemsHtml = `<div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;"><i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>Không có sản phẩm trong phiếu này</div>`;
-    }
-
-    return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(exportItem.exportNo || "PX-" + exportItem.id)}</span></div>
-        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge ${status.class}" style="padding: 2px 10px;">${status.text}</span></div>
-        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.createdAt)}</span></div>
-        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.exportDate)}</span></div>
-        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.creatorName || "Admin")}</span></div>
-        <div><span style="color: #6b82a0;">Người nhận:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.receiverName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Địa chỉ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerAddress || "—")}</span></div>
-        <div><span style="color: #6b82a0;">MST KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerTax || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerContract || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Lý do xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.exportReason || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 700;">${Utils.formatCurrency(totalValue)}</span></div>
-      </div>
-      ${itemsHtml}
-    `;
-  }
-
-  function renderInventoryDetail(product) {
-    if (!product) {
-      return '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có dữ liệu</div>';
-    }
-
-    var expiryColor =
-      product.ngayHetHan && new Date(product.ngayHetHan) < new Date()
-        ? "#f87171"
-        : "#e2eaf5";
-    var stockColor = (product.tonKho || 0) === 0 ? "#f87171" : "#4ade80";
-
-    return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px;">
-        <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(product.maHang || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Quy cách:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.quyCach || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Hãng SX:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.hangSX || "—")}</span></div>
-        <div><span style="color: #6b82a0;">ĐVT:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.dvt || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
-        <div><span style="color: #6b82a0;">SL nhập:</span> <span style="color: #86efac; font-weight: 600;">${product.soLuongNhap || 0}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐơn nhập:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày nhập HĐ:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayNhapHD)}</span></div>
-        <div><span style="color: #6b82a0;">Số lot:</span> <span style="color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(product.soLot || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày hết hạn:</span> <span style="color: ${expiryColor};">${Utils.formatDate(product.ngayHetHan)}</span></div>
-        <div><span style="color: #6b82a0;">SL xuất:</span> <span style="color: #e2eaf5;">${product.soLuongXuat || 0}</span></div>
-        <div><span style="color: #6b82a0;">Giá xuất:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaXuat || 0)}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐ xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongXuat || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Số HĐơn xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayXuatHD)}</span></div>
-        <div><span style="color: #6b82a0;">Tồn cuối:</span> <span style="color: ${stockColor}; font-weight: 700;">${product.tonKho || 0}</span></div>
-        <div><span style="color: #6b82a0;">Ghi chú:</span> <span style="color: #6b82a0; font-style: italic;">${Utils.escapeHtml(product.ghiChu || "—")}</span></div>
-      </div>
-    `;
   }
 
   // ============================================================
@@ -561,7 +312,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL - 7 TRƯỜNG (ĐÃ XÓA 4 TRƯỜNG HÓA ĐƠN)
+  // VIEW APPROVAL DETAIL - 9 TRƯỜNG
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -583,17 +334,7 @@
     var requesterName = request.requesterName || "Admin";
     var createdAt = request.createdAt || new Date().toISOString();
 
-    var formatDateDisplay = function (dateStr) {
-      if (!dateStr) return "—";
-      try {
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString("vi-VN");
-      } catch (e) {
-        return dateStr;
-      }
-    };
-
+    // ✅ 9 TRƯỜNG
     var html = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
@@ -604,6 +345,7 @@
         <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
         <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
         <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Số lượng nhập:</span> <span style="color: #86efac; font-weight: 600;">${Utils.formatNumber(product.soLuongNhap || 0)}</span></div>
       </div>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(requesterName)}</span></div>
@@ -829,6 +571,114 @@
     `;
   };
 
+  function renderReceiptDetail(receipt) {
+    if (!receipt) {
+      return `<div style="padding:20px;text-align:center;color:#f87171;"><i class="fas fa-exclamation-triangle"></i><p>Không có dữ liệu phiếu nhập</p></div>`;
+    }
+
+    var items = receipt.items || [];
+    var totalValue = receipt.total || 0;
+
+    var statusMap = {
+      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      awaiting_confirmation: {
+        class: "status-awaiting",
+        text: "🔄 Chờ xác nhận",
+      },
+      approved: { class: "status-approved", text: "✅ Đã duyệt" },
+      rejected: { class: "status-rejected", text: "❌ Từ chối" },
+    };
+    var status = statusMap[receipt.status] || statusMap["pending"];
+
+    var itemsHtml = "";
+    if (items && items.length > 0) {
+      itemsHtml = `
+        <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
+            <thead>
+              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">QUY CÁCH</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG/NƯỚC SX</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI MÁY</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">GIÁ NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">SL NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">THÀNH TIỀN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐ</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐƠN NHẬP</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY NHẬP HĐ</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ LOT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HẾT HẠN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">GHI CHÚ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items
+                .map(function (item, idx) {
+                  var expiryColor =
+                    item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
+                      ? "#f87171"
+                      : "#e2eaf5";
+                  return `
+                  <tr style="border-bottom: 1px solid #1e2d45;">
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.giaNhap || 0)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuongNhap || 0}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                  </tr>
+                `;
+                })
+                .join("")}
+            </tbody>
+            <tfoot>
+              <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
+                <td colspan="6" style="padding: 8px 12px;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+    } else {
+      itemsHtml = `<div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;"><i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>Không có sản phẩm trong phiếu này</div>`;
+    }
+
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(receipt.receiptNo || "PN-" + receipt.id)}</span></div>
+        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge ${status.class}" style="padding: 2px 10px;">${status.text}</span></div>
+        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.createdAt)}</span></div>
+        <div><span style="color: #6b82a0;">Ngày nhập:</span> <span style="color: #e2eaf5;">${Utils.formatDate(receipt.receiptDate)}</span></div>
+        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.creatorName || "Admin")}</span></div>
+        <div><span style="color: #6b82a0;">Nhà cung cấp:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Địa chỉ NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierAddress || "—")}</span></div>
+        <div><span style="color: #6b82a0;">MST NCC:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.supplierTax || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Địa chỉ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerAddress || "—")}</span></div>
+        <div><span style="color: #6b82a0;">MST KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerTax || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(receipt.customerContract || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 700;">${Utils.formatCurrency(totalValue)}</span></div>
+      </div>
+      ${itemsHtml}
+    `;
+  }
+
   window.approveReceipt = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu nhập này?")) return;
 
@@ -1018,6 +868,107 @@
     `;
   };
 
+  function renderExportDetail(exportItem) {
+    if (!exportItem) {
+      return `<div style="padding:20px;text-align:center;color:#f87171;"><i class="fas fa-exclamation-triangle"></i><p>Không có dữ liệu phiếu xuất</p></div>`;
+    }
+
+    var items = exportItem.items || [];
+    var totalValue = exportItem.total || 0;
+
+    var statusMap = {
+      pending: { class: "status-pending", text: "⏳ Chờ duyệt" },
+      awaiting_confirmation: {
+        class: "status-awaiting",
+        text: "🔄 Chờ xác nhận",
+      },
+      approved: { class: "status-approved", text: "✅ Đã duyệt" },
+      rejected: { class: "status-rejected", text: "❌ Từ chối" },
+    };
+    var status = statusMap[exportItem.status] || statusMap["pending"];
+
+    var itemsHtml = "";
+    if (items && items.length > 0) {
+      itemsHtml = `
+        <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a;">
+            <thead>
+              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">STT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">TÊN THƯƠNG MẠI</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">QUY CÁCH</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">HÃNG/NƯỚC SX</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">ĐVT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">PHÂN LOẠI MÁY</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">ĐƠN GIÁ</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">SỐ LƯỢNG</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa;">THÀNH TIỀN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ LOT</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HẾT HẠN</th>
+                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">GHI CHÚ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items
+                .map(function (item, idx) {
+                  var expiryColor =
+                    item.ngayHetHan && new Date(item.ngayHetHan) < new Date()
+                      ? "#f87171"
+                      : "#e2eaf5";
+                  return `
+                  <tr style="border-bottom: 1px solid #1e2d45;">
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a;">${idx + 1}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${Utils.escapeHtml(item.tenThuongMai || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(item.maHang || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.quyCach || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.hangSX || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.escapeHtml(item.dvt || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(item.phanLoai || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(item.donGia || 0)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${item.soLuong || 0}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; font-family: monospace;">${Utils.formatCurrency(item.thanhTien || 0)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(item.soLot || "—")}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${expiryColor};">${Utils.formatDate(item.ngayHetHan)}</td>
+                    <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #6b82a0; font-style: italic;">${Utils.escapeHtml(item.ghiChu || "—")}</td>
+                  </tr>
+                `;
+                })
+                .join("")}
+            </tbody>
+            <tfoot>
+              <tr style="background: #0f172a; border-top: 2px solid #3b82f6;">
+                <td colspan="9" style="padding: 8px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 15px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(totalValue)}</td>
+                <td colspan="3" style="padding: 8px 12px;"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+    } else {
+      itemsHtml = `<div style="padding:20px;text-align:center;color:#6b82a0;background:#0f172a;border-radius:8px;border:1px solid #1e2d45;margin-top:12px;"><i class="fas fa-box" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>Không có sản phẩm trong phiếu này</div>`;
+    }
+
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(exportItem.exportNo || "PX-" + exportItem.id)}</span></div>
+        <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge ${status.class}" style="padding: 2px 10px;">${status.text}</span></div>
+        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.createdAt)}</span></div>
+        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(exportItem.exportDate)}</span></div>
+        <div><span style="color: #6b82a0;">Người tạo:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.creatorName || "Admin")}</span></div>
+        <div><span style="color: #6b82a0;">Người nhận:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.receiverName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Địa chỉ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerAddress || "—")}</span></div>
+        <div><span style="color: #6b82a0;">MST KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerTax || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐ KH:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.customerContract || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Lý do xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(exportItem.exportReason || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 700;">${Utils.formatCurrency(totalValue)}</span></div>
+      </div>
+      ${itemsHtml}
+    `;
+  }
+
   window.approveExport = async function (id) {
     if (!confirm("Bạn có chắc muốn duyệt phiếu xuất này?")) return;
 
@@ -1120,6 +1071,7 @@
             var oldData = r.oldData || {};
             var newData = r.newData || {};
 
+            // ✅ 9 TRƯỜNG
             var fieldLabels = {
               tenThuongMai: "Tên thương mại",
               maHang: "Mã hàng",
@@ -1129,12 +1081,24 @@
               phanLoai: "Phân loại máy",
               giaNhap: "Giá nhập",
               soHopDongNhap: "Số HĐ",
+              soLuongNhap: "Số lượng nhập",
             };
 
-            var allFields = Object.keys(fieldLabels);
+            var allFields = [
+              "tenThuongMai",
+              "maHang",
+              "quyCach",
+              "dvt",
+              "hangSX",
+              "phanLoai",
+              "giaNhap",
+              "soHopDongNhap",
+              "soLuongNhap",
+            ];
+
             var changedFields = allFields.filter(function (key) {
-              var oldVal = oldData[key] || "";
-              var newVal = newData[key] || "";
+              var oldVal = oldData[key] !== undefined ? oldData[key] : "";
+              var newVal = newData[key] !== undefined ? newData[key] : "";
               return String(oldVal).trim() !== String(newVal).trim();
             });
 
@@ -1165,11 +1129,15 @@
             var previewFields = changedFields.slice(0, 2);
             var previewHtml = previewFields
               .map(function (key) {
-                var oldVal = oldData[key] || "—";
-                var newVal = newData[key] || "—";
+                var oldVal = oldData[key] !== undefined ? oldData[key] : "—";
+                var newVal = newData[key] !== undefined ? newData[key] : "—";
                 if (key === "giaNhap") {
                   oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
                   newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+                }
+                if (key === "soLuongNhap") {
+                  oldVal = Utils.formatNumber(parseInt(oldVal) || 0);
+                  newVal = Utils.formatNumber(parseInt(newVal) || 0);
                 }
                 return (
                   '<span style="color: #6b82a0;">' +
@@ -1227,6 +1195,9 @@
     }
   }
 
+  // ============================================================
+  // VIEW EDIT DETAIL - 9 TRƯỜNG (ĐÃ SỬA)
+  // ============================================================
   window.viewEditDetail = function (id) {
     var container = document.getElementById("pendingEditsList");
     if (!container) return;
@@ -1246,6 +1217,7 @@
     var oldData = editItem.oldData || {};
     var newData = editItem.newData || {};
 
+    // ✅ 9 TRƯỜNG
     var fieldLabels = {
       tenThuongMai: "Tên thương mại",
       maHang: "Mã hàng",
@@ -1255,25 +1227,40 @@
       phanLoai: "Phân loại máy",
       giaNhap: "Giá nhập",
       soHopDongNhap: "Số HĐ",
+      soLuongNhap: "Số lượng nhập",
     };
 
-    var allFields = Object.keys(fieldLabels);
+    var allFields = [
+      "tenThuongMai",
+      "maHang",
+      "quyCach",
+      "dvt",
+      "hangSX",
+      "phanLoai",
+      "giaNhap",
+      "soHopDongNhap",
+      "soLuongNhap",
+    ];
 
     var changedFields = allFields.filter(function (key) {
-      var oldVal = oldData[key] || "";
-      var newVal = newData[key] || "";
+      var oldVal = oldData[key] !== undefined ? oldData[key] : "";
+      var newVal = newData[key] !== undefined ? newData[key] : "";
       return String(oldVal).trim() !== String(newVal).trim();
     });
 
     var rowsHtml = allFields
       .map(function (key) {
-        var oldVal = oldData[key] || "—";
-        var newVal = newData[key] || "—";
+        var oldVal = oldData[key] !== undefined ? oldData[key] : "—";
+        var newVal = newData[key] !== undefined ? newData[key] : "—";
         var isChanged = changedFields.includes(key);
 
         if (key === "giaNhap") {
           oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
           newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+        }
+        if (key === "soLuongNhap") {
+          oldVal = Utils.formatNumber(parseInt(oldVal) || 0);
+          newVal = Utils.formatNumber(parseInt(newVal) || 0);
         }
 
         var highlightStyle = isChanged
@@ -1287,15 +1274,45 @@
 
         return `
           <tr style="border-bottom: 1px solid #1e2d45; ${highlightStyle}">
-            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">${fieldLabels[key] || key}</td>
-            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${oldColor};">${Utils.escapeHtml(String(oldVal))}</td>
-            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${newColor}; font-weight: ${isChanged ? "600" : "400"};">${Utils.escapeHtml(String(newVal))}${changeBadge}</td>
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 600;">
+              ${fieldLabels[key] || key}
+            </td>
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${oldColor};">
+              ${Utils.escapeHtml(String(oldVal))}
+            </td>
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${newColor}; font-weight: ${isChanged ? "600" : "400"};">
+              ${Utils.escapeHtml(String(newVal))}${changeBadge}
+            </td>
           </tr>
         `;
       })
       .join("");
 
-    var changesHtml = `
+    var changeCount = changedFields.length;
+    var changeNotice = "";
+    if (changeCount > 0) {
+      changeNotice = `
+        <div style="padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; margin-bottom: 12px; color: #fbbf24; font-size: 13px;">
+          <i class="fas fa-info-circle"></i> Có <strong>${changeCount}</strong> trường được yêu cầu thay đổi.
+        </div>
+      `;
+    } else {
+      changeNotice = `
+        <div style="padding: 8px 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; margin-bottom: 12px; color: #f87171; font-size: 13px;">
+          <i class="fas fa-exclamation-triangle"></i> 
+          <strong>Không có trường nào thay đổi!</strong> Vui lòng kiểm tra lại yêu cầu.
+        </div>
+      `;
+    }
+
+    var html = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+        <div><span style="color: #6b82a0;">Sản phẩm:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(editItem.productName || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(editItem.productCode || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(editItem.requesterName || "Admin")}</span></div>
+        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(editItem.createdAt)}</span></div>
+      </div>
+      ${changeNotice}
       <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px; margin-top: 12px;">
         <table style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a;">
           <thead>
@@ -1310,27 +1327,6 @@
           </tbody>
         </table>
       </div>
-    `;
-
-    var changeCount = changedFields.length;
-    var changeNotice =
-      changeCount > 0
-        ? `<div style="padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; margin-bottom: 12px; color: #fbbf24; font-size: 13px;">
-           <i class="fas fa-info-circle"></i> Có <strong>${changeCount}</strong> trường được yêu cầu thay đổi.
-         </div>`
-        : `<div style="padding: 8px 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; margin-bottom: 12px; color: #f87171; font-size: 13px;">
-           <i class="fas fa-exclamation-triangle"></i> <strong>Không có trường nào thay đổi!</strong> Vui lòng kiểm tra lại yêu cầu.
-         </div>`;
-
-    var html = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Sản phẩm:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(editItem.productName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(editItem.productCode || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(editItem.requesterName || "Admin")}</span></div>
-        <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(editItem.createdAt)}</span></div>
-      </div>
-      ${changeNotice}
-      ${changesHtml}
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectEditRequest(${editItem.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-times"></i> Từ chối
@@ -1528,6 +1524,43 @@
     `;
   };
 
+  function renderInventoryDetail(product) {
+    if (!product) {
+      return '<div style="padding:20px;text-align:center;color:#6b82a0;">Không có dữ liệu</div>';
+    }
+
+    var expiryColor =
+      product.ngayHetHan && new Date(product.ngayHetHan) < new Date()
+        ? "#f87171"
+        : "#e2eaf5";
+    var stockColor = (product.tonKho || 0) === 0 ? "#f87171" : "#4ade80";
+
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px;">
+        <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(product.maHang || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Quy cách:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.quyCach || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Hãng SX:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.hangSX || "—")}</span></div>
+        <div><span style="color: #6b82a0;">ĐVT:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.dvt || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
+        <div><span style="color: #6b82a0;">SL nhập:</span> <span style="color: #86efac; font-weight: 600;">${product.soLuongNhap || 0}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐơn nhập:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonNhap || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Ngày nhập HĐ:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayNhapHD)}</span></div>
+        <div><span style="color: #6b82a0;">Số lot:</span> <span style="color: #e2eaf5; font-family: monospace;">${Utils.escapeHtml(product.soLot || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Ngày hết hạn:</span> <span style="color: ${expiryColor};">${Utils.formatDate(product.ngayHetHan)}</span></div>
+        <div><span style="color: #6b82a0;">SL xuất:</span> <span style="color: #e2eaf5;">${product.soLuongXuat || 0}</span></div>
+        <div><span style="color: #6b82a0;">Giá xuất:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaXuat || 0)}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐ xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongXuat || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Số HĐơn xuất:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHoaDonXuat || "—")}</span></div>
+        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(product.ngayXuatHD)}</span></div>
+        <div><span style="color: #6b82a0;">Tồn cuối:</span> <span style="color: ${stockColor}; font-weight: 700;">${product.tonKho || 0}</span></div>
+        <div><span style="color: #6b82a0;">Ghi chú:</span> <span style="color: #6b82a0; font-style: italic;">${Utils.escapeHtml(product.ghiChu || "—")}</span></div>
+      </div>
+    `;
+  }
+
   window.approveDeletionRequest = async function (id) {
     if (
       !confirm(
@@ -1601,7 +1634,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES (MỚI)
+  // LOAD PENDING INVOICES
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");
@@ -1615,6 +1648,8 @@
       });
       var result = await response.json();
 
+      console.log("📥 Pending invoices response:", result);
+
       if (result.success) {
         var requests = result.data || [];
         window._pendingInvoices = requests;
@@ -1622,7 +1657,6 @@
         var badge = document.getElementById("badgeInvoices");
         if (badge) badge.textContent = requests.length;
 
-        // Cập nhật stat trên dashboard
         var statEl = document.getElementById("statPendingInvoices");
         if (statEl) statEl.textContent = requests.length;
 
@@ -1643,7 +1677,7 @@
             <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
                  onclick="window.viewInvoiceDetail(${r.id})">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
-                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📄 Hóa đơn phiếu ${Utils.escapeHtml(r.exportNo)}</div>
+                <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📄 Hóa đơn phiếu ${Utils.escapeHtml(r.exportNo || "PX-" + r.exportId)}</div>
                 <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(r.createdAt)}</div>
                 <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ Chờ duyệt</span>
               </div>
@@ -1653,6 +1687,7 @@
                 <div><span style="color: #6b82a0; font-size: 11px;">Ngày HĐ nhập</span><br><span style="color: #e2eaf5;">${Utils.formatDate(r.ngayNhapHD)}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Số hóa đơn xuất</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(r.soHoaDonXuat || "—")}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Ngày HĐ xuất</span><br><span style="color: #e2eaf5;">${Utils.formatDate(r.ngayXuatHD)}</span></div>
+                <div><span style="color: #6b82a0; font-size: 11px;">Tổng tiền</span><br><span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(r.total || 0)}</span></div>
               </div>
               <div style="margin-top: 6px; font-size: 11px; color: #6b82a0; text-align: right;">
                 <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
@@ -1668,7 +1703,7 @@
           "</p></div>";
       }
     } catch (error) {
-      console.error("Load pending invoices error:", error);
+      console.error("❌ Load pending invoices error:", error);
       container.innerHTML =
         '<div class="empty-state"><p>Lỗi: ' + error.message + "</p></div>";
     } finally {
@@ -1677,7 +1712,7 @@
   }
 
   // ============================================================
-  // VIEW INVOICE DETAIL (MỚI)
+  // VIEW INVOICE DETAIL
   // ============================================================
   window.viewInvoiceDetail = function (id) {
     var container = document.getElementById("pendingInvoicesList");
@@ -1694,10 +1729,10 @@
 
     var html = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(request.exportNo)}</span></div>
+        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(request.exportNo || "PX-" + request.exportId)}</span></div>
         <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(request.exportDate)}</span></div>
         <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(request.customerName || request.receiverName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(request.total)}</span></div>
+        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(request.total || 0)}</span></div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #0f172a; padding: 14px 18px; border-radius: 8px; border: 1px solid #1e2d45; margin-bottom: 12px;">
@@ -1749,7 +1784,7 @@
   };
 
   // ============================================================
-  // APPROVE INVOICE (MỚI)
+  // APPROVE INVOICE
   // ============================================================
   window.approveInvoice = async function (id) {
     if (
@@ -1798,7 +1833,7 @@
   };
 
   // ============================================================
-  // REJECT INVOICE (MỚI)
+  // REJECT INVOICE
   // ============================================================
   window.rejectInvoice = async function (id) {
     var reason = prompt("Nhập lý do từ chối:");
@@ -1838,10 +1873,8 @@
   };
 
   // ============================================================
-  // QUẢN LÝ NGƯỜI DÙNG
+  // LOAD USERS (giữ nguyên)
   // ============================================================
-  var usersData = [];
-
   async function loadUsers() {
     var tbody = document.getElementById("usersTableBody");
     if (!tbody) return;
@@ -1855,8 +1888,8 @@
       var result = await response.json();
 
       if (result.success) {
-        usersData = result.data || [];
-        renderUsersTable(usersData);
+        var users = result.data || [];
+        renderUsersTable(users);
       } else {
         tbody.innerHTML = `
           <tr><td colspan="8" style="text-align:center;padding:40px;color:#f87171;">
@@ -1987,6 +2020,9 @@
       .join("");
   }
 
+  // ============================================================
+  // USER MANAGEMENT FUNCTIONS
+  // ============================================================
   function openAddUserModal() {
     var modal = document.getElementById("userModal");
     if (!modal) {
@@ -2029,7 +2065,7 @@
   }
 
   async function editUser(userId) {
-    var user = usersData.find(function (u) {
+    var user = window._usersData?.find(function (u) {
       return u.id === userId;
     });
     if (!user) {
@@ -2175,7 +2211,7 @@
   }
 
   async function deleteUser(userId) {
-    var user = usersData.find(function (u) {
+    var user = window._usersData?.find(function (u) {
       return u.id === userId;
     });
     if (!user) return;
@@ -2341,6 +2377,27 @@
   window.closeUserModal = closeUserModal;
   window.openAddUserModal = openAddUserModal;
   window.saveUser = saveUser;
+
+  // Lưu users data để dùng cho edit/delete
+  window._usersData = [];
+
+  // Override loadUsers để lưu data
+  var originalLoadUsers = loadUsers;
+  loadUsers = async function () {
+    await originalLoadUsers();
+    try {
+      var token = API.getToken();
+      var response = await fetch(API_BASE_URL + "/manager/users", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var result = await response.json();
+      if (result.success) {
+        window._usersData = result.data || [];
+      }
+    } catch (e) {
+      console.error("Load users data error:", e);
+    }
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
