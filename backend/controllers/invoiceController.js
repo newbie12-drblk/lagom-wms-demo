@@ -27,13 +27,6 @@ const createInvoiceRequest = async (req, res) => {
       });
     }
 
-    if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng nhập đầy đủ 4 trường hóa đơn",
-      });
-    }
-
     // Kiểm tra phiếu xuất tồn tại
     const exportItem = await Export.findById(exportId);
     if (!exportItem) {
@@ -67,9 +60,15 @@ const createInvoiceRequest = async (req, res) => {
       });
     }
 
+    // Cho phép tạo request với dữ liệu rỗng
     const requestId = await InvoiceRequest.create(
       exportId,
-      { soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD },
+      {
+        soHoaDonNhap: soHoaDonNhap || "",
+        ngayNhapHD: ngayNhapHD || null,
+        soHoaDonXuat: soHoaDonXuat || "",
+        ngayXuatHD: ngayXuatHD || null,
+      },
       createdBy,
     );
 
@@ -99,7 +98,7 @@ const createInvoiceRequest = async (req, res) => {
 // ==================== QUẢN LÝ: LẤY DANH SÁCH HÓA ĐƠN CHỜ DUYỆT ====================
 const getPendingInvoices = async (req, res) => {
   try {
-    const requests = await InvoiceRequest.getAll("pending");
+    const requests = await InvoiceRequest.getPending();
     res.json({ success: true, data: requests });
   } catch (error) {
     console.error("❌ Get pending invoices error:", error);
@@ -200,7 +199,11 @@ const rejectInvoice = async (req, res) => {
       });
     }
 
-    await InvoiceRequest.reject(id, approvedBy, reason);
+    await InvoiceRequest.reject(
+      id,
+      approvedBy,
+      reason || "Không được chấp thuận",
+    );
 
     await Notification.create(
       request.createdBy,

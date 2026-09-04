@@ -35,7 +35,8 @@ const InvoiceRequest = {
               e.exportDate,
               e.receiverName,
               e.customerName,
-              e.total
+              e.total,
+              e.createdBy as exportCreatedBy
        FROM invoice_requests ir
        LEFT JOIN users u ON ir.createdBy = u.id
        LEFT JOIN users a ON ir.approvedBy = a.id
@@ -147,15 +148,13 @@ const InvoiceRequest = {
         );
         const newStt = (maxSttResult[0]?.maxStt || 0) + 1;
 
-        // Kiểm tra xem đã có dòng nào trùng chưa (KHÔNG CỘNG DỒN)
-        // Mỗi lần xuất là 1 dòng riêng biệt
+        // ✅ ĐÃ XÓA CỘT quyCachDongGoi
         await conn.execute(
           `INSERT INTO inventory (
             stt, 
             tenThuongMai, 
             maHang, 
             quyCach, 
-            quyCachDongGoi,
             hangSX, 
             dvt, 
             phanLoai,
@@ -175,32 +174,33 @@ const InvoiceRequest = {
             status, 
             createdBy, 
             approvedBy, 
-            approvedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+            approvedAt,
+            ghiChu
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
           [
             newStt,
             item.tenThuongMai || "",
             item.maHang || "",
             item.quyCach || "",
-            "", // quyCachDongGoi - chưa có
             item.hangSX || "",
             item.dvt || "",
             item.phanLoai || "",
-            item.donGia || 0, // giaNhap = donGia
-            item.donGia || 0, // giaXuat = donGia
-            0, // soLuongNhap = 0 (đây là phiếu xuất)
+            item.donGia || 0,
+            item.donGia || 0,
+            0,
             item.soLuong || 0,
-            0 - (item.soLuong || 0), // tonKho = âm (chờ nhập sau)
+            0 - (item.soLuong || 0),
             item.soLot || "",
             item.ngayHetHan || null,
-            "", // soHopDongNhap
+            "",
             item.soHopDongXuat || "",
-            request.soHoaDonNhap || "", // ✅ TỪ HÓA ĐƠN
-            request.ngayNhapHD || null, // ✅ TỪ HÓA ĐƠN
-            request.soHoaDonXuat || "", // ✅ TỪ HÓA ĐƠN
-            request.ngayXuatHD || null, // ✅ TỪ HÓA ĐƠN
+            request.soHoaDonNhap || "",
+            request.ngayNhapHD || null,
+            request.soHoaDonXuat || "",
+            request.ngayXuatHD || null,
             exportData.createdBy,
             approvedBy,
+            item.ghiChu || "",
           ],
         );
       }
@@ -238,6 +238,25 @@ const InvoiceRequest = {
       [id],
     );
     return result.affectedRows > 0;
+  },
+
+  // ==================== LẤY YÊU CẦU CHỜ DUYỆT ====================
+  getPending: async () => {
+    const [rows] = await db.execute(
+      `SELECT ir.*, 
+              u.fullName as creatorName, 
+              e.exportNo, 
+              e.exportDate,
+              e.receiverName,
+              e.customerName,
+              e.total
+       FROM invoice_requests ir
+       LEFT JOIN users u ON ir.createdBy = u.id
+       LEFT JOIN exports e ON ir.exportId = e.id
+       WHERE ir.status = 'pending'
+       ORDER BY ir.createdAt ASC`,
+    );
+    return rows;
   },
 };
 
