@@ -2,6 +2,7 @@
  * ==================== INVOICES MODULE ====================
  * Quản lý hóa đơn - Admin nhập, Quản lý duyệt
  * ✅ ĐÃ THÊM BẢNG SẢN PHẨM TRONG FORM TẠO HÓA ĐƠN
+ * ✅ CHỈ GIỮ MÀU ĐỎ CHO TRẠNG THÁI "CHƯA NHẬP"
  */
 
 (function () {
@@ -107,7 +108,7 @@
         allData.push({ ...item, invoiceStatus: item.status });
       });
 
-      // Sắp xếp
+      // Sắp xếp: chưa nhập → chờ duyệt → hoàn thành → từ chối
       allData.sort((a, b) => {
         const order = { "no-invoice": 0, pending: 1, approved: 2, rejected: 3 };
         return (order[a.invoiceStatus] || 99) - (order[b.invoiceStatus] || 99);
@@ -251,25 +252,26 @@
         const isApproved = item.invoiceStatus === "approved";
         const isRejected = item.invoiceStatus === "rejected";
 
-        let color = "#6b82a0";
+        // ✅ CHỈ GIỮ MÀU ĐỎ CHO "CHƯA NHẬP" - CÁC TRẠNG THÁI KHÁC KHÔNG CÓ MÀU
+        let color = "#6b82a0"; // Màu xám mặc định
         let badgeText = "";
         let badgeClass = "";
 
         if (isNo) {
-          color = "#f87171";
+          color = "#f87171"; // MÀU ĐỎ - CHỈ DÙNG CHO CHƯA NHẬP
           badgeText = "🔴 Chưa nhập";
           badgeClass = "status-pending";
         } else if (isPending) {
-          color = "#fbbf24";
-          badgeText = "🟡 Chờ duyệt";
+          color = "#6b82a0"; // Xám - không có màu nổi bật
+          badgeText = "⏳ Chờ duyệt";
           badgeClass = "status-pending";
         } else if (isApproved) {
-          color = "#4ade80";
-          badgeText = "🟢 Hoàn thành";
+          color = "#6b82a0"; // Xám - không có màu nổi bật
+          badgeText = "✅ Hoàn thành";
           badgeClass = "status-approved";
         } else if (isRejected) {
-          color = "#ef4444";
-          badgeText = "🔴 Từ chối";
+          color = "#6b82a0"; // Xám - không có màu nổi bật
+          badgeText = "❌ Từ chối";
           badgeClass = "status-rejected";
         }
 
@@ -344,11 +346,11 @@
         } else if (isNo && !isAdmin()) {
           actions = `<span style="color:#6b82a0;font-size:12px;">Chỉ Admin mới được tạo</span>`;
         } else if (isPending) {
-          actions = `<span style="color:#fbbf24;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Đang chờ</span>`;
+          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Đang chờ</span>`;
         } else if (isApproved) {
-          actions = `<span style="color:#4ade80;font-size:12px;"><i class="fas fa-check-circle"></i> Hoàn thành</span>`;
+          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-check-circle"></i> Hoàn thành</span>`;
         } else if (isRejected) {
-          actions = `<span style="color:#f87171;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
+          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
         }
 
         // Form nhập 4 trường
@@ -427,7 +429,7 @@
         }
 
         return `
-        <div class="receipt-card invoice-card" style="border-left:4px solid ${color};">
+        <div class="receipt-card invoice-card ${isNo ? "no-invoice" : ""}" style="${isNo ? "border-left:4px solid #f87171;" : "border-left:1px solid var(--border);"}">
           <div class="receipt-card-header">
             <div class="receipt-card-id">
               <i class="fas fa-file-export"></i> ${Utils.escapeHtml(
@@ -462,9 +464,9 @@
           <div class="receipt-card-footer">
             <div class="status-text">
               ${isNo ? "🔴 Chưa có thông tin hóa đơn" : ""}
-              ${isPending ? "🟡 Đã nhập, chờ duyệt" : ""}
-              ${isApproved ? "🟢 Đã có đầy đủ thông tin" : ""}
-              ${isRejected ? "🔴 Bị từ chối" : ""}
+              ${isPending ? "⏳ Đã nhập, chờ duyệt" : ""}
+              ${isApproved ? "✅ Đã có đầy đủ thông tin" : ""}
+              ${isRejected ? "❌ Bị từ chối" : ""}
             </div>
             <div class="actions">${actions}</div>
           </div>
