@@ -4,6 +4,7 @@
  * MOBILE: Sidebar full màn hình + Nút Back
  * ✅ ĐÃ THÊM: Hóa đơn chờ duyệt
  * ✅ SỬA: 9 trường cho Edit Request (thêm Số lượng nhập)
+ * ✅ SỬA: Chỉ hiển thị "Đã thay đổi" khi thực sự có thay đổi
  */
 
 (function () {
@@ -312,7 +313,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL - 9 TRƯỜNG
+  // VIEW APPROVAL DETAIL
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -334,7 +335,6 @@
     var requesterName = request.requesterName || "Admin";
     var createdAt = request.createdAt || new Date().toISOString();
 
-    // ✅ 9 TRƯỜNG
     var html = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
@@ -1096,6 +1096,7 @@
               "soLuongNhap",
             ];
 
+            // ✅ Kiểm tra trường thực sự thay đổi
             var changedFields = allFields.filter(function (key) {
               var oldVal = oldData[key] !== undefined ? oldData[key] : "";
               var newVal = newData[key] !== undefined ? newData[key] : "";
@@ -1196,7 +1197,7 @@
   }
 
   // ============================================================
-  // VIEW EDIT DETAIL - 9 TRƯỜNG (ĐÃ SỬA)
+  // VIEW EDIT DETAIL - 9 TRƯỜNG (CHỈ HIỂN THỊ "ĐÃ THAY ĐỔI" KHI THỰC SỰ THAY ĐỔI)
   // ============================================================
   window.viewEditDetail = function (id) {
     var container = document.getElementById("pendingEditsList");
@@ -1242,18 +1243,23 @@
       "soLuongNhap",
     ];
 
+    // ✅ Chỉ tính là thay đổi khi giá trị mới KHÁC giá trị cũ
     var changedFields = allFields.filter(function (key) {
       var oldVal = oldData[key] !== undefined ? oldData[key] : "";
       var newVal = newData[key] !== undefined ? newData[key] : "";
       return String(oldVal).trim() !== String(newVal).trim();
     });
 
+    // ✅ Tạo bảng so sánh
     var rowsHtml = allFields
       .map(function (key) {
         var oldVal = oldData[key] !== undefined ? oldData[key] : "—";
         var newVal = newData[key] !== undefined ? newData[key] : "—";
-        var isChanged = changedFields.includes(key);
 
+        // ✅ Kiểm tra thực sự có thay đổi không
+        var isActuallyChanged = changedFields.includes(key);
+
+        // Format giá tiền
         if (key === "giaNhap") {
           oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
           newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
@@ -1263,12 +1269,14 @@
           newVal = Utils.formatNumber(parseInt(newVal) || 0);
         }
 
-        var highlightStyle = isChanged
+        var highlightStyle = isActuallyChanged
           ? "background: rgba(59, 130, 246, 0.1);"
           : "";
-        var oldColor = isChanged ? "#f87171" : "#6b82a0";
-        var newColor = isChanged ? "#4ade80" : "#6b82a0";
-        var changeBadge = isChanged
+        var oldColor = isActuallyChanged ? "#f87171" : "#6b82a0";
+        var newColor = isActuallyChanged ? "#4ade80" : "#6b82a0";
+
+        // ✅ CHỈ HIỂN THỊ "Đã thay đổi" KHI THỰC SỰ CÓ THAY ĐỔI
+        var changeBadge = isActuallyChanged
           ? ' <span style="color:#fbbf24;font-size:10px;">⬆ Đã thay đổi</span>'
           : ' <span style="color:#6b82a0;font-size:10px;">— Không đổi</span>';
 
@@ -1280,7 +1288,7 @@
             <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${oldColor};">
               ${Utils.escapeHtml(String(oldVal))}
             </td>
-            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${newColor}; font-weight: ${isChanged ? "600" : "400"};">
+            <td style="padding: 8px 14px; border: 1px solid #1e2d45; color: ${newColor}; font-weight: ${isActuallyChanged ? "600" : "400"};">
               ${Utils.escapeHtml(String(newVal))}${changeBadge}
             </td>
           </tr>
@@ -1288,6 +1296,7 @@
       })
       .join("");
 
+    // ✅ Đếm số trường thực sự thay đổi
     var changeCount = changedFields.length;
     var changeNotice = "";
     if (changeCount > 0) {
@@ -1873,7 +1882,7 @@
   };
 
   // ============================================================
-  // LOAD USERS (giữ nguyên)
+  // LOAD USERS
   // ============================================================
   async function loadUsers() {
     var tbody = document.getElementById("usersTableBody");
@@ -1889,6 +1898,7 @@
 
       if (result.success) {
         var users = result.data || [];
+        window._usersData = users;
         renderUsersTable(users);
       } else {
         tbody.innerHTML = `
@@ -2380,24 +2390,6 @@
 
   // Lưu users data để dùng cho edit/delete
   window._usersData = [];
-
-  // Override loadUsers để lưu data
-  var originalLoadUsers = loadUsers;
-  loadUsers = async function () {
-    await originalLoadUsers();
-    try {
-      var token = API.getToken();
-      var response = await fetch(API_BASE_URL + "/manager/users", {
-        headers: { Authorization: "Bearer " + token },
-      });
-      var result = await response.json();
-      if (result.success) {
-        window._usersData = result.data || [];
-      }
-    } catch (e) {
-      console.error("Load users data error:", e);
-    }
-  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
