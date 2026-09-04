@@ -1,6 +1,7 @@
 /**
  * ==================== EXPORT MODULE ====================
- * Quản lý phiếu xuất kho - ĐÃ XÓA 3 CỘT
+ * Quản lý phiếu xuất kho
+ * ✅ ĐÃ SỬA THỨ TỰ CỘT ĐÚNG VỚI HTML
  */
 
 (function () {
@@ -165,7 +166,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - ĐÃ XÓA 3 CỘT ==========
+  // ========== Tạo dòng sản phẩm - ĐÚNG THỨ TỰ CỘT ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -173,6 +174,8 @@
     const removeButton =
       '<button class="btn-remove" type="button"><i class="fas fa-trash"></i></button>';
 
+    // ✅ THỨ TỰ CỘT ĐÚNG VỚI HTML:
+    // STT | MÃ HÀNG | TÊN THƯƠNG MẠI | ĐVT | HÃNG/NƯỚC SX | PHÂN LOẠI MÁY | ĐƠN GIÁ XUẤT | SỐ LƯỢNG | SỐ LOT | HSD | THÀNH TIỀN | XÓA
     row.innerHTML = `
       <td class="stt-cell">${stt}</td>
       <td><input type="text" class="product-code" value="${escapeHtml(data?.maHang || "")}" placeholder="Mã hàng *"></td>
@@ -180,13 +183,10 @@
       <td><input type="text" class="unit" value="${escapeHtml(data?.dvt || "")}" placeholder="ĐVT" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="manufacturer" value="${escapeHtml(data?.hangSX || "")}" placeholder="Hãng/Nước SX" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy" readonly style="background:#f0f0f0;color:#333;"></td>
-      <!-- ĐÃ XÓA: GIÁ NHẬP -->
-      <!-- ĐÃ XÓA: SỐ HĐ NHẬP -->
       <td><input type="text" class="price-input" placeholder="Đơn giá xuất *"></td>
       <td><input type="text" class="qty-input" placeholder="Số lượng *"></td>
       <td><input type="text" class="lot-input" placeholder="Số lot *"></td>
       <td><input type="date" class="expiry-input"></td>
-      <!-- ĐÃ XÓA: SỐ HĐ XUẤT -->
       <td class="row-total" data-total="0">0</td>
       <td class="text-center" style="width:35px;">${removeButton}</td>
     `;
