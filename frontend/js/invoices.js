@@ -1,6 +1,7 @@
 /**
  * ==================== INVOICES MODULE ====================
  * Quản lý hóa đơn - Admin nhập, Quản lý duyệt
+ * ✅ ĐÃ THÊM BẢNG SẢN PHẨM TRONG FORM TẠO HÓA ĐƠN
  */
 
 (function () {
@@ -8,6 +9,7 @@
 
   let allData = [];
   let currentUser = null;
+  let exportItemsCache = {};
 
   // DOM Elements
   const container = document.getElementById("invoicesList");
@@ -54,40 +56,45 @@
     Utils.showLoading(true, "Đang tải...");
     try {
       const token = API.getToken();
-      console.log("🔑 Token:", token ? "Có token" : "Không có token");
 
       // Lấy phiếu xuất chưa có hóa đơn
-      console.log("📡 Gọi API: /invoice/exports-without-invoice");
       const noInvoiceRes = await fetch(
         API_BASE_URL + "/invoice/exports-without-invoice",
         { headers: { Authorization: "Bearer " + token } },
       );
       const noInvoiceResult = await noInvoiceRes.json();
-      console.log("📦 Kết quả noInvoice:", noInvoiceResult);
 
       // Lấy yêu cầu hóa đơn
-      console.log("📡 Gọi API: /invoice/requests");
       const requestsRes = await fetch(API_BASE_URL + "/invoice/requests", {
         headers: { Authorization: "Bearer " + token },
       });
       const requestsResult = await requestsRes.json();
-      console.log("📦 Kết quả requests:", requestsResult);
 
       let noInvoice = [];
       let requests = [];
 
       if (noInvoiceResult.success && noInvoiceResult.data) {
         noInvoice = noInvoiceResult.data;
-        console.log("✅ Đã lấy được noInvoice:", noInvoice.length, "phiếu");
-      } else {
-        console.warn("⚠️ API noInvoice trả về lỗi hoặc rỗng");
+        // Cache items cho từng phiếu xuất
+        for (const item of noInvoice) {
+          const exportDetail = await window.API.export.getById(item.id);
+          if (exportDetail && exportDetail.items) {
+            exportItemsCache[item.id] = exportDetail.items;
+          }
+        }
       }
 
       if (requestsResult.success && requestsResult.data) {
         requests = requestsResult.data;
-        console.log("✅ Đã lấy được requests:", requests.length, "phiếu");
-      } else {
-        console.warn("⚠️ API requests trả về lỗi hoặc rỗng");
+        // Cache items cho từng phiếu xuất trong request
+        for (const item of requests) {
+          if (item.exportId && !exportItemsCache[item.exportId]) {
+            const exportDetail = await window.API.export.getById(item.exportId);
+            if (exportDetail && exportDetail.items) {
+              exportItemsCache[item.exportId] = exportDetail.items;
+            }
+          }
+        }
       }
 
       allData = [];
@@ -100,9 +107,7 @@
         allData.push({ ...item, invoiceStatus: item.status });
       });
 
-      console.log("📊 Tổng dữ liệu:", allData.length, "phiếu");
-
-      // Sắp xếp: chưa nhập → chờ duyệt → hoàn thành → từ chối
+      // Sắp xếp
       allData.sort((a, b) => {
         const order = { "no-invoice": 0, pending: 1, approved: 2, rejected: 3 };
         return (order[a.invoiceStatus] || 99) - (order[b.invoiceStatus] || 99);
@@ -124,13 +129,6 @@
     const pending = allData.filter((d) => d.invoiceStatus === "pending");
     const approved = allData.filter((d) => d.invoiceStatus === "approved");
     const rejected = allData.filter((d) => d.invoiceStatus === "rejected");
-
-    console.log("📊 Stats:", {
-      noInvoice: noInvoice.length,
-      pending: pending.length,
-      approved: approved.length,
-      rejected: rejected.length,
-    });
 
     if (noInvoiceEl) noInvoiceEl.textContent = noInvoice.length;
     if (pendingEl) pendingEl.textContent = pending.length;
@@ -170,20 +168,8 @@
       ?.value.trim();
     const ngayXuatHD = document.getElementById("ngayXuatHD_" + exportId)?.value;
 
-    // Kiểm tra nhập đủ 4 trường
     if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
       Utils.showToast("⚠️ Vui lòng nhập đủ 4 trường!", "warning");
-      return;
-    }
-
-    // Kiểm tra định dạng ngày
-    if (ngayNhapHD && !/^\d{4}-\d{2}-\d{2}$/.test(ngayNhapHD)) {
-      Utils.showToast("⚠️ Ngày hóa đơn nhập không hợp lệ!", "warning");
-      return;
-    }
-
-    if (ngayXuatHD && !/^\d{4}-\d{2}-\d{2}$/.test(ngayXuatHD)) {
-      Utils.showToast("⚠️ Ngày hóa đơn xuất không hợp lệ!", "warning");
       return;
     }
 
@@ -208,10 +194,8 @@
 
       if (result.success) {
         Utils.showToast("✅ " + result.message);
-        // Ẩn form
         const form = document.getElementById("invoiceForm_" + exportId);
         if (form) form.style.display = "none";
-        // Tải lại dữ liệu
         await loadData();
       } else {
         Utils.showToast(
@@ -249,20 +233,12 @@
       );
     }
 
-    console.log("📊 Render filtered:", filtered.length, "phiếu");
-
     if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-receipts">
           <i class="fas fa-file-invoice" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.4;"></i>
           <p>Không có dữ liệu hóa đơn</p>
           <small>Phiếu xuất đã duyệt sẽ hiển thị tại đây</small>
-          <div style="margin-top:16px;padding:12px 20px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px solid rgba(59,130,246,0.2);">
-            <p style="color:#6b82a0;font-size:12px;">
-              <i class="fas fa-info-circle" style="color:#60a5fa;"></i>
-              Để hiển thị nút "Tạo hóa đơn", cần có phiếu xuất đã duyệt (status = 'approved')
-            </p>
-          </div>
         </div>
       `;
       return;
@@ -297,7 +273,67 @@
           badgeClass = "status-rejected";
         }
 
-        // Nút hành động - Chỉ Admin mới được tạo hóa đơn
+        // Lấy danh sách sản phẩm
+        const exportId = item.exportId || item.id;
+        const items = exportItemsCache[exportId] || [];
+
+        // Bảng sản phẩm
+        let itemsTableHtml = "";
+        if (items.length > 0) {
+          itemsTableHtml = `
+            <div style="margin-top: 10px; overflow-x: auto; border: 1px solid #1e2d45; border-radius: 6px;">
+              <table style="width:100%; border-collapse: collapse; font-size: 11px; background: #0f172a;">
+                <thead>
+                  <tr style="background: #1a2235; border-bottom: 1px solid #3b82f6;">
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 600;">STT</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">TÊN SẢN PHẨM</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 80px;">MÃ HÀNG</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 60px;">ĐVT</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 80px;">SỐ LƯỢNG</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">ĐƠN GIÁ</th>
+                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">THÀNH TIỀN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items
+                    .map(
+                      (it, idx) => `
+                    <tr style="border-bottom: 1px solid #1e2d45;">
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(it.tenThuongMai || "—")}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(it.maHang || "—")}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.dvt || "—")}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${it.soLuong || 0}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(it.donGia || 0)}</td>
+                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 600; font-family: monospace;">${Utils.formatCurrency(it.thanhTien || 0)}</td>
+                    </tr>
+                  `,
+                    )
+                    .join("")}
+                </tbody>
+                ${
+                  items.length > 0
+                    ? `
+                <tfoot>
+                  <tr style="background: #0f172a; border-top: 1px solid #3b82f6;">
+                    <td colspan="6" style="padding: 6px 12px; text-align: right; font-size: 13px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
+                    <td style="padding: 6px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(item.total || 0)}</td>
+                  </tr>
+                </tfoot>`
+                    : ""
+                }
+              </table>
+            </div>
+          `;
+        } else {
+          itemsTableHtml = `
+            <div style="margin-top: 10px; padding: 10px; text-align: center; color: #6b82a0; background: #0f172a; border-radius: 6px; border: 1px solid #1e2d45; font-size: 12px;">
+              <i class="fas fa-box" style="margin-right: 6px;"></i> Không có sản phẩm trong phiếu này
+            </div>
+          `;
+        }
+
+        // Nút hành động
         let actions = "";
         if (isNo && isAdmin()) {
           actions = `
@@ -315,7 +351,7 @@
           actions = `<span style="color:#f87171;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
         }
 
-        // Form nhập 4 trường (chỉ hiện khi chưa có và là Admin)
+        // Form nhập 4 trường
         let formHtml = "";
         if (isNo && isAdmin()) {
           formHtml = `
@@ -338,7 +374,16 @@
                 <input type="date" id="ngayXuatHD_${item.id}">
               </div>
             </div>
-            <div class="invoice-form-actions">
+
+            <!-- Bảng sản phẩm trong phiếu -->
+            <div style="margin-top: 12px; background: #0a0f1a; border-radius: 6px; border: 1px solid #1e2d45; padding: 8px;">
+              <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 6px;">
+                <i class="fas fa-list"></i> Danh sách sản phẩm trong phiếu
+              </div>
+              ${itemsTableHtml}
+            </div>
+
+            <div class="invoice-form-actions" style="margin-top: 12px;">
               <button class="btn-cancel-invoice" onclick="window.toggleInvoiceForm(${item.id})">
                 <i class="fas fa-times"></i> Hủy
               </button>
@@ -353,7 +398,7 @@
         `;
         }
 
-        // Thông tin hóa đơn (nếu đã có)
+        // Thông tin hóa đơn
         let infoHtml = "";
         if (isPending || isApproved || isRejected) {
           infoHtml = `
@@ -371,6 +416,13 @@
               item.ngayXuatHD,
             )}</span></div>
           </div>
+          <!-- Bảng sản phẩm -->
+          <div style="margin-top: 10px; background: #0a0f1a; border-radius: 6px; border: 1px solid #1e2d45; padding: 8px;">
+            <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 6px;">
+              <i class="fas fa-list"></i> Danh sách sản phẩm trong phiếu
+            </div>
+            ${itemsTableHtml}
+          </div>
         `;
         }
 
@@ -379,7 +431,7 @@
           <div class="receipt-card-header">
             <div class="receipt-card-id">
               <i class="fas fa-file-export"></i> ${Utils.escapeHtml(
-                item.exportNo || "PX-" + item.id,
+                item.exportNo || "PX-" + (item.exportId || item.id),
               )}
             </div>
             <div class="receipt-card-date">
@@ -461,7 +513,6 @@
     bindEvents();
   }
 
-  // Đợi DOM load xong rồi mới init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
