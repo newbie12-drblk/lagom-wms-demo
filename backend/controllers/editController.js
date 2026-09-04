@@ -24,7 +24,7 @@ const createEditRequest = async (req, res) => {
       });
     }
 
-    // ✅ Kiểm tra xem có trường nào thay đổi không
+    // ✅ 9 trường cho phép sửa
     const allowedFields = [
       "tenThuongMai",
       "maHang",
@@ -33,11 +33,14 @@ const createEditRequest = async (req, res) => {
       "hangSX",
       "phanLoai",
       "giaNhap",
+      "soHopDongNhap",
       "soLuongNhap",
     ];
 
+    // ✅ Kiểm tra trường thay đổi
     const changedFields = {};
     let hasChange = false;
+    const changeDetails = [];
 
     for (const field of allowedFields) {
       if (updatedData[field] !== undefined) {
@@ -47,6 +50,21 @@ const createEditRequest = async (req, res) => {
         if (String(oldVal).trim() !== String(newVal).trim()) {
           changedFields[field] = updatedData[field];
           hasChange = true;
+
+          const fieldLabels = {
+            tenThuongMai: "Tên thương mại",
+            maHang: "Mã hàng",
+            quyCach: "Quy cách",
+            dvt: "ĐVT",
+            hangSX: "Hãng/Nước SX",
+            phanLoai: "Phân loại máy",
+            giaNhap: "Giá nhập",
+            soHopDongNhap: "Số HĐ",
+            soLuongNhap: "Số lượng nhập",
+          };
+          changeDetails.push(
+            `${fieldLabels[field] || field}: "${oldVal || ""}" → "${newVal || ""}"`,
+          );
         }
       }
     }
@@ -58,7 +76,7 @@ const createEditRequest = async (req, res) => {
       });
     }
 
-    // ✅ Kiểm tra xem đã có yêu cầu pending chưa
+    // ✅ Kiểm tra yêu cầu pending
     const existingRequests = await EditRequest.getAllRequests("pending");
     const alreadyRequested = existingRequests.some(
       (req) => req.productId == productId,
@@ -75,29 +93,14 @@ const createEditRequest = async (req, res) => {
       requesterId,
       productId,
       oldProduct,
-      changedFields, // Chỉ gửi những trường thay đổi
+      changedFields,
     );
 
-    // ✅ Gửi thông báo cho Quản lý với chi tiết thay đổi
-    const changeDetails = Object.keys(changedFields)
-      .map((field) => {
-        const fieldLabels = {
-          tenThuongMai: "Tên thương mại",
-          maHang: "Mã hàng",
-          quyCach: "Quy cách",
-          dvt: "ĐVT",
-          hangSX: "Hãng/Nước SX",
-          phanLoai: "Phân loại máy",
-          giaNhap: "Giá nhập",
-          soLuongNhap: "Số lượng nhập",
-        };
-        return `${fieldLabels[field] || field}: "${oldProduct[field] || ""}" → "${changedFields[field] || ""}"`;
-      })
-      .join("\n");
-
+    // ✅ Gửi thông báo cho Quản lý
+    const changeSummary = changeDetails.join("\n");
     await Notification.createForManagers(
       `✏️ Yêu cầu chỉnh sửa sản phẩm "${oldProduct.tenThuongMai}"`,
-      `Admin yêu cầu chỉnh sửa các trường:\n${changeDetails}`,
+      `Admin yêu cầu chỉnh sửa ${Object.keys(changedFields).length} trường:\n${changeSummary}`,
       "approval",
       requestId,
       "edit_request",
@@ -105,7 +108,11 @@ const createEditRequest = async (req, res) => {
 
     res.json({
       success: true,
-      data: { id: requestId, changedFields: Object.keys(changedFields) },
+      data: {
+        id: requestId,
+        changedFields: Object.keys(changedFields),
+        changeCount: Object.keys(changedFields).length,
+      },
       message: `✅ Đã gửi yêu cầu chỉnh sửa ${Object.keys(changedFields).length} trường, chờ Quản lý duyệt`,
     });
   } catch (error) {
@@ -167,8 +174,7 @@ const approveEditRequest = async (req, res) => {
 
     const newData = request.newData || {};
 
-    // ✅ Cập nhật CHỈ những trường đã thay đổi
-    const updateFields = {};
+    // ✅ 9 trường cho phép cập nhật
     const allowedFields = [
       "tenThuongMai",
       "maHang",
@@ -177,12 +183,35 @@ const approveEditRequest = async (req, res) => {
       "hangSX",
       "phanLoai",
       "giaNhap",
+      "soHopDongNhap",
       "soLuongNhap",
     ];
 
+    const updateFields = {};
+    const changeDetails = [];
+
     for (const field of allowedFields) {
       if (newData[field] !== undefined) {
-        updateFields[field] = newData[field];
+        const oldVal = oldProduct[field] !== undefined ? oldProduct[field] : "";
+        const newVal = newData[field] !== undefined ? newData[field] : "";
+        if (String(oldVal).trim() !== String(newVal).trim()) {
+          updateFields[field] = newData[field];
+
+          const fieldLabels = {
+            tenThuongMai: "Tên thương mại",
+            maHang: "Mã hàng",
+            quyCach: "Quy cách",
+            dvt: "ĐVT",
+            hangSX: "Hãng/Nước SX",
+            phanLoai: "Phân loại máy",
+            giaNhap: "Giá nhập",
+            soHopDongNhap: "Số HĐ",
+            soLuongNhap: "Số lượng nhập",
+          };
+          changeDetails.push(
+            `${fieldLabels[field] || field}: "${oldVal || ""}" → "${newVal || ""}"`,
+          );
+        }
       }
     }
 
@@ -220,27 +249,12 @@ const approveEditRequest = async (req, res) => {
 
       await conn.commit();
 
-      // ✅ Gửi thông báo với chi tiết đã cập nhật
-      const changeDetails = Object.keys(updateFields)
-        .map((field) => {
-          const fieldLabels = {
-            tenThuongMai: "Tên thương mại",
-            maHang: "Mã hàng",
-            quyCach: "Quy cách",
-            dvt: "ĐVT",
-            hangSX: "Hãng/Nước SX",
-            phanLoai: "Phân loại máy",
-            giaNhap: "Giá nhập",
-            soLuongNhap: "Số lượng nhập",
-          };
-          return `${fieldLabels[field] || field}: "${oldProduct[field] || ""}" → "${updateFields[field] || ""}"`;
-        })
-        .join("\n");
-
+      // ✅ Gửi thông báo
+      const changeSummary = changeDetails.join("\n");
       await Notification.create(
         request.requesterId,
         "✅ Yêu cầu chỉnh sửa sản phẩm đã được duyệt",
-        `Sản phẩm "${request.productName}" đã được cập nhật:\n${changeDetails}`,
+        `Sản phẩm "${request.productName}" đã được cập nhật ${Object.keys(updateFields).length} trường:\n${changeSummary}`,
         "success",
         id,
         "edit_request",
