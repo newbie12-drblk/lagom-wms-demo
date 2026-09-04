@@ -101,7 +101,7 @@ const InvoiceRequest = {
     return rows;
   },
 
-  // ==================== DUYỆT HÓA ĐƠN ====================
+  // ==================== DUYỆT HÓA ĐƠN - CẬP NHẬT 4 TRƯỜNG ====================
   approve: async (id, approvedBy) => {
     const conn = await db.getConnection();
     try {
@@ -140,69 +140,87 @@ const InvoiceRequest = {
         throw new Error("Không tìm thấy sản phẩm trong phiếu xuất");
       }
 
-      // Lưu từng item vào inventory
+      // ✅ UPDATE từng item vào inventory (KHÔNG INSERT MỚI)
       for (const item of exportItems) {
-        // Tìm max stt
-        const [maxSttResult] = await conn.execute(
-          "SELECT MAX(stt) as maxStt FROM inventory",
+        // Tìm dòng inventory có maHang khớp
+        const [existingItems] = await conn.execute(
+          `SELECT * FROM inventory 
+           WHERE maHang = ? AND status = 'approved'
+           ORDER BY id DESC LIMIT 1`,
+          [item.maHang],
         );
-        const newStt = (maxSttResult[0]?.maxStt || 0) + 1;
 
-        // ✅ ĐÃ XÓA CỘT quyCachDongGoi
-        await conn.execute(
-          `INSERT INTO inventory (
-            stt, 
-            tenThuongMai, 
-            maHang, 
-            quyCach, 
-            hangSX, 
-            dvt, 
-            phanLoai,
-            giaNhap, 
-            giaXuat, 
-            soLuongNhap, 
-            soLuongXuat, 
-            tonKho,
-            soLot, 
-            ngayHetHan,
-            soHopDongNhap,
-            soHopDongXuat,
-            soHoaDonNhap,
-            ngayNhapHD,
-            soHoaDonXuat,
-            ngayXuatHD,
-            status, 
-            createdBy, 
-            approvedBy, 
-            approvedAt,
-            ghiChu
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
-          [
-            newStt,
-            item.tenThuongMai || "",
-            item.maHang || "",
-            item.quyCach || "",
-            item.hangSX || "",
-            item.dvt || "",
-            item.phanLoai || "",
-            item.donGia || 0,
-            item.donGia || 0,
-            0,
-            item.soLuong || 0,
-            0 - (item.soLuong || 0),
-            item.soLot || "",
-            item.ngayHetHan || null,
-            "",
-            item.soHopDongXuat || "",
-            request.soHoaDonNhap || "",
-            request.ngayNhapHD || null,
-            request.soHoaDonXuat || "",
-            request.ngayXuatHD || null,
-            exportData.createdBy,
-            approvedBy,
-            item.ghiChu || "",
-          ],
-        );
+        if (existingItems.length === 0) {
+          // Nếu chưa có sản phẩm trong kho, tạo mới
+          const [maxSttResult] = await conn.execute(
+            "SELECT MAX(stt) as maxStt FROM inventory",
+          );
+          const newStt = (maxSttResult[0]?.maxStt || 0) + 1;
+
+          await conn.execute(
+            `INSERT INTO inventory (
+              stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+              giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+              soLot, ngayHetHan,
+              soHopDongNhap, soHopDongXuat,
+              soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
+              status, createdBy, approvedBy, approvedAt, ghiChu
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
+            [
+              newStt,
+              item.tenThuongMai || "",
+              item.maHang || "",
+              item.quyCach || "",
+              item.hangSX || "",
+              item.dvt || "",
+              item.phanLoai || "",
+              item.donGia || 0,
+              item.donGia || 0,
+              0,
+              item.soLuong || 0,
+              0 - (item.soLuong || 0),
+              item.soLot || "",
+              item.ngayHetHan || null,
+              "",
+              item.soHopDongXuat || "",
+              request.soHoaDonNhap || "",
+              request.ngayNhapHD || null,
+              request.soHoaDonXuat || "",
+              request.ngayXuatHD || null,
+              exportData.createdBy,
+              approvedBy,
+              item.ghiChu || "",
+            ],
+          );
+        } else {
+          // ✅ CẬP NHẬT 4 TRƯỜNG HÓA ĐƠN VÀO DÒNG ĐÃ CÓ
+          const existingItem = existingItems[0];
+
+          await conn.execute(
+            `UPDATE inventory 
+             SET 
+               soHoaDonNhap = ?,
+               ngayNhapHD = ?,
+               soHoaDonXuat = ?,
+               ngayXuatHD = ?,
+               soHopDongXuat = ?,
+               soLuongXuat = soLuongXuat + ?,
+               tonKho = tonKho - ?,
+               giaXuat = ?
+             WHERE id = ?`,
+            [
+              request.soHoaDonNhap || "",
+              request.ngayNhapHD || null,
+              request.soHoaDonXuat || "",
+              request.ngayXuatHD || null,
+              item.soHopDongXuat || "",
+              item.soLuong || 0,
+              item.soLuong || 0,
+              item.donGia || 0,
+              existingItem.id,
+            ],
+          );
+        }
       }
 
       // Cập nhật hasInvoice cho export
