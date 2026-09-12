@@ -66,7 +66,6 @@ const Export = {
 
     const total = parseFloat(data.total) || 0;
 
-    // ✅ ĐÃ THÊM hasInvoice = FALSE
     const [result] = await db.execute(
       `INSERT INTO exports 
         (exportNo, exportDate, receiverName, customerName, customerAddress, 
@@ -83,7 +82,7 @@ const Export = {
         data.exportReason || "Sử dụng nội bộ",
         total,
         "pending",
-        false, // hasInvoice = FALSE
+        false,
         createdBy,
       ],
     );

@@ -37,7 +37,6 @@ const Receipt = {
       [id],
     );
 
-    console.log(`📦 Receipt ${id} has ${items.length} items`);
     return { ...receipt, items };
   },
 
@@ -63,7 +62,6 @@ const Receipt = {
          FROM receipt_items WHERE receiptId = ?`,
         [row.id],
       );
-      console.log(`  - ${row.receiptNo}: ${items.length} items`);
       result.push({ ...row, items });
     }
 
@@ -107,11 +105,8 @@ const Receipt = {
     );
     const receiptId = result.insertId;
 
-    console.log(`📝 Tạo receipt_items cho phiếu ${receiptId}`);
-
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
-        console.log(`  - ${item.maHang}: ${item.tenThuongMai}`);
         await db.execute(
           `INSERT INTO receipt_items 
             (receiptId, tenThuongMai, maHang, quyCach, hangSX, dvt, 
@@ -144,7 +139,6 @@ const Receipt = {
   },
 
   updateStatus: async (id, status, approvedBy, rejectedReason = null) => {
-    console.log(`📝 Cập nhật status phiếu ${id} -> ${status}`);
     await db.execute(
       `UPDATE receipts 
        SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?

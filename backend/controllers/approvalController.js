@@ -27,7 +27,15 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Mã hàng bị trùng trong yêu cầu" });
     }
 
+    // ✅ Validate SL nhập
     for (const prod of products) {
+      if (!prod.soLuongNhap || prod.soLuongNhap <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Sản phẩm ${prod.maHang}: Số lượng nhập phải > 0`,
+        });
+      }
+
       const existing = await Inventory.findByMaHang(prod.maHang);
       if (existing) {
         return res.status(400).json({
@@ -37,13 +45,11 @@ const createApprovalRequest = async (req, res) => {
       }
     }
 
-    // Lưu từng sản phẩm với 4 trường hóa đơn
     for (const prod of products) {
       const requestId = await ApprovalRequest.create(requesterId, prod);
       console.log("✅ Đã tạo yêu cầu ID:", requestId);
     }
 
-    // Lấy danh sách yêu cầu vừa tạo
     const allRequests = await ApprovalRequest.getByRequester(requesterId);
     const latestRequests = allRequests.slice(0, products.length);
 
@@ -90,12 +96,15 @@ const getMyRequests = async (req, res) => {
   }
 };
 
+// ============================================================
+// ✅ DUYỆT YÊU CẦU THÊM SP — LƯU VÀO INVENTORY
+// ============================================================
 const approveRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
-    console.log(`✅ Duyệt yêu cầu ID: ${id}`);
+    console.log(`✅ Duyệt yêu cầu thêm SP ID: ${id}`);
 
     const request = await ApprovalRequest.findById(id);
     if (!request) {
@@ -114,18 +123,20 @@ const approveRequest = async (req, res) => {
     const createdIds = [];
     const errors = [];
 
-    const [maxSttResult] = await db.execute(
-      "SELECT MAX(stt) as maxStt FROM inventory",
-    );
-    let currentStt = maxSttResult[0]?.maxStt || 0;
-
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
+      const [maxSttResult] = await conn.execute(
+        "SELECT MAX(stt) as maxStt FROM inventory",
+      );
+      let currentStt = maxSttResult[0]?.maxStt || 0;
+
       currentStt++;
 
-      // ✅ LƯU 11 TRƯỜNG VÀO INVENTORY (7 + 4 HÓA ĐƠN)
+      const soLuongNhap = productData.soLuongNhap || 0;
+
+      // ✅ LƯU VÀO INVENTORY (11 trường + SL nhập)
       await conn.execute(
         `INSERT INTO inventory (
           stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
@@ -145,16 +156,16 @@ const approveRequest = async (req, res) => {
           productData.phanLoai || "",
           productData.giaNhap || 0,
           0,
-          productData.soLuongNhap || 0,
+          soLuongNhap,
           0,
-          productData.soLuongNhap || 0,
+          soLuongNhap, // tonKho = soLuongNhap
           productData.soLot || "",
           productData.ngayHetHan || null,
           productData.soHopDongNhap || "",
-          productData.soHoaDonNhap || "", // ✅ TRƯỜNG MỚI
-          productData.soHoaDonXuat || "", // ✅ TRƯỜNG MỚI
-          productData.ngayNhapHD || null, // ✅ TRƯỜNG MỚI
-          productData.ngayXuatHD || null, // ✅ TRƯỜNG MỚI
+          productData.soHoaDonNhap || "",
+          productData.soHoaDonXuat || "",
+          productData.ngayNhapHD || null,
+          productData.ngayXuatHD || null,
           productData.ghiChu || "",
           request.requesterId,
           approvedBy,
@@ -172,13 +183,10 @@ const approveRequest = async (req, res) => {
 
       await conn.commit();
 
-      let message = `Đã duyệt yêu cầu, thêm 1 sản phẩm vào kho.`;
-      if (errors.length) message += ` Lưu ý: ${errors.join("; ")}`;
-
       await Notification.create(
         request.requesterId,
         "✅ Yêu cầu thêm sản phẩm đã được duyệt",
-        message,
+        `Sản phẩm "${productData.tenThuongMai}" đã được thêm vào kho với SL: ${soLuongNhap}`,
         "success",
         id,
         "approval_request",
@@ -186,7 +194,7 @@ const approveRequest = async (req, res) => {
 
       res.json({
         success: true,
-        message: `Đã duyệt và thêm sản phẩm vào kho`,
+        message: `Đã duyệt và thêm sản phẩm vào kho (SL: ${soLuongNhap})`,
         errors,
         data: { createdIds, count: createdIds.length },
       });

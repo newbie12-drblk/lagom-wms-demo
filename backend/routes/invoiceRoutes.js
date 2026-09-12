@@ -6,6 +6,7 @@ const {
   getAllInvoiceRequests,
   getInvoiceRequestById,
   approveInvoice,
+  approveMultipleInvoices,
   rejectInvoice,
   deleteInvoiceRequest,
 } = require("../controllers/invoiceController");
@@ -15,7 +16,6 @@ const { checkRole } = require("../middleware/roleCheck");
 const router = express.Router();
 
 // ========== ADMIN ROUTES ==========
-// Lấy danh sách phiếu xuất chưa có hóa đơn
 router.get(
   "/exports-without-invoice",
   verifyToken,
@@ -23,10 +23,8 @@ router.get(
   getExportsWithoutInvoice,
 );
 
-// Admin tạo yêu cầu nhập hóa đơn
 router.post("/requests", verifyToken, checkRole("admin"), createInvoiceRequest);
 
-// Admin xóa yêu cầu
 router.delete(
   "/requests/:id",
   verifyToken,
@@ -35,7 +33,6 @@ router.delete(
 );
 
 // ========== QUẢN LÝ ROUTES ==========
-// Lấy danh sách hóa đơn chờ duyệt
 router.get(
   "/requests/pending",
   verifyToken,
@@ -43,7 +40,6 @@ router.get(
   getPendingInvoices,
 );
 
-// Lấy tất cả yêu cầu
 router.get(
   "/requests",
   verifyToken,
@@ -51,7 +47,6 @@ router.get(
   getAllInvoiceRequests,
 );
 
-// Lấy chi tiết yêu cầu
 router.get(
   "/requests/:id",
   verifyToken,
@@ -59,7 +54,7 @@ router.get(
   getInvoiceRequestById,
 );
 
-// Quản lý duyệt/từ chối
+// Duyệt/từ chối từng cái
 router.put(
   "/requests/:id/approve",
   verifyToken,
@@ -71,6 +66,14 @@ router.put(
   verifyToken,
   checkRole("quan_ly"),
   rejectInvoice,
+);
+
+// ✅ Duyệt hàng loạt
+router.put(
+  "/requests/approve-multiple",
+  verifyToken,
+  checkRole("quan_ly"),
+  approveMultipleInvoices,
 );
 
 module.exports = router;

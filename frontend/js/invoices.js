@@ -1,8 +1,6 @@
 /**
  * ==================== INVOICES MODULE ====================
- * Quản lý hóa đơn - Admin nhập, Quản lý duyệt
- * ✅ ĐÃ THÊM BẢNG SẢN PHẨM TRONG FORM TẠO HÓA ĐƠN
- * ✅ CHỈ GIỮ MÀU ĐỎ CHO TRẠNG THÁI "CHƯA NHẬP"
+ * Quản lý hóa đơn - Admin nhập 4 trường HĐ CHO TỪNG ITEM
  */
 
 (function () {
@@ -12,7 +10,6 @@
   let currentUser = null;
   let exportItemsCache = {};
 
-  // DOM Elements
   const container = document.getElementById("invoicesList");
   const searchInput = document.getElementById("searchInvoice");
   const statusFilter = document.getElementById("invoiceFilterStatus");
@@ -20,13 +17,11 @@
   const clearBtn = document.getElementById("btnClearInvoiceFilters");
   const badge = document.getElementById("invoiceBadge");
 
-  // Stats elements
   const noInvoiceEl = document.getElementById("invoiceNoInvoice");
   const pendingEl = document.getElementById("invoicePending");
   const approvedEl = document.getElementById("invoiceApproved");
   const rejectedEl = document.getElementById("invoiceRejected");
 
-  // ==================== GET CURRENT USER ====================
   function getCurrentUser() {
     if (currentUser) return currentUser;
     const session = localStorage.getItem("lagom_session");
@@ -41,74 +36,101 @@
     return null;
   }
 
-  // ==================== CHECK PERMISSION ====================
   function isAdmin() {
     const user = getCurrentUser();
     return user && user.roleId === "admin";
   }
 
-  function isManager() {
-    const user = getCurrentUser();
-    return user && user.roleId === "quan_ly";
-  }
-
-  // ==================== LOAD DATA ====================
   async function loadData() {
     Utils.showLoading(true, "Đang tải...");
     try {
       const token = API.getToken();
 
-      // Lấy phiếu xuất chưa có hóa đơn
       const noInvoiceRes = await fetch(
         API_BASE_URL + "/invoice/exports-without-invoice",
         { headers: { Authorization: "Bearer " + token } },
       );
       const noInvoiceResult = await noInvoiceRes.json();
 
-      // Lấy yêu cầu hóa đơn
       const requestsRes = await fetch(API_BASE_URL + "/invoice/requests", {
         headers: { Authorization: "Bearer " + token },
       });
       const requestsResult = await requestsRes.json();
 
-      let noInvoice = [];
+      let noInvoiceExports = [];
       let requests = [];
 
       if (noInvoiceResult.success && noInvoiceResult.data) {
-        noInvoice = noInvoiceResult.data;
-        // Cache items cho từng phiếu xuất
-        for (const item of noInvoice) {
-          const exportDetail = await window.API.export.getById(item.id);
-          if (exportDetail && exportDetail.items) {
-            exportItemsCache[item.id] = exportDetail.items;
-          }
+        noInvoiceExports = noInvoiceResult.data;
+        for (const exp of noInvoiceExports) {
+          exportItemsCache[exp.id] = exp.items || [];
         }
       }
 
       if (requestsResult.success && requestsResult.data) {
         requests = requestsResult.data;
-        // Cache items cho từng phiếu xuất trong request
-        for (const item of requests) {
-          if (item.exportId && !exportItemsCache[item.exportId]) {
-            const exportDetail = await window.API.export.getById(item.exportId);
-            if (exportDetail && exportDetail.items) {
-              exportItemsCache[item.exportId] = exportDetail.items;
-            }
-          }
-        }
       }
 
       allData = [];
 
-      noInvoice.forEach((item) => {
-        allData.push({ ...item, invoiceStatus: "no-invoice" });
-      });
+      for (const exp of noInvoiceExports) {
+        const items = exportItemsCache[exp.id] || [];
+        const requestsForExp = requests.filter((r) => r.exportId === exp.id);
+        const approvedItemIds = requestsForExp
+          .filter((r) => r.status === "approved")
+          .map((r) => r.exportItemId);
+        const pendingItemIds = requestsForExp
+          .filter((r) => r.status === "pending")
+          .map((r) => r.exportItemId);
 
-      requests.forEach((item) => {
-        allData.push({ ...item, invoiceStatus: item.status });
-      });
+        const availableItems = items.filter(
+          (it) =>
+            !approvedItemIds.includes(it.id) && !pendingItemIds.includes(it.id),
+        );
 
-      // Sắp xếp: chưa nhập → chờ duyệt → hoàn thành → từ chối
+        if (availableItems.length > 0) {
+          allData.push({
+            ...exp,
+            invoiceStatus: "no-invoice",
+            availableItems,
+            pendingItemIds,
+            approvedItemIds,
+            allItems: items,
+          });
+        }
+      }
+
+      const groupedByExport = {};
+      for (const req of requests) {
+        if (!groupedByExport[req.exportId]) {
+          groupedByExport[req.exportId] = {
+            exportId: req.exportId,
+            exportNo: req.exportNo,
+            exportDate: req.exportDate,
+            receiverName: req.receiverName,
+            customerName: req.customerName,
+            total: req.total,
+            requests: [],
+          };
+        }
+        groupedByExport[req.exportId].requests.push(req);
+      }
+
+      for (const expId in groupedByExport) {
+        const group = groupedByExport[expId];
+        const statuses = group.requests.map((r) => r.status);
+        let groupStatus = "pending";
+        if (statuses.every((s) => s === "approved")) groupStatus = "approved";
+        else if (statuses.some((s) => s === "pending")) groupStatus = "pending";
+        else if (statuses.every((s) => s === "rejected"))
+          groupStatus = "rejected";
+
+        allData.push({
+          ...group,
+          invoiceStatus: groupStatus,
+        });
+      }
+
       allData.sort((a, b) => {
         const order = { "no-invoice": 0, pending: 1, approved: 2, rejected: 3 };
         return (order[a.invoiceStatus] || 99) - (order[b.invoiceStatus] || 99);
@@ -124,7 +146,6 @@
     }
   }
 
-  // ==================== UPDATE STATS ====================
   function updateStats() {
     const noInvoice = allData.filter((d) => d.invoiceStatus === "no-invoice");
     const pending = allData.filter((d) => d.invoiceStatus === "pending");
@@ -143,12 +164,10 @@
     }
   }
 
-  // ==================== TOGGLE FORM ====================
   function toggleForm(exportId) {
     const form = document.getElementById("invoiceForm_" + exportId);
     if (!form) return;
 
-    // Đóng các form khác
     document.querySelectorAll(".invoice-form-container").forEach((el) => {
       if (el.id !== "invoiceForm_" + exportId) {
         el.style.display = "none";
@@ -158,23 +177,40 @@
     form.style.display = form.style.display === "none" ? "block" : "none";
   }
 
-  // ==================== SUBMIT INVOICE ====================
   async function submitInvoice(exportId) {
-    const soHoaDonNhap = document
-      .getElementById("soHoaDonNhap_" + exportId)
-      ?.value.trim();
-    const ngayNhapHD = document.getElementById("ngayNhapHD_" + exportId)?.value;
-    const soHoaDonXuat = document
-      .getElementById("soHoaDonXuat_" + exportId)
-      ?.value.trim();
-    const ngayXuatHD = document.getElementById("ngayXuatHD_" + exportId)?.value;
+    const items = [];
+    const rows = document.querySelectorAll(`.invoice-item-row-${exportId}`);
 
-    if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
-      Utils.showToast("⚠️ Vui lòng nhập đủ 4 trường!", "warning");
+    for (const row of rows) {
+      const exportItemId = parseInt(row.dataset.itemId);
+      const soHoaDonNhap = row.querySelector(".inv-soHoaDonNhap")?.value.trim();
+      const ngayNhapHD = row.querySelector(".inv-ngayNhapHD")?.value;
+      const soHoaDonXuat = row.querySelector(".inv-soHoaDonXuat")?.value.trim();
+      const ngayXuatHD = row.querySelector(".inv-ngayXuatHD")?.value;
+
+      if (!soHoaDonNhap || !ngayNhapHD || !soHoaDonXuat || !ngayXuatHD) {
+        Utils.showToast(
+          `⚠️ Vui lòng nhập đủ 4 trường cho TẤT CẢ sản phẩm!`,
+          "warning",
+        );
+        return;
+      }
+
+      items.push({
+        exportItemId,
+        soHoaDonNhap,
+        ngayNhapHD,
+        soHoaDonXuat,
+        ngayXuatHD,
+      });
+    }
+
+    if (items.length === 0) {
+      Utils.showToast("⚠️ Không có sản phẩm nào để nhập hóa đơn", "warning");
       return;
     }
 
-    Utils.showLoading(true, "Đang gửi yêu cầu...");
+    Utils.showLoading(true, `Đang gửi ${items.length} yêu cầu...`);
     try {
       const token = API.getToken();
       const res = await fetch(API_BASE_URL + "/invoice/requests", {
@@ -183,13 +219,7 @@
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({
-          exportId,
-          soHoaDonNhap,
-          ngayNhapHD,
-          soHoaDonXuat,
-          ngayXuatHD,
-        }),
+        body: JSON.stringify({ exportId, items }),
       });
       const result = await res.json();
 
@@ -212,7 +242,6 @@
     }
   }
 
-  // ==================== RENDER ====================
   function render() {
     if (!container) return;
 
@@ -245,253 +274,212 @@
       return;
     }
 
-    container.innerHTML = filtered
-      .map((item) => {
-        const isNo = item.invoiceStatus === "no-invoice";
-        const isPending = item.invoiceStatus === "pending";
-        const isApproved = item.invoiceStatus === "approved";
-        const isRejected = item.invoiceStatus === "rejected";
-
-        // ✅ CHỈ GIỮ MÀU ĐỎ CHO "CHƯA NHẬP" - CÁC TRẠNG THÁI KHÁC KHÔNG CÓ MÀU
-        let color = "#6b82a0"; // Màu xám mặc định
-        let badgeText = "";
-        let badgeClass = "";
-
-        if (isNo) {
-          color = "#f87171"; // MÀU ĐỎ - CHỈ DÙNG CHO CHƯA NHẬP
-          badgeText = "🔴 Chưa nhập";
-          badgeClass = "status-pending";
-        } else if (isPending) {
-          color = "#6b82a0"; // Xám - không có màu nổi bật
-          badgeText = "⏳ Chờ duyệt";
-          badgeClass = "status-pending";
-        } else if (isApproved) {
-          color = "#6b82a0"; // Xám - không có màu nổi bật
-          badgeText = "✅ Hoàn thành";
-          badgeClass = "status-approved";
-        } else if (isRejected) {
-          color = "#6b82a0"; // Xám - không có màu nổi bật
-          badgeText = "❌ Từ chối";
-          badgeClass = "status-rejected";
-        }
-
-        // Lấy danh sách sản phẩm
-        const exportId = item.exportId || item.id;
-        const items = exportItemsCache[exportId] || [];
-
-        // Bảng sản phẩm
-        let itemsTableHtml = "";
-        if (items.length > 0) {
-          itemsTableHtml = `
-            <div style="margin-top: 10px; overflow-x: auto; border: 1px solid #1e2d45; border-radius: 6px;">
-              <table style="width:100%; border-collapse: collapse; font-size: 11px; background: #0f172a;">
-                <thead>
-                  <tr style="background: #1a2235; border-bottom: 1px solid #3b82f6;">
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 600;">STT</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">TÊN SẢN PHẨM</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 80px;">MÃ HÀNG</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 60px;">ĐVT</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 80px;">SỐ LƯỢNG</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">ĐƠN GIÁ</th>
-                    <th style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; min-width: 100px;">THÀNH TIỀN</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${items
-                    .map(
-                      (it, idx) => `
-                    <tr style="border-bottom: 1px solid #1e2d45;">
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(it.tenThuongMai || "—")}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(it.maHang || "—")}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.dvt || "—")}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${it.soLuong || 0}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(it.donGia || 0)}</td>
-                      <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 600; font-family: monospace;">${Utils.formatCurrency(it.thanhTien || 0)}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-                ${
-                  items.length > 0
-                    ? `
-                <tfoot>
-                  <tr style="background: #0f172a; border-top: 1px solid #3b82f6;">
-                    <td colspan="6" style="padding: 6px 12px; text-align: right; font-size: 13px; font-weight: 700; color: #e2eaf5;">TỔNG CỘNG:</td>
-                    <td style="padding: 6px 12px; text-align: right; font-size: 14px; font-weight: 700; color: #fbbf24; font-family: monospace;">${Utils.formatCurrency(item.total || 0)}</td>
-                  </tr>
-                </tfoot>`
-                    : ""
-                }
-              </table>
-            </div>
-          `;
-        } else {
-          itemsTableHtml = `
-            <div style="margin-top: 10px; padding: 10px; text-align: center; color: #6b82a0; background: #0f172a; border-radius: 6px; border: 1px solid #1e2d45; font-size: 12px;">
-              <i class="fas fa-box" style="margin-right: 6px;"></i> Không có sản phẩm trong phiếu này
-            </div>
-          `;
-        }
-
-        // Nút hành động
-        let actions = "";
-        if (isNo && isAdmin()) {
-          actions = `
-          <button class="btn-create-invoice" onclick="window.toggleInvoiceForm(${item.id})">
-            <i class="fas fa-plus-circle"></i> Tạo hóa đơn
-          </button>
-        `;
-        } else if (isNo && !isAdmin()) {
-          actions = `<span style="color:#6b82a0;font-size:12px;">Chỉ Admin mới được tạo</span>`;
-        } else if (isPending) {
-          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Đang chờ</span>`;
-        } else if (isApproved) {
-          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-check-circle"></i> Hoàn thành</span>`;
-        } else if (isRejected) {
-          actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-times-circle"></i> Từ chối</span>`;
-        }
-
-        // Form nhập 4 trường
-        let formHtml = "";
-        if (isNo && isAdmin()) {
-          formHtml = `
-          <div class="invoice-form-container" id="invoiceForm_${item.id}" style="display:none;">
-            <div class="invoice-form-grid">
-              <div class="invoice-form-group">
-                <label><span class="required">*</span> Số hóa đơn nhập</label>
-                <input type="text" id="soHoaDonNhap_${item.id}" placeholder="VD: HD001/2026">
-              </div>
-              <div class="invoice-form-group">
-                <label><span class="required">*</span> Ngày hóa đơn nhập</label>
-                <input type="date" id="ngayNhapHD_${item.id}">
-              </div>
-              <div class="invoice-form-group">
-                <label><span class="required">*</span> Số hóa đơn xuất</label>
-                <input type="text" id="soHoaDonXuat_${item.id}" placeholder="VD: HDX001/2026">
-              </div>
-              <div class="invoice-form-group">
-                <label><span class="required">*</span> Ngày hóa đơn xuất</label>
-                <input type="date" id="ngayXuatHD_${item.id}">
-              </div>
-            </div>
-
-            <!-- Bảng sản phẩm trong phiếu -->
-            <div style="margin-top: 12px; background: #0a0f1a; border-radius: 6px; border: 1px solid #1e2d45; padding: 8px;">
-              <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 6px;">
-                <i class="fas fa-list"></i> Danh sách sản phẩm trong phiếu
-              </div>
-              ${itemsTableHtml}
-            </div>
-
-            <div class="invoice-form-actions" style="margin-top: 12px;">
-              <button class="btn-cancel-invoice" onclick="window.toggleInvoiceForm(${item.id})">
-                <i class="fas fa-times"></i> Hủy
-              </button>
-              <button class="btn-submit-invoice" onclick="window.submitInvoice(${item.id})">
-                <i class="fas fa-paper-plane"></i> Gửi duyệt
-              </button>
-            </div>
-            <div class="invoice-form-note">
-              <p><i class="fas fa-exclamation-triangle"></i> Sau khi gửi, Quản lý sẽ duyệt và lưu vào tồn kho.</p>
-            </div>
-          </div>
-        `;
-        }
-
-        // Thông tin hóa đơn
-        let infoHtml = "";
-        if (isPending || isApproved || isRejected) {
-          infoHtml = `
-          <div class="invoice-info">
-            <div><span class="label">Số HĐ nhập:</span> <span class="value highlight">${Utils.escapeHtml(
-              item.soHoaDonNhap || "—",
-            )}</span></div>
-            <div><span class="label">Ngày HĐ nhập:</span> <span class="value">${Utils.formatDate(
-              item.ngayNhapHD,
-            )}</span></div>
-            <div><span class="label">Số HĐ xuất:</span> <span class="value highlight">${Utils.escapeHtml(
-              item.soHoaDonXuat || "—",
-            )}</span></div>
-            <div><span class="label">Ngày HĐ xuất:</span> <span class="value">${Utils.formatDate(
-              item.ngayXuatHD,
-            )}</span></div>
-          </div>
-          <!-- Bảng sản phẩm -->
-          <div style="margin-top: 10px; background: #0a0f1a; border-radius: 6px; border: 1px solid #1e2d45; padding: 8px;">
-            <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 6px;">
-              <i class="fas fa-list"></i> Danh sách sản phẩm trong phiếu
-            </div>
-            ${itemsTableHtml}
-          </div>
-        `;
-        }
-
-        return `
-        <div class="receipt-card invoice-card ${isNo ? "no-invoice" : ""}" style="${isNo ? "border-left:4px solid #f87171;" : "border-left:1px solid var(--border);"}">
-          <div class="receipt-card-header">
-            <div class="receipt-card-id">
-              <i class="fas fa-file-export"></i> ${Utils.escapeHtml(
-                item.exportNo || "PX-" + (item.exportId || item.id),
-              )}
-            </div>
-            <div class="receipt-card-date">
-              <i class="far fa-calendar-alt"></i> ${Utils.formatDate(
-                item.exportDate || item.createdAt,
-              )}
-            </div>
-            <span class="status-badge ${badgeClass}">${badgeText}</span>
-          </div>
-          <div class="receipt-card-body">
-            <div class="receipt-card-info">
-              <div class="label">Khách hàng</div>
-              <div class="value">${Utils.escapeHtml(
-                item.customerName || item.receiverName || "—",
-              )}</div>
-            </div>
-            <div class="receipt-card-info">
-              <div class="label">Người nhận</div>
-              <div class="value">${Utils.escapeHtml(
-                item.receiverName || "—",
-              )}</div>
-            </div>
-            <div class="receipt-card-total">
-              <div class="label">Tổng tiền</div>
-              <div class="value">${Utils.formatCurrency(item.total || 0)}</div>
-            </div>
-          </div>
-          <div class="receipt-card-footer">
-            <div class="status-text">
-              ${isNo ? "🔴 Chưa có thông tin hóa đơn" : ""}
-              ${isPending ? "⏳ Đã nhập, chờ duyệt" : ""}
-              ${isApproved ? "✅ Đã có đầy đủ thông tin" : ""}
-              ${isRejected ? "❌ Bị từ chối" : ""}
-            </div>
-            <div class="actions">${actions}</div>
-          </div>
-          ${infoHtml}
-          ${formHtml}
-        </div>
-      `;
-      })
-      .join("");
+    container.innerHTML = filtered.map(renderInvoiceCard).join("");
   }
 
-  // ==================== BIND EVENTS ====================
+  function renderInvoiceCard(item) {
+    const isNo = item.invoiceStatus === "no-invoice";
+    const isPending = item.invoiceStatus === "pending";
+    const isApproved = item.invoiceStatus === "approved";
+    const isRejected = item.invoiceStatus === "rejected";
+
+    let badgeText = "";
+    let badgeClass = "";
+    if (isNo) {
+      badgeText = "🔴 Chưa nhập";
+      badgeClass = "status-pending";
+    } else if (isPending) {
+      badgeText = "⏳ Chờ duyệt";
+      badgeClass = "status-pending";
+    } else if (isApproved) {
+      badgeText = "✅ Hoàn thành";
+      badgeClass = "status-approved";
+    } else if (isRejected) {
+      badgeText = "❌ Từ chối";
+      badgeClass = "status-rejected";
+    }
+
+    let actions = "";
+    if (isNo && isAdmin()) {
+      actions = `
+        <button class="btn-create-invoice" onclick="window.toggleInvoiceForm(${item.id})">
+          <i class="fas fa-plus-circle"></i> Nhập hóa đơn
+        </button>
+      `;
+    } else if (isNo && !isAdmin()) {
+      actions = `<span style="color:#6b82a0;font-size:12px;">Chỉ Admin mới được nhập</span>`;
+    } else if (isPending) {
+      actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Đang chờ Quản lý</span>`;
+    } else if (isApproved) {
+      actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-check-circle"></i> Hoàn thành</span>`;
+    } else if (isRejected) {
+      actions = `<span style="color:#6b82a0;font-size:12px;"><i class="fas fa-times-circle"></i> Bị từ chối</span>`;
+    }
+
+    let itemsHtml = "";
+
+    if (isNo && isAdmin()) {
+      itemsHtml = `
+        <div class="invoice-form-container" id="invoiceForm_${item.id}" style="display:none;">
+          <div style="padding: 10px 14px; background: rgba(96, 165, 250, 0.08); border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(96, 165, 250, 0.15);">
+            <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+            <span style="font-size: 12px; color: #60a5fa;">
+              Nhập <strong>4 trường hóa đơn RIÊNG</strong> cho từng sản phẩm bên dưới
+            </span>
+          </div>
+          <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 6px;">
+            <table style="width:100%; border-collapse: collapse; font-size: 11px; background: #0f172a; min-width: 900px;">
+              <thead>
+                <tr style="background: #1a2235; border-bottom: 1px solid #3b82f6;">
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 600; width: 40px;">STT</th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 120px;">SẢN PHẨM</th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 600; min-width: 80px;">MÃ HÀNG</th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 600; width: 60px;">SL</th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; font-weight: 600; min-width: 110px;">SỐ HĐ NHẬP <span style="color:#ef4444;">*</span></th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; font-weight: 600; min-width: 120px;">NGÀY HĐ NHẬP <span style="color:#ef4444;">*</span></th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; font-weight: 600; min-width: 110px;">SỐ HĐ XUẤT <span style="color:#ef4444;">*</span></th>
+                  <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; font-weight: 600; min-width: 120px;">NGÀY HĐ XUẤT <span style="color:#ef4444;">*</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${item.availableItems
+                  .map(
+                    (it, idx) => `
+                  <tr class="invoice-item-row-${item.id}" data-item-id="${it.id}" style="border-bottom: 1px solid #1e2d45;">
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.tenThuongMai || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(it.maHang || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${it.soLuong || 0}</td>
+                    <td style="padding: 4px 6px; border: 1px solid #1e2d45;">
+                      <input type="text" class="inv-soHoaDonNhap" placeholder="VD: HD001" style="width:100%; padding:5px 6px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:11px;">
+                    </td>
+                    <td style="padding: 4px 6px; border: 1px solid #1e2d45;">
+                      <input type="date" class="inv-ngayNhapHD" style="width:100%; padding:5px 6px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:11px;">
+                    </td>
+                    <td style="padding: 4px 6px; border: 1px solid #1e2d45;">
+                      <input type="text" class="inv-soHoaDonXuat" placeholder="VD: HDX001" style="width:100%; padding:5px 6px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:11px;">
+                    </td>
+                    <td style="padding: 4px 6px; border: 1px solid #1e2d45;">
+                      <input type="date" class="inv-ngayXuatHD" style="width:100%; padding:5px 6px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:11px;">
+                    </td>
+                  </tr>
+                `,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="invoice-form-actions" style="margin-top: 12px;">
+            <button class="btn-cancel-invoice" onclick="window.toggleInvoiceForm(${item.id})">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+            <button class="btn-submit-invoice" onclick="window.submitInvoice(${item.id})">
+              <i class="fas fa-paper-plane"></i> Gửi ${item.availableItems.length} hóa đơn
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      const itemsToShow = item.requests ? item.requests : item.allItems || [];
+
+      itemsHtml = `
+        <div style="margin-top: 10px; overflow-x: auto; border: 1px solid #1e2d45; border-radius: 6px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 11px; background: #0f172a; min-width: 800px;">
+            <thead>
+              <tr style="background: #1a2235; border-bottom: 1px solid #3b82f6;">
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; width: 40px;">STT</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 120px;">SẢN PHẨM</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 80px;">MÃ HÀNG</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; width: 60px;">SL</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐ NHẬP</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HĐ NHẬP</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa;">SỐ HĐ XUẤT</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa;">NGÀY HĐ XUẤT</th>
+                <th style="padding: 6px 8px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; width: 80px;">TRẠNG THÁI</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsToShow
+                .map((it, idx) => {
+                  let stCls = "status-pending";
+                  let stTxt = "Chờ";
+                  if (it.status === "approved") {
+                    stCls = "status-approved";
+                    stTxt = "✓ Duyệt";
+                  } else if (it.status === "rejected") {
+                    stCls = "status-rejected";
+                    stTxt = "✗ Từ chối";
+                  }
+                  return `
+                  <tr style="border-bottom: 1px solid #1e2d45;">
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.tenThuongMai || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(it.maHang || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: right; color: #86efac;">${it.soLuong || 0}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.soHoaDonNhap || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(it.ngayNhapHD)}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(it.soHoaDonXuat || "—")}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(it.ngayXuatHD)}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #1e2d45; text-align: center;">
+                      <span class="status-badge ${stCls}" style="font-size: 9px; padding: 2px 6px;">${stTxt}</span>
+                    </td>
+                  </tr>
+                `;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="receipt-card invoice-card ${isNo ? "no-invoice" : ""}" style="${isNo ? "border-left:4px solid #f87171;" : "border-left:1px solid var(--border);"}">
+        <div class="receipt-card-header">
+          <div class="receipt-card-id">
+            <i class="fas fa-file-export"></i> ${Utils.escapeHtml(item.exportNo || "PX-" + (item.exportId || item.id))}
+          </div>
+          <div class="receipt-card-date">
+            <i class="far fa-calendar-alt"></i> ${Utils.formatDate(item.exportDate || item.createdAt)}
+          </div>
+          <span class="status-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="receipt-card-body">
+          <div class="receipt-card-info">
+            <div class="label">Khách hàng</div>
+            <div class="value">${Utils.escapeHtml(item.customerName || item.receiverName || "—")}</div>
+          </div>
+          <div class="receipt-card-info">
+            <div class="label">Người nhận</div>
+            <div class="value">${Utils.escapeHtml(item.receiverName || "—")}</div>
+          </div>
+          <div class="receipt-card-info">
+            <div class="label">Số sản phẩm</div>
+            <div class="value">${isNo ? item.availableItems?.length || 0 : item.requests?.length || 0}</div>
+          </div>
+          <div class="receipt-card-total">
+            <div class="label">Tổng tiền</div>
+            <div class="value">${Utils.formatCurrency(item.total || 0)}</div>
+          </div>
+        </div>
+        <div class="receipt-card-footer">
+          <div class="status-text">
+            ${isNo ? "🔴 Chưa có thông tin hóa đơn" : ""}
+            ${isPending ? "⏳ Đã nhập, chờ duyệt" : ""}
+            ${isApproved ? "✅ Đã có đầy đủ thông tin" : ""}
+            ${isRejected ? "❌ Bị từ chối" : ""}
+          </div>
+          <div class="actions">${actions}</div>
+        </div>
+        ${itemsHtml}
+      </div>
+    `;
+  }
+
   function bindEvents() {
-    if (searchInput) {
-      searchInput.addEventListener("input", render);
-    }
-
-    if (statusFilter) {
-      statusFilter.addEventListener("change", render);
-    }
-
-    if (refreshBtn) {
-      refreshBtn.addEventListener("click", loadData);
-    }
-
+    if (searchInput) searchInput.addEventListener("input", render);
+    if (statusFilter) statusFilter.addEventListener("change", render);
+    if (refreshBtn) refreshBtn.addEventListener("click", loadData);
     if (clearBtn) {
       clearBtn.addEventListener("click", () => {
         if (searchInput) searchInput.value = "";
@@ -501,14 +489,10 @@
     }
   }
 
-  // ==================== EXPOSE ====================
   window.loadInvoiceData = loadData;
   window.toggleInvoiceForm = toggleForm;
   window.submitInvoice = submitInvoice;
-  window.isAdmin = isAdmin;
-  window.isManager = isManager;
 
-  // ==================== INIT ====================
   function init() {
     console.log("🚀 Invoices module initialized");
     loadData();

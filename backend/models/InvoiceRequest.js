@@ -1,31 +1,33 @@
 const db = require("../config/database");
 
 const InvoiceRequest = {
-  // ==================== TẠO YÊU CẦU NHẬP HÓA ĐƠN ====================
-  create: async (exportId, invoiceData, createdBy) => {
-    const [result] = await db.execute(
-      `INSERT INTO invoice_requests (
-        exportId, 
-        soHoaDonNhap, 
-        ngayNhapHD, 
-        soHoaDonXuat, 
-        ngayXuatHD, 
-        status, 
-        createdBy
-      ) VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-      [
-        exportId,
-        invoiceData.soHoaDonNhap || "",
-        invoiceData.ngayNhapHD || null,
-        invoiceData.soHoaDonXuat || "",
-        invoiceData.ngayXuatHD || null,
-        createdBy,
-      ],
-    );
-    return result.insertId;
+  // ==================== TẠO NHIỀU YÊU CẦU (MỖI ITEM 1 RECORD) ====================
+  createMultiple: async (exportId, items, createdBy) => {
+    const ids = [];
+    for (const item of items) {
+      const [result] = await db.execute(
+        `INSERT INTO invoice_requests (
+          exportId, exportItemId,
+          soHoaDonNhap, ngayNhapHD,
+          soHoaDonXuat, ngayXuatHD,
+          status, createdBy
+        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+        [
+          exportId,
+          item.exportItemId,
+          item.soHoaDonNhap || "",
+          item.ngayNhapHD || null,
+          item.soHoaDonXuat || "",
+          item.ngayXuatHD || null,
+          createdBy,
+        ],
+      );
+      ids.push(result.insertId);
+    }
+    return ids;
   },
 
-  // ==================== LẤY YÊU CẦU THEO ID ====================
+  // ==================== LẤY THEO ID ====================
   findById: async (id) => {
     const [rows] = await db.execute(
       `SELECT ir.*, 
@@ -36,11 +38,16 @@ const InvoiceRequest = {
               e.receiverName,
               e.customerName,
               e.total,
-              e.createdBy as exportCreatedBy
+              ei.tenThuongMai,
+              ei.maHang,
+              ei.soLuong,
+              ei.donGia,
+              ei.thanhTien
        FROM invoice_requests ir
        LEFT JOIN users u ON ir.createdBy = u.id
        LEFT JOIN users a ON ir.approvedBy = a.id
        LEFT JOIN exports e ON ir.exportId = e.id
+       LEFT JOIN export_items ei ON ir.exportItemId = ei.id
        WHERE ir.id = ?`,
       [id],
     );
@@ -48,7 +55,25 @@ const InvoiceRequest = {
     return rows[0];
   },
 
-  // ==================== LẤY TẤT CẢ YÊU CẦU ====================
+  // ==================== LẤY THEO EXPORT ID ====================
+  getByExportId: async (exportId) => {
+    const [rows] = await db.execute(
+      `SELECT * FROM invoice_requests WHERE exportId = ? ORDER BY id ASC`,
+      [exportId],
+    );
+    return rows;
+  },
+
+  // ==================== LẤY THEO EXPORT ITEM ID ====================
+  getByExportItemId: async (exportItemId) => {
+    const [rows] = await db.execute(
+      `SELECT * FROM invoice_requests WHERE exportItemId = ?`,
+      [exportItemId],
+    );
+    return rows[0] || null;
+  },
+
+  // ==================== LẤY TẤT CẢ ====================
   getAll: async (status = null) => {
     let query = `
       SELECT ir.*, 
@@ -58,11 +83,17 @@ const InvoiceRequest = {
              e.exportDate,
              e.receiverName,
              e.customerName,
-             e.total
+             e.total,
+             ei.tenThuongMai,
+             ei.maHang,
+             ei.soLuong,
+             ei.donGia,
+             ei.thanhTien
       FROM invoice_requests ir
       LEFT JOIN users u ON ir.createdBy = u.id
       LEFT JOIN users a ON ir.approvedBy = a.id
       LEFT JOIN exports e ON ir.exportId = e.id
+      LEFT JOIN export_items ei ON ir.exportItemId = ei.id
     `;
     const params = [];
     if (status) {
@@ -74,23 +105,14 @@ const InvoiceRequest = {
     return rows;
   },
 
-  // ==================== LẤY YÊU CẦU THEO EXPORT ID ====================
-  getByExportId: async (exportId) => {
-    const [rows] = await db.execute(
-      `SELECT * FROM invoice_requests WHERE exportId = ? ORDER BY createdAt DESC`,
-      [exportId],
-    );
-    return rows;
-  },
-
-  // ==================== LẤY DANH SÁCH EXPORT CHƯA CÓ HÓA ĐƠN ====================
+  // ==================== LẤY EXPORT CHƯA CÓ HÓA ĐƠN ====================
+  // Chỉ trả về export chưa được tạo yêu cầu hóa đơn cho TẤT CẢ items
   getExportsWithoutInvoice: async () => {
     const [rows] = await db.execute(
       `SELECT e.*, u.fullName as creatorName
        FROM exports e
        LEFT JOIN users u ON e.createdBy = u.id
        WHERE e.status = 'approved' 
-         AND e.hasInvoice = FALSE
          AND NOT EXISTS (
            SELECT 1 FROM invoice_requests ir 
            WHERE ir.exportId = e.id 
@@ -98,24 +120,85 @@ const InvoiceRequest = {
          )
        ORDER BY e.createdAt DESC`,
     );
+
+    // Lấy items cho từng export
+    const result = [];
+    for (const row of rows) {
+      const [items] = await db.execute(
+        `SELECT * FROM export_items WHERE exportId = ?`,
+        [row.id],
+      );
+      // Kiểm tra xem có item nào đã có invoice request chưa
+      const itemIds = items.map((i) => i.id);
+      let itemsWithInvoice = [];
+      if (itemIds.length > 0) {
+        const placeholders = itemIds.map(() => "?").join(",");
+        const [existing] = await db.execute(
+          `SELECT exportItemId FROM invoice_requests 
+           WHERE exportItemId IN (${placeholders})
+           AND status IN ('pending', 'approved')`,
+          itemIds,
+        );
+        itemsWithInvoice = existing.map((e) => e.exportItemId);
+      }
+
+      // Chỉ lấy những item CHƯA có hóa đơn
+      const availableItems = items.filter(
+        (it) => !itemsWithInvoice.includes(it.id),
+      );
+
+      if (availableItems.length > 0) {
+        result.push({ ...row, items: availableItems });
+      }
+    }
+
+    return result;
+  },
+
+  // ==================== LẤY YÊU CẦU CHỜ DUYỆT ====================
+  getPending: async () => {
+    const [rows] = await db.execute(
+      `SELECT ir.*, 
+              u.fullName as creatorName, 
+              e.exportNo, 
+              e.exportDate,
+              e.receiverName,
+              e.customerName,
+              e.total,
+              ei.tenThuongMai,
+              ei.maHang,
+              ei.soLuong,
+              ei.donGia,
+              ei.thanhTien
+       FROM invoice_requests ir
+       LEFT JOIN users u ON ir.createdBy = u.id
+       LEFT JOIN exports e ON ir.exportId = e.id
+       LEFT JOIN export_items ei ON ir.exportItemId = ei.id
+       WHERE ir.status = 'pending'
+       ORDER BY ir.exportId ASC, ir.id ASC`,
+    );
     return rows;
   },
 
-  // ==================== DUYỆT HÓA ĐƠN - CẬP NHẬT 4 TRƯỜNG ====================
+  // ==================== DUYỆT HÓA ĐƠN ====================
+  // Cập nhật 4 trường HĐ vào ĐÚNG dòng inventory của item đó
   approve: async (id, approvedBy) => {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
 
-      // Lấy thông tin yêu cầu
+      // Lấy yêu cầu
       const [requests] = await conn.execute(
-        `SELECT * FROM invoice_requests WHERE id = ?`,
+        `SELECT ir.*, ei.maHang, ei.soLot, ei.soLuong, ei.donGia
+         FROM invoice_requests ir
+         LEFT JOIN export_items ei ON ir.exportItemId = ei.id
+         WHERE ir.id = ?`,
         [id],
       );
       if (requests.length === 0) throw new Error("Không tìm thấy yêu cầu");
-      const request = requests[0];
+      const req = requests[0];
 
-      // Cập nhật trạng thái yêu cầu
+      // Cập nhật trạng thái
       await conn.execute(
         `UPDATE invoice_requests 
          SET status = 'approved', approvedBy = ?, approvedAt = NOW()
@@ -123,110 +206,53 @@ const InvoiceRequest = {
         [approvedBy, id],
       );
 
-      // Lấy danh sách items từ export
-      const [exportItems] = await conn.execute(
-        `SELECT * FROM export_items WHERE exportId = ?`,
-        [request.exportId],
-      );
+      // Tìm dòng inventory tương ứng: maHang + soLot + ngayXuatHD
+      // Vì mỗi lần xuất là 1 dòng riêng (đã insert khi duyệt phiếu xuất)
+      let inventoryRows = [];
 
-      // Lấy thông tin export
-      const [exports] = await conn.execute(
-        `SELECT * FROM exports WHERE id = ?`,
-        [request.exportId],
-      );
-      const exportData = exports[0];
-
-      if (exportItems.length === 0) {
-        throw new Error("Không tìm thấy sản phẩm trong phiếu xuất");
+      if (req.soLot) {
+        [inventoryRows] = await conn.execute(
+          `SELECT * FROM inventory 
+           WHERE maHang = ? AND soLot = ? AND status = 'approved'
+           ORDER BY id DESC LIMIT 1`,
+          [req.maHang, req.soLot],
+        );
       }
 
-      // ✅ UPDATE từng item vào inventory (KHÔNG INSERT MỚI)
-      for (const item of exportItems) {
-        // Tìm dòng inventory có maHang khớp
-        const [existingItems] = await conn.execute(
+      // Fallback: tìm dòng mới nhất theo maHang
+      if (inventoryRows.length === 0) {
+        [inventoryRows] = await conn.execute(
           `SELECT * FROM inventory 
            WHERE maHang = ? AND status = 'approved'
            ORDER BY id DESC LIMIT 1`,
-          [item.maHang],
+          [req.maHang],
         );
-
-        if (existingItems.length === 0) {
-          // Nếu chưa có sản phẩm trong kho, tạo mới
-          const [maxSttResult] = await conn.execute(
-            "SELECT MAX(stt) as maxStt FROM inventory",
-          );
-          const newStt = (maxSttResult[0]?.maxStt || 0) + 1;
-
-          await conn.execute(
-            `INSERT INTO inventory (
-              stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-              giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
-              soLot, ngayHetHan,
-              soHopDongNhap, soHopDongXuat,
-              soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
-              status, createdBy, approvedBy, approvedAt, ghiChu
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW(), ?)`,
-            [
-              newStt,
-              item.tenThuongMai || "",
-              item.maHang || "",
-              item.quyCach || "",
-              item.hangSX || "",
-              item.dvt || "",
-              item.phanLoai || "",
-              item.donGia || 0,
-              item.donGia || 0,
-              0,
-              item.soLuong || 0,
-              0 - (item.soLuong || 0),
-              item.soLot || "",
-              item.ngayHetHan || null,
-              "",
-              item.soHopDongXuat || "",
-              request.soHoaDonNhap || "",
-              request.ngayNhapHD || null,
-              request.soHoaDonXuat || "",
-              request.ngayXuatHD || null,
-              exportData.createdBy,
-              approvedBy,
-              item.ghiChu || "",
-            ],
-          );
-        } else {
-          // ✅ CẬP NHẬT 4 TRƯỜNG HÓA ĐƠN VÀO DÒNG ĐÃ CÓ
-          const existingItem = existingItems[0];
-
-          await conn.execute(
-            `UPDATE inventory 
-             SET 
-               soHoaDonNhap = ?,
-               ngayNhapHD = ?,
-               soHoaDonXuat = ?,
-               ngayXuatHD = ?,
-               soHopDongXuat = ?,
-               soLuongXuat = soLuongXuat + ?,
-               tonKho = tonKho - ?,
-               giaXuat = ?
-             WHERE id = ?`,
-            [
-              request.soHoaDonNhap || "",
-              request.ngayNhapHD || null,
-              request.soHoaDonXuat || "",
-              request.ngayXuatHD || null,
-              item.soHopDongXuat || "",
-              item.soLuong || 0,
-              item.soLuong || 0,
-              item.donGia || 0,
-              existingItem.id,
-            ],
-          );
-        }
       }
 
-      // Cập nhật hasInvoice cho export
-      await conn.execute(`UPDATE exports SET hasInvoice = TRUE WHERE id = ?`, [
-        request.exportId,
-      ]);
+      if (inventoryRows.length === 0) {
+        throw new Error(
+          `Không tìm thấy sản phẩm "${req.maHang}" trong tồn kho`,
+        );
+      }
+
+      const invItem = inventoryRows[0];
+
+      // Cập nhật 4 trường HĐ vào đúng dòng inventory
+      await conn.execute(
+        `UPDATE inventory 
+         SET soHoaDonNhap = ?,
+             ngayNhapHD = ?,
+             soHoaDonXuat = ?,
+             ngayXuatHD = ?
+         WHERE id = ?`,
+        [
+          req.soHoaDonNhap || "",
+          req.ngayNhapHD || null,
+          req.soHoaDonXuat || "",
+          req.ngayXuatHD || null,
+          invItem.id,
+        ],
+      );
 
       await conn.commit();
       return true;
@@ -249,32 +275,13 @@ const InvoiceRequest = {
     return true;
   },
 
-  // ==================== XÓA YÊU CẦU ====================
+  // ==================== XÓA ====================
   delete: async (id) => {
     const [result] = await db.execute(
       "DELETE FROM invoice_requests WHERE id = ?",
       [id],
     );
     return result.affectedRows > 0;
-  },
-
-  // ==================== LẤY YÊU CẦU CHỜ DUYỆT ====================
-  getPending: async () => {
-    const [rows] = await db.execute(
-      `SELECT ir.*, 
-              u.fullName as creatorName, 
-              e.exportNo, 
-              e.exportDate,
-              e.receiverName,
-              e.customerName,
-              e.total
-       FROM invoice_requests ir
-       LEFT JOIN users u ON ir.createdBy = u.id
-       LEFT JOIN exports e ON ir.exportId = e.id
-       WHERE ir.status = 'pending'
-       ORDER BY ir.createdAt ASC`,
-    );
-    return rows;
   },
 };
 

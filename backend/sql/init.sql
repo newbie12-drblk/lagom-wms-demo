@@ -1,15 +1,41 @@
 -- ======================================================
--- DATABASE: LAGOM WMS - Phiên bản 2.0
--- Ngày: 2026-08-19
--- Mô tả: Đã thêm quyCachDongGoi, xóa 3 cột trong export
+-- DATABASE: LAGOM WMS - Phiên bản 3.0
+-- Ngày: 2026
+-- Mô tả: 
+--   - Sửa invoice_requests: thêm exportItemId (mỗi item 1 record)
+--   - Inventory tách riêng dòng nhập/xuất
 -- ======================================================
 
+CREATE DATABASE IF NOT EXISTS defaultdb
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE defaultdb;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS files;
+DROP TABLE IF EXISTS edit_history;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS deletion_requests;
+DROP TABLE IF EXISTS edit_requests;
+DROP TABLE IF EXISTS invoice_requests;
+DROP TABLE IF EXISTS export_items;
+DROP TABLE IF EXISTS exports;
+DROP TABLE IF EXISTS receipt_items;
+DROP TABLE IF EXISTS receipts;
+DROP TABLE IF EXISTS export_requests;
+DROP TABLE IF EXISTS receipt_requests;
+DROP TABLE IF EXISTS approval_requests;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS user_permissions;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ======================================================
 -- 1. Bảng users
 -- ======================================================
-DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -21,40 +47,65 @@ CREATE TABLE users (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     lastLoginAt DATETIME,
     INDEX idx_role (roleId)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 2. Bảng inventory (Tồn kho - có trạng thái duyệt)
--- ĐÃ THÊM CỘT quyCachDongGoi
+-- 2. Bảng user_permissions
 -- ======================================================
-DROP TABLE IF EXISTS inventory;
+CREATE TABLE user_permissions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    userId INT NOT NULL,
+    canEditTenThuongMai BOOLEAN DEFAULT FALSE,
+    canEditMaHang BOOLEAN DEFAULT FALSE,
+    canEditDVT BOOLEAN DEFAULT FALSE,
+    canEditHangSX BOOLEAN DEFAULT FALSE,
+    canEditPhanLoai BOOLEAN DEFAULT FALSE,
+    canEditGiaNhap BOOLEAN DEFAULT FALSE,
+    canEditSoHopDongNhap BOOLEAN DEFAULT FALSE,
+    canEditSoHoaDonNhap BOOLEAN DEFAULT FALSE,
+    canEditSoHoaDonXuat BOOLEAN DEFAULT FALSE,
+    canEditNgayNhapHD BOOLEAN DEFAULT FALSE,
+    canEditNgayXuatHD BOOLEAN DEFAULT FALSE,
+    canEditGhiChu BOOLEAN DEFAULT FALSE,
+    canCreateReceipt BOOLEAN DEFAULT FALSE,
+    canCreateExport BOOLEAN DEFAULT FALSE,
+    canViewAll BOOLEAN DEFAULT FALSE,
+    canDeleteProduct BOOLEAN DEFAULT FALSE,
+    canEditProduct BOOLEAN DEFAULT FALSE,
+    canAddProduct BOOLEAN DEFAULT FALSE,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- 3. Bảng inventory (Tồn kho)
+-- Mỗi lần nhập = 1 dòng, mỗi lần xuất = 1 dòng (tách riêng)
+-- ======================================================
 CREATE TABLE inventory (
     id INT PRIMARY KEY AUTO_INCREMENT,
     stt INT,
-    -- Thông tin cơ bản
     tenThuongMai VARCHAR(200) NOT NULL,
-    maHang VARCHAR(50) UNIQUE NOT NULL,
+    maHang VARCHAR(50) NOT NULL,
     quyCach VARCHAR(100),
-    quyCachDongGoi VARCHAR(200),  -- ← CỘT MỚI
+    quyCachDongGoi VARCHAR(200),
     hangSX VARCHAR(200),
     dvt VARCHAR(20),
     phanLoai VARCHAR(100),
     giaNhap DECIMAL(15,0) DEFAULT 0,
     giaXuat DECIMAL(15,0) DEFAULT 0,
     soHopDongNhap VARCHAR(50),
-    soHoaDonNhap VARCHAR(50),     -- NHẬP TAY KHI DUYỆT
-    soHoaDonXuat VARCHAR(50),     -- NHẬP TAY KHI DUYỆT
-    ngayNhapHD DATE,              -- NHẬP TAY KHI DUYỆT
-    ngayXuatHD DATE,              -- NHẬP TAY KHI DUYỆT
+    soHoaDonNhap VARCHAR(50),
+    soHoaDonXuat VARCHAR(50),
+    ngayNhapHD DATE,
+    ngayXuatHD DATE,
     ghiChu TEXT,
-    -- Số lượng
     soLuongNhap INT DEFAULT 0,
     soLuongXuat INT DEFAULT 0,
     tonKho INT DEFAULT 0,
-    -- Lô hàng
     soLot VARCHAR(50),
     ngayHetHan DATE,
-    -- Trạng thái duyệt
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
     approvedBy INT,
@@ -65,17 +116,21 @@ CREATE TABLE inventory (
     FOREIGN KEY (createdBy) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id),
     INDEX idx_maHang (maHang),
-    INDEX idx_status (status)
-);
+    INDEX idx_status (status),
+    INDEX idx_lot (maHang, soLot, ngayXuatHD)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 3. Bảng approval_requests (Yêu cầu thêm sản phẩm - ADMIN -> QUAN_LY)
+-- 4. Bảng approval_requests (Yêu cầu thêm SP mới)
 -- ======================================================
-DROP TABLE IF EXISTS approval_requests;
 CREATE TABLE approval_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
     productData JSON NOT NULL,
+    soHoaDonNhap VARCHAR(50) DEFAULT '',
+    ngayNhapHD DATE DEFAULT NULL,
+    soHoaDonXuat VARCHAR(50) DEFAULT '',
+    ngayXuatHD DATE DEFAULT NULL,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     approvedBy INT,
     approvedAt DATETIME,
@@ -83,14 +138,11 @@ CREATE TABLE approval_requests (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requesterId) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 4. Bảng receipt_requests (Đề nghị nhập hàng)
--- ĐÃ BỎ 4 TRƯỜNG: soHoaDonNhap, soHoaDonXuat, ngayNhapHD, ngayXuatHD
--- ĐÃ THÊM: quyCachDongGoi
+-- 5. Bảng receipt_requests (Đề nghị nhập hàng)
 -- ======================================================
-DROP TABLE IF EXISTS receipt_requests;
 CREATE TABLE receipt_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requestNo VARCHAR(50) UNIQUE NOT NULL,
@@ -104,13 +156,11 @@ CREATE TABLE receipt_requests (
     soLuongNhap INT DEFAULT 0,
     soLot VARCHAR(50),
     ngayHetHan DATE,
-    quyCachDongGoi VARCHAR(200),   -- ← CỘT MỚI
-    -- 4 TRƯỜNG NÀY SẼ NHẬP KHI DUYỆT
+    quyCachDongGoi VARCHAR(200),
     soHoaDonNhap VARCHAR(50) DEFAULT NULL,
     soHoaDonXuat VARCHAR(50) DEFAULT NULL,
     ngayNhapHD DATE DEFAULT NULL,
     ngayXuatHD DATE DEFAULT NULL,
-    -- Các trường khác
     matchStatus ENUM('matched', 'unmatched') DEFAULT 'unmatched',
     status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
     createdBy INT,
@@ -122,12 +172,11 @@ CREATE TABLE receipt_requests (
     FOREIGN KEY (approvedBy) REFERENCES users(id),
     INDEX idx_status (status),
     INDEX idx_matchStatus (matchStatus)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 5. Bảng export_requests (Đề nghị xuất kho)
+-- 6. Bảng export_requests (Đề nghị xuất kho)
 -- ======================================================
-DROP TABLE IF EXISTS export_requests;
 CREATE TABLE export_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requestNo VARCHAR(50) UNIQUE NOT NULL,
@@ -160,12 +209,11 @@ CREATE TABLE export_requests (
     FOREIGN KEY (approvedBy) REFERENCES users(id),
     INDEX idx_status (status),
     INDEX idx_matchStatus (matchStatus)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 6. Bảng receipts (Phiếu nhập hàng - thực tế)
+-- 7. Bảng receipts (Phiếu nhập hàng)
 -- ======================================================
-DROP TABLE IF EXISTS receipts;
 CREATE TABLE receipts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     receiptNo VARCHAR(50) UNIQUE NOT NULL,
@@ -188,12 +236,11 @@ CREATE TABLE receipts (
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (createdBy) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 7. Bảng receipt_items (Chi tiết phiếu nhập)
+-- 8. Bảng receipt_items (Chi tiết phiếu nhập)
 -- ======================================================
-DROP TABLE IF EXISTS receipt_items;
 CREATE TABLE receipt_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     receiptId INT NOT NULL,
@@ -212,14 +259,14 @@ CREATE TABLE receipt_items (
     soHoaDonNhap VARCHAR(50),
     ngayNhapHD DATE,
     ghiChu TEXT,
-    FOREIGN KEY (receiptId) REFERENCES receipts(id) ON DELETE CASCADE
-);
+    FOREIGN KEY (receiptId) REFERENCES receipts(id) ON DELETE CASCADE,
+    INDEX idx_receipt (receiptId),
+    INDEX idx_maHang (maHang)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 8. Bảng exports (Phiếu xuất kho - thực tế)
--- ĐÃ XÓA 3 CỘT: giaNhap, soHopDongNhap, soHoaDonXuat
+-- 9. Bảng exports (Phiếu xuất kho)
 -- ======================================================
-DROP TABLE IF EXISTS exports;
 CREATE TABLE exports (
     id INT PRIMARY KEY AUTO_INCREMENT,
     exportNo VARCHAR(50) UNIQUE NOT NULL,
@@ -232,6 +279,7 @@ CREATE TABLE exports (
     exportReason VARCHAR(200),
     total DECIMAL(15,0) DEFAULT 0,
     status ENUM('pending', 'awaiting_confirmation', 'approved', 'rejected') DEFAULT 'pending',
+    hasInvoice BOOLEAN DEFAULT FALSE,
     rejectedReason TEXT,
     createdBy INT NOT NULL,
     approvedBy INT,
@@ -240,13 +288,11 @@ CREATE TABLE exports (
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (createdBy) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 9. Bảng export_items (Chi tiết phiếu xuất)
--- ĐÃ XÓA 3 CỘT: giaNhap, soHopDongNhap, soHoaDonXuat
+-- 10. Bảng export_items (Chi tiết phiếu xuất)
 -- ======================================================
-DROP TABLE IF EXISTS export_items;
 CREATE TABLE export_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     exportId INT NOT NULL,
@@ -264,13 +310,40 @@ CREATE TABLE export_items (
     soHopDongXuat VARCHAR(50),
     ngayXuatHD DATE,
     ghiChu TEXT,
-    FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE
-);
+    FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE,
+    INDEX idx_export (exportId),
+    INDEX idx_maHang (maHang)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 10. Bảng edit_requests (Yêu cầu chỉnh sửa)
+-- 11. Bảng invoice_requests (ĐÃ SỬA: mỗi item 1 record)
 -- ======================================================
-DROP TABLE IF EXISTS edit_requests;
+CREATE TABLE invoice_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    exportId INT NOT NULL,
+    exportItemId INT NOT NULL,
+    soHoaDonNhap VARCHAR(50) DEFAULT '',
+    ngayNhapHD DATE DEFAULT NULL,
+    soHoaDonXuat VARCHAR(50) DEFAULT '',
+    ngayXuatHD DATE DEFAULT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    createdBy INT,
+    approvedBy INT,
+    approvedAt DATETIME,
+    rejectedReason TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE,
+    FOREIGN KEY (exportItemId) REFERENCES export_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (createdBy) REFERENCES users(id),
+    FOREIGN KEY (approvedBy) REFERENCES users(id),
+    UNIQUE KEY unique_item (exportItemId),
+    INDEX idx_status (status),
+    INDEX idx_export (exportId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- 12. Bảng edit_requests (Yêu cầu chỉnh sửa)
+-- ======================================================
 CREATE TABLE edit_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
@@ -284,12 +357,11 @@ CREATE TABLE edit_requests (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requesterId) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 11. Bảng deletion_requests (Yêu cầu xóa)
+-- 13. Bảng deletion_requests (Yêu cầu xóa)
 -- ======================================================
-DROP TABLE IF EXISTS deletion_requests;
 CREATE TABLE deletion_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     requesterId INT NOT NULL,
@@ -302,12 +374,11 @@ CREATE TABLE deletion_requests (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requesterId) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 12. Bảng notifications (Thông báo)
+-- 14. Bảng notifications (Thông báo)
 -- ======================================================
-DROP TABLE IF EXISTS notifications;
 CREATE TABLE notifications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId INT NOT NULL,
@@ -320,12 +391,11 @@ CREATE TABLE notifications (
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES users(id),
     INDEX idx_user_read (userId, isRead)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 13. Bảng edit_history (Lịch sử chỉnh sửa)
+-- 15. Bảng edit_history (Lịch sử chỉnh sửa)
 -- ======================================================
-DROP TABLE IF EXISTS edit_history;
 CREATE TABLE edit_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId INT NOT NULL,
@@ -338,12 +408,11 @@ CREATE TABLE edit_history (
     editedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES users(id),
     INDEX idx_record (tableName, recordId)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 14. Bảng files (File đính kèm)
+-- 16. Bảng files (File đính kèm)
 -- ======================================================
-DROP TABLE IF EXISTS files;
 CREATE TABLE files (
     id INT PRIMARY KEY AUTO_INCREMENT,
     relatedType VARCHAR(50) NOT NULL,
@@ -355,56 +424,31 @@ CREATE TABLE files (
     uploadedBy INT NOT NULL,
     uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uploadedBy) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 15. Bảng user_permissions (Quản lý phân quyền)
--- ======================================================
-DROP TABLE IF EXISTS user_permissions;
-CREATE TABLE user_permissions (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    userId INT NOT NULL,
-    canEditTenThuongMai BOOLEAN DEFAULT FALSE,
-    canEditMaHang BOOLEAN DEFAULT FALSE,
-    canEditDVT BOOLEAN DEFAULT FALSE,
-    canEditHangSX BOOLEAN DEFAULT FALSE,
-    canEditPhanLoai BOOLEAN DEFAULT FALSE,
-    canEditGiaNhap BOOLEAN DEFAULT FALSE,
-    canEditSoHopDongNhap BOOLEAN DEFAULT FALSE,
-    canEditSoHoaDonNhap BOOLEAN DEFAULT FALSE,
-    canEditSoHoaDonXuat BOOLEAN DEFAULT FALSE,
-    canEditNgayNhapHD BOOLEAN DEFAULT FALSE,
-    canEditNgayXuatHD BOOLEAN DEFAULT FALSE,
-    canEditGhiChu BOOLEAN DEFAULT FALSE,
-    canCreateReceipt BOOLEAN DEFAULT FALSE,
-    canCreateExport BOOLEAN DEFAULT FALSE,
-    canViewAll BOOLEAN DEFAULT FALSE,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user (userId)
-);
-
--- ======================================================
--- 16. CHÈN DỮ LIỆU MẪU
+-- 17. DỮ LIỆU MẪU
 -- ======================================================
 
--- User mẫu (password: admin123, quanly123)
-INSERT IGNORE INTO users (username, password, fullName, email, roleId, isActive) VALUES
+-- User mẫu
+-- password admin: admin123
+-- password quanly: quanly123
+INSERT INTO users (username, password, fullName, email, roleId, isActive) VALUES
 ('admin', '$2b$10$2g4cl763dUCrtM/buaa6s.VWp.k.K9EpV5EJp5DN1vhUwN0XcMXiu', 'Administrator', 'admin@lagom.com', 'admin', TRUE),
 ('quanly', '$2b$10$TwJSxMoVGJUd/JVs33XYYOXFkWKoG4/KGNDXKguplrU9El5i5ttve', 'Quản Lý', 'quanly@lagom.com', 'quan_ly', TRUE);
 
--- Sản phẩm mẫu (đã được duyệt)
-INSERT IGNORE INTO inventory (stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, dvt, hangSX, phanLoai, giaNhap, giaXuat, tonKho, status, createdBy, approvedBy, approvedAt) VALUES
-(1, 'Atelica IM TSH3-Ultra II', '11208706', 'Hộp 100 test', 'Hộp 2x50 test', 'Hộp', 'Siemens Healthcare', 'Máy sinh hóa miễn dịch', 2915000, 3500000, 10, 'approved', 1, 2, NOW()),
-(2, 'Cobas e601 TSH', 'TSH601', 'Hộp 100 test', 'Hộp 4x25 test', 'Hộp', 'Roche Diagnostics', 'Máy miễn dịch', 3500000, 4200000, 5, 'approved', 1, 2, NOW());
+-- Sản phẩm mẫu
+INSERT INTO inventory (stt, tenThuongMai, maHang, quyCach, quyCachDongGoi, dvt, hangSX, phanLoai, giaNhap, giaXuat, soLuongNhap, tonKho, soLot, ngayHetHan, soHoaDonNhap, ngayNhapHD, status, createdBy, approvedBy, approvedAt) VALUES
+(1, 'Atelica IM TSH3-Ultra II', '11208706', 'Hộp 100 test', 'Hộp 2x50 test', 'Hộp', 'Siemens Healthcare', 'Máy sinh hóa miễn dịch', 2915000, 3500000, 10, 10, 'LOT001', '2027-12-31', 'HD001/2026', '2026-01-15', 'approved', 1, 2, NOW()),
+(2, 'Cobas e601 TSH', 'TSH601', 'Hộp 100 test', 'Hộp 4x25 test', 'Hộp', 'Roche Diagnostics', 'Máy miễn dịch', 3500000, 4200000, 5, 5, 'LOT002', '2027-06-30', 'HD002/2026', '2026-01-20', 'approved', 1, 2, NOW());
 
--- Quyền mẫu cho Admin (user id = 1)
-INSERT IGNORE INTO user_permissions (userId, canEditTenThuongMai, canEditMaHang, canEditDVT, canEditHangSX, canEditPhanLoai, canEditGiaNhap, canEditSoHopDongNhap, canEditSoHoaDonNhap, canEditSoHoaDonXuat, canEditNgayNhapHD, canEditNgayXuatHD, canEditGhiChu, canCreateReceipt, canCreateExport, canViewAll) VALUES
-(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+-- Quyền cho Admin
+INSERT INTO user_permissions (userId, canEditTenThuongMai, canEditMaHang, canEditDVT, canEditHangSX, canEditPhanLoai, canEditGiaNhap, canEditSoHopDongNhap, canEditSoHoaDonNhap, canEditSoHoaDonXuat, canEditNgayNhapHD, canEditNgayXuatHD, canEditGhiChu, canCreateReceipt, canCreateExport, canViewAll, canDeleteProduct, canEditProduct, canAddProduct) VALUES
+(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(2, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
 
--- Thông báo mẫu cho Quản lý
-INSERT IGNORE INTO notifications (userId, title, message, type, isRead) VALUES
+-- Thông báo mẫu
+INSERT INTO notifications (userId, title, message, type, isRead) VALUES
 (2, 'Chào mừng', 'Bạn đã đăng nhập với vai trò Quản lý. Vui lòng kiểm tra các yêu cầu chờ duyệt.', 'info', FALSE);
 
-SELECT '✅ Database initialized successfully!' AS message;
+SELECT '✅ Database LAGOM WMS v3.0 initialized successfully!' AS message;

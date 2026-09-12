@@ -1,15 +1,13 @@
 const db = require("../config/database");
 
 const Inventory = {
-  // ==================== LẤY TẤT CẢ SẢN PHẨM ====================
   getAll: async () => {
     const [rows] = await db.execute(
-      "SELECT * FROM inventory WHERE status = 'approved' ORDER BY stt ASC",
+      "SELECT * FROM inventory WHERE status = 'approved' ORDER BY stt ASC, id ASC",
     );
     return rows;
   },
 
-  // ==================== TÌM THEO MÃ HÀNG (1 DÒNG) ====================
   findByMaHang: async (maHang) => {
     const [rows] = await db.execute(
       "SELECT * FROM inventory WHERE maHang = ? AND status = 'approved' LIMIT 1",
@@ -18,7 +16,6 @@ const Inventory = {
     return rows[0] || null;
   },
 
-  // ==================== TÌM THEO MÃ HÀNG (NHIỀU DÒNG) ====================
   findAllByMaHang: async (maHang) => {
     const [rows] = await db.execute(
       `SELECT * FROM inventory 
@@ -29,7 +26,6 @@ const Inventory = {
     return rows;
   },
 
-  // ==================== TÌM THEO MÃ + LÔ + NGÀY NHẬP ====================
   findByMaHangAndLot: async (maHang, soLot, ngayNhapHD) => {
     const [rows] = await db.execute(
       `SELECT * FROM inventory 
@@ -40,7 +36,6 @@ const Inventory = {
     return rows[0] || null;
   },
 
-  // ==================== TÌM THEO ID ====================
   findById: async (id) => {
     const [rows] = await db.execute("SELECT * FROM inventory WHERE id = ?", [
       id,
@@ -48,7 +43,6 @@ const Inventory = {
     return rows[0] || null;
   },
 
-  // ==================== LẤY SẢN PHẨM CHỜ DUYỆT ====================
   getPending: async () => {
     const [rows] = await db.execute(
       `SELECT i.*, u.fullName as creatorName
@@ -60,7 +54,6 @@ const Inventory = {
     return rows;
   },
 
-  // ==================== TẠO SẢN PHẨM (CHỜ DUYỆT) ====================
   create: async (data, createdBy) => {
     const [maxStt] = await db.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
@@ -103,51 +96,94 @@ const Inventory = {
     return result.insertId;
   },
 
-  // ==================== TẠO SẢN PHẨM (ĐÃ DUYỆT) ====================
-  createApproved: async (data, createdBy, approvedBy) => {
-    const [maxStt] = await db.execute(
+  // Tạo dòng inventory từ item của phiếu nhập (khi duyệt)
+  createFromReceiptItem: async (item, receipt, approvedBy, conn) => {
+    const [maxStt] = await conn.execute(
       "SELECT MAX(stt) as maxStt FROM inventory",
     );
     const newStt = (maxStt[0].maxStt || 0) + 1;
 
-    const [result] = await db.execute(
+    const [result] = await conn.execute(
       `INSERT INTO inventory 
         (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
          giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
          soLot, ngayHetHan,
          soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-         ngayNhapHD, ngayXuatHD, ghiChu, 
-         status, createdBy, approvedBy, approvedAt) 
+         ngayNhapHD, ngayXuatHD, ghiChu,
+         status, createdBy, approvedBy, approvedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
       [
         newStt,
-        data.tenThuongMai || "",
-        data.maHang || "",
-        data.quyCach || "",
-        data.hangSX || "",
-        data.dvt || "",
-        data.phanLoai || "",
-        data.giaNhap || 0,
-        data.giaXuat || 0,
-        data.soLuongNhap || 0,
-        data.soLuongXuat || 0,
-        data.tonKho || 0,
-        data.soLot || "",
-        data.ngayHetHan || null,
-        data.soHopDongNhap || "",
-        data.soHoaDonNhap || "",
-        data.soHoaDonXuat || "",
-        data.ngayNhapHD || null,
-        data.ngayXuatHD || null,
-        data.ghiChu || "",
-        createdBy,
+        item.tenThuongMai || "",
+        item.maHang || "",
+        item.quyCach || "",
+        item.hangSX || "",
+        item.dvt || "",
+        item.phanLoai || "",
+        item.giaNhap || 0,
+        0,
+        item.soLuongNhap || 0,
+        0,
+        item.soLuongNhap || 0,
+        item.soLot || "",
+        item.ngayHetHan || null,
+        item.soHopDongNhap || "",
+        item.soHoaDonNhap || "",
+        "", // soHoaDonXuat - để trống, sẽ cập nhật sau khi có hóa đơn
+        item.ngayNhapHD || null,
+        null, // ngayXuatHD
+        item.ghiChu || "",
+        receipt.createdBy,
         approvedBy,
       ],
     );
     return result.insertId;
   },
 
-  // ==================== DUYỆT SẢN PHẨM ====================
+  // Tạo dòng inventory từ item của phiếu xuất (khi duyệt) - TÁCH RIÊNG
+  createFromExportItem: async (item, exportData, approvedBy, conn) => {
+    const [maxStt] = await conn.execute(
+      "SELECT MAX(stt) as maxStt FROM inventory",
+    );
+    const newStt = (maxStt[0].maxStt || 0) + 1;
+
+    const [result] = await conn.execute(
+      `INSERT INTO inventory 
+        (stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
+         giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
+         soLot, ngayHetHan,
+         soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
+         ngayNhapHD, ngayXuatHD, ghiChu,
+         status, createdBy, approvedBy, approvedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
+      [
+        newStt,
+        item.tenThuongMai || "",
+        item.maHang || "",
+        item.quyCach || "",
+        item.hangSX || "",
+        item.dvt || "",
+        item.phanLoai || "",
+        0,
+        item.donGia || 0,
+        0,
+        item.soLuong || 0,
+        -(item.soLuong || 0), // ÂM = xuất kho
+        item.soLot || "",
+        item.ngayHetHan || null,
+        "",
+        "", // soHoaDonNhap - để trống, cập nhật sau
+        "", // soHoaDonXuat - để trống, cập nhật sau
+        null, // ngayNhapHD
+        item.ngayXuatHD || exportData.exportDate, // Ngày xuất = ngày xuất HĐ hoặc ngày phiếu
+        item.ghiChu || "",
+        exportData.createdBy,
+        approvedBy,
+      ],
+    );
+    return result.insertId;
+  },
+
   approve: async (id, approvedBy, tonKho = 0) => {
     await db.execute(
       `UPDATE inventory 
@@ -158,7 +194,6 @@ const Inventory = {
     return true;
   },
 
-  // ==================== TỪ CHỐI SẢN PHẨM ====================
   reject: async (id, approvedBy, reason) => {
     await db.execute(
       `UPDATE inventory 
@@ -169,7 +204,6 @@ const Inventory = {
     return true;
   },
 
-  // ==================== CẬP NHẬT TỒN KHO ====================
   updateStock: async (id, quantity, type = "import") => {
     const operator = type === "import" ? "+" : "-";
     await db.execute(
@@ -179,7 +213,6 @@ const Inventory = {
     return true;
   },
 
-  // ==================== CẬP NHẬT SẢN PHẨM ====================
   update: async (id, data) => {
     const fields = [];
     const values = [];
@@ -224,7 +257,6 @@ const Inventory = {
     return true;
   },
 
-  // ==================== XÓA SẢN PHẨM ====================
   delete: async (id) => {
     const [result] = await db.execute("DELETE FROM inventory WHERE id = ?", [
       id,
@@ -232,7 +264,6 @@ const Inventory = {
     return result.affectedRows > 0;
   },
 
-  // ==================== THỐNG KÊ ====================
   getStats: async () => {
     const [rows] = await db.execute(
       `SELECT 
@@ -244,7 +275,6 @@ const Inventory = {
     return rows[0];
   },
 
-  // ==================== LẤY DANH SÁCH PHÂN LOẠI ====================
   getCategories: async () => {
     const [rows] = await db.execute(
       "SELECT DISTINCT phanLoai FROM inventory WHERE status = 'approved' AND phanLoai IS NOT NULL AND phanLoai != '' ORDER BY phanLoai",
