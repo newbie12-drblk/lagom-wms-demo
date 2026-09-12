@@ -30,12 +30,17 @@ const getExportById = async (req, res) => {
   }
 };
 
+// ============================================================
+// TẠO PHIẾU XUẤT - CẢNH BÁO NẾU SẮP HẾT HÀNG
+// ============================================================
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
-    // Kiểm tra tồn kho
+    // Kiểm tra tồn kho + phát hiện sản phẩm sắp hết
+    const willBeOutOfStock = [];
+
     for (const item of exportData.items || []) {
       const product = await Inventory.findByMaHang(item.maHang);
       if (!product) {
@@ -48,6 +53,17 @@ const createExport = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: `Sản phẩm ${item.tenThuongMai} tồn kho không đủ (còn ${product.tonKho})`,
+        });
+      }
+
+      // ✅ Kiểm tra nếu xuất xong sẽ hết hàng
+      const tonKhoSau = (product.tonKho || 0) - (item.soLuong || 0);
+      if (tonKhoSau <= 0) {
+        willBeOutOfStock.push({
+          tenThuongMai: item.tenThuongMai,
+          maHang: item.maHang,
+          tonKhoHienTai: product.tonKho || 0,
+          soLuongXuat: item.soLuong || 0,
         });
       }
     }
@@ -63,13 +79,48 @@ const createExport = async (req, res) => {
 
     await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
+    // ✅ Thông báo cho Quản lý duyệt phiếu
+    let managerMessage = `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`;
+
+    if (willBeOutOfStock.length > 0) {
+      const danhSachSapHet = willBeOutOfStock
+        .map(
+          (i) =>
+            `- ${i.tenThuongMai} (${i.maHang}): tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
+        )
+        .join("\n");
+
+      managerMessage += `\n\n⚠️ CẢNH BÁO: ${willBeOutOfStock.length} sản phẩm sẽ HẾT HÀNG sau khi duyệt:\n${danhSachSapHet}`;
+    }
+
     await Notification.createForManagers(
-      `📤 Phiếu xuất ${exportItem.exportNo} chờ duyệt`,
-      `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`,
-      "approval",
+      `📤 Phiếu xuất ${exportItem.exportNo} chờ duyệt${
+        willBeOutOfStock.length > 0 ? " (CÓ SP SẮP HẾT)" : ""
+      }`,
+      managerMessage,
+      willBeOutOfStock.length > 0 ? "warning" : "approval",
       exportId,
       "export",
     );
+
+    // ✅ Thông báo cho Admin nếu có SP sắp hết
+    if (willBeOutOfStock.length > 0) {
+      const danhSachSapHet = willBeOutOfStock
+        .map(
+          (i) =>
+            `- ${i.tenThuongMai} (${i.maHang}): tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
+        )
+        .join("\n");
+
+      await Notification.create(
+        createdBy,
+        `⚠️ CẢNH BÁO: Phiếu xuất ${exportItem.exportNo} có SP sắp hết`,
+        `${willBeOutOfStock.length} sản phẩm sẽ hết hàng sau khi Quản lý duyệt:\n${danhSachSapHet}`,
+        "warning",
+        exportId,
+        "export",
+      );
+    }
 
     res.json({
       success: true,
@@ -77,8 +128,13 @@ const createExport = async (req, res) => {
         id: exportId,
         status: "awaiting_confirmation",
         items: exportItem.items || [],
+        willBeOutOfStock: willBeOutOfStock.length,
       },
-      message: "✅ Tạo phiếu xuất thành công! Phiếu đang chờ Quản lý duyệt.",
+      message:
+        "✅ Tạo phiếu xuất thành công! Phiếu đang chờ Quản lý duyệt." +
+        (willBeOutOfStock.length > 0
+          ? ` ⚠️ Có ${willBeOutOfStock.length} SP sẽ hết hàng.`
+          : ""),
     });
   } catch (error) {
     console.error("❌ Create export error:", error);
@@ -89,7 +145,7 @@ const createExport = async (req, res) => {
 };
 
 // ============================================================
-// ✅ DUYỆT PHIẾU XUẤT — INSERT TÁCH RIÊNG DÒNG (âm tồn)
+// ✅ DUYỆT PHIẾU XUẤT — TRỪ TỒN KHO, XÓA NẾU HẾT HÀNG
 // ============================================================
 const updateExportStatus = async (req, res) => {
   const conn = await db.getConnection();
@@ -132,7 +188,7 @@ const updateExportStatus = async (req, res) => {
       [status, approvedBy, rejectedReason || null, id],
     );
 
-    // ✅ NẾU DUYỆT → INSERT MỖI ITEM 1 DÒNG RIÊNG VÀO INVENTORY (ÂM TỒN)
+    // ✅ NẾU DUYỆT → TRỪ TỒN KHO
     if (status === "approved") {
       if (!exportItem.items || exportItem.items.length === 0) {
         await conn.rollback();
@@ -142,75 +198,144 @@ const updateExportStatus = async (req, res) => {
         });
       }
 
-      // Lấy stt lớn nhất
-      const [maxSttResult] = await conn.execute(
-        "SELECT MAX(stt) as maxStt FROM inventory",
-      );
-      let currentStt = maxSttResult[0]?.maxStt || 0;
-
-      // ✅ Ngày xuất chung cho cả phiếu (nếu item không có ngày riêng)
       const exportDate =
         exportItem.exportDate || new Date().toISOString().split("T")[0];
 
-      for (const item of exportItem.items) {
-        currentStt++;
+      const outOfStockItems = []; // Danh sách sản phẩm hết hàng
 
-        // ✅ MỖI LẦN XUẤT LÀ 1 DÒNG RIÊNG — KHÔNG CỘNG DỒN
-        // Dùng ngày xuất (ngayXuatHD) để phân biệt
+      for (const item of exportItem.items) {
+        const soLuongXuat = item.soLuong || 0;
         const itemNgayXuat = item.ngayXuatHD || exportDate;
 
-        await conn.execute(
-          `INSERT INTO inventory (
-            stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
-            giaNhap, giaXuat, soLuongNhap, soLuongXuat, tonKho,
-            soLot, ngayHetHan,
-            soHopDongNhap, soHoaDonNhap, soHoaDonXuat,
-            ngayNhapHD, ngayXuatHD, ghiChu,
-            status, createdBy, approvedBy, approvedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, NOW())`,
-          [
-            currentStt,
-            item.tenThuongMai || "",
-            item.maHang || "",
-            item.quyCach || "",
-            item.hangSX || "",
-            item.dvt || "",
-            item.phanLoai || "",
-            0, // giaNhap = 0 (vì đây là dòng xuất)
-            item.donGia || 0, // giaXuat
-            0, // soLuongNhap = 0
-            item.soLuong || 0, // soLuongXuat
-            -(item.soLuong || 0), // ✅ tonKho ÂM = đã xuất
-            item.soLot || "",
-            item.ngayHetHan || null,
-            "", // soHopDongNhap
-            "", // soHoaDonNhap (sẽ cập nhật khi duyệt hóa đơn)
-            "", // soHoaDonXuat (sẽ cập nhật khi duyệt hóa đơn)
-            null, // ngayNhapHD
-            itemNgayXuat, // ✅ ngayXuatHD để phân biệt
-            item.ghiChu || "",
-            exportItem.createdBy,
-            approvedBy,
-          ],
+        // ✅ Tìm dòng inventory khớp: ưu tiên (maHang + soLot)
+        let inventoryRows = [];
+
+        if (item.soLot) {
+          [inventoryRows] = await conn.execute(
+            `SELECT * FROM inventory 
+             WHERE maHang = ? AND soLot = ? AND status = 'approved'
+             ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
+            [item.maHang, item.soLot],
+          );
+        }
+
+        // Fallback: tìm theo maHang
+        if (inventoryRows.length === 0) {
+          [inventoryRows] = await conn.execute(
+            `SELECT * FROM inventory 
+             WHERE maHang = ? AND status = 'approved' AND tonKho > 0
+             ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
+            [item.maHang],
+          );
+        }
+
+        if (inventoryRows.length === 0) {
+          throw new Error(
+            `Không tìm thấy sản phẩm "${item.maHang}" trong kho để xuất`,
+          );
+        }
+
+        const invItem = inventoryRows[0];
+        const tonKhoHienTai = invItem.tonKho || 0;
+
+        // ✅ Kiểm tra đủ hàng không
+        if (tonKhoHienTai < soLuongXuat) {
+          throw new Error(
+            `Sản phẩm "${item.tenThuongMai}" (${item.maHang}) không đủ tồn kho. Cần ${soLuongXuat}, còn ${tonKhoHienTai}`,
+          );
+        }
+
+        const tonKhoMoi = tonKhoHienTai - soLuongXuat;
+
+        if (tonKhoMoi <= 0) {
+          // ✅ XUẤT HẾT → XÓA SẢN PHẨM KHỎI KHO
+          await conn.execute(`DELETE FROM inventory WHERE id = ?`, [
+            invItem.id,
+          ]);
+
+          outOfStockItems.push({
+            tenThuongMai: item.tenThuongMai,
+            maHang: item.maHang,
+            soLuongXuat: soLuongXuat,
+          });
+
+          console.log(
+            `  🗑️ ĐÃ XÓA sản phẩm hết hàng: ${item.maHang} - SL xuất: ${soLuongXuat}`,
+          );
+        } else {
+          // ✅ CÒN HÀNG → CẬP NHẬT SỐ LƯỢNG
+          await conn.execute(
+            `UPDATE inventory 
+             SET tonKho = ?,
+                 soLuongXuat = soLuongXuat + ?,
+                 giaXuat = ?,
+                 ngayXuatHD = ?,
+                 soHoaDonXuat = ?,
+                 soHopDongXuat = ?
+             WHERE id = ?`,
+            [
+              tonKhoMoi,
+              soLuongXuat,
+              item.donGia || 0,
+              itemNgayXuat,
+              item.soHoaDonXuat || "",
+              item.soHopDongXuat || "",
+              invItem.id,
+            ],
+          );
+
+          console.log(
+            `  ✅ Cập nhật tồn kho: ${item.maHang} - ${tonKhoHienTai} → ${tonKhoMoi}`,
+          );
+        }
+      }
+
+      // ✅ THÔNG BÁO CHO ADMIN + QUẢN LÝ NẾU CÓ SẢN PHẨM HẾT HÀNG
+      if (outOfStockItems.length > 0) {
+        const danhSachHet = outOfStockItems
+          .map(
+            (i) => `- ${i.tenThuongMai} (${i.maHang}): xuất ${i.soLuongXuat}`,
+          )
+          .join("\n");
+
+        // Thông báo cho Admin (người tạo phiếu)
+        await Notification.create(
+          exportItem.createdBy,
+          `⚠️ CẢNH BÁO HẾT HÀNG - Phiếu xuất ${exportItem.exportNo}`,
+          `${outOfStockItems.length} sản phẩm đã HẾT HÀNG sau khi xuất kho:\n${danhSachHet}`,
+          "warning",
+          id,
+          "export",
         );
 
+        // Thông báo cho TẤT CẢ Quản lý
+        try {
+          await Notification.createForManagers(
+            `⚠️ CẢNH BÁO HẾT HÀNG - Phiếu xuất ${exportItem.exportNo}`,
+            `${outOfStockItems.length} sản phẩm đã HẾT HÀNG sau khi duyệt xuất kho:\n${danhSachHet}`,
+            "warning",
+            id,
+            "export",
+          );
+        } catch (notifErr) {
+          console.error("Lỗi gửi thông báo cho Quản lý:", notifErr);
+        }
+
         console.log(
-          `  ✅ Inserted inventory (export): ${item.maHang} - SL: ${item.soLuong} - Ngày xuất: ${itemNgayXuat}`,
+          `⚠️ Đã gửi thông báo HẾT HÀNG cho ${outOfStockItems.length} sản phẩm`,
         );
       }
 
-      console.log(
-        `✅ Đã lưu ${exportItem.items.length} dòng xuất kho từ phiếu ${exportItem.exportNo}`,
-      );
-    }
+      // Thông báo duyệt phiếu bình thường
+      let message = `Quản lý đã duyệt phiếu xuất ${exportItem.exportNo}.`;
+      if (outOfStockItems.length > 0) {
+        message += ` Có ${outOfStockItems.length} sản phẩm đã hết hàng và bị xóa khỏi kho.`;
+      }
 
-    await conn.commit();
-
-    if (status === "approved") {
       await Notification.create(
         exportItem.createdBy,
         `✅ Phiếu xuất ${exportItem.exportNo} đã được duyệt`,
-        `Quản lý đã duyệt phiếu xuất. ${exportItem.items.length} sản phẩm đã được ghi nhận xuất kho.`,
+        message,
         "success",
         id,
         "export",
@@ -226,13 +351,18 @@ const updateExportStatus = async (req, res) => {
       );
     }
 
+    await conn.commit();
+
+    let responseMessage = `Đã ${
+      status === "approved" ? "duyệt" : "từ chối"
+    } phiếu xuất thành công`;
+    if (status === "approved") {
+      responseMessage += ` — Đã cập nhật tồn kho cho ${exportItem.items.length} sản phẩm`;
+    }
+
     res.json({
       success: true,
-      message: `Đã ${status === "approved" ? "duyệt" : "từ chối"} phiếu xuất thành công${
-        status === "approved"
-          ? ` — Đã ghi nhận ${exportItem.items.length} sản phẩm xuất kho`
-          : ""
-      }`,
+      message: responseMessage,
     });
   } catch (error) {
     await conn.rollback();
