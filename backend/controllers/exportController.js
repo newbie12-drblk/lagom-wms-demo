@@ -38,7 +38,6 @@ const createExport = async (req, res) => {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
-    // Kiểm tra tồn kho + phát hiện sản phẩm sắp hết
     const willBeOutOfStock = [];
 
     for (const item of exportData.items || []) {
@@ -56,7 +55,6 @@ const createExport = async (req, res) => {
         });
       }
 
-      // ✅ Kiểm tra nếu xuất xong sẽ hết hàng
       const tonKhoSau = (product.tonKho || 0) - (item.soLuong || 0);
       if (tonKhoSau <= 0) {
         willBeOutOfStock.push({
@@ -79,7 +77,6 @@ const createExport = async (req, res) => {
 
     await Export.updateStatus(exportId, "awaiting_confirmation", null, null);
 
-    // ✅ Thông báo cho Quản lý duyệt phiếu
     let managerMessage = `Admin vừa tạo phiếu xuất mới. Vui lòng kiểm tra và duyệt.`;
 
     if (willBeOutOfStock.length > 0) {
@@ -103,7 +100,6 @@ const createExport = async (req, res) => {
       "export",
     );
 
-    // ✅ Thông báo cho Admin nếu có SP sắp hết
     if (willBeOutOfStock.length > 0) {
       const danhSachSapHet = willBeOutOfStock
         .map(
@@ -145,6 +141,68 @@ const createExport = async (req, res) => {
 };
 
 // ============================================================
+// ✅ HELPER: TÌM DÒNG INVENTORY ĐỂ XUẤT
+// Ưu tiên:
+//   1. Match maHang + soLot + ngayXuatHD (nếu item có ngày xuất cụ thể)
+//   2. Match maHang + soLot (chọn dòng có ngayNhapHD cũ nhất - FIFO)
+//   3. Match maHang (chọn dòng có ngayNhapHD cũ nhất - FIFO)
+// ============================================================
+async function findInventoryForExport(conn, item, exportDate) {
+  const itemNgayXuat = item.ngayXuatHD || exportDate;
+  const itemSoLot = item.soLot || "";
+  const maHang = item.maHang;
+
+  // ✅ ƯU TIÊN 1: Match maHang + soLot + ngayXuatHD
+  if (itemSoLot && itemNgayXuat) {
+    const [rows] = await conn.execute(
+      `SELECT * FROM inventory 
+       WHERE maHang = ? AND soLot = ? AND ngayXuatHD = ?
+         AND status = 'approved' AND tonKho > 0
+       ORDER BY id DESC LIMIT 1`,
+      [maHang, itemSoLot, itemNgayXuat],
+    );
+    if (rows.length > 0) {
+      console.log(
+        `  ✅ Match KEY 1 (maHang + soLot + ngayXuatHD): ${maHang} / ${itemSoLot} / ${itemNgayXuat}`,
+      );
+      return rows[0];
+    }
+  }
+
+  // ✅ ƯU TIÊN 2: Match maHang + soLot (FIFO theo ngayNhapHD)
+  if (itemSoLot) {
+    const [rows] = await conn.execute(
+      `SELECT * FROM inventory 
+       WHERE maHang = ? AND soLot = ?
+         AND status = 'approved' AND tonKho > 0
+       ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
+      [maHang, itemSoLot],
+    );
+    if (rows.length > 0) {
+      console.log(
+        `  ✅ Match KEY 2 (maHang + soLot): ${maHang} / ${itemSoLot}`,
+      );
+      return rows[0];
+    }
+  }
+
+  // ✅ ƯU TIÊN 3: Match maHang (FIFO theo ngayNhapHD)
+  const [rows] = await conn.execute(
+    `SELECT * FROM inventory 
+     WHERE maHang = ?
+       AND status = 'approved' AND tonKho > 0
+     ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
+    [maHang],
+  );
+  if (rows.length > 0) {
+    console.log(`  ✅ Match KEY 3 (maHang only): ${maHang}`);
+    return rows[0];
+  }
+
+  return null;
+}
+
+// ============================================================
 // ✅ DUYỆT PHIẾU XUẤT — TRỪ TỒN KHO, XÓA NẾU HẾT HÀNG
 // ============================================================
 const updateExportStatus = async (req, res) => {
@@ -174,13 +232,8 @@ const updateExportStatus = async (req, res) => {
       });
     }
 
-    console.log(
-      `📦 Phiếu ${exportItem.exportNo} có ${exportItem.items?.length || 0} sản phẩm`,
-    );
-
     await conn.beginTransaction();
 
-    // Cập nhật status phiếu
     await conn.execute(
       `UPDATE exports 
        SET status = ?, approvedBy = ?, approvedAt = NOW(), rejectedReason = ?
@@ -188,7 +241,6 @@ const updateExportStatus = async (req, res) => {
       [status, approvedBy, rejectedReason || null, id],
     );
 
-    // ✅ NẾU DUYỆT → TRỪ TỒN KHO
     if (status === "approved") {
       if (!exportItem.items || exportItem.items.length === 0) {
         await conn.rollback();
@@ -201,44 +253,23 @@ const updateExportStatus = async (req, res) => {
       const exportDate =
         exportItem.exportDate || new Date().toISOString().split("T")[0];
 
-      const outOfStockItems = []; // Danh sách sản phẩm hết hàng
+      const outOfStockItems = [];
 
       for (const item of exportItem.items) {
         const soLuongXuat = item.soLuong || 0;
         const itemNgayXuat = item.ngayXuatHD || exportDate;
 
-        // ✅ Tìm dòng inventory khớp: ưu tiên (maHang + soLot)
-        let inventoryRows = [];
+        // ✅ Tìm dòng inventory theo logic ưu tiên mới
+        const invItem = await findInventoryForExport(conn, item, exportDate);
 
-        if (item.soLot) {
-          [inventoryRows] = await conn.execute(
-            `SELECT * FROM inventory 
-             WHERE maHang = ? AND soLot = ? AND status = 'approved'
-             ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
-            [item.maHang, item.soLot],
-          );
-        }
-
-        // Fallback: tìm theo maHang
-        if (inventoryRows.length === 0) {
-          [inventoryRows] = await conn.execute(
-            `SELECT * FROM inventory 
-             WHERE maHang = ? AND status = 'approved' AND tonKho > 0
-             ORDER BY ngayNhapHD ASC, id ASC LIMIT 1`,
-            [item.maHang],
-          );
-        }
-
-        if (inventoryRows.length === 0) {
+        if (!invItem) {
           throw new Error(
             `Không tìm thấy sản phẩm "${item.maHang}" trong kho để xuất`,
           );
         }
 
-        const invItem = inventoryRows[0];
         const tonKhoHienTai = invItem.tonKho || 0;
 
-        // ✅ Kiểm tra đủ hàng không
         if (tonKhoHienTai < soLuongXuat) {
           throw new Error(
             `Sản phẩm "${item.tenThuongMai}" (${item.maHang}) không đủ tồn kho. Cần ${soLuongXuat}, còn ${tonKhoHienTai}`,
@@ -248,7 +279,7 @@ const updateExportStatus = async (req, res) => {
         const tonKhoMoi = tonKhoHienTai - soLuongXuat;
 
         if (tonKhoMoi <= 0) {
-          // ✅ XUẤT HẾT → XÓA SẢN PHẨM KHỎI KHO
+          // XUẤT HẾT → XÓA
           await conn.execute(`DELETE FROM inventory WHERE id = ?`, [
             invItem.id,
           ]);
@@ -263,7 +294,7 @@ const updateExportStatus = async (req, res) => {
             `  🗑️ ĐÃ XÓA sản phẩm hết hàng: ${item.maHang} - SL xuất: ${soLuongXuat}`,
           );
         } else {
-          // ✅ CÒN HÀNG → CẬP NHẬT SỐ LƯỢNG
+          // CÒN HÀNG → CẬP NHẬT
           await conn.execute(
             `UPDATE inventory 
              SET tonKho = ?,
@@ -285,12 +316,11 @@ const updateExportStatus = async (req, res) => {
           );
 
           console.log(
-            `  ✅ Cập nhật tồn kho: ${item.maHang} - ${tonKhoHienTai} → ${tonKhoMoi}`,
+            `  ✅ Cập nhật tồn kho: ${item.maHang} (ID ${invItem.id}) - ${tonKhoHienTai} → ${tonKhoMoi}`,
           );
         }
       }
 
-      // ✅ THÔNG BÁO CHO ADMIN + QUẢN LÝ NẾU CÓ SẢN PHẨM HẾT HÀNG
       if (outOfStockItems.length > 0) {
         const danhSachHet = outOfStockItems
           .map(
@@ -298,7 +328,6 @@ const updateExportStatus = async (req, res) => {
           )
           .join("\n");
 
-        // Thông báo cho Admin (người tạo phiếu)
         await Notification.create(
           exportItem.createdBy,
           `⚠️ CẢNH BÁO HẾT HÀNG - Phiếu xuất ${exportItem.exportNo}`,
@@ -308,7 +337,6 @@ const updateExportStatus = async (req, res) => {
           "export",
         );
 
-        // Thông báo cho TẤT CẢ Quản lý
         try {
           await Notification.createForManagers(
             `⚠️ CẢNH BÁO HẾT HÀNG - Phiếu xuất ${exportItem.exportNo}`,
@@ -320,13 +348,8 @@ const updateExportStatus = async (req, res) => {
         } catch (notifErr) {
           console.error("Lỗi gửi thông báo cho Quản lý:", notifErr);
         }
-
-        console.log(
-          `⚠️ Đã gửi thông báo HẾT HÀNG cho ${outOfStockItems.length} sản phẩm`,
-        );
       }
 
-      // Thông báo duyệt phiếu bình thường
       let message = `Quản lý đã duyệt phiếu xuất ${exportItem.exportNo}.`;
       if (outOfStockItems.length > 0) {
         message += ` Có ${outOfStockItems.length} sản phẩm đã hết hàng và bị xóa khỏi kho.`;
