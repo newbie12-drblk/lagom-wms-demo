@@ -22,7 +22,7 @@ const InvoiceRequest = {
   },
 
   // ==================== TÌM SẢN PHẨM TRONG INVENTORY ====================
-  // ✅ Hỗ trợ tìm song song theo maHang VÀ soHopDongNhap
+  // Hỗ trợ tìm song song theo maHang VÀ soHopDongNhap
   searchInventory: async ({ maHang, soHopDongNhap }) => {
     let query = `
       SELECT id, stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
@@ -56,16 +56,17 @@ const InvoiceRequest = {
   },
 
   // ==================== TẠO YÊU CẦU HÓA ĐƠN ====================
+  // ✅ ĐÃ BỎ soLuong khỏi INSERT — DB sẽ tự nhận default = 0
   create: async (data, createdBy) => {
     const code = await InvoiceRequest.generateCode();
 
     const [result] = await db.execute(
       `INSERT INTO invoice_requests (
         soHoaDonCode, inventoryId,
-        maHang, soHopDongNhap, soLot, tenThuongMai, soLuong,
+        maHang, soHopDongNhap, soLot, tenThuongMai,
         soHoaDonNhap, ngayNhapHD, soHoaDonXuat, ngayXuatHD,
         status, createdBy
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       [
         code,
         data.inventoryId,
@@ -73,7 +74,6 @@ const InvoiceRequest = {
         data.soHopDongNhap || "",
         data.soLot || "",
         data.tenThuongMai || "",
-        data.soLuong || 0,
         data.soHoaDonNhap || "",
         data.ngayNhapHD || null,
         data.soHoaDonXuat || "",
@@ -120,7 +120,7 @@ const InvoiceRequest = {
     return rows;
   },
 
-  // ✅ ==================== LẤY HĐ CỦA ADMIN (người tạo) ====================
+  // ==================== LẤY HĐ CỦA ADMIN (người tạo) ====================
   getByCreator: async (userId) => {
     const [rows] = await db.execute(
       `SELECT ir.*, 
@@ -160,6 +160,7 @@ const InvoiceRequest = {
   },
 
   // ==================== DUYỆT HÓA ĐƠN ====================
+  // Cập nhật 4 trường HĐ vào ĐÚNG dòng inventory theo inventoryId
   approve: async (id, approvedBy) => {
     const conn = await db.getConnection();
     try {

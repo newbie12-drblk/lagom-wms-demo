@@ -62,7 +62,7 @@
   }
 
   // ============================================================
-  // LOAD DATA
+  // LOAD DATA — Admin gọi /requests/my, Quản lý gọi /requests
   // ============================================================
   async function loadData() {
     Utils.showLoading(true, "Đang tải...");
@@ -70,7 +70,6 @@
       const token = API.getToken();
       const user = getCurrentUser();
 
-      // ✅ Phân biệt Admin và Quản lý
       let url;
       if (user && user.roleId === "admin") {
         url = API_BASE_URL + "/invoice/requests/my";
@@ -199,10 +198,6 @@
             <div class="value">${Utils.escapeHtml(item.soLot || "—")}</div>
           </div>
           <div class="receipt-card-info">
-            <div class="label">Số lượng</div>
-            <div class="value" style="color: #86efac; font-weight: 600;">${item.soLuong || 0}</div>
-          </div>
-          <div class="receipt-card-info">
             <div class="label">Số HĐ nhập</div>
             <div class="value">${Utils.escapeHtml(item.soHoaDonNhap || "—")}</div>
           </div>
@@ -266,7 +261,6 @@
       "createNgayNhapHD",
       "createSoHoaDonXuat",
       "createNgayXuatHD",
-      "createSoLuong",
     ];
     inputs.forEach((id) => {
       const el = document.getElementById(id);
@@ -277,7 +271,7 @@
   }
 
   // ============================================================
-  // TÌM SẢN PHẨM
+  // TÌM SẢN PHẨM — Gửi CẢ 2 key nếu có
   // ============================================================
   async function searchProduct() {
     const maHang = document.getElementById("createMaHang")?.value.trim() || "";
@@ -295,7 +289,6 @@
     try {
       const token = API.getToken();
 
-      // ✅ Gửi CẢ 2 key nếu có
       const params = new URLSearchParams();
       if (maHang) params.append("maHang", maHang);
       if (soHD) params.append("soHopDongNhap", soHD);
@@ -412,7 +405,7 @@
   }
 
   // ============================================================
-  // SUBMIT TẠO HĐ
+  // SUBMIT TẠO HĐ — Không còn số lượng
   // ============================================================
   async function submitCreateInvoice() {
     if (!selectedInventory) {
@@ -428,9 +421,6 @@
       .getElementById("createSoHoaDonXuat")
       ?.value.trim();
     const ngayXuatHD = document.getElementById("createNgayXuatHD")?.value;
-    const soLuong = parseInt(
-      document.getElementById("createSoLuong")?.value || 0,
-    );
 
     if (!soHoaDonNhap || !ngayNhapHD) {
       Utils.showToast("⚠️ Vui lòng nhập Số HĐ nhập và Ngày HĐ nhập", "warning");
@@ -440,21 +430,10 @@
       Utils.showToast("⚠️ Vui lòng nhập Số HĐ xuất và Ngày HĐ xuất", "warning");
       return;
     }
-    if (!soLuong || soLuong <= 0) {
-      Utils.showToast("⚠️ Số lượng phải > 0", "warning");
-      return;
-    }
-    if (soLuong > selectedInventory.tonKho) {
-      Utils.showToast(
-        `⚠️ Số lượng (${soLuong}) vượt tồn kho (${selectedInventory.tonKho})`,
-        "warning",
-      );
-      return;
-    }
 
     if (
       !confirm(
-        `Bạn có chắc muốn gửi yêu cầu hóa đơn cho sản phẩm "${selectedInventory.tenThuongMai}" (SL: ${soLuong})?`,
+        `Bạn có chắc muốn gửi yêu cầu hóa đơn cho sản phẩm "${selectedInventory.tenThuongMai}"?`,
       )
     )
       return;
@@ -474,7 +453,6 @@
           soHopDongNhap: selectedInventory.soHopDongNhap,
           soLot: selectedInventory.soLot,
           tenThuongMai: selectedInventory.tenThuongMai,
-          soLuong,
           soHoaDonNhap,
           ngayNhapHD,
           soHoaDonXuat,

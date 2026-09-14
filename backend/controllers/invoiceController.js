@@ -3,7 +3,7 @@ const InvoiceRequest = require("../models/InvoiceRequest");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 
-// ✅ ==================== TÌM SẢN PHẨM (Admin) ====================
+// ==================== TÌM SẢN PHẨM (Admin) ====================
 // GET /api/invoice/search-product?maHang=...&soHopDongNhap=...
 const searchProduct = async (req, res) => {
   try {
@@ -33,6 +33,7 @@ const searchProduct = async (req, res) => {
 };
 
 // ==================== ADMIN: TẠO YÊU CẦU HÓA ĐƠN ====================
+// ✅ ĐÃ BỎ SỐ LƯỢNG
 const createInvoiceRequest = async (req, res) => {
   try {
     const {
@@ -41,7 +42,6 @@ const createInvoiceRequest = async (req, res) => {
       soHopDongNhap,
       soLot,
       tenThuongMai,
-      soLuong,
       soHoaDonNhap,
       ngayNhapHD,
       soHoaDonXuat,
@@ -49,7 +49,7 @@ const createInvoiceRequest = async (req, res) => {
     } = req.body;
     const createdBy = req.user.userId;
 
-    console.log("📥 Tạo yêu cầu hóa đơn:", { inventoryId, maHang, soLuong });
+    console.log("📥 Tạo yêu cầu hóa đơn:", { inventoryId, maHang });
 
     if (!inventoryId) {
       return res.status(400).json({
@@ -76,13 +76,6 @@ const createInvoiceRequest = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Vui lòng nhập Số HĐ xuất và Ngày HĐ xuất",
-      });
-    }
-
-    if (!soLuong || soLuong <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Số lượng phải > 0",
       });
     }
 
@@ -119,7 +112,6 @@ const createInvoiceRequest = async (req, res) => {
         soHopDongNhap: soHopDongNhap || invItem.soHopDongNhap || "",
         soLot: soLot || invItem.soLot || "",
         tenThuongMai: tenThuongMai || invItem.tenThuongMai || "",
-        soLuong,
         soHoaDonNhap,
         ngayNhapHD,
         soHoaDonXuat,
@@ -164,7 +156,7 @@ const getAllInvoiceRequests = async (req, res) => {
   }
 };
 
-// ✅ ==================== ADMIN: LẤY HĐ CỦA MÌNH ====================
+// ==================== ADMIN: LẤY HĐ CỦA MÌNH ====================
 const getMyInvoiceRequests = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -358,7 +350,7 @@ module.exports = {
   searchProduct,
   createInvoiceRequest,
   getAllInvoiceRequests,
-  getMyInvoiceRequests, // ✅ THÊM
+  getMyInvoiceRequests,
   getPendingInvoices,
   getInvoiceRequestById,
   approveInvoice,
