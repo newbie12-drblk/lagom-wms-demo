@@ -1,7 +1,7 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * MOBILE: Sidebar full màn hình + Nút Back
+ * ✅ Khi duyệt SP mới: Quản lý nhập SL NHẬP
  */
 
 (function () {
@@ -285,7 +285,6 @@
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
                 <div><span style="color: #6b82a0; font-size: 11px;">Tên sản phẩm</span><br><span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Mã hàng</span><br><span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(product.maHang || "—")}</span></div>
-                <div><span style="color: #6b82a0; font-size: 11px;">SL nhập</span><br><span style="color: #86efac; font-weight: 600;">${product.soLuongNhap || 0}</span></div>
                 <div><span style="color: #6b82a0; font-size: 11px;">Người yêu cầu</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(r.requesterName || "Admin")}</span></div>
               </div>
               <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
@@ -311,7 +310,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL
+  // VIEW APPROVAL DETAIL — CÓ INPUT SL NHẬP
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -334,6 +333,13 @@
     var createdAt = request.createdAt || new Date().toISOString();
 
     var html = `
+      <div style="padding: 10px 14px; background: rgba(251, 191, 36, 0.08); border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
+        <i class="fas fa-info-circle" style="color: #fbbf24;"></i>
+        <span style="font-size: 12px; color: #fbbf24;">
+          <strong>Nhập SỐ LƯỢNG NHẬP</strong> cho sản phẩm này trước khi duyệt
+        </span>
+      </div>
+
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Tên thương mại:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(product.tenThuongMai || "—")}</span></div>
         <div><span style="color: #6b82a0;">Mã hàng:</span> <span style="color: #93c5fd; font-weight: 600;">${Utils.escapeHtml(product.maHang || "—")}</span></div>
@@ -343,13 +349,23 @@
         <div><span style="color: #6b82a0;">Phân loại:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.phanLoai || "—")}</span></div>
         <div><span style="color: #6b82a0;">Giá nhập:</span> <span style="color: #93c5fd; font-family: monospace;">${Utils.formatCurrency(product.giaNhap || 0)}</span></div>
         <div><span style="color: #6b82a0;">Số HĐ:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(product.soHopDongNhap || "—")}</span></div>
-        <div><span style="color: #6b82a0;">SL nhập:</span> <span style="color: #86efac; font-weight: 700;">${Utils.formatNumber(product.soLuongNhap || 0)}</span></div>
       </div>
+
+      <div style="background: #0f172a; padding: 14px 18px; border-radius: 8px; border: 1px solid #fbbf24; margin-bottom: 12px;">
+        <label style="display: block; font-weight: 700; color: #fbbf24; margin-bottom: 8px; font-size: 14px;">
+          📦 SỐ LƯỢNG NHẬP <span style="color: #ef4444;">*</span>
+        </label>
+        <input type="number" id="approveSoLuongNhap" min="1" value="1" placeholder="Nhập số lượng" 
+               style="width: 100%; padding: 10px 14px; background: #1a2235; border: 2px solid #fbbf24; border-radius: 6px; color: #fbbf24; font-size: 16px; font-weight: 700; text-align: center;">
+        <p style="font-size: 11px; color: #6b82a0; margin-top: 6px;">Số lượng này sẽ được lưu vào tồn kho</p>
+      </div>
+
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
         <div><span style="color: #6b82a0;">Người yêu cầu:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(requesterName)}</span></div>
         <div><span style="color: #6b82a0;">Ngày tạo:</span> <span style="color: #e2eaf5;">${Utils.formatDate(createdAt)}</span></div>
         <div><span style="color: #6b82a0;">Trạng thái:</span> <span class="status-badge status-pending">⏳ Chờ duyệt</span></div>
       </div>
+
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e2d45; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-danger" onclick="window.rejectApproval(${request.id})" style="padding: 8px 20px; font-size: 13px;">
           <i class="fas fa-times"></i> Từ chối
@@ -372,8 +388,27 @@
     `;
   };
 
+  // ============================================================
+  // APPROVE APPROVAL — GỬI SL NHẬP LÊN SERVER
+  // ============================================================
   window.approveApproval = async function (id) {
-    if (!confirm("Bạn có chắc muốn duyệt yêu cầu thêm sản phẩm này?")) return;
+    var soLuongNhapEl = document.getElementById("approveSoLuongNhap");
+    var soLuongNhap = soLuongNhapEl ? parseInt(soLuongNhapEl.value) : 0;
+
+    if (!soLuongNhap || soLuongNhap <= 0) {
+      Utils.showToast("⚠️ Vui lòng nhập SỐ LƯỢNG NHẬP (> 0)!", "warning");
+      soLuongNhapEl?.focus();
+      return;
+    }
+
+    if (
+      !confirm(
+        "Bạn có chắc muốn duyệt yêu cầu thêm sản phẩm này với SL: " +
+          soLuongNhap +
+          "?",
+      )
+    )
+      return;
 
     Utils.showLoading(true, "Đang duyệt...");
     try {
@@ -386,6 +421,7 @@
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
+          body: JSON.stringify({ soLuongNhap: soLuongNhap }),
         },
       );
       var result = await response.json();
@@ -1086,7 +1122,6 @@
               phanLoai: "Phân loại máy",
               giaNhap: "Giá nhập",
               soHopDongNhap: "Số HĐ",
-              soLuongNhap: "Số lượng nhập",
             };
 
             var allFields = Object.keys(fieldLabels);
@@ -1204,7 +1239,6 @@
       phanLoai: "Phân loại máy",
       giaNhap: "Giá nhập",
       soHopDongNhap: "Số HĐ",
-      soLuongNhap: "Số lượng nhập",
     };
 
     var allFields = Object.keys(fieldLabels);
@@ -1225,10 +1259,6 @@
         if (key === "giaNhap") {
           oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
           newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
-        }
-        if (key === "soLuongNhap") {
-          oldVal = Utils.formatNumber(parseInt(oldVal) || 0);
-          newVal = Utils.formatNumber(parseInt(newVal) || 0);
         }
 
         var highlightStyle = isActuallyChanged
@@ -1603,7 +1633,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES - HÓA ĐƠN THEO TỪNG ITEM
+  // LOAD PENDING INVOICES
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");
@@ -2089,7 +2119,7 @@
   }
 
   // ============================================================
-  // USER MANAGEMENT
+  // USER MANAGEMENT FUNCTIONS
   // ============================================================
   function openAddUserModal() {
     var modal = document.getElementById("userModal");

@@ -4,6 +4,10 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 const EditHistory = require("../models/EditHistory");
 
+// ============================================================
+// TẠO YÊU CẦU THÊM SẢN PHẨM (ADMIN)
+// KHÔNG CÒN SL NHẬP Ở FORM — Quản lý sẽ nhập khi duyệt
+// ============================================================
 const createApprovalRequest = async (req, res) => {
   try {
     const { products } = req.body;
@@ -27,15 +31,8 @@ const createApprovalRequest = async (req, res) => {
         .json({ success: false, message: "Mã hàng bị trùng trong yêu cầu" });
     }
 
-    // ✅ Validate SL nhập
+    // Kiểm tra mã hàng đã tồn tại chưa
     for (const prod of products) {
-      if (!prod.soLuongNhap || prod.soLuongNhap <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Sản phẩm ${prod.maHang}: Số lượng nhập phải > 0`,
-        });
-      }
-
       const existing = await Inventory.findByMaHang(prod.maHang);
       if (existing) {
         return res.status(400).json({
@@ -45,17 +42,19 @@ const createApprovalRequest = async (req, res) => {
       }
     }
 
+    // Lưu từng sản phẩm
     for (const prod of products) {
       const requestId = await ApprovalRequest.create(requesterId, prod);
       console.log("✅ Đã tạo yêu cầu ID:", requestId);
     }
 
+    // Lấy danh sách yêu cầu vừa tạo
     const allRequests = await ApprovalRequest.getByRequester(requesterId);
     const latestRequests = allRequests.slice(0, products.length);
 
     await Notification.createForManagers(
       `📦 Yêu cầu thêm ${products.length} sản phẩm mới`,
-      `Admin đã tạo yêu cầu thêm sản phẩm. Vui lòng kiểm tra và duyệt.`,
+      `Admin đã tạo yêu cầu thêm sản phẩm. Vui lòng kiểm tra, nhập SỐ LƯỢNG và duyệt.`,
       "approval",
       latestRequests[0]?.id || null,
       "approval_request",
@@ -75,6 +74,9 @@ const createApprovalRequest = async (req, res) => {
   }
 };
 
+// ============================================================
+// LẤY TẤT CẢ YÊU CẦU
+// ============================================================
 const getAllRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -97,14 +99,26 @@ const getMyRequests = async (req, res) => {
 };
 
 // ============================================================
-// ✅ DUYỆT YÊU CẦU THÊM SP — LƯU VÀO INVENTORY
+// DUYỆT YÊU CẦU THÊM SP — NHẬN SL NHẬP TỪ QUẢN LÝ
 // ============================================================
 const approveRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
-    console.log(`✅ Duyệt yêu cầu thêm SP ID: ${id}`);
+    // ✅ Nhận SL nhập từ Quản lý
+    const soLuongNhapFromManager = parseInt(req.body.soLuongNhap) || 0;
+
+    console.log(
+      `✅ Duyệt yêu cầu thêm SP ID: ${id}, SL nhập: ${soLuongNhapFromManager}`,
+    );
+
+    if (soLuongNhapFromManager <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập SỐ LƯỢNG NHẬP (> 0) trước khi duyệt",
+      });
+    }
 
     const request = await ApprovalRequest.findById(id);
     if (!request) {
@@ -121,7 +135,6 @@ const approveRequest = async (req, res) => {
 
     const productData = request.productData || {};
     const createdIds = [];
-    const errors = [];
 
     const conn = await db.getConnection();
     try {
@@ -134,9 +147,7 @@ const approveRequest = async (req, res) => {
 
       currentStt++;
 
-      const soLuongNhap = productData.soLuongNhap || 0;
-
-      // ✅ LƯU VÀO INVENTORY (11 trường + SL nhập)
+      // ✅ LƯU VÀO INVENTORY với SL nhập từ Quản lý
       await conn.execute(
         `INSERT INTO inventory (
           stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
@@ -156,9 +167,9 @@ const approveRequest = async (req, res) => {
           productData.phanLoai || "",
           productData.giaNhap || 0,
           0,
-          soLuongNhap,
+          soLuongNhapFromManager, // ✅ SL nhập từ Quản lý
           0,
-          soLuongNhap, // tonKho = soLuongNhap
+          soLuongNhapFromManager, // tonKho = SL nhập
           productData.soLot || "",
           productData.ngayHetHan || null,
           productData.soHopDongNhap || "",
@@ -186,7 +197,7 @@ const approveRequest = async (req, res) => {
       await Notification.create(
         request.requesterId,
         "✅ Yêu cầu thêm sản phẩm đã được duyệt",
-        `Sản phẩm "${productData.tenThuongMai}" đã được thêm vào kho với SL: ${soLuongNhap}`,
+        `Sản phẩm "${productData.tenThuongMai}" đã được thêm vào kho với SL: ${soLuongNhapFromManager}`,
         "success",
         id,
         "approval_request",
@@ -194,8 +205,7 @@ const approveRequest = async (req, res) => {
 
       res.json({
         success: true,
-        message: `Đã duyệt và thêm sản phẩm vào kho (SL: ${soLuongNhap})`,
-        errors,
+        message: `Đã duyệt và thêm sản phẩm vào kho (SL: ${soLuongNhapFromManager})`,
         data: { createdIds, count: createdIds.length },
       });
     } catch (error) {
@@ -212,6 +222,9 @@ const approveRequest = async (req, res) => {
   }
 };
 
+// ============================================================
+// TỪ CHỐI YÊU CẦU
+// ============================================================
 const rejectRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -253,6 +266,9 @@ const rejectRequest = async (req, res) => {
   }
 };
 
+// ============================================================
+// XÓA YÊU CẦU
+// ============================================================
 const deleteRequest = async (req, res) => {
   try {
     const { id } = req.params;

@@ -2,7 +2,7 @@
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
- * ✅ 10 TRƯỜNG: tên, mã, quy cách, đvt, hãng, phân loại, giá nhập, số HĐ, SL NHẬP
+ * ✅ ĐÃ BỎ trường SL NHẬP khỏi form Thêm/Sửa
  */
 
 (function () {
@@ -91,7 +91,7 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
-  // ==================== RENDER TABLE - 21 CỘT ====================
+  // ==================== RENDER TABLE ====================
   function renderInventoryTable(data) {
     if (!tbody) return;
 
@@ -128,49 +128,29 @@
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
             <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${globalIdx}</td>
-            
             <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
               <strong style="color: #60a5fa;">${escapeHtml(item.tenThuongMai || "—")}</strong>
             </td>
-            
             <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.maHang || "—")}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.quyCach || "—")}</td>
-            
             <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.hangSX || "—")}</td>
-            
             <td style="min-width: 50px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.dvt || "—")}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.phanLoai || "—")}</td>
-            
             <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-            
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #86efac; font-weight: 600;">${formatNumber(item.soLuongNhap || 0)}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongNhap || "—")}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
-            
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayNhapHD)}</td>
-            
             <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; font-family: monospace;">${escapeHtml(item.soLot || "—")}</td>
-            
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#ffffff"};">${formatDateDisplay(item.ngayHetHan)}</td>
-            
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatNumber(item.soLuongXuat || 0)}</td>
-            
             <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaXuat || 0)}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongXuat || "—")}</td>
-            
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
-            
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayXuatHD)}</td>
-            
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
               <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${formatNumber(item.tonKho || 0)}</strong>
             </td>
-            
             <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${getDebtBadge(remainingDays)}</td>
           </tr>
         `;
@@ -430,19 +410,19 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG - 10 TRƯỜNG ====================
+  // ==================== RENDER NỘI DUNG - ĐÃ BỎ SL NHẬP ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 10 TRƯỜNG (CÓ SL NHẬP) ==========
+      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG (KHÔNG CÓ SL NHẬP) ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
         </p>
         <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1400px;">
+          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1200px;">
             <thead>
               <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 45px; white-space: nowrap;">STT</th>
@@ -454,7 +434,6 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">PHÂN LOẠI MÁY</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #fbbf24; font-weight: 700; min-width: 100px;">SL NHẬP <span style="color:#ef4444;">*</span></th>
               </tr>
             </thead>
             <tbody id="addProductBody">
@@ -468,7 +447,6 @@
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
                 <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDong" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="number" class="add-soLuongNhap" placeholder="SL nhập *" min="1" value="1" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #fbbf24; border-radius:4px; color:#fbbf24; font-size:13px; text-align:right; font-weight:700;"></td>
               </tr>
             </tbody>
           </table>
@@ -479,12 +457,12 @@
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
           <p style="font-size: 12px; color: #6b82a0;">
             <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
-            <strong>Lưu ý:</strong> Nhập đầy đủ 10 trường. Trường <span style="color:#fbbf24;">SL NHẬP</span> bắt buộc (>0). Các trường có <span style="color:#ef4444;">*</span> là bắt buộc.
+            <strong>Lưu ý:</strong> Nhập đầy đủ 9 trường. Các trường có <span style="color:#ef4444;">*</span> là bắt buộc. Số lượng sẽ được nhập khi Quản lý duyệt yêu cầu.
           </p>
         </div>
       `;
     } else if (type === "edit") {
-      // ========== SỬA SẢN PHẨM - 9 TRƯỜNG ==========
+      // ========== SỬA SẢN PHẨM - 8 TRƯỜNG (KHÔNG CÓ SL NHẬP) ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -511,7 +489,6 @@
             <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
             <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
             <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${formatNumber(item.soLuongNhap || 0)}</td>
           </tr>
         `,
         )
@@ -520,7 +497,7 @@
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> 
-          <strong>Chọn sản phẩm cần sửa</strong> (sửa được 9 trường):
+          <strong>Chọn sản phẩm cần sửa</strong> (sửa được 8 trường):
         </p>
         <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
           <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1200px;">
@@ -536,7 +513,6 @@
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
                 <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 100px;">SL NHẬP</th>
               </tr>
             </thead>
             <tbody>
@@ -545,7 +521,7 @@
           </table>
         </div>
         <div id="editFormContainer" style="margin-top:16px; display:none;">
-          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (9 trường):</p>
+          <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (8 trường):</p>
           <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
             <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
@@ -555,7 +531,6 @@
             <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
             <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Số HĐ</label><input type="text" id="edit-soHopDong" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Số lượng nhập</label><input type="number" id="edit-soLuongNhap" class="edit-field" min="0" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
           </div>
         </div>
       `;
@@ -660,8 +635,6 @@
         document.getElementById("edit-giaNhap").value = product.giaNhap || "";
         document.getElementById("edit-soHopDong").value =
           product.soHopDongNhap || "";
-        document.getElementById("edit-soLuongNhap").value =
-          product.soLuongNhap || 0;
       }
     }
   };
@@ -691,7 +664,6 @@
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
       <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDong" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="number" class="add-soLuongNhap" placeholder="SL nhập *" min="1" value="1" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #fbbf24; border-radius:4px; color:#fbbf24; font-size:13px; text-align:right; font-weight:700;"></td>
     `;
     tbody.appendChild(tr);
   };
@@ -704,7 +676,7 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM ====================
+  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (KHÔNG CÓ SL NHẬP) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -713,16 +685,8 @@
     rows.forEach((row) => {
       const tenThuongMai = row.querySelector(".add-tenThuongMai")?.value.trim();
       const maHang = row.querySelector(".add-maHang")?.value.trim();
-      const soLuongNhap = parseInt(
-        row.querySelector(".add-soLuongNhap")?.value || 0,
-      );
 
       if (!tenThuongMai || !maHang) {
-        hasError = true;
-        return;
-      }
-
-      if (soLuongNhap <= 0) {
         hasError = true;
         return;
       }
@@ -738,7 +702,6 @@
           row.querySelector(".add-giaNhap")?.value?.replace(/[^0-9]/g, "") || 0,
         ),
         soHopDongNhap: row.querySelector(".add-soHopDong")?.value || "",
-        soLuongNhap: soLuongNhap,
       });
     });
 
@@ -757,7 +720,7 @@
 
         if (hasError || products.length === 0) {
           Utils.showToast(
-            "⚠️ Vui lòng điền đầy đủ Tên thương mại, Mã hàng và SL NHẬP (> 0)!",
+            "⚠️ Vui lòng điền đầy đủ Tên thương mại và Mã hàng!",
             "warning",
           );
           Utils.showLoading(false);
@@ -822,11 +785,6 @@
           soHopDongNhap:
             document.getElementById("edit-soHopDong")?.value ||
             oldProduct.soHopDongNhap,
-          soLuongNhap: parseInt(
-            document.getElementById("edit-soLuongNhap")?.value ||
-              oldProduct.soLuongNhap ||
-              0,
-          ),
         };
 
         const changedFields = {};
@@ -839,7 +797,6 @@
           "phanLoai",
           "giaNhap",
           "soHopDongNhap",
-          "soLuongNhap",
         ];
 
         let hasChange = false;
