@@ -3,7 +3,7 @@ const Export = require("../models/Export");
 const Notification = require("../models/Notification");
 const db = require("../config/database");
 
-// ==================== ADMIN: LẤY DANH SÁCH PHIẾU XUẤT CHƯA CÓ HÓA ĐƠN ====================
+// ==================== ADMIN: LẤY PHIẾU XUẤT CHƯA CÓ HÓA ĐƠN ====================
 const getExportsWithoutInvoice = async (req, res) => {
   try {
     const exports = await InvoiceRequest.getExportsWithoutInvoice();
@@ -14,17 +14,21 @@ const getExportsWithoutInvoice = async (req, res) => {
   }
 };
 
-// ==================== ADMIN: TẠO YÊU CẦU NHẬP HÓA ĐƠN CHO TỪNG ITEM ====================
+// ==================== ADMIN: TẠO YÊU CẦU HÓA ĐƠN CHO TỪNG ITEM ====================
 const createInvoiceRequest = async (req, res) => {
   try {
     const { exportId, items } = req.body;
     const createdBy = req.user.userId;
 
+    console.log("📥 Nhận yêu cầu tạo HĐ:", {
+      exportId,
+      itemsCount: items?.length,
+    });
+
     if (!exportId) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng chọn phiếu xuất",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Vui lòng chọn phiếu xuất" });
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -34,32 +38,41 @@ const createInvoiceRequest = async (req, res) => {
       });
     }
 
-    // Kiểm tra phiếu xuất
     const exportItem = await Export.findById(exportId);
     if (!exportItem) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy phiếu xuất",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy phiếu xuất" });
     }
 
     if (exportItem.status !== "approved") {
-      return res.status(400).json({
-        success: false,
-        message: "Phiếu xuất chưa được duyệt",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Phiếu xuất chưa được duyệt" });
     }
 
     // Validate từng item
     for (const item of items) {
       if (!item.exportItemId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Thiếu exportItemId" });
+      }
+
+      if (!item.soHoaDonNhap || !item.ngayNhapHD) {
         return res.status(400).json({
           success: false,
-          message: "Thiếu exportItemId cho 1 sản phẩm",
+          message: `Item ID ${item.exportItemId}: thiếu Số HĐ nhập hoặc Ngày HĐ nhập`,
         });
       }
 
-      // Kiểm tra item đã có hóa đơn pending/approved chưa
+      if (!item.soHoaDonXuat || !item.ngayXuatHD) {
+        return res.status(400).json({
+          success: false,
+          message: `Item ID ${item.exportItemId}: thiếu Số HĐ xuất hoặc Ngày HĐ xuất`,
+        });
+      }
+
       const existing = await InvoiceRequest.getByExportItemId(
         item.exportItemId,
       );
@@ -74,14 +87,12 @@ const createInvoiceRequest = async (req, res) => {
       }
     }
 
-    // Tạo yêu cầu cho từng item
     const requestIds = await InvoiceRequest.createMultiple(
       exportId,
       items,
       createdBy,
     );
 
-    // Thông báo cho Quản lý
     await Notification.createForManagers(
       `📄 Yêu cầu nhập hóa đơn cho phiếu ${exportItem.exportNo}`,
       `Admin đã nhập thông tin hóa đơn cho ${items.length} sản phẩm trong phiếu xuất ${exportItem.exportNo}. Vui lòng kiểm tra và duyệt.`,
@@ -97,14 +108,13 @@ const createInvoiceRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Create invoice request error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server: " + error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
-// ==================== QUẢN LÝ: LẤY DANH SÁCH HÓA ĐƠN CHỜ DUYỆT ====================
+// ==================== QUẢN LÝ: LẤY HÓA ĐƠN CHỜ DUYỆT ====================
 const getPendingInvoices = async (req, res) => {
   try {
     const requests = await InvoiceRequest.getPending();
@@ -115,7 +125,7 @@ const getPendingInvoices = async (req, res) => {
   }
 };
 
-// ==================== QUẢN LÝ: LẤY TẤT CẢ YÊU CẦU ====================
+// ==================== QUẢN LÝ: LẤY TẤT CẢ ====================
 const getAllInvoiceRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -133,10 +143,9 @@ const getInvoiceRequestById = async (req, res) => {
     const { id } = req.params;
     const request = await InvoiceRequest.findById(id);
     if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy yêu cầu",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy yêu cầu" });
     }
     res.json({ success: true, data: request });
   } catch (error) {
@@ -145,36 +154,31 @@ const getInvoiceRequestById = async (req, res) => {
   }
 };
 
-// ==================== QUẢN LÝ: DUYỆT HÓA ĐƠN ====================
+// ==================== QUẢN LÝ: DUYỆT 1 HÓA ĐƠN ====================
 const approveInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const approvedBy = req.user.userId;
 
-    console.log(`✅ Duyệt hóa đơn ID: ${id}`);
-
     const request = await InvoiceRequest.findById(id);
     if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy yêu cầu",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy yêu cầu" });
     }
 
     if (request.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Yêu cầu này đã được xử lý",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Yêu cầu này đã được xử lý" });
     }
 
     await InvoiceRequest.approve(id, approvedBy);
 
-    // Thông báo cho Admin
     await Notification.create(
       request.createdBy,
       `✅ Hóa đơn phiếu ${request.exportNo} đã được duyệt`,
-      `Quản lý đã duyệt hóa đơn cho sản phẩm "${request.tenThuongMai}" trong phiếu ${request.exportNo}.`,
+      `Quản lý đã duyệt hóa đơn cho sản phẩm "${request.tenThuongMai}".`,
       "success",
       id,
       "invoice_request",
@@ -186,10 +190,9 @@ const approveInvoice = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Approve invoice error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server: " + error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server: " + error.message });
   }
 };
 
@@ -202,7 +205,7 @@ const approveMultipleInvoices = async (req, res) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng chọn ít nhất 1 hóa đơn để duyệt",
+        message: "Vui lòng chọn ít nhất 1 hóa đơn",
       });
     }
 
@@ -243,7 +246,7 @@ const approveMultipleInvoices = async (req, res) => {
   }
 };
 
-// ==================== QUẢN LÝ: TỪ CHỐI HÓA ĐƠN ====================
+// ==================== QUẢN LÝ: TỪ CHỐI ====================
 const rejectInvoice = async (req, res) => {
   try {
     const { id } = req.params;
@@ -252,10 +255,9 @@ const rejectInvoice = async (req, res) => {
 
     const request = await InvoiceRequest.findById(id);
     if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy yêu cầu",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy yêu cầu" });
     }
 
     await InvoiceRequest.reject(
@@ -273,17 +275,14 @@ const rejectInvoice = async (req, res) => {
       "invoice_request",
     );
 
-    res.json({
-      success: true,
-      message: `Đã từ chối hóa đơn`,
-    });
+    res.json({ success: true, message: `Đã từ chối hóa đơn` });
   } catch (error) {
     console.error("❌ Reject invoice error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 
-// ==================== ADMIN: XÓA YÊU CẦU ====================
+// ==================== ADMIN: XÓA ====================
 const deleteInvoiceRequest = async (req, res) => {
   try {
     const { id } = req.params;

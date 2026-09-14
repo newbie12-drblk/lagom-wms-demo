@@ -319,6 +319,7 @@
     let itemsHtml = "";
 
     if (isNo && isAdmin()) {
+      // FORM NHẬP HĐ THEO TỪNG ITEM
       itemsHtml = `
         <div class="invoice-form-container" id="invoiceForm_${item.id}" style="display:none;">
           <div style="padding: 10px 14px; background: rgba(96, 165, 250, 0.08); border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(96, 165, 250, 0.15);">

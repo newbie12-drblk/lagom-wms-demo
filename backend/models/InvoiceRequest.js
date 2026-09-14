@@ -175,8 +175,8 @@ const InvoiceRequest = {
   },
 
   // ==================== DUYỆT HÓA ĐƠN ====================
-  // ✅ Cập nhật 4 trường HĐ vào ĐÚNG dòng inventory của item đó
-  // Ưu tiên tìm theo: maHang + soLot + ngayXuatHD
+  // Cập nhật 4 trường HĐ vào ĐÚNG dòng inventory của item đó
+  // Ưu tiên: maHang + soLot + ngayXuatHD → maHang + soLot → maHang
   approve: async (id, approvedBy) => {
     const conn = await db.getConnection();
     try {
@@ -206,7 +206,6 @@ const InvoiceRequest = {
         [approvedBy, id],
       );
 
-      // ✅ Tìm dòng inventory — ưu tiên như khi xuất
       const itemNgayXuat =
         req.ngayXuatHD || req.itemNgayXuatHD || req.exportDate;
 
@@ -253,7 +252,6 @@ const InvoiceRequest = {
 
       const invItem = inventoryRows[0];
 
-      // Cập nhật 4 trường HĐ vào đúng dòng inventory
       await conn.execute(
         `UPDATE inventory 
          SET soHoaDonNhap = ?,

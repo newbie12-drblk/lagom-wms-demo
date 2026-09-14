@@ -1,33 +1,79 @@
 const express = require("express");
 const {
-  getAllInventory,
-  getProductByMaHang,
-  getCategories,
-  getPendingProducts,
-  createProduct,
-  approveProduct,
-  rejectProduct,
-  getStats,
-} = require("../controllers/inventoryController");
+  getExportsWithoutInvoice,
+  createInvoiceRequest,
+  getPendingInvoices,
+  getAllInvoiceRequests,
+  getInvoiceRequestById,
+  approveInvoice,
+  approveMultipleInvoices,
+  rejectInvoice,
+  deleteInvoiceRequest,
+} = require("../controllers/invoiceController");
 const { verifyToken } = require("../middleware/auth");
 const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// Tất cả user đã đăng nhập đều xem được
-router.get("/", verifyToken, getAllInventory);
-router.get("/stats", verifyToken, getStats);
-router.get("/categories", verifyToken, getCategories);
-router.get("/product/:maHang", verifyToken, getProductByMaHang);
+// ========== ADMIN ==========
+router.get(
+  "/exports-without-invoice",
+  verifyToken,
+  checkRole("admin"),
+  getExportsWithoutInvoice,
+);
 
-// Quản lý xem danh sách chờ duyệt
-router.get("/pending", verifyToken, checkRole("quan_ly"), getPendingProducts);
+router.post("/requests", verifyToken, checkRole("admin"), createInvoiceRequest);
 
-// Admin tạo yêu cầu nhập sản phẩm (chờ duyệt)
-router.post("/", verifyToken, checkRole("admin"), createProduct);
+router.delete(
+  "/requests/:id",
+  verifyToken,
+  checkRole("admin"),
+  deleteInvoiceRequest,
+);
 
-// Quản lý duyệt/từ chối
-router.put("/:id/approve", verifyToken, checkRole("quan_ly"), approveProduct);
-router.put("/:id/reject", verifyToken, checkRole("quan_ly"), rejectProduct);
+// ========== QUẢN LÝ ==========
+router.get(
+  "/requests/pending",
+  verifyToken,
+  checkRole("quan_ly"),
+  getPendingInvoices,
+);
+
+router.get(
+  "/requests",
+  verifyToken,
+  checkRole("quan_ly"),
+  getAllInvoiceRequests,
+);
+
+// Duyệt hàng loạt — PHẢI đặt TRƯỚC /:id/approve
+router.put(
+  "/requests/approve-multiple",
+  verifyToken,
+  checkRole("quan_ly"),
+  approveMultipleInvoices,
+);
+
+router.get(
+  "/requests/:id",
+  verifyToken,
+  checkRole("quan_ly"),
+  getInvoiceRequestById,
+);
+
+router.put(
+  "/requests/:id/approve",
+  verifyToken,
+  checkRole("quan_ly"),
+  approveInvoice,
+);
+
+router.put(
+  "/requests/:id/reject",
+  verifyToken,
+  checkRole("quan_ly"),
+  rejectInvoice,
+);
 
 module.exports = router;

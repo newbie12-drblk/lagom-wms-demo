@@ -2,6 +2,7 @@
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
  * ✅ Khi duyệt SP mới: Quản lý nhập SL NHẬP
+ * ✅ Nhập hóa đơn theo TỪNG ITEM
  */
 
 (function () {
@@ -238,7 +239,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS
+  // LOAD PENDING APPROVALS (YÊU CẦU THÊM SẢN PHẨM)
   // ============================================================
   async function loadPendingApprovals() {
     var container = document.getElementById("pendingApprovalsList");
@@ -388,9 +389,6 @@
     `;
   };
 
-  // ============================================================
-  // APPROVE APPROVAL — GỬI SL NHẬP LÊN SERVER
-  // ============================================================
   window.approveApproval = async function (id) {
     var soLuongNhapEl = document.getElementById("approveSoLuongNhap");
     var soLuongNhap = soLuongNhapEl ? parseInt(soLuongNhapEl.value) : 0;
@@ -1122,6 +1120,7 @@
               phanLoai: "Phân loại máy",
               giaNhap: "Giá nhập",
               soHopDongNhap: "Số HĐ",
+              soLuongNhap: "Số lượng nhập",
             };
 
             var allFields = Object.keys(fieldLabels);
@@ -1239,6 +1238,7 @@
       phanLoai: "Phân loại máy",
       giaNhap: "Giá nhập",
       soHopDongNhap: "Số HĐ",
+      soLuongNhap: "Số lượng nhập",
     };
 
     var allFields = Object.keys(fieldLabels);
@@ -1259,6 +1259,10 @@
         if (key === "giaNhap") {
           oldVal = Utils.formatCurrency(parseFloat(oldVal) || 0);
           newVal = Utils.formatCurrency(parseFloat(newVal) || 0);
+        }
+        if (key === "soLuongNhap") {
+          oldVal = Utils.formatNumber(parseInt(oldVal) || 0);
+          newVal = Utils.formatNumber(parseInt(newVal) || 0);
         }
 
         var highlightStyle = isActuallyChanged
@@ -1633,7 +1637,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES
+  // LOAD PENDING INVOICES — HÓA ĐƠN THEO TỪNG ITEM
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");
@@ -1668,6 +1672,7 @@
           return;
         }
 
+        // Group theo exportId
         var groupedByExport = {};
         for (var req of requests) {
           if (!groupedByExport[req.exportId]) {
