@@ -1,8 +1,6 @@
 /**
  * ==================== MANAGER MODULE ====================
  * Quản lý - Duyệt các yêu cầu từ Admin + Quản lý người dùng
- * ✅ Khi duyệt SP mới: Quản lý nhập SL NHẬP
- * ✅ Nhập hóa đơn theo TỪNG ITEM
  */
 
 (function () {
@@ -239,7 +237,7 @@
   }
 
   // ============================================================
-  // LOAD PENDING APPROVALS (YÊU CẦU THÊM SẢN PHẨM)
+  // LOAD PENDING APPROVALS
   // ============================================================
   async function loadPendingApprovals() {
     var container = document.getElementById("pendingApprovalsList");
@@ -311,7 +309,7 @@
   }
 
   // ============================================================
-  // VIEW APPROVAL DETAIL — CÓ INPUT SL NHẬP
+  // VIEW APPROVAL DETAIL
   // ============================================================
   window.viewApprovalDetail = function (id) {
     var container = document.getElementById("pendingApprovalsList");
@@ -1637,7 +1635,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES — HÓA ĐƠN THEO TỪNG ITEM
+  // LOAD PENDING INVOICES — HÓA ĐƠN THEO MÃ HĐ RIÊNG
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");
@@ -1672,50 +1670,82 @@
           return;
         }
 
-        // Group theo exportId
-        var groupedByExport = {};
-        for (var req of requests) {
-          if (!groupedByExport[req.exportId]) {
-            groupedByExport[req.exportId] = {
-              exportId: req.exportId,
-              exportNo: req.exportNo,
-              exportDate: req.exportDate,
-              customerName: req.customerName,
-              receiverName: req.receiverName,
-              total: req.total,
-              createdAt: req.createdAt,
-              requests: [],
-            };
-          }
-          groupedByExport[req.exportId].requests.push(req);
-        }
+        var bulkActionsHtml = `
+          <div class="invoice-bulk-actions">
+            <button class="btn btn-outline" onclick="window.toggleAllInvoiceCheckboxes(true)">
+              <i class="fas fa-check-square"></i> Chọn tất cả
+            </button>
+            <button class="btn btn-outline" onclick="window.toggleAllInvoiceCheckboxes(false)">
+              <i class="fas fa-square"></i> Bỏ chọn
+            </button>
+            <button class="btn btn-success" onclick="window.approveSelectedInvoices()">
+              <i class="fas fa-check-double"></i> Duyệt các HĐ đã chọn
+            </button>
+          </div>
+        `;
 
-        var groups = Object.values(groupedByExport);
-
-        container.innerHTML = groups
-          .map(function (group) {
-            var totalItems = group.requests.length;
+        var cardsHtml = requests
+          .map(function (r) {
             return `
-              <div class="approval-card" style="margin-bottom: 16px; border-left: 4px solid #8b5cf6; background: #111827; border-radius: 12px; padding: 16px 20px; cursor: pointer;" 
-                   onclick="window.viewInvoiceGroup(${group.exportId})">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
-                  <div style="font-size: 18px; font-weight: 700; color: #a78bfa;">📄 Phiếu ${Utils.escapeHtml(group.exportNo || "PX-" + group.exportId)}</div>
-                  <div style="font-size: 12px; color: #6b82a0;">${Utils.formatDate(group.createdAt)}</div>
-                  <span class="status-badge status-pending" style="font-size: 13px; padding: 4px 14px;">⏳ ${totalItems} hóa đơn chờ</span>
+              <div class="manager-invoice-card">
+                <div class="manager-invoice-card-header">
+                  <div class="manager-invoice-code">
+                    <input type="checkbox" class="inv-check checkbox" data-id="${r.id}">
+                    <div class="code-text">📄 ${Utils.escapeHtml(r.soHoaDonCode || "—")}</div>
+                  </div>
+                  <div class="manager-invoice-date">${Utils.formatDate(r.createdAt)}</div>
+                  <span class="status-badge status-pending">⏳ Chờ duyệt</span>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
-                  <div><span style="color: #6b82a0; font-size: 11px;">Khách hàng</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(group.customerName || group.receiverName || "—")}</span></div>
-                  <div><span style="color: #6b82a0; font-size: 11px;">Người nhận</span><br><span style="color: #e2eaf5;">${Utils.escapeHtml(group.receiverName || "—")}</span></div>
-                  <div><span style="color: #6b82a0; font-size: 11px;">Tổng tiền</span><br><span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(group.total || 0)}</span></div>
-                  <div><span style="color: #6b82a0; font-size: 11px;">Số hóa đơn</span><br><span style="color: #a78bfa; font-weight: 600;">${totalItems}</span></div>
+
+                <div class="manager-invoice-info-grid">
+                  <div class="info-item">
+                    <span class="info-label">MÃ HÀNG</span>
+                    <span class="info-value code">${Utils.escapeHtml(r.maHang || "—")}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">TÊN SP</span>
+                    <span class="info-value name">${Utils.escapeHtml(r.tenThuongMai || "—")}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">SỐ LÔ</span>
+                    <span class="info-value">${Utils.escapeHtml(r.soLot || "—")}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">SL</span>
+                    <span class="info-value quantity">${r.soLuong || 0}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">SỐ HĐ NHẬP</span>
+                    <span class="info-value">${Utils.escapeHtml(r.soHoaDonNhap || "—")}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">NGÀY HĐ NHẬP</span>
+                    <span class="info-value">${Utils.formatDate(r.ngayNhapHD)}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">SỐ HĐ XUẤT</span>
+                    <span class="info-value">${Utils.escapeHtml(r.soHoaDonXuat || "—")}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">NGÀY HĐ XUẤT</span>
+                    <span class="info-value">${Utils.formatDate(r.ngayXuatHD)}</span>
+                  </div>
                 </div>
-                <div style="margin-top: 8px; font-size: 12px; color: #6b82a0; text-align: right;">
-                  <i class="fas fa-eye"></i> Nhấn để xem chi tiết & duyệt
+
+                <div class="manager-invoice-actions">
+                  <button class="btn btn-danger" onclick="window.rejectInvoice(${r.id})">
+                    <i class="fas fa-times"></i> Từ chối
+                  </button>
+                  <button class="btn btn-success" onclick="window.approveInvoice(${r.id})">
+                    <i class="fas fa-check"></i> Duyệt
+                  </button>
                 </div>
               </div>
             `;
           })
           .join("");
+
+        container.innerHTML = bulkActionsHtml + cardsHtml;
       } else {
         container.innerHTML =
           '<div class="empty-state"><p>Lỗi: ' +
@@ -1731,119 +1761,13 @@
     }
   }
 
-  // ============================================================
-  // VIEW INVOICE GROUP
-  // ============================================================
-  window.viewInvoiceGroup = function (exportId) {
-    var container = document.getElementById("pendingInvoicesList");
-    if (!container) return;
-
-    var requests = (window._pendingInvoices || []).filter(
-      (r) => r.exportId === exportId,
-    );
-
-    if (requests.length === 0) {
-      Utils.showToast("Không tìm thấy dữ liệu", "error");
-      return;
-    }
-
-    var firstReq = requests[0];
-
-    var html = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 16px; background: #0f172a; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
-        <div><span style="color: #6b82a0;">Số phiếu:</span> <span style="color: #60a5fa; font-weight: 600;">${Utils.escapeHtml(firstReq.exportNo || "PX-" + exportId)}</span></div>
-        <div><span style="color: #6b82a0;">Ngày xuất:</span> <span style="color: #e2eaf5;">${Utils.formatDate(firstReq.exportDate)}</span></div>
-        <div><span style="color: #6b82a0;">Khách hàng:</span> <span style="color: #e2eaf5;">${Utils.escapeHtml(firstReq.customerName || firstReq.receiverName || "—")}</span></div>
-        <div><span style="color: #6b82a0;">Tổng tiền:</span> <span style="color: #fbbf24; font-weight: 600;">${Utils.formatCurrency(firstReq.total || 0)}</span></div>
-      </div>
-
-      <div style="padding: 10px 14px; background: rgba(139, 92, 246, 0.08); border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.15);">
-        <i class="fas fa-info-circle" style="color: #a78bfa;"></i>
-        <span style="font-size: 12px; color: #a78bfa;">
-          Mỗi sản phẩm có hóa đơn riêng. Bạn có thể <strong>duyệt từng cái</strong> hoặc <strong>duyệt tất cả</strong>.
-        </span>
-      </div>
-
-      <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
-        <button class="btn btn-outline" onclick="window.toggleAllInvoiceCheckboxes(true)" style="font-size: 12px; padding: 6px 14px;">
-          <i class="fas fa-check-square"></i> Chọn tất cả
-        </button>
-        <button class="btn btn-outline" onclick="window.toggleAllInvoiceCheckboxes(false)" style="font-size: 12px; padding: 6px 14px;">
-          <i class="fas fa-square"></i> Bỏ chọn
-        </button>
-        <button class="btn btn-success" onclick="window.approveSelectedInvoices(${exportId})" style="font-size: 12px; padding: 6px 14px;">
-          <i class="fas fa-check-double"></i> Duyệt các mục đã chọn
-        </button>
-      </div>
-
-      <div style="overflow-x: auto; border: 1px solid #1e2d45; border-radius: 8px;">
-        <table style="width:100%; border-collapse: collapse; font-size: 12px; background: #0f172a; min-width: 900px;">
-          <thead>
-            <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; width: 40px;"><input type="checkbox" id="inv-check-all" onchange="window.toggleAllInvoiceCheckboxes(this.checked)" style="cursor: pointer;"></th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; width: 40px;">STT</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 130px;">SẢN PHẨM</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; min-width: 90px;">MÃ HÀNG</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; width: 60px;">SL</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; min-width: 110px;">SỐ HĐ NHẬP</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #fbbf24; min-width: 110px;">NGÀY HĐ NHẬP</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #fbbf24; min-width: 110px;">SỐ HĐ XUẤT</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #fbbf24; min-width: 110px;">NGÀY HĐ XUẤT</th>
-              <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; width: 140px;">HÀNH ĐỘNG</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${requests
-              .map(
-                (r, idx) => `
-              <tr style="border-bottom: 1px solid #1e2d45;">
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;">
-                  <input type="checkbox" class="inv-check" data-id="${r.id}" style="cursor: pointer;">
-                </td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-weight: 500;">${Utils.escapeHtml(r.tenThuongMai || "—")}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #93c5fd; font-family: monospace;">${Utils.escapeHtml(r.maHang || "—")}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #86efac; font-weight: 600;">${r.soLuong || 0}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(r.soHoaDonNhap || "—")}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(r.ngayNhapHD)}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${Utils.escapeHtml(r.soHoaDonXuat || "—")}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${Utils.formatDate(r.ngayXuatHD)}</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;">
-                  <button class="btn btn-success" onclick="window.approveInvoice(${r.id})" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;">
-                    <i class="fas fa-check"></i> Duyệt
-                  </button>
-                  <button class="btn btn-danger" onclick="window.rejectInvoice(${r.id})" style="padding: 4px 8px; font-size: 11px;">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    container.innerHTML = `
-      <div style="margin-bottom: 16px;">
-        <button class="btn btn-outline" onclick="window.loadPendingInvoices()" style="margin-bottom: 16px;">
-          <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </button>
-        <div class="approval-card" style="background: #111827; border-radius: 12px; padding: 16px 20px; border-left: 4px solid #8b5cf6;">
-          ${html}
-        </div>
-      </div>
-    `;
-  };
-
   window.toggleAllInvoiceCheckboxes = function (checked) {
     document.querySelectorAll(".inv-check").forEach(function (cb) {
       cb.checked = checked;
     });
   };
 
-  window.approveSelectedInvoices = async function (exportId) {
+  window.approveSelectedInvoices = async function () {
     var checked = Array.from(document.querySelectorAll(".inv-check:checked"));
     var ids = checked.map(function (cb) {
       return parseInt(cb.dataset.id);
@@ -1883,9 +1807,6 @@
         if (typeof window.initHome === "function") {
           await window.initHome();
         }
-        if (typeof window.loadInvoiceData === "function") {
-          await window.loadInvoiceData();
-        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1924,9 +1845,6 @@
         if (typeof window.initHome === "function") {
           await window.initHome();
         }
-        if (typeof window.loadInvoiceData === "function") {
-          await window.loadInvoiceData();
-        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -1961,9 +1879,6 @@
         Utils.showToast("✅ " + result.message);
         await loadPendingInvoices();
         await loadDashboardStats();
-        if (typeof window.loadInvoiceData === "function") {
-          await window.loadInvoiceData();
-        }
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi"), "error");
       }
@@ -2124,7 +2039,7 @@
   }
 
   // ============================================================
-  // USER MANAGEMENT FUNCTIONS
+  // USER MANAGEMENT
   // ============================================================
   function openAddUserModal() {
     var modal = document.getElementById("userModal");

@@ -35,34 +35,34 @@
         <div class="nav-label">Tổng quan</div>
         <a href="#" class="nav-item active" data-view="home">
           <div class="nav-icon">🏠</div>
-          Trang chủ
+          <span class="nav-text">Trang chủ</span>
         </a>
 
         <div class="nav-label">Quản lý kho</div>
         <a href="#" class="nav-item" data-view="inventory">
           <div class="nav-icon">📦</div>
-          Tồn kho
+          <span class="nav-text">Tồn kho</span>
         </a>
         <a href="#" class="nav-item" data-view="invoices">
           <div class="nav-icon">📄</div>
-          Hóa đơn
+          <span class="nav-text">Hóa đơn</span>
           <span class="nav-badge" id="invoiceBadge" style="display: none"
             >0</span
           >
         </a>
         <a href="#" class="nav-item" data-view="receipts">
           <div class="nav-icon">📥</div>
-          Phiếu nhập hàng
+          <span class="nav-text">Phiếu nhập hàng</span>
         </a>
         <a href="#" class="nav-item" data-view="exports">
           <div class="nav-icon">📤</div>
-          Phiếu xuất kho
+          <span class="nav-text">Phiếu xuất kho</span>
         </a>
 
         <div class="nav-label">Báo cáo</div>
         <a href="#" class="nav-item" data-view="statistics">
           <div class="nav-icon">📊</div>
-          Thống kê
+          <span class="nav-text">Thống kê</span>
         </a>
 
         <div class="sidebar-footer">
@@ -348,131 +348,311 @@
           <!-- ========================================================== -->
           <div class="view" id="view-invoices">
             <div class="scroll-area">
-              <div class="page-header">
-                <div>
-                  <div class="page-title-tag">INVOICE</div>
-                  <div class="page-title">Quản lý hóa đơn</div>
-                  <div class="page-sub">
-                    Nhập thông tin hóa đơn cho phiếu xuất đã duyệt
+              <!-- MÀN HÌNH 1: DANH SÁCH HÓA ĐƠN -->
+              <div id="invoiceListView">
+                <div class="page-header">
+                  <div>
+                    <div class="page-title-tag">INVOICE</div>
+                    <div class="page-title">Quản lý hóa đơn</div>
+                    <div class="page-sub">
+                      Tạo và quản lý hóa đơn nhập/xuất cho sản phẩm trong kho
+                    </div>
+                  </div>
+                  <div class="header-actions">
+                    <button class="btn btn-outline" id="btnRefreshInvoices">
+                      <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
                   </div>
                 </div>
-                <div class="header-actions">
-                  <button class="btn btn-outline" id="btnRefreshInvoices">
-                    <i class="fas fa-sync-alt"></i> Làm mới
+
+                <div class="invoice-info-banner">
+                  <div class="invoice-info-banner-inner">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                      <div class="invoice-info-banner-title">Hướng dẫn</div>
+                      <div class="invoice-info-banner-desc">
+                        Nhấn "Tạo hóa đơn mới" → Tìm sản phẩm → Chọn SP → Nhập 4
+                        trường HĐ → Gửi Quản lý duyệt
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="filter-bar-invoice">
+                  <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input
+                      type="text"
+                      id="searchInvoice"
+                      placeholder="Tìm theo mã HĐ, mã hàng, tên SP..."
+                    />
+                  </div>
+                  <select class="cat-select" id="invoiceFilterStatus">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="pending">⏳ Chờ duyệt</option>
+                    <option value="approved">✅ Đã duyệt</option>
+                    <option value="rejected">❌ Từ chối</option>
+                  </select>
+                  <button class="btn btn-outline" id="btnClearInvoiceFilters">
+                    <i class="fas fa-undo-alt"></i> Xóa lọc
                   </button>
                 </div>
+
+                <div class="inventory-stats invoice-stats">
+                  <div class="stat-mini">
+                    <span class="stat-mini-label">Tổng HĐ:</span>
+                    <span
+                      class="stat-mini-value"
+                      id="invoiceNoInvoice"
+                      style="color: #60a5fa"
+                      >0</span
+                    >
+                  </div>
+                  <div class="stat-mini">
+                    <span class="stat-mini-label">Chờ duyệt:</span>
+                    <span
+                      class="stat-mini-value"
+                      id="invoicePending"
+                      style="color: #fbbf24"
+                      >0</span
+                    >
+                  </div>
+                  <div class="stat-mini">
+                    <span class="stat-mini-label">Đã duyệt:</span>
+                    <span
+                      class="stat-mini-value"
+                      id="invoiceApproved"
+                      style="color: #4ade80"
+                      >0</span
+                    >
+                  </div>
+                  <div class="stat-mini">
+                    <span class="stat-mini-label">Từ chối:</span>
+                    <span
+                      class="stat-mini-value"
+                      id="invoiceRejected"
+                      style="color: #f87171"
+                      >0</span
+                    >
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 16px">
+                  <button
+                    class="btn btn-primary btn-create-invoice"
+                    onclick="window.showCreateInvoiceForm()"
+                  >
+                    <i class="fas fa-plus-circle"></i> Tạo hóa đơn mới
+                  </button>
+                </div>
+
+                <div id="invoicesList" class="invoices-list"></div>
               </div>
 
-              <div
-                style="
-                  background: rgba(59, 130, 246, 0.08);
-                  border: 1px solid rgba(59, 130, 246, 0.15);
-                  border-radius: 10px;
-                  padding: 14px 20px;
-                  margin-bottom: 20px;
-                "
-              >
-                <div style="display: flex; align-items: center; gap: 12px">
-                  <i
-                    class="fas fa-info-circle"
-                    style="color: #60a5fa; font-size: 18px"
-                  ></i>
+              <!-- MÀN HÌNH 2: TẠO HÓA ĐƠN MỚI -->
+              <div id="invoiceCreateView" style="display: none">
+                <div class="page-header" style="margin-bottom: 20px">
                   <div>
-                    <div
-                      style="font-weight: 600; color: #e2eaf5; font-size: 13px"
+                    <button
+                      class="btn btn-outline btn-back-invoice"
+                      onclick="window.hideCreateInvoiceForm()"
                     >
-                      Hướng dẫn
+                      <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </button>
+                    <div class="page-title-tag">CREATE INVOICE</div>
+                    <div class="page-title">Tạo hóa đơn mới</div>
+                    <div class="page-sub">
+                      Tìm sản phẩm và nhập thông tin hóa đơn
                     </div>
-                    <div style="font-size: 12px; color: #6b82a0">
-                      Chọn phiếu xuất → Nhập 4 trường hóa đơn → Gửi Quản lý
-                      duyệt
+                  </div>
+                </div>
+
+                <!-- BƯỚC 1 -->
+                <div class="panel" style="margin-bottom: 20px">
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">🔍</span> BƯỚC 1: Tìm sản phẩm
+                    </div>
+                  </div>
+                  <div class="panel-body">
+                    <div class="search-grid">
+                      <div class="search-grid-item">
+                        <label> <i class="fas fa-barcode"></i> Mã hàng </label>
+                        <input
+                          type="text"
+                          id="createMaHang"
+                          placeholder="VD: 11208706"
+                          onkeydown="
+                            if (event.key === 'Enter')
+                              window.searchProductForInvoice();
+                          "
+                        />
+                      </div>
+                      <div class="search-grid-item">
+                        <label>
+                          <i class="fas fa-file-contract"></i> Số hợp đồng nhập
+                        </label>
+                        <input
+                          type="text"
+                          id="createSoHopDong"
+                          placeholder="VD: 506/HĐNT/2026/LAGOM-PĐ"
+                          onkeydown="
+                            if (event.key === 'Enter')
+                              window.searchProductForInvoice();
+                          "
+                        />
+                      </div>
+                    </div>
+
+                    <div class="search-footer">
+                      <p class="search-footer-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Nhập 1 trong 2 ô trên. Nếu trùng mã hàng, dùng Số hợp
+                        đồng để lọc chính xác.
+                      </p>
+                      <button
+                        class="btn btn-primary btn-search-invoice"
+                        onclick="window.searchProductForInvoice()"
+                      >
+                        <i class="fas fa-search"></i> Tìm kiếm
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BƯỚC 2 -->
+                <div
+                  class="panel"
+                  id="searchResultsSection"
+                  style="display: none; margin-bottom: 20px"
+                >
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">📋</span> BƯỚC 2: Chọn sản phẩm
+                    </div>
+                    <span class="pill pill-blue"
+                      ><span id="searchResultsCount">0</span> kết quả</span
+                    >
+                  </div>
+                  <div class="results-table-wrap">
+                    <table class="results-table">
+                      <thead>
+                        <tr>
+                          <th class="text-center">STT</th>
+                          <th class="text-left">MÃ HÀNG</th>
+                          <th class="text-left">TÊN SP</th>
+                          <th class="text-left">SỐ LÔ</th>
+                          <th class="text-left">SỐ HĐ NHẬP</th>
+                          <th class="text-center">NGÀY NHẬP</th>
+                          <th class="text-right">TỒN KHO</th>
+                          <th class="text-center">HẠN DÙNG</th>
+                          <th class="text-center">CHỌN</th>
+                        </tr>
+                      </thead>
+                      <tbody id="searchResultsBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- BƯỚC 3 -->
+                <div
+                  class="panel"
+                  id="invoiceFormSection"
+                  style="display: none"
+                >
+                  <div class="panel-head">
+                    <div class="panel-head-title">
+                      <span class="ph-icon">📝</span> BƯỚC 3: Nhập thông tin hóa
+                      đơn
+                    </div>
+                  </div>
+                  <div class="panel-body">
+                    <div class="selected-product-box">
+                      <div class="selected-product-box-title">
+                        <i class="fas fa-check-circle"></i> Sản phẩm đã chọn
+                      </div>
+                      <div id="selectedProductInfo"></div>
+                    </div>
+
+                    <div class="invoice-form-grid">
+                      <div class="invoice-form-item">
+                        <label>
+                          <i class="fas fa-file-alt"></i> Số HĐ nhập
+                          <span class="required">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="createSoHoaDonNhap"
+                          placeholder="VD: HD001/2026"
+                          class="input-invoice"
+                        />
+                      </div>
+                      <div class="invoice-form-item">
+                        <label>
+                          <i class="fas fa-calendar"></i> Ngày HĐ nhập
+                          <span class="required">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          id="createNgayNhapHD"
+                          class="input-invoice"
+                        />
+                      </div>
+                      <div class="invoice-form-item">
+                        <label>
+                          <i class="fas fa-file-alt"></i> Số HĐ xuất
+                          <span class="required">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="createSoHoaDonXuat"
+                          placeholder="VD: HDX001/2026"
+                          class="input-invoice"
+                        />
+                      </div>
+                      <div class="invoice-form-item">
+                        <label>
+                          <i class="fas fa-calendar"></i> Ngày HĐ xuất
+                          <span class="required">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          id="createNgayXuatHD"
+                          class="input-invoice"
+                        />
+                      </div>
+                      <div class="invoice-form-item">
+                        <label>
+                          <i class="fas fa-cubes"></i> Số lượng
+                          <span class="required">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          id="createSoLuong"
+                          placeholder="Nhập số lượng"
+                          min="1"
+                          class="input-quantity"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="invoice-form-actions">
+                      <button
+                        class="btn btn-outline btn-cancel-invoice"
+                        onclick="window.hideCreateInvoiceForm()"
+                      >
+                        <i class="fas fa-times"></i> Hủy
+                      </button>
+                      <button
+                        class="btn btn-success btn-submit-invoice"
+                        onclick="window.submitCreateInvoice()"
+                      >
+                        <i class="fas fa-paper-plane"></i> Gửi Quản lý duyệt
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div
-                class="filter-bar"
-                style="
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 10px;
-                  align-items: center;
-                  background: var(--surface);
-                  padding: 12px 16px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border);
-                  margin-bottom: 16px;
-                "
-              >
-                <div class="search-box" style="flex: 1; min-width: 180px">
-                  <i class="fas fa-search"></i>
-                  <input
-                    type="text"
-                    id="searchInvoice"
-                    placeholder="Tìm theo số phiếu, khách hàng..."
-                  />
-                </div>
-                <select
-                  class="cat-select"
-                  id="invoiceFilterStatus"
-                  style="min-width: 130px"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="no-invoice">🔴 Chưa nhập</option>
-                  <option value="pending">🟡 Chờ duyệt</option>
-                  <option value="approved">🟢 Hoàn thành</option>
-                  <option value="rejected">🔴 Từ chối</option>
-                </select>
-                <button
-                  class="btn btn-outline"
-                  id="btnClearInvoiceFilters"
-                  style="padding: 8px 16px"
-                >
-                  <i class="fas fa-undo-alt"></i> Xóa lọc
-                </button>
-              </div>
-
-              <div class="inventory-stats" style="margin-bottom: 20px">
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Chưa nhập:</span>
-                  <span
-                    class="stat-mini-value"
-                    id="invoiceNoInvoice"
-                    style="color: #f87171"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Chờ duyệt:</span>
-                  <span
-                    class="stat-mini-value"
-                    id="invoicePending"
-                    style="color: #fbbf24"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Hoàn thành:</span>
-                  <span
-                    class="stat-mini-value"
-                    id="invoiceApproved"
-                    style="color: #4ade80"
-                    >0</span
-                  >
-                </div>
-                <div class="stat-mini">
-                  <span class="stat-mini-label">Từ chối:</span>
-                  <span
-                    class="stat-mini-value"
-                    id="invoiceRejected"
-                    style="color: #f87171"
-                    >0</span
-                  >
-                </div>
-              </div>
-
-              <div id="invoicesList" class="invoices-list"></div>
             </div>
           </div>
 
@@ -494,20 +674,7 @@
                 </div>
               </div>
 
-              <div
-                class="filter-bar"
-                style="
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 10px;
-                  align-items: center;
-                  background: var(--surface);
-                  padding: 12px 16px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border);
-                  margin-bottom: 16px;
-                "
-              >
+              <div class="filter-bar">
                 <div class="search-box" style="flex: 1; min-width: 180px">
                   <i class="fas fa-search"></i>
                   <input
@@ -516,61 +683,17 @@
                     placeholder="Tìm theo số phiếu, nhà cung cấp..."
                   />
                 </div>
-                <select
-                  class="cat-select"
-                  id="receiptFilterDate"
-                  style="min-width: 130px"
-                >
+                <select class="cat-select" id="receiptFilterDate">
                   <option value="all">Tất cả thời gian</option>
                   <option value="7">7 ngày qua</option>
                   <option value="30">30 ngày qua</option>
                   <option value="60">60 ngày qua</option>
                   <option value="90">90 ngày qua</option>
                 </select>
-                <div style="display: flex; align-items: center; gap: 4px">
-                  <span style="color: #6b82a0; font-size: 12px">Từ</span>
-                  <input
-                    type="date"
-                    id="receiptFromDate"
-                    style="
-                      padding: 8px 10px;
-                      background: #1a2235;
-                      border: 1px solid #1e2d45;
-                      border-radius: 8px;
-                      color: #e2eaf5;
-                      font-size: 13px;
-                      max-width: 150px;
-                    "
-                  />
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px">
-                  <span style="color: #6b82a0; font-size: 12px">Đến</span>
-                  <input
-                    type="date"
-                    id="receiptToDate"
-                    style="
-                      padding: 8px 10px;
-                      background: #1a2235;
-                      border: 1px solid #1e2d45;
-                      border-radius: 8px;
-                      color: #e2eaf5;
-                      font-size: 13px;
-                      max-width: 150px;
-                    "
-                  />
-                </div>
-                <button
-                  class="btn btn-outline"
-                  id="btnRefreshReceipts"
-                  style="padding: 8px 16px"
-                >
+                <button class="btn btn-outline" id="btnRefreshReceipts">
                   <i class="fas fa-sync-alt"></i> Làm mới
                 </button>
-                <button
-                  class="btn btn-outline"
-                  id="btnClearReceiptFilters"
-                  style="padding: 8px 16px"
-                >
+                <button class="btn btn-outline" id="btnClearReceiptFilters">
                   <i class="fas fa-undo-alt"></i> Xóa lọc
                 </button>
               </div>
@@ -589,16 +712,6 @@
               </div>
 
               <div id="receiptsList" class="receipts-list"></div>
-
-              <div class="pagination">
-                <button class="page-btn" id="receiptPrevPage" disabled>
-                  <i class="fas fa-chevron-left"></i> Trước
-                </button>
-                <span class="page-info" id="receiptPageInfo">Trang 1 / 1</span>
-                <button class="page-btn" id="receiptNextPage">
-                  Sau <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -620,20 +733,7 @@
                 </div>
               </div>
 
-              <div
-                class="filter-bar"
-                style="
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 10px;
-                  align-items: center;
-                  background: var(--surface);
-                  padding: 12px 16px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border);
-                  margin-bottom: 16px;
-                "
-              >
+              <div class="filter-bar">
                 <div class="search-box" style="flex: 1; min-width: 180px">
                   <i class="fas fa-search"></i>
                   <input
@@ -642,61 +742,17 @@
                     placeholder="Tìm theo số phiếu, người nhận..."
                   />
                 </div>
-                <select
-                  class="cat-select"
-                  id="exportFilterDate"
-                  style="min-width: 130px"
-                >
+                <select class="cat-select" id="exportFilterDate">
                   <option value="all">Tất cả thời gian</option>
                   <option value="7">7 ngày qua</option>
                   <option value="30">30 ngày qua</option>
                   <option value="60">60 ngày qua</option>
                   <option value="90">90 ngày qua</option>
                 </select>
-                <div style="display: flex; align-items: center; gap: 4px">
-                  <span style="color: #6b82a0; font-size: 12px">Từ</span>
-                  <input
-                    type="date"
-                    id="exportFromDate"
-                    style="
-                      padding: 8px 10px;
-                      background: #1a2235;
-                      border: 1px solid #1e2d45;
-                      border-radius: 8px;
-                      color: #e2eaf5;
-                      font-size: 13px;
-                      max-width: 150px;
-                    "
-                  />
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px">
-                  <span style="color: #6b82a0; font-size: 12px">Đến</span>
-                  <input
-                    type="date"
-                    id="exportToDate"
-                    style="
-                      padding: 8px 10px;
-                      background: #1a2235;
-                      border: 1px solid #1e2d45;
-                      border-radius: 8px;
-                      color: #e2eaf5;
-                      font-size: 13px;
-                      max-width: 150px;
-                    "
-                  />
-                </div>
-                <button
-                  class="btn btn-outline"
-                  id="btnRefreshExports"
-                  style="padding: 8px 16px"
-                >
+                <button class="btn btn-outline" id="btnRefreshExports">
                   <i class="fas fa-sync-alt"></i> Làm mới
                 </button>
-                <button
-                  class="btn btn-outline"
-                  id="btnClearExportFilters"
-                  style="padding: 8px 16px"
-                >
+                <button class="btn btn-outline" id="btnClearExportFilters">
                   <i class="fas fa-undo-alt"></i> Xóa lọc
                 </button>
               </div>
@@ -713,16 +769,6 @@
               </div>
 
               <div id="exportsList" class="exports-list"></div>
-
-              <div class="pagination">
-                <button class="page-btn" id="exportPrevPage" disabled>
-                  <i class="fas fa-chevron-left"></i> Trước
-                </button>
-                <span class="page-info" id="exportPageInfo">Trang 1 / 1</span>
-                <button class="page-btn" id="exportNextPage">
-                  Sau <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
             </div>
           </div>
 

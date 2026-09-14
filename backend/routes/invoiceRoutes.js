@@ -1,9 +1,9 @@
 const express = require("express");
 const {
-  getExportsWithoutInvoice,
+  searchProduct,
   createInvoiceRequest,
-  getPendingInvoices,
   getAllInvoiceRequests,
+  getPendingInvoices,
   getInvoiceRequestById,
   approveInvoice,
   approveMultipleInvoices,
@@ -15,16 +15,14 @@ const { checkRole } = require("../middleware/roleCheck");
 
 const router = express.Router();
 
-// ========== ADMIN ROUTES ==========
-router.get(
-  "/exports-without-invoice",
-  verifyToken,
-  checkRole("admin"),
-  getExportsWithoutInvoice,
-);
+// ========== ADMIN ==========
+// Tìm sản phẩm trong kho (theo mã hàng hoặc số hợp đồng)
+router.get("/search-product", verifyToken, checkRole("admin"), searchProduct);
 
+// Tạo yêu cầu hóa đơn
 router.post("/requests", verifyToken, checkRole("admin"), createInvoiceRequest);
 
+// Xóa yêu cầu
 router.delete(
   "/requests/:id",
   verifyToken,
@@ -32,7 +30,8 @@ router.delete(
   deleteInvoiceRequest,
 );
 
-// ========== QUẢN LÝ ROUTES ==========
+// ========== QUẢN LÝ ==========
+// Lấy danh sách hóa đơn chờ duyệt
 router.get(
   "/requests/pending",
   verifyToken,
@@ -40,6 +39,7 @@ router.get(
   getPendingInvoices,
 );
 
+// Lấy tất cả
 router.get(
   "/requests",
   verifyToken,
@@ -47,6 +47,15 @@ router.get(
   getAllInvoiceRequests,
 );
 
+// Duyệt hàng loạt — PHẢI đặt TRƯỚC /:id/approve
+router.put(
+  "/requests/approve-multiple",
+  verifyToken,
+  checkRole("quan_ly"),
+  approveMultipleInvoices,
+);
+
+// Chi tiết 1 yêu cầu
 router.get(
   "/requests/:id",
   verifyToken,
@@ -54,26 +63,20 @@ router.get(
   getInvoiceRequestById,
 );
 
-// Duyệt/từ chối từng cái
+// Duyệt 1
 router.put(
   "/requests/:id/approve",
   verifyToken,
   checkRole("quan_ly"),
   approveInvoice,
 );
+
+// Từ chối
 router.put(
   "/requests/:id/reject",
   verifyToken,
   checkRole("quan_ly"),
   rejectInvoice,
-);
-
-// ✅ Duyệt hàng loạt
-router.put(
-  "/requests/approve-multiple",
-  verifyToken,
-  checkRole("quan_ly"),
-  approveMultipleInvoices,
 );
 
 module.exports = router;
