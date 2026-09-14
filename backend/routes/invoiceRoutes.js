@@ -1,8 +1,10 @@
+// backend/routes/invoiceRoutes.js
 const express = require("express");
 const {
   searchProduct,
   createInvoiceRequest,
   getAllInvoiceRequests,
+  getMyInvoiceRequests,
   getPendingInvoices,
   getInvoiceRequestById,
   approveInvoice,
@@ -16,13 +18,21 @@ const { checkRole } = require("../middleware/roleCheck");
 const router = express.Router();
 
 // ========== ADMIN ==========
-// Tìm sản phẩm trong kho (theo mã hàng hoặc số hợp đồng)
+// Tìm sản phẩm (theo mã hàng HOẶC số hợp đồng)
 router.get("/search-product", verifyToken, checkRole("admin"), searchProduct);
 
-// Tạo yêu cầu hóa đơn
+// Admin xem danh sách HĐ của mình
+router.get(
+  "/requests/my",
+  verifyToken,
+  checkRole("admin"),
+  getMyInvoiceRequests,
+);
+
+// Admin tạo yêu cầu hóa đơn
 router.post("/requests", verifyToken, checkRole("admin"), createInvoiceRequest);
 
-// Xóa yêu cầu
+// Admin xóa yêu cầu (chỉ khi pending)
 router.delete(
   "/requests/:id",
   verifyToken,

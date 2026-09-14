@@ -1,28 +1,25 @@
+// backend/controllers/invoiceController.js
 const InvoiceRequest = require("../models/InvoiceRequest");
 const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 
-// ==================== TÌM SẢN PHẨM (Admin) ====================
-// GET /api/invoice/search-product?key=maHang&value=...
+// ✅ ==================== TÌM SẢN PHẨM (Admin) ====================
+// GET /api/invoice/search-product?maHang=...&soHopDongNhap=...
 const searchProduct = async (req, res) => {
   try {
-    const { key, value } = req.query;
+    const { maHang, soHopDongNhap } = req.query;
 
-    if (!key || !value) {
+    if (!maHang && !soHopDongNhap) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng cung cấp key (maHang/soHopDongNhap) và value",
+        message: "Vui lòng nhập Mã hàng hoặc Số hợp đồng",
       });
     }
 
-    if (!["maHang", "soHopDongNhap"].includes(key)) {
-      return res.status(400).json({
-        success: false,
-        message: "Key phải là 'maHang' hoặc 'soHopDongNhap'",
-      });
-    }
-
-    const results = await InvoiceRequest.searchInventory(key, value);
+    const results = await InvoiceRequest.searchInventory({
+      maHang: maHang || "",
+      soHopDongNhap: soHopDongNhap || "",
+    });
 
     res.json({
       success: true,
@@ -52,13 +49,8 @@ const createInvoiceRequest = async (req, res) => {
     } = req.body;
     const createdBy = req.user.userId;
 
-    console.log("📥 Tạo yêu cầu hóa đơn:", {
-      inventoryId,
-      maHang,
-      soLuong,
-    });
+    console.log("📥 Tạo yêu cầu hóa đơn:", { inventoryId, maHang, soLuong });
 
-    // Validate
     if (!inventoryId) {
       return res.status(400).json({
         success: false,
@@ -94,7 +86,6 @@ const createInvoiceRequest = async (req, res) => {
       });
     }
 
-    // Kiểm tra dòng inventory tồn tại
     const invItem = await Inventory.findById(inventoryId);
     if (!invItem) {
       return res.status(404).json({
@@ -110,17 +101,17 @@ const createInvoiceRequest = async (req, res) => {
       });
     }
 
-    // Kiểm tra đã có yêu cầu pending/approved chưa
     const existing = await InvoiceRequest.getByInventoryId(inventoryId);
     if (existing.length > 0) {
       const existingStatus = existing[0].status;
       return res.status(400).json({
         success: false,
-        message: `Sản phẩm "${maHang}" (Lô: ${soLot || "N/A"}) đã có yêu cầu hóa đơn đang ${existingStatus === "pending" ? "chờ duyệt" : "đã duyệt"}`,
+        message: `Sản phẩm "${maHang}" (Lô: ${soLot || "N/A"}) đã có yêu cầu hóa đơn đang ${
+          existingStatus === "pending" ? "chờ duyệt" : "đã duyệt"
+        }`,
       });
     }
 
-    // Tạo yêu cầu
     const result = await InvoiceRequest.create(
       {
         inventoryId,
@@ -137,10 +128,11 @@ const createInvoiceRequest = async (req, res) => {
       createdBy,
     );
 
-    // Thông báo cho Quản lý
     await Notification.createForManagers(
       `📄 Hóa đơn mới ${result.soHoaDonCode} chờ duyệt`,
-      `Admin đã tạo hóa đơn "${result.soHoaDonCode}" cho sản phẩm ${tenThuongMai || maHang} (${maHang}). Vui lòng kiểm tra và duyệt.`,
+      `Admin đã tạo hóa đơn "${result.soHoaDonCode}" cho sản phẩm ${
+        tenThuongMai || maHang
+      } (${maHang}). Vui lòng kiểm tra và duyệt.`,
       "approval",
       result.id,
       "invoice_request",
@@ -160,7 +152,7 @@ const createInvoiceRequest = async (req, res) => {
   }
 };
 
-// ==================== LẤY TẤT CẢ ====================
+// ==================== LẤY TẤT CẢ (Quản lý) ====================
 const getAllInvoiceRequests = async (req, res) => {
   try {
     const { status } = req.query;
@@ -168,6 +160,18 @@ const getAllInvoiceRequests = async (req, res) => {
     res.json({ success: true, data: requests });
   } catch (error) {
     console.error("❌ Get all invoice requests error:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// ✅ ==================== ADMIN: LẤY HĐ CỦA MÌNH ====================
+const getMyInvoiceRequests = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const requests = await InvoiceRequest.getByCreator(userId);
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    console.error("❌ Get my invoice requests error:", error);
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
@@ -320,7 +324,9 @@ const rejectInvoice = async (req, res) => {
     await Notification.create(
       request.createdBy,
       `❌ Hóa đơn ${request.soHoaDonCode} bị từ chối`,
-      `Quản lý đã từ chối hóa đơn "${request.soHoaDonCode}".\nLý do: ${reason || "Không được chấp thuận"}`,
+      `Quản lý đã từ chối hóa đơn "${request.soHoaDonCode}".\nLý do: ${
+        reason || "Không được chấp thuận"
+      }`,
       "warning",
       id,
       "invoice_request",
@@ -352,6 +358,7 @@ module.exports = {
   searchProduct,
   createInvoiceRequest,
   getAllInvoiceRequests,
+  getMyInvoiceRequests, // ✅ THÊM
   getPendingInvoices,
   getInvoiceRequestById,
   approveInvoice,

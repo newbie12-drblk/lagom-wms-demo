@@ -1,3 +1,4 @@
+// backend/models/InvoiceRequest.js
 const db = require("../config/database");
 
 const InvoiceRequest = {
@@ -21,12 +22,8 @@ const InvoiceRequest = {
   },
 
   // ==================== TÌM SẢN PHẨM TRONG INVENTORY ====================
-  // key = 'maHang' hoặc 'soHopDongNhap'
-  searchInventory: async (key, value) => {
-    if (!value || value.trim() === "") {
-      return [];
-    }
-
+  // ✅ Hỗ trợ tìm song song theo maHang VÀ soHopDongNhap
+  searchInventory: async ({ maHang, soHopDongNhap }) => {
     let query = `
       SELECT id, stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
              giaNhap, soLuongNhap, soLuongXuat, tonKho,
@@ -38,13 +35,17 @@ const InvoiceRequest = {
     `;
     const params = [];
 
-    if (key === "maHang") {
+    if (maHang && maHang.trim() !== "") {
       query += ` AND maHang LIKE ?`;
-      params.push(`%${value.trim()}%`);
-    } else if (key === "soHopDongNhap") {
+      params.push(`%${maHang.trim()}%`);
+    }
+
+    if (soHopDongNhap && soHopDongNhap.trim() !== "") {
       query += ` AND soHopDongNhap LIKE ?`;
-      params.push(`%${value.trim()}%`);
-    } else {
+      params.push(`%${soHopDongNhap.trim()}%`);
+    }
+
+    if (params.length === 0) {
       return [];
     }
 
@@ -119,6 +120,22 @@ const InvoiceRequest = {
     return rows;
   },
 
+  // ✅ ==================== LẤY HĐ CỦA ADMIN (người tạo) ====================
+  getByCreator: async (userId) => {
+    const [rows] = await db.execute(
+      `SELECT ir.*, 
+              u.fullName as creatorName, 
+              a.fullName as approverName
+       FROM invoice_requests ir
+       LEFT JOIN users u ON ir.createdBy = u.id
+       LEFT JOIN users a ON ir.approvedBy = a.id
+       WHERE ir.createdBy = ?
+       ORDER BY ir.createdAt DESC`,
+      [userId],
+    );
+    return rows;
+  },
+
   // ==================== LẤY CHỜ DUYỆT ====================
   getPending: async () => {
     const [rows] = await db.execute(
@@ -143,7 +160,6 @@ const InvoiceRequest = {
   },
 
   // ==================== DUYỆT HÓA ĐƠN ====================
-  // Cập nhật 4 trường HĐ vào ĐÚNG dòng inventory theo inventoryId
   approve: async (id, approvedBy) => {
     const conn = await db.getConnection();
     try {
@@ -156,7 +172,6 @@ const InvoiceRequest = {
       if (requests.length === 0) throw new Error("Không tìm thấy yêu cầu");
       const req = requests[0];
 
-      // Cập nhật status
       await conn.execute(
         `UPDATE invoice_requests 
          SET status = 'approved', approvedBy = ?, approvedAt = NOW()
@@ -164,7 +179,6 @@ const InvoiceRequest = {
         [approvedBy, id],
       );
 
-      // Kiểm tra dòng inventory còn tồn tại không
       const [inventoryRows] = await conn.execute(
         `SELECT * FROM inventory WHERE id = ? AND status = 'approved'`,
         [req.inventoryId],
@@ -176,7 +190,6 @@ const InvoiceRequest = {
         );
       }
 
-      // Cập nhật 4 trường HĐ vào đúng dòng inventory
       await conn.execute(
         `UPDATE inventory 
          SET soHoaDonNhap = ?,

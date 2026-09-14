@@ -1,12 +1,14 @@
+// js/invoices.js
 /**
  * ==================== INVOICES MODULE ====================
- * Quản lý hóa đơn — Module ĐỘC LẬP (không liên quan phiếu xuất)
+ * Quản lý hóa đơn — Module ĐỘC LẬP
  *
  * Flow:
  *   1. Admin bấm "Tạo hóa đơn mới" → chuyển sang màn hình tạo
- *   2. Nhập Mã hàng HOẶC Số hợp đồng → Hệ thống show danh sách SP
+ *   2. Nhập Mã hàng VÀ/HOẶC Số hợp đồng → Hệ thống show danh sách SP
  *   3. Chọn 1 dòng SP → hiện form nhập 4 trường HĐ
  *   4. Gửi Quản lý duyệt → sinh mã HD-YYYY-NNN
+ *   5. Quản lý duyệt → cập nhật 4 trường vào ĐÚNG dòng inventory
  */
 
 (function () {
@@ -54,6 +56,11 @@
     return user && user.roleId === "admin";
   }
 
+  function isManager() {
+    const user = getCurrentUser();
+    return user && user.roleId === "quan_ly";
+  }
+
   // ============================================================
   // LOAD DATA
   // ============================================================
@@ -61,7 +68,17 @@
     Utils.showLoading(true, "Đang tải...");
     try {
       const token = API.getToken();
-      const res = await fetch(API_BASE_URL + "/invoice/requests", {
+      const user = getCurrentUser();
+
+      // ✅ Phân biệt Admin và Quản lý
+      let url;
+      if (user && user.roleId === "admin") {
+        url = API_BASE_URL + "/invoice/requests/my";
+      } else {
+        url = API_BASE_URL + "/invoice/requests";
+      }
+
+      const res = await fetch(url, {
         headers: { Authorization: "Bearer " + token },
       });
       const result = await res.json();
@@ -218,7 +235,6 @@
     if (listView) listView.style.display = "none";
     if (createView) {
       createView.style.display = "block";
-      // Reset form
       resetCreateForm();
     }
   }
@@ -226,7 +242,6 @@
   function hideCreateView() {
     if (createView) createView.style.display = "none";
     if (listView) listView.style.display = "block";
-    // Reload danh sách
     loadData();
   }
 
@@ -246,7 +261,6 @@
     if (resultsSection) resultsSection.style.display = "none";
     if (invoiceFormSection) invoiceFormSection.style.display = "none";
 
-    // Reset các input 4 trường
     const inputs = [
       "createSoHoaDonNhap",
       "createNgayNhapHD",
@@ -259,7 +273,6 @@
       if (el) el.value = "";
     });
 
-    // Focus vào ô mã hàng
     if (maHangInput) maHangInput.focus();
   }
 
@@ -282,13 +295,12 @@
     try {
       const token = API.getToken();
 
-      // Ưu tiên mã hàng nếu có, không thì dùng số HĐ
-      let url = "";
-      if (maHang) {
-        url = `${API_BASE_URL}/invoice/search-product?key=maHang&value=${encodeURIComponent(maHang)}`;
-      } else {
-        url = `${API_BASE_URL}/invoice/search-product?key=soHopDongNhap&value=${encodeURIComponent(soHD)}`;
-      }
+      // ✅ Gửi CẢ 2 key nếu có
+      const params = new URLSearchParams();
+      if (maHang) params.append("maHang", maHang);
+      if (soHD) params.append("soHopDongNhap", soHD);
+
+      const url = `${API_BASE_URL}/invoice/search-product?${params.toString()}`;
 
       const res = await fetch(url, {
         headers: { Authorization: "Bearer " + token },
@@ -296,7 +308,7 @@
       const result = await res.json();
 
       if (result.success) {
-        renderSearchResults(result.data || [], maHang, soHD);
+        renderSearchResults(result.data || []);
       } else {
         Utils.showToast("❌ " + (result.message || "Lỗi tìm kiếm"), "error");
       }
@@ -308,7 +320,7 @@
     }
   }
 
-  function renderSearchResults(items, maHangInput, soHDInput) {
+  function renderSearchResults(items) {
     const resultsSection = document.getElementById("searchResultsSection");
     const resultsBody = document.getElementById("searchResultsBody");
     const resultsCount = document.getElementById("searchResultsCount");
@@ -355,7 +367,6 @@
       )
       .join("");
 
-    // Lưu cache để selectProduct truy cập
     window._searchResults = items;
   }
 
@@ -373,11 +384,9 @@
 
     selectedInventory = item;
 
-    // Hiện form nhập HĐ
     const invoiceFormSection = document.getElementById("invoiceFormSection");
     if (invoiceFormSection) invoiceFormSection.style.display = "block";
 
-    // Fill thông tin SP đã chọn
     const infoEl = document.getElementById("selectedProductInfo");
     if (infoEl) {
       infoEl.innerHTML = `
@@ -392,13 +401,11 @@
       `;
     }
 
-    // Set giá trị mặc định cho Số HĐ nhập
     const soHDNhapEl = document.getElementById("createSoHoaDonNhap");
     if (soHDNhapEl && !soHDNhapEl.value) {
       soHDNhapEl.value = item.soHoaDonNhap || item.soHopDongNhap || "";
     }
 
-    // Scroll xuống form
     if (invoiceFormSection) {
       invoiceFormSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -425,7 +432,6 @@
       document.getElementById("createSoLuong")?.value || 0,
     );
 
-    // Validate
     if (!soHoaDonNhap || !ngayNhapHD) {
       Utils.showToast("⚠️ Vui lòng nhập Số HĐ nhập và Ngày HĐ nhập", "warning");
       return;
@@ -479,7 +485,6 @@
 
       if (result.success) {
         Utils.showToast("✅ " + result.message);
-        // Quay lại màn hình list
         hideCreateView();
       } else {
         Utils.showToast(
