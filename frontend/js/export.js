@@ -1,7 +1,7 @@
 /**
  * ==================== EXPORT MODULE ====================
  * Quản lý phiếu xuất kho
- * ✅ ĐÃ SỬA THỨ TỰ CỘT ĐÚNG VỚI HTML
+ * ✅ BẮT BUỘC nhập Số lot + HSD
  */
 
 (function () {
@@ -116,6 +116,8 @@
         const manufacturerInput = row.querySelector(".manufacturer");
         const categoryInput = row.querySelector(".category");
         const priceInput = row.querySelector(".price-input");
+        const lotInput = row.querySelector(".lot-input");
+        const expiryInput = row.querySelector(".expiry-input");
 
         if (nameInput) {
           nameInput.value = product.tenThuongMai || "";
@@ -133,10 +135,23 @@
           categoryInput.value = product.phanLoai || "";
           categoryInput.style.borderColor = "#4ade80";
         }
-
         if (priceInput) {
           priceInput.placeholder = `Gợi ý: ${formatCurrency(product.giaNhap || 0)}`;
           priceInput.style.borderColor = "#4ade80";
+        }
+
+        // ✅ Tự động điền Số lot + HSD nếu có
+        if (lotInput && product.soLot) {
+          lotInput.value = product.soLot;
+          lotInput.style.borderColor = "#4ade80";
+        }
+        if (expiryInput && product.ngayHetHan) {
+          // Chuyển về định dạng YYYY-MM-DD cho input date
+          const d = new Date(product.ngayHetHan);
+          if (!isNaN(d.getTime())) {
+            expiryInput.value = d.toISOString().split("T")[0];
+            expiryInput.style.borderColor = "#4ade80";
+          }
         }
 
         setTimeout(() => {
@@ -166,7 +181,7 @@
     }
   }
 
-  // ========== Tạo dòng sản phẩm - ĐÚNG THỨ TỰ CỘT ==========
+  // ========== Tạo dòng sản phẩm ==========
   function createProductRow(data = null) {
     const row = document.createElement("tr");
     const stt = rowCounter++;
@@ -174,8 +189,6 @@
     const removeButton =
       '<button class="btn-remove" type="button"><i class="fas fa-trash"></i></button>';
 
-    // ✅ THỨ TỰ CỘT ĐÚNG VỚI HTML:
-    // STT | MÃ HÀNG | TÊN THƯƠNG MẠI | ĐVT | HÃNG/NƯỚC SX | PHÂN LOẠI MÁY | ĐƠN GIÁ XUẤT | SỐ LƯỢNG | SỐ LOT | HSD | THÀNH TIỀN | XÓA
     row.innerHTML = `
       <td class="stt-cell">${stt}</td>
       <td><input type="text" class="product-code" value="${escapeHtml(data?.maHang || "")}" placeholder="Mã hàng *"></td>
@@ -185,8 +198,8 @@
       <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="price-input" placeholder="Đơn giá xuất *"></td>
       <td><input type="text" class="qty-input" placeholder="Số lượng *"></td>
-      <td><input type="text" class="lot-input" placeholder="Số lot *"></td>
-      <td><input type="date" class="expiry-input"></td>
+      <td><input type="text" class="lot-input" placeholder="Số lot *" required></td>
+      <td><input type="date" class="expiry-input" required></td>
       <td class="row-total" data-total="0">0</td>
       <td class="text-center" style="width:35px;">${removeButton}</td>
     `;
@@ -349,12 +362,26 @@
       return;
     }
 
-    const invalidItems = data.items.filter(
-      (item) => !item.tenThuongMai || !item.maHang,
-    );
+    // ✅ VALIDATE: Bắt buộc nhập Mã hàng, Tên, Số lot, HSD
+    const invalidItems = [];
+
+    data.items.forEach((item, idx) => {
+      const missing = [];
+      if (!item.maHang) missing.push("Mã hàng");
+      if (!item.tenThuongMai) missing.push("Tên thương mại");
+      if (!item.soLuong || item.soLuong <= 0) missing.push("Số lượng");
+      if (!item.soLot) missing.push("Số lot");
+      if (!item.ngayHetHan) missing.push("HSD");
+
+      if (missing.length > 0) {
+        invalidItems.push(`Dòng ${idx + 1}: thiếu ${missing.join(", ")}`);
+      }
+    });
+
     if (invalidItems.length > 0) {
       alert(
-        "⚠️ Vui lòng nhập đầy đủ Tên thương mại và Mã hàng cho tất cả sản phẩm!",
+        "⚠️ Vui lòng nhập đầy đủ thông tin bắt buộc:\n\n" +
+          invalidItems.join("\n"),
       );
       return;
     }

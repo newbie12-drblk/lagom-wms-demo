@@ -1,3 +1,4 @@
+// backend/controllers/exportController.js
 const db = require("../config/database");
 const Export = require("../models/Export");
 const Inventory = require("../models/Inventory");
@@ -31,36 +32,76 @@ const getExportById = async (req, res) => {
 };
 
 // ============================================================
-// TẠO PHIẾU XUẤT - CẢNH BÁO NẾU SẮP HẾT HÀNG
+// TẠO PHIẾU XUẤT
+// ✅ BẮT BUỘC: Mỗi item phải có soLot + ngayHetHan
 // ============================================================
 const createExport = async (req, res) => {
   try {
     const exportData = req.body;
     const createdBy = req.user.userId;
 
+    if (!exportData.items || exportData.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Phiếu xuất phải có ít nhất 1 sản phẩm",
+      });
+    }
+
+    // ✅ VALIDATE: Bắt buộc nhập Số lot + HSD cho từng item
+    const invalidItems = [];
+    exportData.items.forEach((item, idx) => {
+      const missing = [];
+      if (!item.maHang) missing.push("Mã hàng");
+      if (!item.tenThuongMai) missing.push("Tên thương mại");
+      if (!item.soLuong || item.soLuong <= 0) missing.push("Số lượng");
+      if (!item.soLot) missing.push("Số lot");
+      if (!item.ngayHetHan) missing.push("HSD");
+
+      if (missing.length > 0) {
+        invalidItems.push(`Dòng ${idx + 1}: thiếu ${missing.join(", ")}`);
+      }
+    });
+
+    if (invalidItems.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Vui lòng nhập đầy đủ thông tin bắt buộc:\n" +
+          invalidItems.join("\n"),
+      });
+    }
+
     const willBeOutOfStock = [];
 
-    for (const item of exportData.items || []) {
-      const product = await Inventory.findByMaHang(item.maHang);
-      if (!product) {
+    // Kiểm tra tồn kho theo MÃ HÀNG + SỐ LOT
+    for (const item of exportData.items) {
+      const invItem = await Inventory.findByMaHangAndLot(
+        item.maHang,
+        item.soLot,
+        item.ngayNhapHD || null,
+      );
+
+      if (!invItem) {
         return res.status(400).json({
           success: false,
-          message: `Sản phẩm ${item.maHang} không tồn tại trong kho`,
-        });
-      }
-      if ((product.tonKho || 0) < (item.soLuong || 0)) {
-        return res.status(400).json({
-          success: false,
-          message: `Sản phẩm ${item.tenThuongMai} tồn kho không đủ (còn ${product.tonKho})`,
+          message: `Không tìm thấy lô "${item.soLot}" của sản phẩm ${item.maHang} trong kho`,
         });
       }
 
-      const tonKhoSau = (product.tonKho || 0) - (item.soLuong || 0);
+      if ((invItem.tonKho || 0) < (item.soLuong || 0)) {
+        return res.status(400).json({
+          success: false,
+          message: `Lô "${item.soLot}" của "${item.tenThuongMai}" không đủ tồn (cần ${item.soLuong}, còn ${invItem.tonKho})`,
+        });
+      }
+
+      const tonKhoSau = (invItem.tonKho || 0) - (item.soLuong || 0);
       if (tonKhoSau <= 0) {
         willBeOutOfStock.push({
           tenThuongMai: item.tenThuongMai,
           maHang: item.maHang,
-          tonKhoHienTai: product.tonKho || 0,
+          soLot: item.soLot,
+          tonKhoHienTai: invItem.tonKho || 0,
           soLuongXuat: item.soLuong || 0,
         });
       }
@@ -83,7 +124,7 @@ const createExport = async (req, res) => {
       const danhSachSapHet = willBeOutOfStock
         .map(
           (i) =>
-            `- ${i.tenThuongMai} (${i.maHang}): tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
+            `- ${i.tenThuongMai} (${i.maHang}) - Lô ${i.soLot}: tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
         )
         .join("\n");
 
@@ -104,7 +145,7 @@ const createExport = async (req, res) => {
       const danhSachSapHet = willBeOutOfStock
         .map(
           (i) =>
-            `- ${i.tenThuongMai} (${i.maHang}): tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
+            `- ${i.tenThuongMai} (${i.maHang}) - Lô ${i.soLot}: tồn ${i.tonKhoHienTai}, xuất ${i.soLuongXuat} → HẾT`,
         )
         .join("\n");
 
@@ -264,7 +305,7 @@ const updateExportStatus = async (req, res) => {
 
         if (!invItem) {
           throw new Error(
-            `Không tìm thấy sản phẩm "${item.maHang}" trong kho để xuất`,
+            `Không tìm thấy sản phẩm "${item.maHang}" (lô ${item.soLot}) trong kho để xuất`,
           );
         }
 
@@ -272,7 +313,7 @@ const updateExportStatus = async (req, res) => {
 
         if (tonKhoHienTai < soLuongXuat) {
           throw new Error(
-            `Sản phẩm "${item.tenThuongMai}" (${item.maHang}) không đủ tồn kho. Cần ${soLuongXuat}, còn ${tonKhoHienTai}`,
+            `Sản phẩm "${item.tenThuongMai}" (${item.maHang}) - Lô ${item.soLot} không đủ tồn kho. Cần ${soLuongXuat}, còn ${tonKhoHienTai}`,
           );
         }
 
@@ -287,11 +328,12 @@ const updateExportStatus = async (req, res) => {
           outOfStockItems.push({
             tenThuongMai: item.tenThuongMai,
             maHang: item.maHang,
+            soLot: item.soLot,
             soLuongXuat: soLuongXuat,
           });
 
           console.log(
-            `  🗑️ ĐÃ XÓA sản phẩm hết hàng: ${item.maHang} - SL xuất: ${soLuongXuat}`,
+            `  🗑️ ĐÃ XÓA sản phẩm hết hàng: ${item.maHang} - Lô ${item.soLot} - SL xuất: ${soLuongXuat}`,
           );
         } else {
           // CÒN HÀNG → CẬP NHẬT
@@ -316,7 +358,7 @@ const updateExportStatus = async (req, res) => {
           );
 
           console.log(
-            `  ✅ Cập nhật tồn kho: ${item.maHang} (ID ${invItem.id}) - ${tonKhoHienTai} → ${tonKhoMoi}`,
+            `  ✅ Cập nhật tồn kho: ${item.maHang} (Lô ${item.soLot}, ID ${invItem.id}) - ${tonKhoHienTai} → ${tonKhoMoi}`,
           );
         }
       }
@@ -324,7 +366,8 @@ const updateExportStatus = async (req, res) => {
       if (outOfStockItems.length > 0) {
         const danhSachHet = outOfStockItems
           .map(
-            (i) => `- ${i.tenThuongMai} (${i.maHang}): xuất ${i.soLuongXuat}`,
+            (i) =>
+              `- ${i.tenThuongMai} (${i.maHang}) - Lô ${i.soLot}: xuất ${i.soLuongXuat}`,
           )
           .join("\n");
 
