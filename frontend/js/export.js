@@ -1,7 +1,8 @@
 /**
  * ==================== EXPORT MODULE ====================
  * Quản lý phiếu xuất kho
- * ✅ BẮT BUỘC nhập Số lot + HSD
+ * ✅ Số lot KHÔNG bắt buộc
+ * ✅ Ngày xuất BẮT BUỘC — dùng làm key tìm inventory
  */
 
 (function () {
@@ -100,6 +101,14 @@
     );
   }
 
+  function getTodayISO() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
   // ========== TỰ ĐỘNG ĐIỀN THEO MÃ HÀNG ==========
   async function autoFillByMaHang(row, maHangInput) {
     if (!row || !maHangInput) return;
@@ -117,7 +126,7 @@
         const categoryInput = row.querySelector(".category");
         const priceInput = row.querySelector(".price-input");
         const lotInput = row.querySelector(".lot-input");
-        const expiryInput = row.querySelector(".expiry-input");
+        const exportDateInput = row.querySelector(".export-date-input");
 
         if (nameInput) {
           nameInput.value = product.tenThuongMai || "";
@@ -140,18 +149,16 @@
           priceInput.style.borderColor = "#4ade80";
         }
 
-        // ✅ Tự động điền Số lot + HSD nếu có
-        if (lotInput && product.soLot) {
+        // ✅ Tự động điền Số lot nếu sản phẩm có (không bắt buộc)
+        if (lotInput && product.soLot && !lotInput.value) {
           lotInput.value = product.soLot;
           lotInput.style.borderColor = "#4ade80";
         }
-        if (expiryInput && product.ngayHetHan) {
-          // Chuyển về định dạng YYYY-MM-DD cho input date
-          const d = new Date(product.ngayHetHan);
-          if (!isNaN(d.getTime())) {
-            expiryInput.value = d.toISOString().split("T")[0];
-            expiryInput.style.borderColor = "#4ade80";
-          }
+
+        // ✅ Tự động điền Ngày xuất = hôm nay (bắt buộc)
+        if (exportDateInput && !exportDateInput.value) {
+          exportDateInput.value = getTodayISO();
+          exportDateInput.style.borderColor = "#4ade80";
         }
 
         setTimeout(() => {
@@ -189,6 +196,8 @@
     const removeButton =
       '<button class="btn-remove" type="button"><i class="fas fa-trash"></i></button>';
 
+    const defaultExportDate = data?.ngayXuatHD || getTodayISO();
+
     row.innerHTML = `
       <td class="stt-cell">${stt}</td>
       <td><input type="text" class="product-code" value="${escapeHtml(data?.maHang || "")}" placeholder="Mã hàng *"></td>
@@ -198,8 +207,8 @@
       <td><input type="text" class="category" value="${escapeHtml(data?.phanLoai || "")}" placeholder="Phân loại máy" readonly style="background:#f0f0f0;color:#333;"></td>
       <td><input type="text" class="price-input" placeholder="Đơn giá xuất *"></td>
       <td><input type="text" class="qty-input" placeholder="Số lượng *"></td>
-      <td><input type="text" class="lot-input" placeholder="Số lot *" required></td>
-      <td><input type="date" class="expiry-input" required></td>
+      <td><input type="text" class="lot-input" value="${escapeHtml(data?.soLot || "")}" placeholder="Số lot"></td>
+      <td><input type="date" class="export-date-input" value="${defaultExportDate}" required></td>
       <td class="row-total" data-total="0">0</td>
       <td class="text-center" style="width:35px;">${removeButton}</td>
     `;
@@ -283,7 +292,7 @@
       const priceInput = row.querySelector(".price-input");
       const qtyInput = row.querySelector(".qty-input");
       const lotInput = row.querySelector(".lot-input");
-      const expiryInput = row.querySelector(".expiry-input");
+      const exportDateInput = row.querySelector(".export-date-input");
       const totalSpan = row.querySelector(".row-total");
 
       items.push({
@@ -294,8 +303,8 @@
         phanLoai: categoryInput?.value || "",
         donGia: parseNumber(priceInput?.value),
         soLuong: parseNumber(qtyInput?.value),
-        soLot: lotInput?.value || "",
-        ngayHetHan: expiryInput?.value || "",
+        soLot: lotInput?.value || "", // optional
+        ngayXuatHD: exportDateInput?.value || "", // required
         thanhTien: parseNumber(totalSpan?.getAttribute("data-total")),
       });
     });
@@ -308,14 +317,8 @@
     const receiverNameEl = document.getElementById("receiverName");
     const exportReasonEl = document.getElementById("exportReason");
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const exportDate = `${year}-${month}-${day}`;
-
     const data = {
-      exportDate: exportDate,
+      exportDate: getTodayISO(),
       exportNo: exportNoEl?.value || "",
       customerName: customerNameEl?.value || "",
       customerAddress: customerAddressEl?.value || "",
@@ -362,7 +365,8 @@
       return;
     }
 
-    // ✅ VALIDATE: Bắt buộc nhập Mã hàng, Tên, Số lot, HSD
+    // ✅ VALIDATE: bắt buộc Mã hàng, Tên, Số lượng, Ngày xuất
+    // (Số lot KHÔNG bắt buộc)
     const invalidItems = [];
 
     data.items.forEach((item, idx) => {
@@ -370,8 +374,7 @@
       if (!item.maHang) missing.push("Mã hàng");
       if (!item.tenThuongMai) missing.push("Tên thương mại");
       if (!item.soLuong || item.soLuong <= 0) missing.push("Số lượng");
-      if (!item.soLot) missing.push("Số lot");
-      if (!item.ngayHetHan) missing.push("HSD");
+      if (!item.ngayXuatHD) missing.push("Ngày xuất");
 
       if (missing.length > 0) {
         invalidItems.push(`Dòng ${idx + 1}: thiếu ${missing.join(", ")}`);
