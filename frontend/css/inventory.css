@@ -227,7 +227,6 @@
    ===== STICKY COLUMNS — DESKTOP: 3 CỘT ĐẦU =====
    ================================================================ */
 
-/* Cột 1 (STT) - sticky */
 .inv-table thead th:nth-child(1) {
   position: sticky;
   left: 0;
@@ -238,7 +237,6 @@
   max-width: 45px;
 }
 
-/* Cột 2 (Tên thương mại) - sticky */
 .inv-table thead th:nth-child(2) {
   position: sticky;
   left: 45px;
@@ -249,7 +247,6 @@
   max-width: 180px;
 }
 
-/* Cột 3 (Mã hàng) - sticky */
 .inv-table thead th:nth-child(3) {
   position: sticky;
   left: 225px;
@@ -260,7 +257,6 @@
   max-width: 120px;
 }
 
-/* Bóng đổ phân cách — sau cột 3 */
 .inv-table thead th:nth-child(3)::after {
   content: "";
   position: absolute;
@@ -300,8 +296,6 @@
 }
 
 /* ==================== 3.5. TOTAL ROW (TFOOT) ==================== */
-
-/* Ô "TỔNG:" (cột 1) - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(1) {
   position: sticky;
   left: 0;
@@ -315,7 +309,6 @@
   border-right: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-/* Ô trống cột 2 - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(2) {
   position: sticky;
   left: 45px;
@@ -326,7 +319,6 @@
   max-width: 180px;
 }
 
-/* Ô trống cột 3 - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(3) {
   position: sticky;
   left: 225px;
@@ -352,7 +344,6 @@
   text-align: center;
 }
 
-/* Sum số căn phải */
 .inv-table tfoot .inv-total-row td:nth-child(9),
 .inv-table tfoot .inv-total-row td:nth-child(15),
 .inv-table tfoot .inv-total-row td:nth-child(20),
@@ -642,12 +633,6 @@
   font-size: 14px;
 }
 
-.request-options .btn.active {
-  background: var(--blue);
-  color: white;
-  border-color: var(--blue);
-}
-
 .request-table-wrap {
   overflow: auto;
   max-height: 400px;
@@ -767,7 +752,7 @@
    ================ MOBILE RESPONSIVE ==============================
    ================================================================ */
 @media (max-width: 768px) {
-  /* ---------- Filter Bar: full width từng ô ---------- */
+  /* ---------- Filter Bar ---------- */
   .filter-bar {
     flex-direction: column;
     gap: 8px;
@@ -782,10 +767,7 @@
     flex: none;
   }
 
-  .search-box {
-    min-width: 0;
-  }
-
+  .search-box,
   .cat-select {
     min-width: 0;
   }
@@ -817,110 +799,210 @@
     font-size: 15px;
   }
 
-  /* ---------- Table: chỉ sticky 2 cột đầu ---------- */
+  /* ============================================================
+     TABLE MOBILE — HIỆN ĐẦY ĐỦ 21 CỘT, THU NHỎ
+     3 cột sticky: STT + Tên TM + Mã hàng = 165px
+     ============================================================ */
   .table-wrap {
-    max-height: 60vh;
+    max-height: 65vh;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .inv-table {
-    min-width: 900px;
-    font-size: 11px;
+    font-size: 10px;
+    width: max-content;
   }
 
   .inv-table th,
   .inv-table td {
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 6px 6px;
+    font-size: 10px;
   }
 
-  /* ===== Cột 1 STT - sticky ===== */
+  /* ===== Cột 1 STT: 30px ===== */
   .inv-table thead th:nth-child(1),
+  .inv-table tbody td:nth-child(1),
   .inv-table tfoot .inv-total-row td:nth-child(1) {
     position: sticky !important;
     left: 0 !important;
     z-index: 200;
-    min-width: 35px !important;
-    width: 35px !important;
-    max-width: 35px !important;
+    min-width: 30px !important;
+    width: 30px !important;
+    max-width: 30px !important;
     background: #0f172a !important;
     font-size: 10px;
+    text-align: center !important;
+    padding: 6px 2px;
   }
 
   .inv-table tfoot .inv-total-row td:nth-child(1) {
     z-index: 250;
-    text-align: right;
-    padding-right: 6px;
+    text-align: right !important;
+    padding-right: 4px;
   }
 
-  /* ===== Cột 2 Tên TM - sticky ===== */
+  /* ===== Cột 2 Tên TM: 75px ===== */
   .inv-table thead th:nth-child(2),
+  .inv-table tbody td:nth-child(2),
   .inv-table tfoot .inv-total-row td:nth-child(2) {
     position: sticky !important;
-    left: 35px !important;
+    left: 30px !important;
     z-index: 200;
-    min-width: 110px !important;
-    width: 110px !important;
-    max-width: 110px !important;
+    min-width: 75px !important;
+    width: 75px !important;
+    max-width: 75px !important;
     background: #0f172a !important;
+    text-align: left !important;
+    padding: 6px 4px;
   }
 
   .inv-table tfoot .inv-total-row td:nth-child(2) {
     z-index: 250;
   }
 
-  /* Tên SP mobile: rút gọn font */
   .inv-table td:nth-child(2) strong {
     font-size: 10px;
-    max-width: 110px;
+    max-width: 75px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
   }
 
-  /* ===== Cột 3 Mã hàng - BỎ STICKY trên mobile ===== */
-  .inv-table thead th:nth-child(3) {
-    position: static !important;
-    left: auto !important;
-    min-width: 90px;
-    width: auto;
-    max-width: none;
-    z-index: auto;
+  /* ===== Cột 3 Mã hàng: 60px ===== */
+  .inv-table thead th:nth-child(3),
+  .inv-table tbody td:nth-child(3),
+  .inv-table tfoot .inv-total-row td:nth-child(3) {
+    position: sticky !important;
+    left: 105px !important;
+    z-index: 200;
+    min-width: 60px !important;
+    width: 60px !important;
+    max-width: 60px !important;
+    background: #0f172a !important;
+    text-align: center !important;
+    padding: 6px 4px;
+    border-right: 2px solid rgba(59, 130, 246, 0.5) !important;
   }
 
+  .inv-table tfoot .inv-total-row td:nth-child(3) {
+    z-index: 250;
+  }
+
+  /* Bóng đổ sau cột 3 — vẫn giữ */
   .inv-table thead th:nth-child(3)::after {
-    display: none;
+    display: block;
   }
 
-  .inv-table tfoot .inv-total-row td:nth-child(3) {
-    position: static !important;
-    left: auto !important;
-    min-width: 90px;
-    width: auto;
-    max-width: none;
-    z-index: auto;
-    border-right: none;
-  }
-
-  /* Bỏ border-right cột 3 trong tfoot desktop */
-  .inv-table tfoot .inv-total-row td:nth-child(3) {
-    border-right: none;
-  }
-
-  /* Ẩn bớt cột không quan trọng trên mobile (tùy chọn) */
-  /* Bỏ comment nếu muốn ẩn cột
+  /* ===== Các cột còn lại: thu nhỏ ===== */
   .inv-table th:nth-child(4),
-  .inv-table td:nth-child(4),
+  .inv-table td:nth-child(4) {
+    min-width: 60px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(5),
+  .inv-table td:nth-child(5) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(6),
+  .inv-table td:nth-child(6) {
+    min-width: 30px;
+    padding: 6px 3px;
+  }
+
+  .inv-table th:nth-child(7),
+  .inv-table td:nth-child(7) {
+    min-width: 60px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(8),
+  .inv-table td:nth-child(8) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(9),
+  .inv-table td:nth-child(9) {
+    min-width: 40px;
+    padding: 6px 3px;
+  }
+
   .inv-table th:nth-child(10),
-  .inv-table td:nth-child(10),
+  .inv-table td:nth-child(10) {
+    min-width: 60px;
+    padding: 6px 4px;
+  }
+
   .inv-table th:nth-child(11),
-  .inv-table td:nth-child(11),
+  .inv-table td:nth-child(11) {
+    min-width: 60px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(12),
+  .inv-table td:nth-child(12) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
   .inv-table th:nth-child(13),
-  .inv-table td:nth-child(13),
+  .inv-table td:nth-child(13) {
+    min-width: 50px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(14),
+  .inv-table td:nth-child(14) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(15),
+  .inv-table td:nth-child(15) {
+    min-width: 40px;
+    padding: 6px 3px;
+  }
+
+  .inv-table th:nth-child(16),
+  .inv-table td:nth-child(16) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
   .inv-table th:nth-child(17),
-  .inv-table td:nth-child(17),
+  .inv-table td:nth-child(17) {
+    min-width: 60px;
+    padding: 6px 4px;
+  }
+
   .inv-table th:nth-child(18),
   .inv-table td:nth-child(18) {
-    display: none;
+    min-width: 60px;
+    padding: 6px 4px;
   }
-  */
+
+  .inv-table th:nth-child(19),
+  .inv-table td:nth-child(19) {
+    min-width: 70px;
+    padding: 6px 4px;
+  }
+
+  .inv-table th:nth-child(20),
+  .inv-table td:nth-child(20) {
+    min-width: 40px;
+    padding: 6px 3px;
+  }
+
+  .inv-table th:nth-child(21),
+  .inv-table td:nth-child(21) {
+    min-width: 80px;
+    padding: 6px 4px;
+  }
 
   /* ---------- Pagination ---------- */
   .pagination {
@@ -1008,39 +1090,49 @@
   }
 
   .inv-table {
-    min-width: 800px;
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .inv-table th,
   .inv-table td {
-    padding: 5px 6px;
-    font-size: 10px;
+    padding: 5px 4px;
+    font-size: 9px;
   }
 
   .inv-table thead th:nth-child(1),
+  .inv-table tbody td:nth-child(1),
   .inv-table tfoot .inv-total-row td:nth-child(1) {
-    min-width: 30px !important;
-    width: 30px !important;
-    max-width: 30px !important;
+    min-width: 26px !important;
+    width: 26px !important;
+    max-width: 26px !important;
   }
 
   .inv-table thead th:nth-child(2),
+  .inv-table tbody td:nth-child(2),
   .inv-table tfoot .inv-total-row td:nth-child(2) {
-    min-width: 100px !important;
-    width: 100px !important;
-    max-width: 100px !important;
-    left: 30px !important;
+    min-width: 65px !important;
+    width: 65px !important;
+    max-width: 65px !important;
+    left: 26px !important;
+  }
+
+  .inv-table thead th:nth-child(3),
+  .inv-table tbody td:nth-child(3),
+  .inv-table tfoot .inv-total-row td:nth-child(3) {
+    min-width: 55px !important;
+    width: 55px !important;
+    max-width: 55px !important;
+    left: 91px !important;
   }
 
   .inv-table td:nth-child(2) strong {
     font-size: 9px;
-    max-width: 100px;
+    max-width: 65px;
   }
 
   .debt-badge {
-    font-size: 9px;
-    padding: 2px 6px;
+    font-size: 8px;
+    padding: 2px 5px;
   }
 
   .page-btn {

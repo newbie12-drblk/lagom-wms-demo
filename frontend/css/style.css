@@ -2,7 +2,7 @@
    FILE: style.css
    TÁC GIẢ: LAGOM
    MÔ TẢ: Global styles - Reset CSS, variables, layout, sidebar, topbar
-   NGÀY: 2026 - FIX MOBILE SIDEBAR CĂN TRÁI
+   NGÀY: 2026 - FIX MOBILE SIDEBAR HIỆN CHỮ
 ====================================================== */
 
 /* ==================== 1. RESET & VARIABLES ==================== */
@@ -674,8 +674,6 @@ body::before {
 }
 
 /* ==================== 10. INVOICE MODULE STYLES ==================== */
-
-/* Info Banner */
 .invoice-info-banner {
   background: rgba(59, 130, 246, 0.08);
   border: 1px solid rgba(59, 130, 246, 0.15);
@@ -706,14 +704,12 @@ body::before {
   color: #6b82a0;
 }
 
-/* Create Invoice Button */
 .btn-create-invoice {
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
 }
 
-/* Filter Bar Invoice */
 .filter-bar-invoice {
   display: flex;
   flex-wrap: wrap;
@@ -735,12 +731,10 @@ body::before {
   min-width: 160px;
 }
 
-/* Stats */
 .invoice-stats {
   margin-bottom: 20px;
 }
 
-/* Panel */
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -774,7 +768,6 @@ body::before {
   padding: 20px;
 }
 
-/* Pill badges */
 .pill {
   font-size: 10px;
   font-weight: 700;
@@ -789,12 +782,10 @@ body::before {
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-/* Back button */
 .btn-back-invoice {
   margin-bottom: 12px;
 }
 
-/* Search grid */
 .search-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -831,7 +822,6 @@ body::before {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* Search footer */
 .search-footer {
   display: flex;
   justify-content: space-between;
@@ -857,7 +847,6 @@ body::before {
   white-space: nowrap;
 }
 
-/* Results Table */
 .results-table-wrap {
   overflow-x: auto;
 }
@@ -938,7 +927,6 @@ body::before {
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* Selected Product Info */
 .selected-product-box {
   padding: 14px;
   background: rgba(16, 185, 129, 0.08);
@@ -985,7 +973,6 @@ body::before {
   font-size: 16px;
 }
 
-/* Invoice Form Grid */
 .invoice-form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1036,7 +1023,6 @@ body::before {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* Form Actions */
 .invoice-form-actions {
   display: flex;
   justify-content: flex-end;
@@ -1055,7 +1041,6 @@ body::before {
   font-weight: 600;
 }
 
-/* Invoice Cards (List) */
 .invoices-list {
   display: flex;
   flex-direction: column;
@@ -1133,7 +1118,6 @@ body::before {
   color: #86efac;
 }
 
-/* Empty state */
 .empty-receipts {
   text-align: center;
   padding: 60px 20px;
@@ -1158,7 +1142,6 @@ body::before {
   font-size: 12px;
 }
 
-/* ==================== 11. MANAGER - INVOICE CARDS ==================== */
 .manager-invoice-card {
   margin-bottom: 12px;
   border-left: 4px solid #8b5cf6;
@@ -1250,7 +1233,6 @@ body::before {
   font-size: 12px;
 }
 
-/* Bulk actions */
 .invoice-bulk-actions {
   display: flex;
   gap: 10px;
@@ -1263,7 +1245,6 @@ body::before {
   padding: 6px 14px;
 }
 
-/* ==================== 12. STATUS BADGES ==================== */
 .status-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -1288,7 +1269,6 @@ body::before {
   color: #f87171;
 }
 
-/* Empty state for manager */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -1305,8 +1285,12 @@ body::before {
   margin-bottom: 8px;
 }
 
-/* ==================== 13. RESPONSIVE ==================== */
-@media (max-width: 992px) {
+/* ================================================================
+   ==================== RESPONSIVE ================================
+   ================================================================ */
+
+/* ---------- Tablet (769px - 992px): Sidebar thu gọn 70px ---------- */
+@media (max-width: 992px) and (min-width: 769px) {
   .sidebar {
     width: 70px;
     min-width: 70px;
@@ -1351,7 +1335,9 @@ body::before {
   }
 }
 
+/* ---------- Mobile (≤ 768px): Sidebar full + có chữ ---------- */
 @media (max-width: 768px) {
+  /* Sidebar full màn hình khi mở */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -1371,6 +1357,7 @@ body::before {
     display: none !important;
   }
 
+  /* Sidebar logo — hiển thị đầy đủ */
   .sidebar-logo {
     padding: 0 0 18px 0 !important;
     text-align: center !important;
@@ -1403,48 +1390,76 @@ body::before {
     color: #6b82a0 !important;
   }
 
+  /* Nav label hiện */
   .sidebar .nav-label {
-    font-size: 10px !important;
-    padding: 14px 0 6px 4px !important;
+    font-size: 11px !important;
+    padding: 14px 4px 8px 4px !important;
     color: #4a5a7a !important;
     display: block !important;
     text-transform: uppercase !important;
     text-align: left !important;
+    letter-spacing: 1px !important;
+    font-weight: 700 !important;
   }
 
+  /* Nav item hiện chữ + icon */
   .sidebar .nav-item {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
-    padding: 10px 14px !important;
-    margin: 2px 0 !important;
-    border-radius: 8px !important;
+    padding: 12px 14px !important;
+    margin: 3px 0 !important;
+    border-radius: 10px !important;
     font-size: 14px !important;
+    font-weight: 600 !important;
     color: #8ba0bc !important;
     width: 100% !important;
     text-align: left !important;
     justify-content: flex-start !important;
+    text-decoration: none !important;
   }
 
   .sidebar .nav-item.active {
-    background: rgba(59, 130, 246, 0.12) !important;
+    background: rgba(59, 130, 246, 0.15) !important;
     color: #60a5fa !important;
-    border: 1px solid rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+  }
+
+  .sidebar .nav-item .nav-text {
+    display: inline-block !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
   }
 
   .sidebar .nav-icon {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 8px !important;
-    font-size: 15px !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    font-size: 17px !important;
     flex-shrink: 0 !important;
-    background: rgba(26, 34, 53, 0.5) !important;
+    background: rgba(26, 34, 53, 0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .nav-badge {
     margin-left: auto !important;
-    font-size: 9px !important;
-    padding: 2px 8px !important;
+    font-size: 10px !important;
+    padding: 3px 9px !important;
+  }
+
+  /* Sidebar footer */
+  .sidebar-footer {
+    margin-top: auto !important;
+    padding: 20px 0 0 0 !important;
+    border-top: 1px solid rgba(30, 45, 69, 0.4) !important;
+  }
+
+  .sidebar-ver {
+    font-size: 11px !important;
+    color: #4a5a7a !important;
+    text-align: center !important;
   }
 
   .content-area {
