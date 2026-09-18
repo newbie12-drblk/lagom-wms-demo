@@ -6,6 +6,7 @@
  * ✅ 10 SP/trang
  * ✅ Phân trang hoạt động đúng
  * ✅ Sum đúng cột (SL nhập, SL xuất, Tồn cuối)
+ * ✅ Công nợ: Tồn = 0 → "⛔ Hết hàng"
  */
 
 (function () {
@@ -92,6 +93,8 @@
       return '<span class="debt-badge no-debt">—</span>';
     if (remainingDays < 0)
       return `<span class="debt-badge expired">Quá hạn ${Math.abs(remainingDays)} ngày</span>`;
+    if (remainingDays === 0)
+      return `<span class="debt-badge expired">Đến hạn hôm nay</span>`;
     if (remainingDays <= 7)
       return `<span class="debt-badge critical">Còn ${remainingDays} ngày (KHẨN CẤP)</span>`;
     if (remainingDays <= 30)
@@ -99,6 +102,20 @@
     if (remainingDays <= 90)
       return `<span class="debt-badge normal">Còn ${remainingDays} ngày</span>`;
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
+  }
+
+  // ✅ HÀM MỚI: Nếu tồn = 0 → "Hết hàng", ngược lại → giữ công nợ cũ
+  function getStockStatusBadge(item) {
+    const tonKho = Number(item.tonKho) || 0;
+
+    // Chỉ khi hết hàng mới đổi hiển thị
+    if (tonKho === 0) {
+      return '<span class="debt-badge out-of-stock-badge">⛔ Hết hàng</span>';
+    }
+
+    // Còn hàng → giữ nguyên công nợ như cũ
+    const remainingDays = getRemainingDays(item);
+    return getDebtBadge(remainingDays);
   }
 
   // ==================== TÍNH STATS ====================
@@ -224,7 +241,7 @@
             <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
               <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${formatNumber(item.tonKho || 0)}</strong>
             </td>
-            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${getDebtBadge(remainingDays)}</td>
+            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${getStockStatusBadge(item)}</td>
           </tr>
         `;
       })
@@ -262,7 +279,6 @@
     }
   }
 
-  // ✅ Hàm chuyển trang — export ra window
   window.goToPrevPage = function () {
     if (currentPage <= 1) return;
     currentPage--;
@@ -319,7 +335,6 @@
 
     let filtered = [...data];
 
-    // ✅ SEARCH TẤT CẢ TRƯỜNG + TIẾNG VIỆT KHÔNG DẤU
     if (searchTerm) {
       filtered = filtered.filter((item) => {
         const searchableFields = [
@@ -371,7 +386,6 @@
       });
     }
 
-    // ✅ SORT A→Z THEO TÊN THƯƠNG MẠI
     filtered.sort((a, b) =>
       (a.tenThuongMai || "").localeCompare(b.tenThuongMai || "", "vi"),
     );
@@ -1012,7 +1026,6 @@
   };
 
   // ==================== INIT ====================
-  // ✅ FIX: Luôn gắn lại event mỗi lần init, dùng oninput/onclick
   async function initInventory(inventoryDataFromMain) {
     localStorage.removeItem("lagom_inventory");
 
@@ -1023,17 +1036,16 @@
     await populateCategoryFilter();
     applyInventoryFilters(data);
 
-    // ✅ SEARCH — dùng oninput để không gắn trùng
+    // Search — oninput
     const searchEl = document.getElementById("inv-search");
     if (searchEl) {
       searchEl.oninput = function () {
-        console.log("🔍 Search:", this.value);
         currentPage = 1;
         applyInventoryFilters(inventoryData);
       };
     }
 
-    // ✅ Category filter — dùng onchange
+    // Category filter — onchange
     const catEl = document.getElementById("inv-cat-filter");
     if (catEl) {
       catEl.onchange = function () {
@@ -1042,7 +1054,7 @@
       };
     }
 
-    // ✅ Status filter — dùng onchange
+    // Status filter — onchange
     const statusEl = document.getElementById("inv-status-filter");
     if (statusEl) {
       statusEl.onchange = function () {
@@ -1051,7 +1063,7 @@
       };
     }
 
-    // ✅ Nút phân trang
+    // Nút phân trang
     const prevPageBtnEl = document.getElementById("prevPage");
     if (prevPageBtnEl) {
       prevPageBtnEl.onclick = window.goToPrevPage;
@@ -1061,7 +1073,7 @@
       nextPageBtnEl.onclick = window.goToNextPage;
     }
 
-    // ✅ Create request
+    // Create request
     const createRequestBtnEl = document.getElementById("btnCreateRequest");
     if (createRequestBtnEl && isAdmin()) {
       createRequestBtnEl.style.display = "inline-flex";
@@ -1070,13 +1082,13 @@
       createRequestBtnEl.style.display = "none";
     }
 
-    // ✅ Export Excel
+    // Export Excel
     const exportBtnEl = document.getElementById("btnExport");
     if (exportBtnEl) {
       exportBtnEl.onclick = exportInventoryToExcel;
     }
 
-    // ✅ Refresh
+    // Refresh
     const refreshBtnEl = document.getElementById("btnRefreshInventory");
     if (refreshBtnEl) {
       refreshBtnEl.onclick = refreshInventoryData;
