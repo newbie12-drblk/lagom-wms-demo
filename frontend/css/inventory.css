@@ -173,7 +173,7 @@
 .inv-table td {
   padding: 12px 10px;
   border-bottom: 1px solid #1e2d45;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .inv-table th {
@@ -185,17 +185,48 @@
   letter-spacing: 0.5px;
   border-bottom: 2px solid #3b82f6;
   white-space: nowrap;
+  text-align: center;
 }
 
+/* ===== HEADER: căn phải cho cột số, căn trái cho Tên TM ===== */
+.inv-table th:nth-child(2) {
+  text-align: left;
+}
+
+.inv-table th:nth-child(8),
+.inv-table th:nth-child(9),
+.inv-table th:nth-child(15),
+.inv-table th:nth-child(16),
+.inv-table th:nth-child(20),
+.inv-table th.text-right {
+  text-align: right;
+}
+
+/* ===== BODY CELLS ===== */
 .inv-table td {
   background-color: #111827;
   color: #ffffff;
   font-weight: 500;
+  text-align: center;
+}
+
+/* Cột Tên thương mại — căn trái */
+.inv-table td:nth-child(2) {
+  text-align: left;
+}
+
+/* Các cột số — căn phải */
+.inv-table td:nth-child(8),
+.inv-table td:nth-child(9),
+.inv-table td:nth-child(15),
+.inv-table td:nth-child(16),
+.inv-table td:nth-child(20),
+.inv-table td.text-right {
+  text-align: right;
 }
 
 /* ================================================================
    ===== STICKY COLUMNS — 3 CỘT ĐẦU =====
-   Dùng inline style trong JS cho <tbody>, chỉ style cho <thead>
    ================================================================ */
 
 /* Cột 1 (STT) - sticky */
@@ -245,22 +276,18 @@
 }
 
 /* ===== MÀU CHỮ ĐẶC BIỆT ===== */
-
-/* Giá nhập, Giá xuất */
 .inv-table td:nth-child(8),
 .inv-table td:nth-child(16) {
   color: #93c5fd;
   font-weight: 600;
 }
 
-/* SL nhập, SL xuất */
 .inv-table td:nth-child(9),
 .inv-table td:nth-child(15) {
   color: #86efac;
   font-weight: 600;
 }
 
-/* Tồn cuối */
 .inv-table td:nth-child(20) {
   font-size: 14px;
   font-weight: 800;
@@ -324,6 +351,20 @@
   color: #e2eaf5;
   font-weight: 700;
   border-bottom: none;
+  text-align: center;
+}
+
+/* Sum số căn phải */
+.inv-table tfoot .inv-total-row td:nth-child(9),
+.inv-table tfoot .inv-total-row td:nth-child(15),
+.inv-table tfoot .inv-total-row td:nth-child(20),
+.inv-table tfoot .inv-total-row td.text-right {
+  text-align: right;
+}
+
+/* TỔNG: căn phải */
+.inv-table tfoot .inv-total-row td:nth-child(1) {
+  text-align: right;
 }
 
 .inv-table tfoot .inv-total-row strong {

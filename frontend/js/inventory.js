@@ -7,7 +7,8 @@
  * ✅ Phân trang hoạt động đúng
  * ✅ Sum đúng cột (SL nhập, SL xuất, Tồn cuối)
  * ✅ Công nợ: Tồn = 0 → "⛔ Hết hàng"
- * ✅ 3 cột sticky: STT + Tên TM + Mã hàng (dùng inline style)
+ * ✅ 3 cột sticky: STT + Tên TM + Mã hàng
+ * ✅ Căn giữa các cột dữ liệu (trừ cột số căn phải, tên TM căn trái)
  */
 
 (function () {
@@ -105,7 +106,6 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
-  // Nếu tồn = 0 → "Hết hàng", ngược lại → giữ công nợ cũ
   function getStockStatusBadge(item) {
     const tonKho = Number(item.tonKho) || 0;
 
@@ -180,7 +180,6 @@
   }
 
   // ==================== RENDER TABLE ====================
-  // ✅ 3 cột đầu dùng INLINE STYLE sticky — không phụ thuộc CSS
   function renderInventoryTable(data) {
     if (!tbody) return;
 
@@ -218,30 +217,30 @@
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
             <td style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; width: 45px; max-width: 45px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${globalIdx}</td>
-            <td style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; width: 180px; max-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
+            <td style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; width: 180px; max-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; text-align: left;">
               <strong style="color: #60a5fa; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${escapeHtml(item.tenThuongMai || "—")}</strong>
             </td>
-            <td style="position: sticky; left: 225px; z-index: 100; background: #0f172a; min-width: 120px; width: 120px; max-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; border-right: 2px solid rgba(59, 130, 246, 0.3);">${escapeHtml(item.maHang || "—")}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.quyCach || "—")}</td>
-            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.hangSX || "—")}</td>
+            <td style="position: sticky; left: 225px; z-index: 100; background: #0f172a; min-width: 120px; width: 120px; max-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; border-right: 2px solid rgba(59, 130, 246, 0.3); text-align: center;">${escapeHtml(item.maHang || "—")}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: center;">${escapeHtml(item.quyCach || "—")}</td>
+            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: center;">${escapeHtml(item.hangSX || "—")}</td>
             <td style="min-width: 50px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.dvt || "—")}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.phanLoai || "—")}</td>
-            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #86efac; font-weight: 600;">${formatNumber(item.soLuongNhap || 0)}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongNhap || "—")}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: center;">${escapeHtml(item.phanLoai || "—")}</td>
+            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace; text-align: right;">${formatCurrency(item.giaNhap || 0)}</td>
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #86efac; font-weight: 600; text-align: right;">${formatNumber(item.soLuongNhap || 0)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: center;">${escapeHtml(item.soHopDongNhap || "—")}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500; text-align: center;">${escapeHtml(item.soHoaDonNhap || "—")}</td>
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayNhapHD)}</td>
-            <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; font-family: monospace;">${escapeHtml(item.soLot || "—")}</td>
+            <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; font-family: monospace; text-align: center;">${escapeHtml(item.soLot || "—")}</td>
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#ffffff"};">${formatDateDisplay(item.ngayHetHan)}</td>
-            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatNumber(item.soLuongXuat || 0)}</td>
-            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaXuat || 0)}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.soHopDongXuat || "—")}</td>
-            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: right;">${formatNumber(item.soLuongXuat || 0)}</td>
+            <td class="text-right" style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #93c5fd; font-family: monospace; text-align: right;">${formatCurrency(item.giaXuat || 0)}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; text-align: center;">${escapeHtml(item.soHopDongXuat || "—")}</td>
+            <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #fbbf24; font-weight: 500; text-align: center;">${escapeHtml(item.soHoaDonXuat || "—")}</td>
             <td style="min-width: 110px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${formatDateDisplay(item.ngayXuatHD)}</td>
-            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
+            <td class="text-right" style="min-width: 80px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; text-align: right;">
               <strong style="${isOutOfStock ? "color: #f87171;" : "color: #4ade80;"}">${formatNumber(item.tonKho || 0)}</strong>
             </td>
-            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${getStockStatusBadge(item)}</td>
+            <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; text-align: center;">${getStockStatusBadge(item)}</td>
           </tr>
         `;
       })
