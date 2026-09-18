@@ -7,6 +7,7 @@
  * ✅ Phân trang hoạt động đúng
  * ✅ Sum đúng cột (SL nhập, SL xuất, Tồn cuối)
  * ✅ Công nợ: Tồn = 0 → "⛔ Hết hàng"
+ * ✅ 3 cột sticky: STT + Tên TM + Mã hàng (dùng inline style)
  */
 
 (function () {
@@ -104,16 +105,14 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
-  // ✅ HÀM MỚI: Nếu tồn = 0 → "Hết hàng", ngược lại → giữ công nợ cũ
+  // Nếu tồn = 0 → "Hết hàng", ngược lại → giữ công nợ cũ
   function getStockStatusBadge(item) {
     const tonKho = Number(item.tonKho) || 0;
 
-    // Chỉ khi hết hàng mới đổi hiển thị
     if (tonKho === 0) {
       return '<span class="debt-badge out-of-stock-badge">⛔ Hết hàng</span>';
     }
 
-    // Còn hàng → giữ nguyên công nợ như cũ
     const remainingDays = getRemainingDays(item);
     return getDebtBadge(remainingDays);
   }
@@ -181,6 +180,7 @@
   }
 
   // ==================== RENDER TABLE ====================
+  // ✅ 3 cột đầu dùng INLINE STYLE sticky — không phụ thuộc CSS
   function renderInventoryTable(data) {
     if (!tbody) return;
 
@@ -217,11 +217,11 @@
 
         return `
           <tr class="${isOutOfStock ? "out-of-stock" : ""}">
-            <td class="sticky-col" style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${globalIdx}</td>
-            <td class="sticky-col-2" style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
-              <strong style="color: #60a5fa;">${escapeHtml(item.tenThuongMai || "—")}</strong>
+            <td style="position: sticky; left: 0; z-index: 100; background: #0f172a; color: #ffffff; min-width: 45px; width: 45px; max-width: 45px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">${globalIdx}</td>
+            <td style="position: sticky; left: 45px; z-index: 100; background: #0f172a; min-width: 180px; width: 180px; max-width: 180px; border-bottom: 1px solid #1e2d45; padding: 8px 6px;">
+              <strong style="color: #60a5fa; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${escapeHtml(item.tenThuongMai || "—")}</strong>
             </td>
-            <td style="min-width: 100px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.maHang || "—")}</td>
+            <td style="position: sticky; left: 225px; z-index: 100; background: #0f172a; min-width: 120px; width: 120px; max-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff; border-right: 2px solid rgba(59, 130, 246, 0.3);">${escapeHtml(item.maHang || "—")}</td>
             <td style="min-width: 120px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.quyCach || "—")}</td>
             <td style="min-width: 150px; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.hangSX || "—")}</td>
             <td style="min-width: 50px; text-align: center; border-bottom: 1px solid #1e2d45; padding: 8px 6px; color: #ffffff;">${escapeHtml(item.dvt || "—")}</td>
@@ -415,17 +415,6 @@
     }
   }
 
-  function resetFilters() {
-    const searchInputEl = document.getElementById("inv-search");
-    const catFilterEl = document.getElementById("inv-cat-filter");
-    const statusFilterEl = document.getElementById("inv-status-filter");
-
-    if (searchInputEl) searchInputEl.value = "";
-    if (catFilterEl) catFilterEl.value = "";
-    if (statusFilterEl) statusFilterEl.value = "";
-    applyInventoryFilters(inventoryData);
-  }
-
   function exportInventoryToExcel() {
     if (!filteredInventoryData || filteredInventoryData.length === 0) {
       Utils.showToast("Không có dữ liệu để xuất!", "error");
@@ -552,7 +541,6 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG MODAL ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
@@ -562,37 +550,37 @@
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
         </p>
-        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1200px;">
+        <div class="request-table-wrap">
+          <table class="request-table">
             <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 45px; white-space: nowrap;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG <span style="color:#ef4444;">*</span></th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 90px;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 140px;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐ</th>
+              <tr>
+                <th style="text-align: center; width: 45px;">STT</th>
+                <th>TÊN THƯƠNG MẠI <span style="color:#ef4444;">*</span></th>
+                <th>MÃ HÀNG <span style="color:#ef4444;">*</span></th>
+                <th>QUY CÁCH</th>
+                <th style="text-align: center;">ĐVT</th>
+                <th>HÃNG/NƯỚC SX</th>
+                <th>PHÂN LOẠI MÁY</th>
+                <th style="text-align: right;">GIÁ NHẬP</th>
+                <th>SỐ HĐ</th>
               </tr>
             </thead>
             <tbody id="addProductBody">
-              <tr style="border-bottom: 1px solid #1e2d45;">
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a; font-weight: 600; width: 45px;">1</td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-maHang" placeholder="Mã hàng *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCach" placeholder="Quy cách" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:center; min-width:70px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
-                <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDong" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+              <tr>
+                <td style="text-align: center; background: #0a0f1a; font-weight: 600;">1</td>
+                <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *"></td>
+                <td><input type="text" class="add-maHang" placeholder="Mã hàng *"></td>
+                <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
+                <td style="text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="text-align:center;"></td>
+                <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
+                <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
+                <td style="text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="text-align:right;"></td>
+                <td><input type="text" class="add-soHopDong" placeholder="Số HĐ"></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <button class="btn-add-sm" style="margin-top:10px; background:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;" onclick="window.addNewAddRow()">
+        <button class="btn-add-sm" style="margin-top:10px;" onclick="window.addNewAddRow()">
           <i class="fas fa-plus"></i> Thêm dòng
         </button>
         <div style="margin-top: 12px; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid #1e2d45;">
@@ -616,19 +604,19 @@
       let tableRows = data
         .map(
           (item, idx) => `
-          <tr style="border-bottom: 1px solid #1e2d45;">
-            <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+          <tr>
+            <td class="checkbox-cell" style="text-align: center; width: 40px;">
               <input type="checkbox" class="edit-checkbox" data-id="${item.id}" onchange="window.onEditSelect(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
             </td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
+            <td style="text-align: center;">${idx + 1}</td>
+            <td>${escapeHtml(item.tenThuongMai || "")}</td>
+            <td>${escapeHtml(item.maHang || "")}</td>
+            <td>${escapeHtml(item.quyCach || "")}</td>
+            <td>${escapeHtml(item.dvt || "")}</td>
+            <td>${escapeHtml(item.hangSX || "")}</td>
+            <td>${escapeHtml(item.phanLoai || "")}</td>
+            <td style="text-align: right;">${formatCurrency(item.giaNhap || 0)}</td>
+            <td>${escapeHtml(item.soHopDongNhap || "")}</td>
           </tr>
         `,
         )
@@ -639,20 +627,20 @@
           <i class="fas fa-info-circle"></i> 
           <strong>Chọn sản phẩm cần sửa</strong> (sửa được 8 trường):
         </p>
-        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1200px;">
+        <div class="request-table-wrap">
+          <table class="request-table">
             <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px; white-space: nowrap;">Chọn</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐ</th>
+              <tr>
+                <th style="text-align: center; width: 40px;">Chọn</th>
+                <th style="text-align: center; width: 40px;">STT</th>
+                <th>TÊN THƯƠNG MẠI</th>
+                <th>MÃ HÀNG</th>
+                <th>QUY CÁCH</th>
+                <th style="text-align: center;">ĐVT</th>
+                <th>HÃNG/NƯỚC SX</th>
+                <th>PHÂN LOẠI MÁY</th>
+                <th style="text-align: right;">GIÁ NHẬP</th>
+                <th>SỐ HĐ</th>
               </tr>
             </thead>
             <tbody>
@@ -663,14 +651,14 @@
         <div id="editFormContainer" style="margin-top:16px; display:none;">
           <p style="color: #fbbf24; margin-bottom: 8px;">✏️ Nhập thông tin mới cho sản phẩm đã chọn (8 trường):</p>
           <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #1e2d45;">
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">ĐVT</label><input type="text" id="edit-dvt" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
-            <div><label style="color:#6b82a0;font-size:11px;display:block;margin-bottom:4px;">Số HĐ</label><input type="text" id="edit-soHopDong" class="edit-field" style="width:100%;padding:6px 8px;background:#1a2235;border:1px solid #1e2d45;border-radius:4px;color:#e2eaf5;"></div>
+            <div><label class="edit-label">Tên thương mại</label><input type="text" id="edit-tenThuongMai" class="edit-field"></div>
+            <div><label class="edit-label">Mã hàng</label><input type="text" id="edit-maHang" class="edit-field"></div>
+            <div><label class="edit-label">Quy cách</label><input type="text" id="edit-quyCach" class="edit-field"></div>
+            <div><label class="edit-label">ĐVT</label><input type="text" id="edit-dvt" class="edit-field"></div>
+            <div><label class="edit-label">Hãng/Nước SX</label><input type="text" id="edit-hangSX" class="edit-field"></div>
+            <div><label class="edit-label">Phân loại máy</label><input type="text" id="edit-phanLoai" class="edit-field"></div>
+            <div><label class="edit-label">Giá nhập</label><input type="text" id="edit-giaNhap" class="edit-field"></div>
+            <div><label class="edit-label">Số HĐ</label><input type="text" id="edit-soHopDong" class="edit-field"></div>
           </div>
         </div>
       `;
@@ -688,23 +676,23 @@
       let tableRows = data
         .map(
           (item, idx) => `
-          <tr style="border-bottom: 1px solid #1e2d45;">
-            <td class="checkbox-cell" style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; width: 40px;">
+          <tr>
+            <td class="checkbox-cell" style="text-align: center; width: 40px;">
               <input type="checkbox" class="delete-checkbox" data-id="${item.id}" data-maHang="${escapeHtml(item.maHang || "")}" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;">
             </td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${idx + 1}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.tenThuongMai || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.maHang || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.quyCach || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.hangSX || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.dvt || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.phanLoai || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: #93c5fd; font-family: monospace;">${formatCurrency(item.giaNhap || 0)}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5;">${escapeHtml(item.soHopDongNhap || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5;">${item.soLuongNhap || 0}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; color: #e2eaf5; font-family: monospace;">${escapeHtml(item.soLot || "")}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${formatDate(item.ngayHetHan)}</td>
-            <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right; color: ${(item.tonKho || 0) === 0 ? "#f87171" : "#4ade80"}; font-weight: 600;">${item.tonKho || 0}</td>
+            <td style="text-align: center;">${idx + 1}</td>
+            <td>${escapeHtml(item.tenThuongMai || "")}</td>
+            <td>${escapeHtml(item.maHang || "")}</td>
+            <td>${escapeHtml(item.quyCach || "")}</td>
+            <td>${escapeHtml(item.hangSX || "")}</td>
+            <td>${escapeHtml(item.dvt || "")}</td>
+            <td>${escapeHtml(item.phanLoai || "")}</td>
+            <td style="text-align: right;">${formatCurrency(item.giaNhap || 0)}</td>
+            <td>${escapeHtml(item.soHopDongNhap || "")}</td>
+            <td style="text-align: center;">${item.soLuongNhap || 0}</td>
+            <td>${escapeHtml(item.soLot || "")}</td>
+            <td style="text-align: center; color: ${item.ngayHetHan && new Date(item.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${formatDate(item.ngayHetHan)}</td>
+            <td style="text-align: right; color: ${(item.tonKho || 0) === 0 ? "#f87171" : "#4ade80"}; font-weight: 600;">${item.tonKho || 0}</td>
           </tr>
         `,
         )
@@ -715,24 +703,24 @@
           <i class="fas fa-exclamation-triangle"></i> 
           <strong>Chọn sản phẩm cần xóa:</strong> Hành động này KHÔNG thể hoàn tác!
         </p>
-        <div class="request-table-wrap" style="overflow-x: auto; max-height: 400px; border: 1px solid #1e2d45; border-radius: 8px;">
-          <table class="request-table" style="width:100%; border-collapse: collapse; font-size: 13px; background: #0f172a; min-width: 1200px;">
+        <div class="request-table-wrap">
+          <table class="request-table">
             <thead>
-              <tr style="background: #1a2235; border-bottom: 2px solid #3b82f6;">
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px;"><input type="checkbox" id="selectAllDelete" onchange="window.toggleAllDelete(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;"></th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 40px;">STT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 150px;">TÊN THƯƠNG MẠI</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">MÃ HÀNG</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">QUY CÁCH</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 130px;">HÃNG/NƯỚC SX</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">ĐVT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">PHÂN LOẠI MÁY</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; min-width: 120px;">GIÁ NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 120px;">SỐ HĐ</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; width: 70px;">SL NHẬP</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: left; color: #60a5fa; font-weight: 700; min-width: 100px;">SỐ LOT</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: center; color: #60a5fa; font-weight: 700; min-width: 110px;">NGÀY HẾT HẠN</th>
-                <th style="padding: 8px 10px; border: 1px solid #1e2d45; text-align: right; color: #60a5fa; font-weight: 700; width: 80px;">TỒN KHO</th>
+              <tr>
+                <th style="text-align: center; width: 40px;"><input type="checkbox" id="selectAllDelete" onchange="window.toggleAllDelete(this)" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;"></th>
+                <th style="text-align: center; width: 40px;">STT</th>
+                <th>TÊN THƯƠNG MẠI</th>
+                <th>MÃ HÀNG</th>
+                <th>QUY CÁCH</th>
+                <th>HÃNG/NƯỚC SX</th>
+                <th style="text-align: center;">ĐVT</th>
+                <th>PHÂN LOẠI MÁY</th>
+                <th style="text-align: right;">GIÁ NHẬP</th>
+                <th>SỐ HĐ</th>
+                <th style="text-align: center;">SL NHẬP</th>
+                <th>SỐ LOT</th>
+                <th style="text-align: center;">NGÀY HẾT HẠN</th>
+                <th style="text-align: right;">TỒN KHO</th>
               </tr>
             </thead>
             <tbody>
@@ -744,7 +732,6 @@
     }
   }
 
-  // ==================== HÀM HỖ TRỢ ====================
   window.toggleAllDelete = function (checkbox) {
     document.querySelectorAll(".delete-checkbox").forEach((cb) => {
       cb.checked = checkbox.checked;
@@ -778,42 +765,24 @@
     }
   };
 
-  window.removeAddRow = function (btn) {
-    const row = btn.closest("tr");
-    if (document.querySelectorAll("#addProductBody tr").length <= 1) {
-      alert("⚠️ Phải có ít nhất một dòng sản phẩm!");
-      return;
-    }
-    row.remove();
-    renumberAddRows();
-  };
-
   window.addNewAddRow = function () {
     const tbodyEl = document.getElementById("addProductBody");
     if (!tbodyEl) return;
     const rowCount = tbodyEl.querySelectorAll("tr").length + 1;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center; color: #e2eaf5; background: #0a0f1a; font-weight: 600; width: 45px;">${rowCount}</td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-maHang" placeholder="Mã hàng *" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #3b82f6; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-quyCach" placeholder="Quy cách" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:center; min-width:70px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-phanLoai" placeholder="Phân loại máy" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45; text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px; text-align:right;"></td>
-      <td style="padding: 6px 10px; border: 1px solid #1e2d45;"><input type="text" class="add-soHopDong" placeholder="Số HĐ" style="width:100%; padding:6px 8px; background:#1a2235; border:1px solid #1e2d45; border-radius:4px; color:#e2eaf5; font-size:13px;"></td>
+      <td style="text-align: center; background: #0a0f1a; font-weight: 600;">${rowCount}</td>
+      <td><input type="text" class="add-tenThuongMai" placeholder="Tên thương mại *"></td>
+      <td><input type="text" class="add-maHang" placeholder="Mã hàng *"></td>
+      <td><input type="text" class="add-quyCach" placeholder="Quy cách"></td>
+      <td style="text-align: center;"><input type="text" class="add-dvt" placeholder="ĐVT" style="text-align:center;"></td>
+      <td><input type="text" class="add-hangSX" placeholder="Hãng/Nước SX"></td>
+      <td><input type="text" class="add-phanLoai" placeholder="Phân loại máy"></td>
+      <td style="text-align: right;"><input type="text" class="add-giaNhap" placeholder="Giá nhập" style="text-align:right;"></td>
+      <td><input type="text" class="add-soHopDong" placeholder="Số HĐ"></td>
     `;
     tbodyEl.appendChild(tr);
   };
-
-  function renumberAddRows() {
-    const rows = document.querySelectorAll("#addProductBody tr");
-    rows.forEach((row, idx) => {
-      const firstTd = row.querySelector("td:first-child");
-      if (firstTd) firstTd.textContent = idx + 1;
-    });
-  }
 
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
@@ -1036,7 +1005,6 @@
     await populateCategoryFilter();
     applyInventoryFilters(data);
 
-    // Search — oninput
     const searchEl = document.getElementById("inv-search");
     if (searchEl) {
       searchEl.oninput = function () {
@@ -1045,7 +1013,6 @@
       };
     }
 
-    // Category filter — onchange
     const catEl = document.getElementById("inv-cat-filter");
     if (catEl) {
       catEl.onchange = function () {
@@ -1054,7 +1021,6 @@
       };
     }
 
-    // Status filter — onchange
     const statusEl = document.getElementById("inv-status-filter");
     if (statusEl) {
       statusEl.onchange = function () {
@@ -1063,7 +1029,6 @@
       };
     }
 
-    // Nút phân trang
     const prevPageBtnEl = document.getElementById("prevPage");
     if (prevPageBtnEl) {
       prevPageBtnEl.onclick = window.goToPrevPage;
@@ -1073,7 +1038,6 @@
       nextPageBtnEl.onclick = window.goToNextPage;
     }
 
-    // Create request
     const createRequestBtnEl = document.getElementById("btnCreateRequest");
     if (createRequestBtnEl && isAdmin()) {
       createRequestBtnEl.style.display = "inline-flex";
@@ -1082,13 +1046,11 @@
       createRequestBtnEl.style.display = "none";
     }
 
-    // Export Excel
     const exportBtnEl = document.getElementById("btnExport");
     if (exportBtnEl) {
       exportBtnEl.onclick = exportInventoryToExcel;
     }
 
-    // Refresh
     const refreshBtnEl = document.getElementById("btnRefreshInventory");
     if (refreshBtnEl) {
       refreshBtnEl.onclick = refreshInventoryData;
@@ -1102,7 +1064,6 @@
   window.setRequestType = setRequestType;
   window.toggleAllDelete = toggleAllDelete;
   window.onEditSelect = onEditSelect;
-  window.removeAddRow = removeAddRow;
   window.addNewAddRow = addNewAddRow;
   window.inventoryData = inventoryData;
   window.isAdmin = isAdmin;

@@ -304,8 +304,8 @@
                 <table class="inv-table">
                   <thead>
                     <tr>
-                      <th class="sticky-col">STT</th>
-                      <th class="sticky-col-2">Tên thương mại</th>
+                      <th>STT</th>
+                      <th>Tên thương mại</th>
                       <th>Mã hàng</th>
                       <th>Quy cách</th>
                       <th>Hãng/Nước SX</th>
@@ -341,7 +341,7 @@
                       <td></td>
                       <td></td>
                       <td class="text-right">
-                        <strong id="sumSLNhap" style="color: #86efac">0</strong>
+                        <strong id="sumSLNhap">0</strong>
                       </td>
                       <td></td>
                       <td></td>
@@ -349,16 +349,14 @@
                       <td></td>
                       <td></td>
                       <td class="text-right">
-                        <strong id="sumSLXuat" style="color: #86efac">0</strong>
+                        <strong id="sumSLXuat">0</strong>
                       </td>
                       <td></td>
                       <td></td>
                       <td></td>
                       <td></td>
                       <td class="text-right">
-                        <strong id="sumTonCuoi" style="color: #4ade80"
-                          >0</strong
-                        >
+                        <strong id="sumTonCuoi">0</strong>
                       </td>
                       <td></td>
                     </tr>
@@ -383,7 +381,6 @@
           <!-- ========================================================== -->
           <div class="view" id="view-invoices">
             <div class="scroll-area">
-              <!-- MÀN HÌNH 1: DANH SÁCH HÓA ĐƠN -->
               <div id="invoiceListView">
                 <div class="page-header">
                   <div>
@@ -484,7 +481,6 @@
                 <div id="invoicesList" class="invoices-list"></div>
               </div>
 
-              <!-- MÀN HÌNH 2: TẠO HÓA ĐƠN MỚI -->
               <div id="invoiceCreateView" style="display: none">
                 <div class="page-header" style="margin-bottom: 20px">
                   <div>
@@ -502,7 +498,6 @@
                   </div>
                 </div>
 
-                <!-- TÌM SẢN PHẨM -->
                 <div class="panel" style="margin-bottom: 20px">
                   <div class="panel-head">
                     <div class="panel-head-title">
@@ -554,7 +549,6 @@
                   </div>
                 </div>
 
-                <!-- KẾT QUẢ TÌM KIẾM -->
                 <div
                   class="panel"
                   id="searchResultsSection"
@@ -589,7 +583,6 @@
                   </div>
                 </div>
 
-                <!-- FORM NHẬP HÓA ĐƠN -->
                 <div
                   class="panel"
                   id="invoiceFormSection"
@@ -811,9 +804,7 @@
       </div>
     </div>
 
-    <!-- ========================================================== -->
     <!-- MODAL: RECEIPT DETAIL -->
-    <!-- ========================================================== -->
     <div id="receiptDetailModal" class="modal" style="display: none">
       <div
         class="modal-content"
@@ -853,9 +844,7 @@
       </div>
     </div>
 
-    <!-- ========================================================== -->
     <!-- MODAL: EXPORT DETAIL -->
-    <!-- ========================================================== -->
     <div id="exportDetailModal" class="modal" style="display: none">
       <div
         class="modal-content"
@@ -895,9 +884,6 @@
       </div>
     </div>
 
-    <!-- ========================================================== -->
-    <!-- SCRIPTS -->
-    <!-- ========================================================== -->
     <script src="js/utils.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>

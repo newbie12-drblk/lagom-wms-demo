@@ -194,78 +194,45 @@
 }
 
 /* ================================================================
-   ===== STICKY COLUMNS — 3 CỘT ĐẦU: STT + TÊN TM + MÃ HÀNG =====
+   ===== STICKY COLUMNS — 3 CỘT ĐẦU =====
+   Dùng inline style trong JS cho <tbody>, chỉ style cho <thead>
    ================================================================ */
 
-/* Cột 1: STT */
-.inv-table th.sticky-col,
-.inv-table td.sticky-col,
-.inv-table th:nth-child(1),
-.inv-table td:nth-child(1) {
+/* Cột 1 (STT) - sticky */
+.inv-table thead th:nth-child(1) {
   position: sticky;
   left: 0;
-  z-index: 100;
+  z-index: 200;
   background-color: #0f172a;
   min-width: 45px;
   width: 45px;
   max-width: 45px;
 }
 
-/* Cột 2: Tên thương mại */
-.inv-table th.sticky-col-2,
-.inv-table td.sticky-col-2,
-.inv-table th:nth-child(2),
-.inv-table td:nth-child(2) {
+/* Cột 2 (Tên thương mại) - sticky */
+.inv-table thead th:nth-child(2) {
   position: sticky;
   left: 45px;
-  z-index: 100;
+  z-index: 200;
   background-color: #0f172a;
   min-width: 180px;
   width: 180px;
   max-width: 180px;
 }
 
-/* Cột 3: Mã hàng */
-.inv-table th:nth-child(3),
-.inv-table td:nth-child(3) {
+/* Cột 3 (Mã hàng) - sticky */
+.inv-table thead th:nth-child(3) {
   position: sticky;
   left: 225px;
-  z-index: 100;
+  z-index: 200;
   background-color: #0f172a;
   min-width: 120px;
   width: 120px;
   max-width: 120px;
 }
 
-/* Tên sản phẩm — cắt bớt nếu quá dài */
-.inv-table td.sticky-col-2 strong,
-.inv-table td:nth-child(2) strong {
-  color: #60a5fa;
-  font-size: 13px;
-  font-weight: 700;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-}
-
-/* Hover cho sticky columns */
-.inv-table tr:hover td.sticky-col,
-.inv-table tr:hover td.sticky-col-2,
-.inv-table tr:hover td:nth-child(1),
-.inv-table tr:hover td:nth-child(2),
-.inv-table tr:hover td:nth-child(3) {
-  background-color: #1e293b !important;
-}
-
 /* Bóng đổ phân cách — sau cột 3 */
-.inv-table td.sticky-col::after,
-.inv-table td.sticky-col-2::after,
-.inv-table td:nth-child(3)::after,
-.inv-table th.sticky-col::after,
-.inv-table th.sticky-col-2::after,
-.inv-table th:nth-child(3)::after {
+.inv-table thead th:nth-child(3)::after {
   content: "";
   position: absolute;
   top: 0;
@@ -274,7 +241,7 @@
   height: 100%;
   background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5));
   pointer-events: none;
-  z-index: 101;
+  z-index: 201;
 }
 
 /* ===== MÀU CHỮ ĐẶC BIỆT ===== */
@@ -299,47 +266,21 @@
   font-weight: 800;
 }
 
-.inv-table td:nth-child(20).text-success {
-  color: #4ade80;
-}
-
-.inv-table td:nth-child(20).text-danger {
-  color: #f87171;
-}
-
-/* Hover row */
 .inv-table tr:hover td {
   background: rgba(59, 130, 246, 0.1);
 }
 
-/* Hàng hết hàng */
 .inv-table tr.out-of-stock td {
   opacity: 0.85;
 }
 
 /* ==================== 3.5. TOTAL ROW (TFOOT) ==================== */
-.inv-table tfoot .inv-total-row {
-  background: #0f172a !important;
-  border-top: 2px solid #3b82f6;
-  position: sticky;
-  bottom: 0;
-  z-index: 50;
-}
 
-.inv-table tfoot .inv-total-row td {
-  background: #0f172a !important;
-  padding: 14px 10px;
-  font-size: 13px;
-  color: #e2eaf5;
-  font-weight: 700;
-  border-bottom: none;
-}
-
-/* ✅ Ô "TỔNG:" (cột 1) — cố định bên trái */
+/* Ô "TỔNG:" (cột 1) - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(1) {
   position: sticky;
   left: 0;
-  z-index: 150;
+  z-index: 250;
   background: #0f172a !important;
   text-align: right;
   padding-right: 12px;
@@ -349,27 +290,40 @@
   border-right: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-/* ✅ Ô trống cột 2 (Tên TM) — cố định để không lệch */
+/* Ô trống cột 2 - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(2) {
   position: sticky;
   left: 45px;
-  z-index: 150;
+  z-index: 250;
   background: #0f172a !important;
   min-width: 180px;
   width: 180px;
   max-width: 180px;
 }
 
-/* ✅ Ô trống cột 3 (Mã hàng) — cố định để không lệch */
+/* Ô trống cột 3 - sticky */
 .inv-table tfoot .inv-total-row td:nth-child(3) {
   position: sticky;
   left: 225px;
-  z-index: 150;
+  z-index: 250;
   background: #0f172a !important;
   min-width: 120px;
   width: 120px;
   max-width: 120px;
   border-right: 2px solid rgba(59, 130, 246, 0.5);
+}
+
+.inv-table tfoot .inv-total-row {
+  border-top: 2px solid #3b82f6;
+}
+
+.inv-table tfoot .inv-total-row td {
+  background: #0f172a !important;
+  padding: 14px 10px;
+  font-size: 13px;
+  color: #e2eaf5;
+  font-weight: 700;
+  border-bottom: none;
 }
 
 .inv-table tfoot .inv-total-row strong {
@@ -462,7 +416,7 @@
   color: #94a3b8;
 }
 
-/* ✅ OUT OF STOCK BADGE — Khi tồn = 0 */
+/* OUT OF STOCK BADGE — Khi tồn = 0 */
 .debt-badge.out-of-stock-badge {
   background: rgba(107, 114, 128, 0.25);
   color: #9ca3af;
@@ -745,6 +699,22 @@
   background: #059669;
 }
 
+.edit-label {
+  color: #6b82a0;
+  font-size: 11px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.edit-field {
+  width: 100%;
+  padding: 6px 8px;
+  background: #1a2235;
+  border: 1px solid #1e2d45;
+  border-radius: 4px;
+  color: #e2eaf5;
+}
+
 @keyframes modalSlideIn {
   from {
     opacity: 0;
@@ -800,62 +770,28 @@
     font-size: 10px;
   }
 
-  /* Sticky cột 1 (STT) */
-  .inv-table th.sticky-col,
-  .inv-table td.sticky-col,
-  .inv-table th:nth-child(1),
-  .inv-table td:nth-child(1) {
-    min-width: 35px !important;
-    width: 35px !important;
-    max-width: 35px !important;
-  }
-
-  /* Sticky cột 2 (Tên TM) */
-  .inv-table th.sticky-col-2,
-  .inv-table td.sticky-col-2,
-  .inv-table th:nth-child(2),
-  .inv-table td:nth-child(2) {
-    min-width: 120px !important;
-    width: 120px !important;
-    max-width: 120px !important;
-    left: 35px !important;
-  }
-
-  .inv-table td.sticky-col-2 strong,
-  .inv-table td:nth-child(2) strong {
-    font-size: 10px;
-    max-width: 120px;
-  }
-
-  /* Sticky cột 3 (Mã hàng) */
-  .inv-table th:nth-child(3),
-  .inv-table td:nth-child(3) {
-    min-width: 90px !important;
-    width: 90px !important;
-    max-width: 90px !important;
-    left: 155px !important; /* 35 + 120 */
-  }
-
-  /* Tfoot mobile */
+  /* Sticky columns responsive */
+  .inv-table thead th:nth-child(1),
   .inv-table tfoot .inv-total-row td:nth-child(1) {
     min-width: 35px !important;
     width: 35px !important;
     max-width: 35px !important;
-    left: 0 !important;
   }
 
+  .inv-table thead th:nth-child(2),
   .inv-table tfoot .inv-total-row td:nth-child(2) {
-    left: 35px !important;
     min-width: 120px !important;
     width: 120px !important;
     max-width: 120px !important;
+    left: 35px !important;
   }
 
+  .inv-table thead th:nth-child(3),
   .inv-table tfoot .inv-total-row td:nth-child(3) {
-    left: 155px !important; /* 35 + 120 */
     min-width: 90px !important;
     width: 90px !important;
     max-width: 90px !important;
+    left: 155px !important;
   }
 
   .request-modal {
@@ -889,7 +825,7 @@
   }
 }
 
-/* ==================== REQUEST MODAL TABS - FIX ACTIVE ==================== */
+/* ==================== REQUEST MODAL TABS ==================== */
 .request-options {
   display: flex;
   gap: 10px;
