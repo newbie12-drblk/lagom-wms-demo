@@ -1,9 +1,9 @@
 -- ======================================================
--- DATABASE: LAGOM WMS - Phiên bản 3.0
+-- DATABASE: LAGOM WMS - Phiên bản 3.1
 -- Ngày: 2026
 -- Mô tả: 
---   - Sửa invoice_requests: thêm exportItemId (mỗi item 1 record)
---   - Inventory tách riêng dòng nhập/xuất
+--   - Sửa invoice_requests: inventory-based (khớp model)
+--   - Inventory giữ nguyên dòng khi xuất hết (tonKho = 0)
 -- ======================================================
 
 CREATE DATABASE IF NOT EXISTS defaultdb
@@ -81,7 +81,8 @@ CREATE TABLE user_permissions (
 
 -- ======================================================
 -- 3. Bảng inventory (Tồn kho)
--- Mỗi lần nhập = 1 dòng, mỗi lần xuất = 1 dòng (tách riêng)
+-- Mỗi lần nhập = 1 dòng. Khi xuất hết, KHÔNG xóa dòng,
+-- chỉ cập nhật tonKho = 0.
 -- ======================================================
 CREATE TABLE inventory (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -316,12 +317,17 @@ CREATE TABLE export_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
--- 11. Bảng invoice_requests (ĐÃ SỬA: mỗi item 1 record)
+-- 11. Bảng invoice_requests (INVENTORY-BASED)
+-- Mỗi yêu cầu HĐ gắn với 1 dòng inventory
 -- ======================================================
 CREATE TABLE invoice_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    exportId INT NOT NULL,
-    exportItemId INT NOT NULL,
+    soHoaDonCode VARCHAR(50) UNIQUE NOT NULL,
+    inventoryId INT NOT NULL,
+    maHang VARCHAR(50) NOT NULL,
+    soHopDongNhap VARCHAR(50) DEFAULT '',
+    soLot VARCHAR(50) DEFAULT '',
+    tenThuongMai VARCHAR(200) DEFAULT '',
     soHoaDonNhap VARCHAR(50) DEFAULT '',
     ngayNhapHD DATE DEFAULT NULL,
     soHoaDonXuat VARCHAR(50) DEFAULT '',
@@ -332,13 +338,12 @@ CREATE TABLE invoice_requests (
     approvedAt DATETIME,
     rejectedReason TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (exportId) REFERENCES exports(id) ON DELETE CASCADE,
-    FOREIGN KEY (exportItemId) REFERENCES export_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (inventoryId) REFERENCES inventory(id) ON DELETE CASCADE,
     FOREIGN KEY (createdBy) REFERENCES users(id),
     FOREIGN KEY (approvedBy) REFERENCES users(id),
-    UNIQUE KEY unique_item (exportItemId),
     INDEX idx_status (status),
-    INDEX idx_export (exportId)
+    INDEX idx_inventory (inventoryId),
+    INDEX idx_maHang (maHang)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
@@ -451,4 +456,4 @@ INSERT INTO user_permissions (userId, canEditTenThuongMai, canEditMaHang, canEdi
 INSERT INTO notifications (userId, title, message, type, isRead) VALUES
 (2, 'Chào mừng', 'Bạn đã đăng nhập với vai trò Quản lý. Vui lòng kiểm tra các yêu cầu chờ duyệt.', 'info', FALSE);
 
-SELECT '✅ Database LAGOM WMS v3.0 initialized successfully!' AS message;
+SELECT '✅ Database LAGOM WMS v3.1 initialized successfully!' AS message;

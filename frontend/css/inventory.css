@@ -298,6 +298,29 @@
   opacity: 0.85;
 }
 
+/* ==================== 3.5. TOTAL ROW (TFOOT) ==================== */
+.inv-table tfoot .inv-total-row {
+  background: #0f172a !important;
+  border-top: 2px solid #3b82f6;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+}
+
+.inv-table tfoot .inv-total-row td {
+  background: #0f172a !important;
+  padding: 14px 10px;
+  font-size: 13px;
+  color: #e2eaf5;
+  font-weight: 700;
+  border-bottom: none;
+}
+
+.inv-table tfoot .inv-total-row strong {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
 /* ==================== 4. PAGINATION ==================== */
 .pagination {
   display: flex;

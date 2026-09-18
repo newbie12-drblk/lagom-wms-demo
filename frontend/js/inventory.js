@@ -2,7 +2,7 @@
  * ==================== INVENTORY MODULE ====================
  * Quản lý tồn kho (chế độ xem)
  * CHỈ 3 TAB: Thêm, Sửa, Xóa
- * ✅ ĐÃ BỎ trường SL NHẬP khỏi form Thêm/Sửa
+ * ✅ CÓ FILTER ĐA TRƯỜNG + SUM (SL nhập, SL xuất, Tồn cuối)
  */
 
 (function () {
@@ -25,6 +25,11 @@
   const prevPageBtn = document.getElementById("prevPage");
   const nextPageBtn = document.getElementById("nextPage");
   const pageInfo = document.getElementById("pageInfo");
+
+  // Sum elements
+  const sumSLNhapEl = document.getElementById("sumSLNhap");
+  const sumSLXuatEl = document.getElementById("sumSLXuat");
+  const sumTonCuoiEl = document.getElementById("sumTonCuoi");
 
   // ==================== KIỂM TRA ROLE ====================
   function isAdmin() {
@@ -91,6 +96,23 @@
     return `<span class="debt-badge safe">Còn ${remainingDays} ngày</span>`;
   }
 
+  // ==================== TÍNH SUM ====================
+  function updateSums(data) {
+    let totalSLNhap = 0;
+    let totalSLXuat = 0;
+    let totalTonCuoi = 0;
+
+    for (const item of data) {
+      totalSLNhap += Number(item.soLuongNhap) || 0;
+      totalSLXuat += Number(item.soLuongXuat) || 0;
+      totalTonCuoi += Number(item.tonKho) || 0;
+    }
+
+    if (sumSLNhapEl) sumSLNhapEl.textContent = formatNumber(totalSLNhap);
+    if (sumSLXuatEl) sumSLXuatEl.textContent = formatNumber(totalSLXuat);
+    if (sumTonCuoiEl) sumTonCuoiEl.textContent = formatNumber(totalTonCuoi);
+  }
+
   // ==================== RENDER TABLE ====================
   function renderInventoryTable(data) {
     if (!tbody) return;
@@ -101,6 +123,7 @@
         Không có dữ liệu tồn kho
       </td></tr>`;
       updatePaginationControls(0);
+      updateSums([]);
       return;
     }
 
@@ -158,6 +181,7 @@
       .join("");
 
     updatePaginationControls(data.length);
+    updateSums(data);
   }
 
   function updatePaginationControls(totalItems) {
@@ -208,6 +232,7 @@
     }
   }
 
+  // ==================== FILTER ĐA TRƯỜNG ====================
   function applyInventoryFilters(data) {
     inventoryData = data;
     if (!data || data.length === 0) {
@@ -217,20 +242,45 @@
       return;
     }
 
-    const searchTerm = searchInput?.value.toLowerCase() || "";
+    const searchTerm = (searchInput?.value || "").toLowerCase().trim();
     const category = catFilter?.value || "";
     const status = statusFilter?.value || "";
 
     let filtered = [...data];
 
+    // ✅ FILTER ĐA TRƯỜNG — tìm kiếm trên TẤT CẢ các trường dữ liệu
     if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          (item.tenThuongMai &&
-            item.tenThuongMai.toLowerCase().includes(searchTerm)) ||
-          (item.maHang && item.maHang.toLowerCase().includes(searchTerm)) ||
-          (item.soLot && item.soLot.toLowerCase().includes(searchTerm)),
-      );
+      filtered = filtered.filter((item) => {
+        const searchableFields = [
+          item.tenThuongMai,
+          item.maHang,
+          item.quyCach,
+          item.hangSX,
+          item.dvt,
+          item.phanLoai,
+          item.soHopDongNhap,
+          item.soHoaDonNhap,
+          item.soHoaDonXuat,
+          item.soHopDongXuat,
+          item.soLot,
+          item.ghiChu,
+          // Format ngày để search
+          item.ngayNhapHD ? formatDate(item.ngayNhapHD) : "",
+          item.ngayXuatHD ? formatDate(item.ngayXuatHD) : "",
+          item.ngayHetHan ? formatDate(item.ngayHetHan) : "",
+          // Giá
+          String(item.giaNhap || ""),
+          String(item.giaXuat || ""),
+          // Số lượng
+          String(item.soLuongNhap || ""),
+          String(item.soLuongXuat || ""),
+          String(item.tonKho || ""),
+        ];
+        return searchableFields.some(
+          (field) =>
+            field && field.toString().toLowerCase().includes(searchTerm),
+        );
+      });
     }
 
     if (category) {
@@ -410,13 +460,12 @@
     renderRequestContent(type);
   };
 
-  // ==================== RENDER NỘI DUNG - ĐÃ BỎ SL NHẬP ====================
+  // ==================== RENDER NỘI DUNG ====================
   function renderRequestContent(type) {
     const container = document.getElementById("requestContent");
     if (!container) return;
 
     if (type === "add") {
-      // ========== THÊM SẢN PHẨM - 9 TRƯỜNG (KHÔNG CÓ SL NHẬP) ==========
       container.innerHTML = `
         <p style="color: #6b82a0; margin-bottom: 12px;">
           <i class="fas fa-info-circle"></i> Điền thông tin sản phẩm mới (các trường có <span style="color: #ef4444;">*</span> là bắt buộc):
@@ -462,7 +511,6 @@
         </div>
       `;
     } else if (type === "edit") {
-      // ========== SỬA SẢN PHẨM - 8 TRƯỜNG (KHÔNG CÓ SL NHẬP) ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -535,7 +583,6 @@
         </div>
       `;
     } else if (type === "delete") {
-      // ========== XÓA SẢN PHẨM ==========
       const data =
         filteredInventoryData.length > 0
           ? filteredInventoryData
@@ -676,7 +723,6 @@
     });
   }
 
-  // ==================== LẤY DỮ LIỆU THÊM SẢN PHẨM (KHÔNG CÓ SL NHẬP) ====================
   function getAddProductsData() {
     const rows = document.querySelectorAll("#addProductBody tr");
     const products = [];
@@ -936,19 +982,26 @@
       }
     }
 
-    if (exportBtn) exportBtn.addEventListener("click", exportInventoryToExcel);
-    if (refreshBtn) refreshBtn.addEventListener("click", refreshInventoryData);
+    const exportBtnEl = document.getElementById("btnExport");
+    if (exportBtnEl)
+      exportBtnEl.addEventListener("click", exportInventoryToExcel);
 
-    if (prevPageBtn) {
-      prevPageBtn.addEventListener("click", () => {
+    const refreshBtnEl = document.getElementById("btnRefreshInventory");
+    if (refreshBtnEl)
+      refreshBtnEl.addEventListener("click", refreshInventoryData);
+
+    const prevPageBtnEl = document.getElementById("prevPage");
+    if (prevPageBtnEl) {
+      prevPageBtnEl.addEventListener("click", () => {
         if (currentPage > 1) {
           currentPage--;
           renderInventoryTable(filteredInventoryData);
         }
       });
     }
-    if (nextPageBtn) {
-      nextPageBtn.addEventListener("click", () => {
+    const nextPageBtnEl = document.getElementById("nextPage");
+    if (nextPageBtnEl) {
+      nextPageBtnEl.addEventListener("click", () => {
         const total = Math.ceil(filteredInventoryData.length / rowsPerPage);
         if (currentPage < total) {
           currentPage++;

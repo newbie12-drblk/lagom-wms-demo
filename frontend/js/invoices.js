@@ -5,7 +5,7 @@
  *
  * Flow:
  *   1. Admin bấm "Tạo hóa đơn mới" → chuyển sang màn hình tạo
- *   2. Nhập Mã hàng VÀ/HOẶC Số hợp đồng → Hệ thống show danh sách SP
+ *   2. Nhập Mã hàng VÀ/HOẶC Ngày xuất kho → Hệ thống show danh sách SP
  *   3. Chọn 1 dòng SP → hiện form nhập 4 trường HĐ
  *   4. Gửi Quản lý duyệt → sinh mã HD-YYYY-NNN
  *   5. Quản lý duyệt → cập nhật 4 trường vào ĐÚNG dòng inventory
@@ -247,12 +247,12 @@
     selectedInventory = null;
 
     const maHangInput = document.getElementById("createMaHang");
-    const soHDInput = document.getElementById("createSoHopDong");
+    const ngayXuatInput = document.getElementById("createNgayXuat");
     const resultsSection = document.getElementById("searchResultsSection");
     const invoiceFormSection = document.getElementById("invoiceFormSection");
 
     if (maHangInput) maHangInput.value = "";
-    if (soHDInput) soHDInput.value = "";
+    if (ngayXuatInput) ngayXuatInput.value = "";
     if (resultsSection) resultsSection.style.display = "none";
     if (invoiceFormSection) invoiceFormSection.style.display = "none";
 
@@ -275,11 +275,12 @@
   // ============================================================
   async function searchProduct() {
     const maHang = document.getElementById("createMaHang")?.value.trim() || "";
-    const soHD = document.getElementById("createSoHopDong")?.value.trim() || "";
+    const ngayXuatHD =
+      document.getElementById("createNgayXuat")?.value.trim() || "";
 
-    if (!maHang && !soHD) {
+    if (!maHang && !ngayXuatHD) {
       Utils.showToast(
-        "⚠️ Vui lòng nhập Mã hàng hoặc Số hợp đồng để tìm",
+        "⚠️ Vui lòng nhập Mã hàng hoặc Ngày xuất để tìm",
         "warning",
       );
       return;
@@ -291,7 +292,7 @@
 
       const params = new URLSearchParams();
       if (maHang) params.append("maHang", maHang);
-      if (soHD) params.append("soHopDongNhap", soHD);
+      if (ngayXuatHD) params.append("ngayXuatHD", ngayXuatHD);
 
       const url = `${API_BASE_URL}/invoice/search-product?${params.toString()}`;
 
@@ -347,6 +348,7 @@
         <td style="padding: 8px; color: #e2eaf5;">${Utils.escapeHtml(it.soLot || "—")}</td>
         <td style="padding: 8px; color: #e2eaf5;">${Utils.escapeHtml(it.soHopDongNhap || "—")}</td>
         <td style="padding: 8px; text-align: center; color: #e2eaf5;">${Utils.formatDate(it.ngayNhapHD)}</td>
+        <td style="padding: 8px; text-align: center; color: #e2eaf5;">${Utils.formatDate(it.ngayXuatHD)}</td>
         <td style="padding: 8px; text-align: right; color: #86efac; font-weight: 600;">${it.tonKho || 0}</td>
         <td style="padding: 8px; text-align: center; color: ${it.ngayHetHan && new Date(it.ngayHetHan) < new Date() ? "#f87171" : "#e2eaf5"};">${Utils.formatDate(it.ngayHetHan)}</td>
         <td style="padding: 8px; text-align: center;">
@@ -389,6 +391,7 @@
           <div><span style="color: #6b82a0; font-size: 11px;">Số lô:</span><br><strong style="color: #e2eaf5;">${Utils.escapeHtml(item.soLot || "—")}</strong></div>
           <div><span style="color: #6b82a0; font-size: 11px;">Số HĐ nhập:</span><br><strong style="color: #e2eaf5;">${Utils.escapeHtml(item.soHopDongNhap || "—")}</strong></div>
           <div><span style="color: #6b82a0; font-size: 11px;">Ngày nhập:</span><br><strong style="color: #e2eaf5;">${Utils.formatDate(item.ngayNhapHD)}</strong></div>
+          <div><span style="color: #6b82a0; font-size: 11px;">Ngày xuất:</span><br><strong style="color: #e2eaf5;">${Utils.formatDate(item.ngayXuatHD)}</strong></div>
           <div><span style="color: #6b82a0; font-size: 11px;">Tồn kho:</span><br><strong style="color: #86efac; font-size: 16px;">${item.tonKho || 0}</strong></div>
         </div>
       `;
@@ -405,7 +408,7 @@
   }
 
   // ============================================================
-  // SUBMIT TẠO HĐ — Không còn số lượng
+  // SUBMIT TẠO HĐ
   // ============================================================
   async function submitCreateInvoice() {
     if (!selectedInventory) {

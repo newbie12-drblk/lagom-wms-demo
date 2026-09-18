@@ -30,6 +30,10 @@ router.get(
       const [deleteResult] = await db.execute(
         "SELECT COUNT(*) as count FROM deletion_requests WHERE status = 'pending'",
       );
+      // ✅ MỚI: đếm hóa đơn chờ duyệt
+      const [invoiceResult] = await db.execute(
+        "SELECT COUNT(*) as count FROM invoice_requests WHERE status = 'pending'",
+      );
 
       res.json({
         success: true,
@@ -39,6 +43,7 @@ router.get(
           pendingExports: parseInt(exportResult[0]?.count || 0),
           pendingEdits: parseInt(editResult[0]?.count || 0),
           pendingDeletions: parseInt(deleteResult[0]?.count || 0),
+          pendingInvoices: parseInt(invoiceResult[0]?.count || 0),
         },
       });
     } catch (error) {

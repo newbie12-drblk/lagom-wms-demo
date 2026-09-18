@@ -328,6 +328,27 @@
                     </tr>
                   </thead>
                   <tbody id="inv-tbody"></tbody>
+                  <tfoot>
+                    <tr class="inv-total-row">
+                      <td colspan="8" class="text-right">
+                        <strong>TỔNG CỘNG:</strong>
+                      </td>
+                      <td class="text-right">
+                        <strong id="sumSLNhap" style="color: #86efac">0</strong>
+                      </td>
+                      <td colspan="6"></td>
+                      <td class="text-right">
+                        <strong id="sumSLXuat" style="color: #86efac">0</strong>
+                      </td>
+                      <td colspan="3"></td>
+                      <td class="text-right">
+                        <strong id="sumTonCuoi" style="color: #4ade80"
+                          >0</strong
+                        >
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
 
@@ -371,8 +392,8 @@
                     <div>
                       <div class="invoice-info-banner-title">Hướng dẫn</div>
                       <div class="invoice-info-banner-desc">
-                        Tìm sản phẩm → Chọn SP → Nhập 4 trường HĐ → Gửi Quản lý
-                        duyệt
+                        Tìm sản phẩm theo Mã hàng & Ngày xuất → Chọn SP → Nhập 4
+                        trường HĐ → Gửi Quản lý duyệt
                       </div>
                     </div>
                   </div>
@@ -490,12 +511,11 @@
                       </div>
                       <div class="search-grid-item">
                         <label>
-                          <i class="fas fa-file-contract"></i> Số hợp đồng nhập
+                          <i class="fas fa-calendar-alt"></i> Ngày xuất kho
                         </label>
                         <input
-                          type="text"
-                          id="createSoHopDong"
-                          placeholder="VD: 506/HĐNT/2026/LAGOM-PĐ"
+                          type="date"
+                          id="createNgayXuat"
                           onkeydown="
                             if (event.key === 'Enter')
                               window.searchProductForInvoice();
@@ -507,8 +527,8 @@
                     <div class="search-footer">
                       <p class="search-footer-hint">
                         <i class="fas fa-info-circle"></i>
-                        Nhập 1 trong 2 ô trên. Nếu trùng mã hàng, dùng Số hợp
-                        đồng để lọc chính xác.
+                        Nhập 1 trong 2 ô trên. Nếu trùng mã hàng, dùng Ngày xuất
+                        kho để lọc chính xác.
                       </p>
                       <button
                         class="btn btn-primary btn-search-invoice"
@@ -544,6 +564,7 @@
                           <th class="text-left">SỐ LÔ</th>
                           <th class="text-left">SỐ HĐ NHẬP</th>
                           <th class="text-center">NGÀY NHẬP</th>
+                          <th class="text-center">NGÀY XUẤT</th>
                           <th class="text-right">TỒN KHO</th>
                           <th class="text-center">HẠN DÙNG</th>
                           <th class="text-center">CHỌN</th>

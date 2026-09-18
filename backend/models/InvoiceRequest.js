@@ -22,8 +22,8 @@ const InvoiceRequest = {
   },
 
   // ==================== TÌM SẢN PHẨM TRONG INVENTORY ====================
-  // Hỗ trợ tìm song song theo maHang VÀ soHopDongNhap
-  searchInventory: async ({ maHang, soHopDongNhap }) => {
+  // ✅ Tìm theo maHang VÀ/ HOẶC ngayXuatHD (ngày xuất kho)
+  searchInventory: async ({ maHang, ngayXuatHD }) => {
     let query = `
       SELECT id, stt, tenThuongMai, maHang, quyCach, hangSX, dvt, phanLoai,
              giaNhap, soLuongNhap, soLuongXuat, tonKho,
@@ -40,9 +40,9 @@ const InvoiceRequest = {
       params.push(`%${maHang.trim()}%`);
     }
 
-    if (soHopDongNhap && soHopDongNhap.trim() !== "") {
-      query += ` AND soHopDongNhap LIKE ?`;
-      params.push(`%${soHopDongNhap.trim()}%`);
+    if (ngayXuatHD && ngayXuatHD.trim() !== "") {
+      query += ` AND ngayXuatHD = ?`;
+      params.push(ngayXuatHD.trim());
     }
 
     if (params.length === 0) {
@@ -56,7 +56,6 @@ const InvoiceRequest = {
   },
 
   // ==================== TẠO YÊU CẦU HÓA ĐƠN ====================
-  // ✅ ĐÃ BỎ soLuong khỏi INSERT — DB sẽ tự nhận default = 0
   create: async (data, createdBy) => {
     const code = await InvoiceRequest.generateCode();
 

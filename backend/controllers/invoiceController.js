@@ -4,21 +4,21 @@ const Inventory = require("../models/Inventory");
 const Notification = require("../models/Notification");
 
 // ==================== TÌM SẢN PHẨM (Admin) ====================
-// GET /api/invoice/search-product?maHang=...&soHopDongNhap=...
+// GET /api/invoice/search-product?maHang=...&ngayXuatHD=...
 const searchProduct = async (req, res) => {
   try {
-    const { maHang, soHopDongNhap } = req.query;
+    const { maHang, ngayXuatHD } = req.query;
 
-    if (!maHang && !soHopDongNhap) {
+    if (!maHang && !ngayXuatHD) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập Mã hàng hoặc Số hợp đồng",
+        message: "Vui lòng nhập Mã hàng hoặc Ngày xuất",
       });
     }
 
     const results = await InvoiceRequest.searchInventory({
       maHang: maHang || "",
-      soHopDongNhap: soHopDongNhap || "",
+      ngayXuatHD: ngayXuatHD || "",
     });
 
     res.json({
@@ -33,7 +33,6 @@ const searchProduct = async (req, res) => {
 };
 
 // ==================== ADMIN: TẠO YÊU CẦU HÓA ĐƠN ====================
-// ✅ ĐÃ BỎ SỐ LƯỢNG
 const createInvoiceRequest = async (req, res) => {
   try {
     const {
