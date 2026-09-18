@@ -16,7 +16,6 @@
   let filteredInventoryData = [];
   let inventoryData = [];
   let requestType = "add";
-  let eventBound = false; // ✅ Tránh gắn event trùng
 
   // DOM Elements
   const tbody = document.getElementById("inv-tbody");
@@ -239,7 +238,6 @@
   function updatePaginationControls(totalItems) {
     const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
 
-    // Đảm bảo currentPage không vượt quá totalPages
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
@@ -251,7 +249,6 @@
       pageInfoEl.textContent = `Trang ${currentPage} / ${totalPages}`;
     }
 
-    // ✅ FIX: disable đúng — dùng property thay vì attribute
     if (prevPageBtnEl) {
       prevPageBtnEl.disabled = currentPage <= 1;
       prevPageBtnEl.style.opacity = currentPage <= 1 ? "0.5" : "1";
@@ -265,7 +262,7 @@
     }
   }
 
-  // ✅ FIX: Hàm chuyển trang — export ra window để HTML gọi được
+  // ✅ Hàm chuyển trang — export ra window
   window.goToPrevPage = function () {
     if (currentPage <= 1) return;
     currentPage--;
@@ -322,7 +319,7 @@
 
     let filtered = [...data];
 
-    // ✅ SEARCH TẤT CẢ TRƯỜNG + TIẾNG VIỆT
+    // ✅ SEARCH TẤT CẢ TRƯỜNG + TIẾNG VIỆT KHÔNG DẤU
     if (searchTerm) {
       filtered = filtered.filter((item) => {
         const searchableFields = [
@@ -1015,6 +1012,7 @@
   };
 
   // ==================== INIT ====================
+  // ✅ FIX: Luôn gắn lại event mỗi lần init, dùng oninput/onclick
   async function initInventory(inventoryDataFromMain) {
     localStorage.removeItem("lagom_inventory");
 
@@ -1025,67 +1023,63 @@
     await populateCategoryFilter();
     applyInventoryFilters(data);
 
-    // ✅ CHỈ GẮN EVENT 1 LẦN DUY NHẤT
-    if (!eventBound) {
-      eventBound = true;
+    // ✅ SEARCH — dùng oninput để không gắn trùng
+    const searchEl = document.getElementById("inv-search");
+    if (searchEl) {
+      searchEl.oninput = function () {
+        console.log("🔍 Search:", this.value);
+        currentPage = 1;
+        applyInventoryFilters(inventoryData);
+      };
+    }
 
-      // Search
-      const searchEl = document.getElementById("inv-search");
-      if (searchEl) {
-        searchEl.addEventListener("input", () => {
-          currentPage = 1;
-          applyInventoryFilters(inventoryData);
-        });
-      }
+    // ✅ Category filter — dùng onchange
+    const catEl = document.getElementById("inv-cat-filter");
+    if (catEl) {
+      catEl.onchange = function () {
+        currentPage = 1;
+        applyInventoryFilters(inventoryData);
+      };
+    }
 
-      // Category filter
-      const catEl = document.getElementById("inv-cat-filter");
-      if (catEl) {
-        catEl.addEventListener("change", () => {
-          currentPage = 1;
-          applyInventoryFilters(inventoryData);
-        });
-      }
+    // ✅ Status filter — dùng onchange
+    const statusEl = document.getElementById("inv-status-filter");
+    if (statusEl) {
+      statusEl.onchange = function () {
+        currentPage = 1;
+        applyInventoryFilters(inventoryData);
+      };
+    }
 
-      // Status filter
-      const statusEl = document.getElementById("inv-status-filter");
-      if (statusEl) {
-        statusEl.addEventListener("change", () => {
-          currentPage = 1;
-          applyInventoryFilters(inventoryData);
-        });
-      }
+    // ✅ Nút phân trang
+    const prevPageBtnEl = document.getElementById("prevPage");
+    if (prevPageBtnEl) {
+      prevPageBtnEl.onclick = window.goToPrevPage;
+    }
+    const nextPageBtnEl = document.getElementById("nextPage");
+    if (nextPageBtnEl) {
+      nextPageBtnEl.onclick = window.goToNextPage;
+    }
 
-      // ✅ FIX: Nút phân trang — dùng onclick để tránh gắn trùng
-      const prevPageBtnEl = document.getElementById("prevPage");
-      if (prevPageBtnEl) {
-        prevPageBtnEl.onclick = window.goToPrevPage;
-      }
-      const nextPageBtnEl = document.getElementById("nextPage");
-      if (nextPageBtnEl) {
-        nextPageBtnEl.onclick = window.goToNextPage;
-      }
+    // ✅ Create request
+    const createRequestBtnEl = document.getElementById("btnCreateRequest");
+    if (createRequestBtnEl && isAdmin()) {
+      createRequestBtnEl.style.display = "inline-flex";
+      createRequestBtnEl.onclick = showRequestModal;
+    } else if (createRequestBtnEl) {
+      createRequestBtnEl.style.display = "none";
+    }
 
-      // Create request
-      const createRequestBtnEl = document.getElementById("btnCreateRequest");
-      if (createRequestBtnEl && isAdmin()) {
-        createRequestBtnEl.style.display = "inline-flex";
-        createRequestBtnEl.onclick = showRequestModal;
-      } else if (createRequestBtnEl) {
-        createRequestBtnEl.style.display = "none";
-      }
+    // ✅ Export Excel
+    const exportBtnEl = document.getElementById("btnExport");
+    if (exportBtnEl) {
+      exportBtnEl.onclick = exportInventoryToExcel;
+    }
 
-      // Export Excel
-      const exportBtnEl = document.getElementById("btnExport");
-      if (exportBtnEl) {
-        exportBtnEl.onclick = exportInventoryToExcel;
-      }
-
-      // Refresh
-      const refreshBtnEl = document.getElementById("btnRefreshInventory");
-      if (refreshBtnEl) {
-        refreshBtnEl.onclick = refreshInventoryData;
-      }
+    // ✅ Refresh
+    const refreshBtnEl = document.getElementById("btnRefreshInventory");
+    if (refreshBtnEl) {
+      refreshBtnEl.onclick = refreshInventoryData;
     }
   }
 
