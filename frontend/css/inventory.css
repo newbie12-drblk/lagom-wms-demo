@@ -262,14 +262,14 @@
 
 /* Giá nhập, Giá xuất - màu xanh dương */
 .inv-table td:nth-child(8),
-.inv-table td:nth-child(15) {
+.inv-table td:nth-child(16) {
   color: #93c5fd;
   font-weight: 600;
 }
 
 /* SL nhập, SL xuất - màu xanh lá */
 .inv-table td:nth-child(9),
-.inv-table td:nth-child(14) {
+.inv-table td:nth-child(15) {
   color: #86efac;
   font-weight: 600;
 }

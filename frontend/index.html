@@ -251,7 +251,7 @@
                   <input
                     type="text"
                     id="inv-search"
-                    placeholder="Tìm theo tên, mã hàng, hoặc số lot..."
+                    placeholder="Tìm theo tên, mã hàng, số lô, hãng SX, số HĐ..."
                   />
                 </div>
                 <select class="cat-select" id="inv-cat-filter">
@@ -330,22 +330,29 @@
                   <tbody id="inv-tbody"></tbody>
                   <tfoot>
                     <tr class="inv-total-row">
+                      <!-- 8 cột đầu: STT → Giá nhập (colspan 8) -->
                       <td colspan="8" class="text-right">
                         <strong>TỔNG CỘNG:</strong>
                       </td>
+                      <!-- Cột 9: SL nhập -->
                       <td class="text-right">
                         <strong id="sumSLNhap" style="color: #86efac">0</strong>
                       </td>
-                      <td colspan="6"></td>
+                      <!-- Cột 10-14: Số HĐ → Ngày hết hạn (colspan 5) -->
+                      <td colspan="5"></td>
+                      <!-- Cột 15: SL xuất -->
                       <td class="text-right">
                         <strong id="sumSLXuat" style="color: #86efac">0</strong>
                       </td>
-                      <td colspan="3"></td>
+                      <!-- Cột 16-19: Giá xuất → Ngày xuất (colspan 4) -->
+                      <td colspan="4"></td>
+                      <!-- Cột 20: Tồn cuối -->
                       <td class="text-right">
                         <strong id="sumTonCuoi" style="color: #4ade80"
                           >0</strong
                         >
                       </td>
+                      <!-- Cột 21: Công nợ -->
                       <td></td>
                     </tr>
                   </tfoot>
