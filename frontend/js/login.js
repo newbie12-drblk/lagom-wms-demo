@@ -29,7 +29,6 @@
       const result = await Auth.login(username, password);
 
       if (result.success) {
-        // 🔥 Chuyển hướng theo URL từ backend
         console.log("🔑 Redirecting to:", result.redirectUrl);
         window.location.href = result.redirectUrl;
         return true;
@@ -65,19 +64,13 @@
   function checkExistingSession() {
     if (Auth.isLoggedIn()) {
       const session = Auth.getCurrentSession();
-      let redirectUrl = "role-panel.html";
+      let redirectUrl = "/role-panel";
 
-      // Admin → thẳng index.html
+      // Admin → thẳng index
       if (session.roleId === "admin") {
-        redirectUrl = "index.html";
-      }
-      // Quản lý → role-panel
-      else if (session.roleId === "quan_ly") {
-        redirectUrl = "role-panel.html";
-      }
-      // Nhân viên/Nhập liệu → role-panel
-      else {
-        redirectUrl = "role-panel.html";
+        redirectUrl = "/";
+      } else {
+        redirectUrl = "/role-panel";
       }
 
       console.log("🔑 Session redirect to:", redirectUrl);

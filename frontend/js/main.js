@@ -1,6 +1,6 @@
 /**
  * ==================== MAIN MODULE ====================
- * Trang chủ cho role xem (index.html)
+ * Trang chủ cho role xem (index)
  */
 
 (function () {
@@ -11,7 +11,7 @@
 
   // Check auth
   if (!Auth.isLoggedIn()) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -80,7 +80,7 @@
       .getElementById("topbarLogoutBtn")
       ?.addEventListener("click", () => {
         Auth.logout();
-        window.location.href = "login.html";
+        window.location.href = "/login";
       });
   }
 
@@ -355,10 +355,10 @@
 
     document
       .getElementById("btnCreateNewReceipt")
-      ?.addEventListener("click", () => window.open("receipt.html", "_blank"));
+      ?.addEventListener("click", () => window.open("/receipt", "_blank"));
     document
       .getElementById("btnCreateNewExport")
-      ?.addEventListener("click", () => window.open("export.html", "_blank"));
+      ?.addEventListener("click", () => window.open("/export", "_blank"));
 
     document.getElementById("receiptTile")?.addEventListener("click", (e) => {
       e.preventDefault();

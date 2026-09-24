@@ -36,8 +36,9 @@ async function apiCall(endpoint, options = {}) {
     if (!response.ok) {
       if (response.status === 401) {
         removeToken();
-        if (window.location.pathname !== "/login.html") {
-          window.location.href = "login.html";
+        // ✅ URL sạch
+        if (!window.location.pathname.endsWith("/login")) {
+          window.location.href = "/login";
         }
       }
       throw new Error(data.message || "Có lỗi xảy ra");
@@ -220,19 +221,16 @@ const API = {
 
   // ==================== INVOICE API ====================
   invoice: {
-    // Lấy danh sách phiếu xuất chưa có hóa đơn
     getExportsWithoutInvoice: async () => {
       const data = await apiCall("/invoice/exports-without-invoice");
       return data.data || [];
     },
-    // Tạo yêu cầu hóa đơn
     createRequest: async (invoiceData) => {
       return await apiCall("/invoice/requests", {
         method: "POST",
         body: JSON.stringify(invoiceData),
       });
     },
-    // Lấy danh sách yêu cầu hóa đơn
     getRequests: async (status = null) => {
       const url = status
         ? `/invoice/requests?status=${status}`
@@ -240,25 +238,21 @@ const API = {
       const data = await apiCall(url);
       return data.data || [];
     },
-    // Lấy yêu cầu hóa đơn theo ID
     getRequestById: async (id) => {
       const data = await apiCall(`/invoice/requests/${id}`);
       return data.data;
     },
-    // Duyệt hóa đơn (Quản lý)
     approve: async (id) => {
       return await apiCall(`/invoice/requests/${id}/approve`, {
         method: "PUT",
       });
     },
-    // Từ chối hóa đơn (Quản lý)
     reject: async (id, reason) => {
       return await apiCall(`/invoice/requests/${id}/reject`, {
         method: "PUT",
         body: JSON.stringify({ reason }),
       });
     },
-    // Xóa yêu cầu hóa đơn
     delete: async (id) => {
       return await apiCall(`/invoice/requests/${id}`, {
         method: "DELETE",

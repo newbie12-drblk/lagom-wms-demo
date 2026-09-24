@@ -7,14 +7,14 @@
   "use strict";
 
   if (!Auth.isLoggedIn()) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return;
   }
 
   const currentUser = Auth.getCurrentUser();
   if (currentUser.roleId !== "quan_ly") {
     alert("❌ Bạn không có quyền truy cập trang này!");
-    window.location.href = "role-panel.html";
+    window.location.href = "/role-panel";
     return;
   }
 
@@ -83,7 +83,7 @@
     if (logoutBtn) {
       logoutBtn.addEventListener("click", function () {
         Auth.logout();
-        window.location.href = "login.html";
+        window.location.href = "/login";
       });
     }
 
@@ -1635,7 +1635,7 @@
   };
 
   // ============================================================
-  // LOAD PENDING INVOICES — HÓA ĐƠN THEO MÃ HĐ RIÊNG
+  // LOAD PENDING INVOICES
   // ============================================================
   async function loadPendingInvoices() {
     var container = document.getElementById("pendingInvoicesList");

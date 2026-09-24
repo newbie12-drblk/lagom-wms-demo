@@ -14,7 +14,7 @@
   window.handleLogout = function () {
     if (confirm("Bạn có chắc muốn đăng xuất?")) {
       Auth.logout();
-      window.location.href = "login.html";
+      window.location.href = "/login";
     }
   };
 
@@ -24,15 +24,15 @@
   function checkAuth() {
     // Nếu chưa đăng nhập → về login
     if (!Auth.isLoggedIn()) {
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
     const user = Auth.getCurrentUser();
 
-    // 🔥 Nếu là admin → chuyển thẳng về index.html (trang tồn kho)
+    // 🔥 Nếu là admin → chuyển thẳng về trang chủ
     if (user && user.roleId === "admin") {
-      window.location.href = "index.html";
+      window.location.href = "/";
       return false;
     }
 

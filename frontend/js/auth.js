@@ -58,7 +58,6 @@
       const result = await window.API.auth.login(username, password);
 
       if (result.success) {
-        // Lưu session vào localStorage
         const session = {
           userId: result.user.id,
           username: result.user.username,
@@ -79,7 +78,7 @@
 
         return {
           success: true,
-          redirectUrl: result.redirectUrl || "role-panel.html",
+          redirectUrl: result.redirectUrl || "/role-panel",
           user: session,
         };
       }
@@ -175,7 +174,7 @@
 
   // ========== ROUTE GUARDS ==========
 
-  function requireAuth(redirectUrl = "login.html") {
+  function requireAuth(redirectUrl = "/login") {
     if (!isLoggedIn()) {
       window.location.href = redirectUrl;
       return false;
@@ -183,9 +182,9 @@
     return true;
   }
 
-  function requireAdmin(redirectUrl = "login.html") {
+  function requireAdmin(redirectUrl = "/login") {
     if (!isLoggedIn()) {
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
@@ -196,9 +195,9 @@
     return false;
   }
 
-  function requireManager(redirectUrl = "role-panel.html") {
+  function requireManager(redirectUrl = "/role-panel") {
     if (!isLoggedIn()) {
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
@@ -209,9 +208,9 @@
     return false;
   }
 
-  function requireNhapLieu(redirectUrl = "role-panel.html") {
+  function requireNhapLieu(redirectUrl = "/role-panel") {
     if (!isLoggedIn()) {
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
@@ -222,7 +221,7 @@
     return false;
   }
 
-  function requireRolePanel(redirectUrl = "login.html") {
+  function requireRolePanel(redirectUrl = "/login") {
     if (!isLoggedIn()) {
       window.location.href = redirectUrl;
       return false;
@@ -232,7 +231,7 @@
 
   function requireAnyRole(allowedRoles = []) {
     if (!isLoggedIn()) {
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
@@ -244,7 +243,7 @@
     }
 
     alert("❌ Bạn không có quyền truy cập trang này!");
-    window.location.href = "role-panel.html";
+    window.location.href = "/role-panel";
     return false;
   }
 
